@@ -30,8 +30,8 @@
 
 namespace uint_validation_tests {
 
-	constexpr std::array<uint64_t, 16> expectedInt64Values{ 0, 1, 42, 123456789, 2147483647, std::numeric_limits<uint64_t>::max(), 0, 1, 3, 123, 100000, 2000, 31400000000LL, 0,
-		500, 1 };
+	constexpr jsonifier_internal::array<uint64_t, 16> expectedInt64Values{ 0, 1, 42, 123456789, 2147483647, std::numeric_limits<uint64_t>::max(), 0, 1, 3, 123, 100000, 2000,
+		31400000000LL, 0, 500, 1 };
 
 	template<bool passTest = true, typename value_type>
 	auto runTest(value_type& expectedValue, const std::string_view& testName, const std::string& dataToParse, jsonifier::jsonifier_core<>& parser) noexcept {
@@ -72,7 +72,7 @@ namespace uint_validation_tests {
 
 	bool uintTests() noexcept {
 		std::cout << "Uint Tests: " << std::endl;
-		std::string filePath01{ testPath };
+		std::string filePath01{ testPath.operator std::string() };
 		filePath01 += "/UintValidation/passTests.json";
 		auto file = bnch_swt::file_loader::loadFile(filePath01);
 		std::vector<std::string> passTests{};
@@ -81,7 +81,7 @@ namespace uint_validation_tests {
 		for (size_t x = 0; x < passTests.size(); ++x) {
 			runTest(expectedInt64Values[x], "Unsigned-Integer-Pass-Test " + std::to_string(x + 1), passTests[x], parser);
 		}
-		std::string filePath02{ testPath };
+		std::string filePath02{ testPath.operator std::string() };
 		filePath02 += "/UintValidation/failTests.json";
 		file = bnch_swt::file_loader::loadFile(filePath02);
 		std::vector<std::string> failTests{};

@@ -34,7 +34,7 @@ jobs:
     - name: Configure CMake
       working-directory: ./
       run: |
-           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm/bin/clang++ -DJSONIFIER_TEST="TRUE"
+           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm/bin/clang++ -DJSONIFIER_BENCHMARKS="TRUE"
 
     - name: Build the Test
       working-directory: ./Build
@@ -47,7 +47,7 @@ jobs:
            sudo cmake --install . --config=${{matrix.build_type}}
 
     - name: Run the Test
-      working-directory: ./Build/Source
+      working-directory: ./Build/Benchmarks
       run: |
            ./Json-Performance
       continue-on-error: true
@@ -77,7 +77,7 @@ jobs:
 
     - name: Configure CMake
       run: |
-           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm/bin/clang++ -DJSONIFIER_TEST="TRUE" -DJSONIFIER_CPU_INSTRUCTIONS=0
+           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm/bin/clang++ -DJSONIFIER_BENCHMARKS="TRUE" -DJSONIFIER_CPU_INSTRUCTIONS=0
 
     - name: Build the Test
       run: |
@@ -89,6 +89,6 @@ jobs:
 
     - name: Run the Test
       run: |
-           ./Build/Source/Json-Performance
+           ./Build/Benchmarks/Json-Performance
       continue-on-error: true
       

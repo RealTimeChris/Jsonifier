@@ -77,7 +77,7 @@ namespace jsonifier_internal {
 	};
 
 	/// Generated using the above algorithm.
-	constexpr std::array<uint64_t, 135> prns{ { 1033321092324544984ull, 2666561049963377653ull, 3901177690447069239ull, 4218182233242110882ull, 5911765535454950103ull,
+	constexpr array<uint64_t, 135> prns{ { 1033321092324544984ull, 2666561049963377653ull, 3901177690447069239ull, 4218182233242110882ull, 5911765535454950103ull,
 		6788651254494793497ull, 7100864855074445223ull, 8121427956336305945ull, 9038010914689427860ull, 14840306302415334885ull, 2861875790078914964ull, 3162274379479658823ull,
 		4716213344225307449ull, 540950270129450019ull, 6138393194460717092ull, 7344427311844191385ull, 8475133706542525636ull, 9707373313909664576ull, 13125261184447140558ull,
 		2935828130652229499ull, 3352961464321085856ull, 4654333323360932970ull, 5071886467123008198ull, 6337413869067417456ull, 7068363609472928302ull, 8706829452892616150ull,
@@ -98,7 +98,7 @@ namespace jsonifier_internal {
 		8724494295438506783ull, 9277533619161797917ull, 13495127262014153477ull, 2883303557104387784ull, 3039599040070277986ull, 4196273005435491662ull, 5417879022829474871ull,
 		6476778602757520149ull, 7959620869796075525ull, 8518936512742009562ull, 9635246566869230345ull } };
 
-	template<typename value_type> constexpr value_type readBitsCt(const char* ptr) noexcept {
+	template<typename value_type> constexpr value_type readBitsCt(string_view_ptr ptr) noexcept {
 		value_type returnValue{};
 		for (size_t x = 0; x < sizeof(value_type); ++x) {
 			returnValue |= static_cast<value_type>(static_cast<uint8_t>(ptr[x])) << (x * 8);
@@ -133,7 +133,7 @@ namespace jsonifier_internal {
 		 * @param length The length of the value.
 		 * @return The hashed value.
 		 */
-		constexpr size_t hashKeyCt(const char* value, size_t length) const noexcept {
+		constexpr size_t hashKeyCt(string_view_ptr value, size_t length) const noexcept {
 			size_t seed64{ seed };
 			while (length >= 8) {
 				seed64 ^= readBitsCt<size_t>(value);
@@ -169,7 +169,7 @@ namespace jsonifier_internal {
 		 * @param length The length of the value.
 		 * @return The hashed value.
 		 */
-		JSONIFIER_ALWAYS_INLINE size_t hashKeyRt(const char* value, size_t length) const noexcept {
+		JSONIFIER_INLINE size_t hashKeyRt(string_view_ptr value, size_t length) const noexcept {
 			size_t seed64{ seed };
 			while (length >= 8) {
 				std::memcpy(&returnValue64, value, 8);

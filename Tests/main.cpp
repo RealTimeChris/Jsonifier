@@ -20,38 +20,15 @@
 	DEALINGS IN THE SOFTWARE.
 */
 /// https://github.com/RealTimeChris/jsonifier
-#pragma once
+#include "Tests.hpp"
 
-#include "Common.hpp"
-
-#include <jsonifier/Index.hpp>
-#include <filesystem>
-#include <fstream>
-
-namespace bounds_tests {
-
-	bool boundsTests() noexcept {
-		jsonifier::jsonifier_core<> parser{};
-		test_generator<test_struct> tests{};
-		partial_test<test_struct> newTests{};
-		std::string testString{};
-		parser.serializeJson(tests, testString);
-		parser.parseJson(newTests, testString);
-		newTests.m.resize(1);
-		newTests.s.resize(0);
-		parser.serializeJson(newTests, testString);
-		while (testString.size() > 0) {
-			test<test_struct> newData{};
-			parser.parseJson<jsonifier::parse_options{ .minified = true }>(newData, testString);
-			testString.resize(testString.size() - 1);
-		}
-		parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(newTests, testString);
-		while (testString.size() > 0) {
-			test<test_struct> newData{};
-			parser.parseJson(newData, testString);
-			testString.resize(testString.size() - 1);
-		}
-		return true;
+int32_t main() {
+	try {
+		tests::testFunction();
+	} catch (std::runtime_error& error) {
+		std::cout << error.what() << std::endl;
+	} catch (std::out_of_range& error) {
+		std::cout << error.what() << std::endl;
 	}
-
-}
+	return 0;
+};

@@ -30,7 +30,7 @@
 
 namespace int_validation_tests {
 
-	constexpr std::array<int64_t, 24> expectedInt64Values{ 0, 1, -1, 42, -42, 123456789, -123456789, 2147483647, -2147483648, std::numeric_limits<int64_t>::max(),
+	constexpr jsonifier_internal::array<int64_t, 24> expectedInt64Values{ 0, 1, -1, 42, -42, 123456789, -123456789, 2147483647, -2147483648, std::numeric_limits<int64_t>::max(),
 		std::numeric_limits<int64_t>::min(), 0, 1, -1, 3, -2, 123, -789, 100000, -2000, 31400000000LL, 0, 500, 1 };
 
 	template<bool passTest = true, typename value_type>
@@ -72,7 +72,7 @@ namespace int_validation_tests {
 
 	bool intTests() noexcept {
 		std::cout << "Int Tests: " << std::endl;
-		std::string filePath01{ testPath };
+		std::string filePath01{ testPath.operator std::string() };
 		filePath01 += "/IntValidation/passTests.json";
 		auto file = bnch_swt::file_loader::loadFile(filePath01);
 		std::vector<std::string> passTests{};
@@ -81,7 +81,7 @@ namespace int_validation_tests {
 		for (size_t x = 0; x < passTests.size(); ++x) {
 			runTest(expectedInt64Values[x], "Integer-Pass-Test " + std::to_string(x + 1), passTests[x], parser);
 		}
-		std::string filePath02{ testPath };
+		std::string filePath02{ testPath.operator std::string() };
 		filePath02 += "/IntValidation/failTests.json";
 		file = bnch_swt::file_loader::loadFile(filePath02);
 		std::vector<std::string> failTests{};

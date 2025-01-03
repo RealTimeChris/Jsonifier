@@ -23,7 +23,6 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/ISA/JsonifierCPUInstructions.hpp>
 #include <cstdint>
 #include <atomic>
 
@@ -106,60 +105,54 @@
 #endif
 
 #if JSONIFIER_HAS_INLINE_VARIABLE
-	#define JSONIFIER_ALWAYS_INLINE_VARIABLE inline constexpr
+	#define JSONIFIER_INLINE_VARIABLE inline constexpr
 #else
-	#define JSONIFIER_ALWAYS_INLINE_VARIABLE static constexpr
+	#define JSONIFIER_INLINE_VARIABLE static constexpr
 #endif
 
 #if defined(NDEBUG)
 	#if defined(JSONIFIER_MSVC)
-		#define JSONIFIER_ALWAYS_NO_INLINE [[msvc::noinline]]
-		#define JSONIFIER_ALWAYS_INLINE [[msvc::forceinline]] inline
-		#define JSONIFIER_NON_GCC_ALWAYS_INLINE [[msvc::forceinline]] inline
-		#define JSONIFIER_CLANG_ALWAYS_INLINE inline
-		#define JSONIFIER_INLINE inline
+		#define JSONIFIER_INLINE [[msvc::forceinline]] inline
+		#define JSONIFIER_NON_GCC_INLINE [[msvc::forceinline]] inline
+		#define JSONIFIER_CLANG_MACOS_INLINE
+		#define JSONIFIER_CLANG_INLINE
 	#elif defined(JSONIFIER_CLANG)
-		#define JSONIFIER_ALWAYS_NO_INLINE __attribute__((noinline))
-		#define JSONIFIER_ALWAYS_INLINE inline __attribute__((always_inline))
-		#define JSONIFIER_NON_GCC_ALWAYS_INLINE inline __attribute__((always_inline))
-		#define JSONIFIER_CLANG_ALWAYS_INLINE inline __attribute__((always_inline))
-		#define JSONIFIER_INLINE inline
+		#if defined(JSONIFIER_MAC)
+			#define JSONIFIER_CLANG_MACOS_INLINE inline __attribute__((always_inline))
+		#else
+			#define JSONIFIER_CLANG_MACOS_INLINE
+		#endif
+		#define JSONIFIER_NON_GCC_INLINE inline __attribute__((always_inline))
+		#define JSONIFIER_NO_INLINE __attribute__((noinline))
+		#define JSONIFIER_INLINE inline __attribute__((always_inline))
+		#define JSONIFIER_CLANG_INLINE inline __attribute__((always_inline))
 	#elif defined(JSONIFIER_GNUCXX)
-		#define JSONIFIER_ALWAYS_NO_INLINE __attribute__((noinline))
-		#define JSONIFIER_ALWAYS_INLINE inline __attribute__((always_inline))
-		#define JSONIFIER_NON_GCC_ALWAYS_INLINE inline
-		#define JSONIFIER_CLANG_ALWAYS_INLINE inline
-		#define JSONIFIER_INLINE inline
+		#define JSONIFIER_INLINE inline __attribute__((always_inline))
+		#define JSONIFIER_NON_GCC_INLINE
+		#define JSONIFIER_CLANG_INLINE
+		#define JSONIFIER_CLANG_MACOS_INLINE
 	#endif
 #else
-	#define JSONIFIER_ALWAYS_NO_INLINE
-	#define JSONIFIER_ALWAYS_INLINE inline
-	#define JSONIFIER_NON_GCC_ALWAYS_INLINE inline
-	#define JSONIFIER_CLANG_ALWAYS_INLINE inline
-	#define JSONIFIER_INLINE inline
+	#define JSONIFIER_INLINE
+	#define JSONIFIER_NON_GCC_INLINE
+	#define JSONIFIER_CLANG_INLINE
+	#define JSONIFIER_CLANG_MACOS_INLINE
 #endif
 
 #if !defined JSONIFIER_ALIGN
 	#define JSONIFIER_ALIGN alignas(bytesPerStep)
 #endif
 
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY)
-	#include <immintrin.h>
-
-#endif
-
-#if defined(__APPLE__) && defined(__arm64__)
-	#define JSONIFIER_PREFETCH(ptr) __builtin_prefetch(ptr, 0, 0);
-#elif defined(JSONIFIER_MSVC)
-	#include <intrin.h>
-	#define JSONIFIER_PREFETCH(ptr) _mm_prefetch(static_cast<const char*>(ptr), _MM_HINT_T0);
-#elif defined(JSONIFIER_GNUCXX) || defined(JSONIFIER_CLANG)
-	#include <xmmintrin.h>
-	#define JSONIFIER_PREFETCH(ptr) _mm_prefetch(static_cast<const char*>(ptr), _MM_HINT_T0);
+#if defined(JSONIFIER_MSVC)
+static constexpr uint64_t forceInlineLimitParse{ 1 };
+static constexpr uint64_t forceInlineLimitSerialize{ 1 };
+#elif defined(JSONIFIER_GNUCXX)
+static constexpr uint64_t forceInlineLimitParse{ 4 };
+static constexpr uint64_t forceInlineLimitSerialize{ 4 };
+#elif defined(JSONIFIER_CLANG) && defined(JSONIFIER_MAC)
+static constexpr uint64_t forceInlineLimitParse{ 20 };
+static constexpr uint64_t forceInlineLimitSerialize{ 20 };
 #else
-	#error "Compiler or architecture not supported for prefetching"
+static constexpr uint64_t forceInlineLimitParse{ 4 };
+static constexpr uint64_t forceInlineLimitSerialize{ 4 };
 #endif
-
-JSONIFIER_ALWAYS_INLINE void jsonifierPrefetchImpl(const void* ptr) noexcept {
-	JSONIFIER_PREFETCH(ptr)
-}

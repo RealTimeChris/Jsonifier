@@ -23,12 +23,12 @@
 /// Sep 1, 2024
 #pragma once
 
-#include <jsonifier/StringView.hpp>
+#include <jsonifier/Config.hpp>
 
 namespace jsonifier_internal {
 
-	template<size_t sizeVal, typename value_type_new> struct string_literal {
-		using value_type	  = value_type_new;
+	template<size_t sizeVal> struct string_literal {
+		using value_type	  = char;
 		using const_reference = const value_type&;
 		using reference		  = value_type&;
 		using const_pointer	  = const value_type*;
@@ -39,7 +39,7 @@ namespace jsonifier_internal {
 
 		constexpr string_literal() noexcept = default;
 
-		constexpr string_literal(const value_type_new (&str)[sizeVal]) noexcept {
+		constexpr string_literal(const char (&str)[sizeVal]) noexcept {
 			for (size_t x = 0; x < length; ++x) {
 				values[x] = str[x];
 			}
@@ -54,36 +54,36 @@ namespace jsonifier_internal {
 			return values;
 		}
 
-		template<size_type sizeNew> constexpr auto operator+=(const string_literal<sizeNew, value_type_new>& str) const noexcept {
-			string_literal<sizeNew + sizeVal - 1, value_type> newLiteral{};
+		template<size_type sizeNew> constexpr auto operator+=(const string_literal<sizeNew>& str) const noexcept {
+			string_literal<sizeNew + sizeVal - 1> newLiteral{};
 			std::copy(values, values + size(), newLiteral.data());
 			std::copy(str.data(), str.data() + sizeNew, newLiteral.data() + size());
 			return newLiteral;
 		}
 
 		template<size_type sizeNew> constexpr auto operator+=(const value_type (&str)[sizeNew]) const noexcept {
-			string_literal<sizeNew + sizeVal - 1, value_type> newLiteral{};
+			string_literal<sizeNew + sizeVal - 1> newLiteral{};
 			std::copy(values, values + size(), newLiteral.data());
 			std::copy(str, str + sizeNew, newLiteral.data() + size());
 			return newLiteral;
 		}
 
-		template<size_type sizeNew> constexpr auto operator+(const string_literal<sizeNew, value_type_new>& str) const noexcept {
-			string_literal<sizeNew + sizeVal - 1, value_type> newLiteral{};
+		template<size_type sizeNew> constexpr auto operator+(const string_literal<sizeNew>& str) const noexcept {
+			string_literal<sizeNew + sizeVal - 1> newLiteral{};
 			std::copy(values, values + size(), newLiteral.data());
 			std::copy(str.data(), str.data() + sizeNew, newLiteral.data() + size());
 			return newLiteral;
 		}
 
 		template<size_type sizeNew> constexpr auto operator+(const value_type (&str)[sizeNew]) const noexcept {
-			string_literal<sizeNew + sizeVal - 1, value_type> newLiteral{};
+			string_literal<sizeNew + sizeVal - 1> newLiteral{};
 			std::copy(values, values + size(), newLiteral.data());
 			std::copy(str, str + sizeNew, newLiteral.data() + size());
 			return newLiteral;
 		}
 
-		template<size_type sizeNew> constexpr friend auto operator+(const value_type (&lhs)[sizeNew], const string_literal<sizeVal, value_type>& str) noexcept {
-			return string_literal<sizeNew, value_type>{ lhs } + str;
+		template<size_type sizeNew> constexpr friend auto operator+(const value_type (&lhs)[sizeNew], const string_literal<sizeVal>& str) noexcept {
+			return string_literal<sizeNew>{ lhs } + str;
 		}
 
 		constexpr reference operator[](size_type index) noexcept {
@@ -94,22 +94,12 @@ namespace jsonifier_internal {
 			return values[index];
 		}
 
-		constexpr size_type size() const noexcept {
+		static constexpr size_type size() noexcept {
 			return length;
 		}
 
-		JSONIFIER_INLINE operator std::string() const noexcept {
-			JSONIFIER_ALIGN std::string returnValues{ values, length };
-			return returnValues;
-		}
-
-		JSONIFIER_INLINE operator jsonifier::string() const noexcept {
-			JSONIFIER_ALIGN jsonifier::string returnValues{ values, length };
-			return returnValues;
-		}
-
-		constexpr jsonifier::string_view view() const noexcept {
-			JSONIFIER_ALIGN jsonifier::string_view returnValues{ values, length };
+		template<typename string_type> constexpr operator string_type() const noexcept {
+			JSONIFIER_ALIGN string_type returnValues{ values, length };
 			return returnValues;
 		}
 
@@ -122,13 +112,13 @@ namespace jsonifier_internal {
 
 	template<size_t size> using get_int_type_for_length_t = get_int_type_for_length<size>::type;
 
-	template<jsonifier_internal::string_literal string>
+	template<string_literal string>
 		requires(string.length == 0)
 	constexpr auto packValues() {
 		return uint8_t{};
 	}
 
-	template<jsonifier_internal::string_literal string>
+	template<string_literal string>
 		requires(string.length > 0 && string.length <= 8)
 	constexpr auto packValues() {
 		JSONIFIER_ALIGN get_int_type_for_length_t<string.length> returnValues{};
@@ -148,10 +138,10 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<jsonifier_internal::string_literal string>
+	template<string_literal string>
 		requires(string.length != 0 && string.length > 8)
 	constexpr auto packValues() {
-		JSONIFIER_ALIGN jsonifier_internal::array<uint64_t, roundUpToMultiple<16>(getPackingSize<string.length>())> returnValues{};
+		JSONIFIER_ALIGN array<uint64_t, roundUpToMultiple<16>(getPackingSize<string.length>())> returnValues{};
 		for (size_t x = 0; x < string.length; ++x) {
 			if (x / 8 < (string.length / 8) + 1) {
 				returnValues[x / 8] |= (static_cast<uint64_t>(string[x]) << ((x % 8) * 8));
@@ -178,17 +168,17 @@ namespace jsonifier_internal {
 	template<typename value_type>
 	concept gt_16 = std::remove_cvref_t<value_type>::length > 16 && !eq_16<value_type> && !eq_32<value_type> && !eq_64<value_type>;
 
-	template<size_t N> constexpr auto stringLiteralFromView(jsonifier::string_view str) noexcept {
-		jsonifier_internal::string_literal<N + 1, char> sl{};
+	template<size_t N, typename string_type> constexpr auto stringLiteralFromView(string_type str) noexcept {
+		string_literal<N + 1> sl{};
 		std::copy_n(str.data(), str.size(), sl.values);
 		sl[N] = '\0';
 		return sl;
 	}
 
-	template<jsonifier_internal::string_literal string, size_t offset> constexpr auto offSetNewLiteral() noexcept {
+	template<string_literal string, size_t offset> constexpr auto offSetNewLiteral() noexcept {
 		constexpr size_t originalSize = string.length;
 		constexpr size_t newSize	  = (offset >= originalSize) ? 0 : originalSize - offset;
-		jsonifier_internal::string_literal<newSize + 1, char> sl{};
+		string_literal<newSize + 1> sl{};
 		if constexpr (newSize > 0) {
 			std::copy_n(string.data() + offset, newSize, sl.values);
 			sl.values[newSize] = '\0';
@@ -196,10 +186,10 @@ namespace jsonifier_internal {
 		return sl;
 	}
 
-	template<jsonifier_internal::string_literal string, size_t offset> constexpr auto offSetIntoLiteral() noexcept {
+	template<string_literal string, size_t offset> constexpr auto offSetIntoLiteral() noexcept {
 		constexpr size_t originalSize = string.length;
 		constexpr size_t newSize	  = (offset >= originalSize) ? originalSize : offset;
-		jsonifier_internal::string_literal<newSize + 1, char> sl{};
+		string_literal<newSize + 1> sl{};
 		if constexpr (newSize > 0) {
 			std::copy_n(string.data(), newSize, sl.values);
 			sl.values[newSize] = '\0';
@@ -210,57 +200,56 @@ namespace jsonifier_internal {
 	template<typename sl_type, std::remove_cvref_t<sl_type> stringNew> struct string_literal_comparitor;
 
 	template<equals_0 sl_type, std::remove_cvref_t<sl_type> stringNew> struct string_literal_comparitor<sl_type, stringNew> {
-		JSONIFIER_INLINE static bool impl(const char*) noexcept {
+		JSONIFIER_INLINE static bool impl(string_view_ptr) noexcept {
 			return true;
 		}
 	};
 
 	template<gt_0_lt_16 sl_type, std::remove_cvref_t<sl_type> stringNew> struct string_literal_comparitor<sl_type, stringNew> {
-		JSONIFIER_INLINE static bool impl(const char* str) noexcept {
+		JSONIFIER_INLINE static bool impl(string_view_ptr str) noexcept {
 			static constexpr auto stringLiteral{ stringNew };
 			static constexpr auto newCount{ stringLiteral.size() };
 			if constexpr (newCount > 8) {
-				JSONIFIER_ALIGN static constexpr auto valuesNew{ jsonifier_internal::packValues<stringLiteral>() };
+				JSONIFIER_ALIGN static constexpr auto valuesNew{ packValues<stringLiteral>() };
 				jsonifier_simd_int_128 data1{};
 				std::memcpy(&data1, str, newCount);
-				jsonifier_simd_int_128 data2;
-				std::memcpy(&data2, valuesNew.data(), 16);
+				jsonifier_simd_int_128 data2{ simd_internal::gatherValues<jsonifier_simd_int_128>(valuesNew.data()) };
 				return !simd_internal::opTest(simd_internal::opXor(data1, data2));
 			} else if constexpr (newCount == 8) {
 				static constexpr auto valuesNew{ packValues<stringLiteral>() };
 				uint64_t l;
 				std::memcpy(&l, str, 8);
-				return (l == valuesNew);
+				return !(l ^ valuesNew);
 			} else if constexpr (newCount == 7) {
 				static constexpr auto valuesNew{ packValues<stringLiteral>() };
 				uint64_t l{};
 				std::memcpy(&l, str, 7);
-				return (l == valuesNew);
+				return !(l ^ valuesNew);
 			} else if constexpr (newCount == 6) {
 				static constexpr auto valuesNew{ packValues<stringLiteral>() };
 				uint64_t l{};
 				std::memcpy(&l, str, 6);
-				return (l == valuesNew);
+				return !(l ^ valuesNew);
 			} else if constexpr (newCount == 5) {
 				static constexpr uint32_t valuesNew{ static_cast<uint32_t>(packValues<stringLiteral>()) };
 				uint32_t l;
 				std::memcpy(&l, str, 4);
-				return (l == valuesNew) && (str[4] == stringLiteral[4]);
+				return !(l ^ valuesNew) && (str[4] == stringLiteral[4]);
 			} else if constexpr (newCount == 4) {
 				static constexpr uint32_t valuesNew{ static_cast<uint32_t>(packValues<stringLiteral>()) };
 				uint32_t l;
 				std::memcpy(&l, str, 4);
-				return (l == valuesNew);
+				return !(l ^ valuesNew);
 			} else if constexpr (newCount == 3) {
 				static constexpr uint16_t valuesNew{ static_cast<uint16_t>(packValues<stringLiteral>()) };
 				uint16_t l;
 				std::memcpy(&l, str, 2);
-				return (l == valuesNew) && (str[2] == stringLiteral[2]);
+				return !(l ^ valuesNew) && (str[2] == stringLiteral[2]);
 			} else if constexpr (newCount == 2) {
 				static constexpr uint16_t valuesNew{ static_cast<uint16_t>(packValues<stringLiteral>()) };
 				uint16_t l;
 				std::memcpy(&l, str, 2);
-				return (l == valuesNew);
+				return !(l ^ valuesNew);
 			} else if constexpr (newCount == 1) {
 				return *str == stringLiteral[0];
 			} else {
@@ -269,26 +258,22 @@ namespace jsonifier_internal {
 		};
 	};
 
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) || \
-	JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 	template<eq_16 sl_type, std::remove_cvref_t<sl_type> stringNew> struct string_literal_comparitor<sl_type, stringNew> {
-		JSONIFIER_INLINE static bool impl(const char* str) noexcept {
+		JSONIFIER_INLINE static bool impl(string_view_ptr str) noexcept {
 			static constexpr auto newLiteral{ stringNew };
-			JSONIFIER_ALIGN static constexpr auto valuesNew{ jsonifier_internal::packValues<newLiteral>() };
+			JSONIFIER_ALIGN static constexpr auto valuesNew{ packValues<newLiteral>() };
 			jsonifier_simd_int_128 data1{ simd_internal::gatherValuesU<jsonifier_simd_int_128>(str) };
 			jsonifier_simd_int_128 data2{ simd_internal::gatherValues<jsonifier_simd_int_128>(valuesNew.data()) };
 			return !simd_internal::opTest(simd_internal::opXor(data1, data2));
 		}
 	};
 
-#endif
-
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
 
 	template<eq_32 sl_type, std::remove_cvref_t<sl_type> stringNew> struct string_literal_comparitor<sl_type, stringNew> {
-		JSONIFIER_INLINE static bool impl(const char* str) noexcept {
+		JSONIFIER_INLINE static bool impl(string_view_ptr str) noexcept {
 			static constexpr auto newLiteral{ stringNew };
-			JSONIFIER_ALIGN static constexpr auto valuesNew{ jsonifier_internal::packValues<newLiteral>() };
+			JSONIFIER_ALIGN static constexpr auto valuesNew{ packValues<newLiteral>() };
 			jsonifier_simd_int_256 data1{ simd_internal::gatherValuesU<jsonifier_simd_int_256>(str) };
 			jsonifier_simd_int_256 data2{ simd_internal::gatherValues<jsonifier_simd_int_256>(valuesNew.data()) };
 			return !simd_internal::opTest(simd_internal::opXor(data1, data2));
@@ -299,9 +284,9 @@ namespace jsonifier_internal {
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 	template<eq_64 value_type, std::remove_cvref_t<value_type> stringNew> struct string_literal_comparitor<value_type, stringNew> {
-		JSONIFIER_INLINE static bool impl(const char* str) noexcept {
+		JSONIFIER_INLINE static bool impl(string_view_ptr str) noexcept {
 			static constexpr auto newLiteral{ stringNew };
-			JSONIFIER_ALIGN static constexpr auto valuesNew{ jsonifier_internal::packValues<newLiteral>() };
+			JSONIFIER_ALIGN static constexpr auto valuesNew{ packValues<newLiteral>() };
 			jsonifier_simd_int_512 data1{ simd_internal::gatherValuesU<jsonifier_simd_int_512>(str) };
 			jsonifier_simd_int_512 data2{ simd_internal::gatherValues<jsonifier_simd_int_512>(valuesNew.data()) };
 			return !simd_internal::opTest(simd_internal::opXor(data1, data2));
@@ -320,7 +305,7 @@ namespace jsonifier_internal {
 	}
 
 	template<gt_16 sl_type, std::remove_cvref_t<sl_type> stringNew> struct string_literal_comparitor<sl_type, stringNew> {
-		JSONIFIER_INLINE static bool impl(const char* str) noexcept {
+		JSONIFIER_INLINE static bool impl(string_view_ptr str) noexcept {
 			static constexpr auto string{ offSetIntoLiteral<stringNew, getOffsetIntoLiteralSize(stringNew.size())>() };
 			if (!string_literal_comparitor<decltype(string), string>::impl(str)) {
 				return false;
@@ -333,8 +318,8 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<size_t size, typename value_type_new> JSONIFIER_INLINE std::ostream& operator<<(std::ostream& os, const string_literal<size, value_type_new>& input) noexcept {
-		os << input.view();
+	template<size_t size> std::ostream& operator<<(std::ostream& os, const string_literal<size>& input) noexcept {
+		os << input.operator jsonifier::string_view();
 		return os;
 	}
 
@@ -351,10 +336,10 @@ namespace jsonifier_internal {
 		return count;
 	}
 
-	template<int64_t number, size_t numDigits = countDigits(number)> constexpr string_literal<numDigits + 1, char> toStringLiteral() noexcept {
+	template<int64_t number, size_t numDigits = countDigits(number)> constexpr string_literal<numDigits + 1> toStringLiteral() noexcept {
 		char buffer[numDigits + 1]{};
-		char* ptr = buffer + numDigits;
-		*ptr	  = '\0';
+		string_buffer_ptr ptr = buffer + numDigits;
+		*ptr				  = '\0';
 		int64_t temp{};
 		if constexpr (number < 0) {
 			temp			   = number * -1;
@@ -366,28 +351,19 @@ namespace jsonifier_internal {
 			*--ptr = '0' + (temp % 10);
 			temp /= 10;
 		} while (temp != 0);
-		return string_literal<numDigits + 1, char>{ buffer };
+		return string_literal<numDigits + 1>{ buffer };
 	}
-
-	template<auto valueNew> struct make_static {
-		static constexpr auto value{ valueNew };
-	};
 
 	constexpr char toLower(char input) noexcept {
 		return (input >= 'A' && input <= 'Z') ? (input + 32) : input;
 	}
 
-	template<size_t size, typename value_type> constexpr auto toLower(string_literal<size, value_type> input) noexcept {
-		string_literal<size, value_type> output{};
+	template<size_t size, typename value_type> constexpr auto toLower(string_literal<size> input) noexcept {
+		string_literal<size> output{};
 		for (size_t x = 0; x < size; ++x) {
 			output[x] = toLower(input[x]);
 		}
 		return output;
-	}
-
-	template<int64_t number> constexpr jsonifier::string_view toStringView() noexcept {
-		constexpr auto& lit = jsonifier_internal::make_static<toStringLiteral<number>()>::value;
-		return jsonifier::string_view{ lit.data(), lit.size() };
 	}
 
 }

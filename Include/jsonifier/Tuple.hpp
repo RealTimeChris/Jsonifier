@@ -28,26 +28,26 @@
 #include <type_traits>
 #include <utility>
 
-#if defined(TUPLET_NO_UNIQUE_ADDRESS) && !TUPLET_NO_UNIQUE_ADDRESS
-	#define TUPLET_NO_UNIQUE_ADDRESS
+#if defined(JSONIFIER_TUPLET_NO_UNIQUE_ADDRESS) && !JSONIFIER_TUPLET_NO_UNIQUE_ADDRESS
+	#define JSONIFIER_TUPLET_NO_UNIQUE_ADDRESS
 #else
 	#if _MSVC_LANG >= 202002L && (!defined __clang__)
 
-		#define TUPLET_HAS_NO_UNIQUE_ADDRESS 1
-		#define TUPLET_NO_UNIQUE_ADDRESS [[msvc::no_unique_address]]
+		#define JSONIFIER_TUPLET_HAS_NO_UNIQUE_ADDRESS 1
+		#define JSONIFIER_TUPLET_NO_UNIQUE_ADDRESS [[msvc::no_unique_address]]
 
 	#elif _MSC_VER
-		#define TUPLET_HAS_NO_UNIQUE_ADDRESS 0
-		#define TUPLET_NO_UNIQUE_ADDRESS
+		#define JSONIFIER_TUPLET_HAS_NO_UNIQUE_ADDRESS 0
+		#define JSONIFIER_TUPLET_NO_UNIQUE_ADDRESS
 
 	#elif __cplusplus > 201703L && (__has_cpp_attribute(no_unique_address))
 
-		#define TUPLET_HAS_NO_UNIQUE_ADDRESS 1
-		#define TUPLET_NO_UNIQUE_ADDRESS [[no_unique_address]]
+		#define JSONIFIER_TUPLET_HAS_NO_UNIQUE_ADDRESS 1
+		#define JSONIFIER_TUPLET_NO_UNIQUE_ADDRESS [[no_unique_address]]
 
 	#else
-		#define TUPLET_HAS_NO_UNIQUE_ADDRESS 0
-		#define TUPLET_NO_UNIQUE_ADDRESS
+		#define JSONIFIER_TUPLET_HAS_NO_UNIQUE_ADDRESS 0
+		#define JSONIFIER_TUPLET_NO_UNIQUE_ADDRESS
 	#endif
 #endif
 
@@ -81,14 +81,10 @@ namespace jsonifier_internal {
 
 	template<size_t I> using tag = std::integral_constant<size_t, I>;
 
-	template<size_t I> constexpr tag<I> tag_v{};
-
-	template<size_t N> using tag_range = std::make_index_sequence<N>;
-
 	template<typename tup> using base_list_t = typename std::decay_t<tup>::base_list;
 
 	template<typename tuple>
-	concept base_list_tuple = requires() { typename std::decay_t<tuple>::base_list; };
+	concept base_list_tuple = requires { typename std::decay_t<tuple>::base_list; };
 
 	template<typename value_type>
 	concept stateless = std::is_empty_v<std::decay_t<value_type>>;
@@ -96,26 +92,28 @@ namespace jsonifier_internal {
 	template<typename value_type>
 	concept indexable = stateless<value_type> || requires(value_type t) { t[tag<0>()]; };
 
-	template<typename... Bases> struct type_map : Bases... {
-		using base_list = type_list<Bases...>;
-		using Bases::operator[]...;
+	template<class... bases> struct type_map : bases... {
+		using base_list = type_list<bases...>;
+		using bases::operator[]...;
+		using bases::decl_elem...;
 	};
 
 	template<size_t I, typename value_type> struct tuple_elem {
-		using type = std::remove_cvref_t<value_type>;
+		static value_type decl_elem(tag<I>);
+		using type = value_type;
 
-		TUPLET_NO_UNIQUE_ADDRESS type value;
+		JSONIFIER_TUPLET_NO_UNIQUE_ADDRESS value_type value{};
 
-		JSONIFIER_INLINE constexpr decltype(auto) operator[](tag<I>) & {
-			return (value);
+		constexpr decltype(auto) operator[](tag<I>) & {
+			return value;
 		}
 
-		JSONIFIER_INLINE constexpr decltype(auto) operator[](tag<I>) const& {
-			return (value);
+		constexpr decltype(auto) operator[](tag<I>) const& {
+			return value;
 		}
 
-		JSONIFIER_INLINE constexpr decltype(auto) operator[](tag<I>) && {
-			return (static_cast<tuple_elem&&>(*this).value);
+		constexpr decltype(auto) operator[](tag<I>) && {
+			return static_cast<tuple_elem&&>(*this).value;
 		}
 	};
 
@@ -125,24 +123,25 @@ namespace jsonifier_internal {
 		using type = type_map<tuple_elem<I, value_type>...>;
 	};
 
-	template<typename... value_type> using tuple_base_t = typename get_tuple_base<tag_range<sizeof...(value_type)>, value_type...>::type;
+	template<typename... value_type> using tuple_base_t = typename get_tuple_base<std::make_index_sequence<sizeof...(value_type)>, value_type...>::type;
 
 	template<typename... value_type> struct tuple : tuple_base_t<value_type...> {
 		static constexpr size_t N = sizeof...(value_type);
 		using super				  = tuple_base_t<value_type...>;
 		using super::operator[];
-		using base_list = typename super::base_list;
+		using super::decl_elem;
 	};
 
 	template<> struct tuple<> : tuple_base_t<> {
-		static constexpr size_t N = 0;
+		constexpr static size_t N = 0;
 		using super				  = tuple_base_t<>;
 		using base_list			  = type_list<>;
+		using element_list		  = type_list<>;
 	};
 
 	template<typename... types> tuple(types&&...) -> tuple<std::remove_cvref_t<types>...>;
 
-	template<size_t I, indexable tup> JSONIFIER_INLINE constexpr decltype(auto) get(tup&& tupleVal) {
+	template<size_t I, indexable tup> constexpr decltype(auto) get(tup&& tupleVal) {
 		return static_cast<tup&&>(tupleVal)[tag<I>()];
 	}
 
@@ -171,14 +170,14 @@ namespace jsonifier_internal {
 		if constexpr (sizeof...(value_type) == 0) {
 			return tuple<>{};
 		} else {
-#if !defined(TUPLET_CAT_BY_FORWARDING_TUPLE)
+#if !defined(JSONIFIER_TUPLET_CAT_BY_FORWARDING_TUPLE)
 	#if defined(__clang__)
-		#define TUPLET_CAT_BY_FORWARDING_TUPLE 0
+		#define JSONIFIER_TUPLET_CAT_BY_FORWARDING_TUPLE 0
 	#else
-		#define TUPLET_CAT_BY_FORWARDING_TUPLE 1
+		#define JSONIFIER_TUPLET_CAT_BY_FORWARDING_TUPLE 1
 	#endif
 #endif
-#if TUPLET_CAT_BY_FORWARDING_TUPLE
+#if JSONIFIER_TUPLET_CAT_BY_FORWARDING_TUPLE
 			using big_tuple = tuple<value_type&&...>;
 #else
 			using big_tuple = tuple<std::decay_t<value_type>...>;
@@ -194,21 +193,25 @@ namespace jsonifier_internal {
 
 	template<size_t I, typename... value_type> struct tuple_element;
 
+	template<size_t I, typename... value_type> struct tuple_element<I, tuple<value_type...>> {
+		using type = decltype(tuple<std::remove_cvref_t<value_type>...>::decl_elem(tag<I>()));
+	};
+
+	template<size_t I, typename tuple_type> using tuple_element_t = typename tuple_element<I, tuple_type>::type;
+
 	template<typename... value_type> struct tuple_size<tuple<value_type...>> : std::integral_constant<size_t, sizeof...(value_type)> {};
 
 	template<typename... value_type> struct tuple_size<std::tuple<value_type...>> : std::integral_constant<size_t, sizeof...(value_type)> {};
-
-	template<size_t I, typename... value_type> struct tuple_element<I, tuple<value_type...>> {
-		using type = decltype(tuple<value_type...>::decl_elem(tag<I>()));
-	};
 
 	template<typename... value_type> static constexpr auto tuple_size_v = tuple_size<std::remove_cvref_t<value_type>...>::value;
 }
 
 namespace std {
+
 	template<typename... value_type> struct tuple_size<jsonifier_internal::tuple<value_type...>> : std::integral_constant<size_t, sizeof...(value_type)> {};
 
 	template<size_t I, typename... value_type> struct tuple_element<I, jsonifier_internal::tuple<value_type...>> {
 		using type = decltype(jsonifier_internal::tuple<value_type...>::decl_elem(jsonifier_internal::tag<I>()));
 	};
+
 }

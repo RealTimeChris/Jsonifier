@@ -29,7 +29,7 @@
 
 struct search_metadata_data {
 	double completed_in{};
-	int64_t max_id{};
+	double max_id{};
 	std::string max_id_str{};
 	std::string next_results{};
 	std::string query{};
@@ -58,7 +58,7 @@ struct sizes_data {
 };
 
 struct media_data {
-	int64_t id{};
+	double id{};
 	std::string id_str{};
 	std::vector<int64_t> indices{};
 	std::string media_url{};
@@ -68,7 +68,7 @@ struct media_data {
 	std::string expanded_url{};
 	std::string type{};
 	sizes_data sizes{};
-	std::optional<int64_t> source_status_id{};
+	std::optional<double> source_status_id{};
 	std::optional<std::string> source_status_id_str{};
 };
 
@@ -79,7 +79,7 @@ struct url_data {
 	std::vector<int64_t> indices{};
 };
 
-struct user_mention {
+struct user_mention_data {
 	std::string screen_name{};
 	std::string name{};
 	int64_t id{};
@@ -91,7 +91,7 @@ struct status_entities {
 	std::vector<hashtag_data> hashtags{};
 	std::vector<std::nullptr_t> symbols{};
 	std::vector<url_data> urls{};
-	std::vector<user_mention> user_mentions{};
+	std::vector<user_mention_data> user_mentions{};
 	std::optional<std::vector<media_data>> media{};
 };
 
@@ -155,12 +155,12 @@ struct twitter_user_data {
 struct status_data {
 	metadata_data metadata{};
 	std::string created_at{};
-	int64_t id{};
+	double id{};
 	std::string id_str{};
 	std::string text{};
 	std::string source{};
 	bool truncated{};
-	std::optional<int64_t> in_reply_to_status_id{};
+	std::optional<double> in_reply_to_status_id{};
 	std::optional<std::string> in_reply_to_status_id_str{};
 	std::optional<int64_t> in_reply_to_user_id{};
 	std::optional<std::string> in_reply_to_user_id_str{};
@@ -183,4 +183,18 @@ struct status_data {
 struct twitter_message {
 	std::vector<status_data> statuses{};
 	search_metadata_data search_metadata{};
+};
+
+struct user_data_partial {
+	std::string screen_name{};
+};
+
+struct status_data_partial {
+	std::string text{};
+	user_data_partial user{};
+	int64_t retweet_count{};
+};
+
+struct twitter_partial_message {
+	std::vector<status_data_partial> statuses{};
 };

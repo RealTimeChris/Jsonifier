@@ -23,23 +23,38 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier/ISA/SimdCommon.hpp>
+#include <jsonifier/ISA/SimdTypes.hpp>
 #include <memory_resource>
+#include <stdlib.h>
 
 namespace jsonifier_internal {
 
-	template<auto multiple, typename value_type = decltype(multiple)> constexpr value_type roundUpToMultiple(value_type value) noexcept {
+	template<typename value_type> JSONIFIER_INLINE constexpr value_type&& forward(std::remove_reference_t<value_type>& value) noexcept {
+		return static_cast<value_type&&>(value);
+	}
+
+	template<typename value_type>
+	concept r_value_reference = std::is_rvalue_reference_v<value_type>;
+
+	template<r_value_reference value_type> JSONIFIER_INLINE constexpr value_type forward(value_type value) noexcept {
+		return value;
+	}
+
+	template<auto multiple, typename value_type = decltype(multiple)> JSONIFIER_INLINE constexpr value_type roundUpToMultiple(value_type value) noexcept {
 		if constexpr ((multiple & (multiple - 1)) == 0) {
-			return (value + (multiple - 1)) & ~(multiple - 1);
+			constexpr auto mulSub1{ multiple - 1 };
+			constexpr auto notMulSub1{ ~mulSub1 };
+			return (value + (mulSub1)) & notMulSub1;
 		} else {
 			auto remainder = value % multiple;
 			return remainder == 0 ? value : value + (multiple - remainder);
 		}
 	}
 
-	template<auto multiple, typename value_type = decltype(multiple)> constexpr value_type roundDownToMultiple(value_type value) noexcept {
+	template<auto multiple, typename value_type = decltype(multiple)> JSONIFIER_INLINE constexpr value_type roundDownToMultiple(value_type value) noexcept {
 		if constexpr ((multiple & (multiple - 1)) == 0) {
-			return value & ~(multiple - 1);
+			constexpr auto notMulSub1{ ~(multiple - 1) };
+			return value & notMulSub1;
 		} else {
 			return static_cast<int64_t>(value) >= 0 ? (value / multiple) * multiple : ((value - multiple + 1) / multiple) * multiple;
 		}
@@ -52,18 +67,18 @@ namespace jsonifier_internal {
 		using size_type		   = size_t;
 		using allocator_traits = std::allocator_traits<alloc_wrapper<value_type>>;
 
-		JSONIFIER_ALWAYS_INLINE pointer allocate(size_type count) noexcept {
+		JSONIFIER_INLINE pointer allocate(size_type count) noexcept {
 			if JSONIFIER_UNLIKELY (count == 0) {
 				return nullptr;
 			}
 #if defined(JSONIFIER_MSVC)
 			return static_cast<value_type*>(_aligned_malloc(roundUpToMultiple<bytesPerStep>(count * sizeof(value_type)), bytesPerStep));
 #else
-			return static_cast<value_type*>(std::aligned_alloc(bytesPerStep, roundUpToMultiple<bytesPerStep>(count * sizeof(value_type))));
+			return static_cast<value_type*>(aligned_alloc(bytesPerStep, roundUpToMultiple<bytesPerStep>(count * sizeof(value_type))));
 #endif
 		}
 
-		JSONIFIER_ALWAYS_INLINE void deallocate(pointer ptr, size_t = 0) noexcept {
+		JSONIFIER_INLINE void deallocate(pointer ptr, size_t = 0) noexcept {
 			if JSONIFIER_LIKELY (ptr) {
 #if defined(JSONIFIER_MSVC)
 				_aligned_free(ptr);
@@ -73,15 +88,15 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<typename... arg_types> JSONIFIER_ALWAYS_INLINE void construct(pointer ptr, arg_types&&... args) noexcept {
-			new (ptr) value_type(std::forward<arg_types>(args)...);
+		template<typename... arg_types> JSONIFIER_INLINE void construct(pointer ptr, arg_types&&... args) noexcept {
+			new (ptr) value_type(jsonifier_internal::forward<arg_types>(args)...);
 		}
 
-		JSONIFIER_ALWAYS_INLINE static size_type maxSize() noexcept {
+		JSONIFIER_INLINE static size_type maxSize() noexcept {
 			return allocator_traits::max_size(alloc_wrapper{});
 		}
 
-		JSONIFIER_ALWAYS_INLINE void destroy(pointer ptr) noexcept {
+		JSONIFIER_INLINE void destroy(pointer ptr) noexcept {
 			ptr->~value_type();
 		}
 	};

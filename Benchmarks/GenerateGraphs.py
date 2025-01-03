@@ -158,7 +158,6 @@ def plot_raw_comparisons(df, raw_speeds, output_folder, test_name):
             ax.text(i + width / 2, write_speedup - write_speedup * 0.05,
                     f"{write_speedup:.2f}MB/s", ha='center', va='top', color='black', fontsize=font_size, fontweight='bold')
 
-
     ax.set_xticks(range(len(libraries)))
     ax.set_xticklabels(libraries)
     ax.set_title(f'{test_name} Result Speed Comparison', color='white')

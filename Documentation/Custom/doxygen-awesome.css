@@ -111,7 +111,6 @@ html {
     --menu-focus-background: var(--primary-color);
     --menu-selected-background: rgba(0,0,0,.05);
 
-
     --header-background: var(--page-background-color);
     --header-foreground: var(--page-foreground-color);
 
@@ -461,7 +460,6 @@ a:link, a:visited, a:hover, a:focus, a:active {
 .tablist a {
     padding: 0 var(--spacing-large);
 }
-
 
 /*
  Search box
@@ -922,7 +920,6 @@ div.toc ul li.level2, div.toc ul li.level3 {
     margin-top: 0;
 }
 
-
 @media screen and (max-width: 767px) {
     div.toc {
         float: none;
@@ -1214,7 +1211,6 @@ dl.reflist {
     padding: 0;
 }
 
-
 dl.reflist dt, dl.reflist dd {
     box-shadow: none;
     text-shadow: none;
@@ -1223,7 +1219,6 @@ dl.reflist dt, dl.reflist dd {
     padding: 12px;
 }
 
-
 dl.reflist dt {
     font-weight: 500;
     border-radius: 0;
@@ -1231,7 +1226,6 @@ dl.reflist dt {
     border-bottom: 1px solid var(--separator-color);
     color: var(--page-foreground-color)
 }
-
 
 dl.reflist dd {
     background: none;
@@ -1292,7 +1286,6 @@ table.memberdecls {
     overflow-x: auto;
     overflow-y: hidden;
 }
-
 
 /*
  Horizontal Rule

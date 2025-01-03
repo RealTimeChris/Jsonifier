@@ -23,6 +23,7 @@
 /// Feb 3, 2023
 #pragma once
 
+#include <jsonifier/Config.hpp>
 #include <type_traits>
 #include <algorithm>
 #include <cstdint>
@@ -62,7 +63,7 @@ namespace simd_internal {
 			m128x_uint64[1] = 0;
 		}
 
-#if JSONIFIER_WIN
+#if defined(JSONIFIER_WIN)
 		int8_t m128x_int8[16]{};
 		int16_t m128x_int16[8];
 		int32_t m128x_int32[4];

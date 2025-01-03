@@ -27,11 +27,11 @@
 
 namespace jsonifier_internal {
 
-	static constexpr bool options{ false };
+	static constexpr bool optionsVal{};
 
 	template<typename derived_type> struct validate_impl<json_structural_type::Object_Start, derived_type> {
-		template<typename validator_type, typename iterator> JSONIFIER_INLINE static bool impl(iterator&& iter, uint64_t& depth, validator_type& validatorRef) noexcept {
-			if (!*iter || **iter != '{') {
+		template<typename validator_type, typename iterator> static bool impl(iterator&& iter, iterator&& end, uint64_t& depth, validator_type& validatorRef) noexcept {
+			if (!*iter || **iter != lBrace) {
 				validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Missing_Object_Start>(
 					getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 				return false;
@@ -43,36 +43,45 @@ namespace jsonifier_internal {
 					getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 				return false;
 			}
-			if (*iter && **iter == '}') {
+			if (*iter && **iter == rBrace) {
 				++iter;
 				--depth;
 				return true;
 			}
 
-			while (*iter) {
+			while (*iter < *end) {
 				if (!validate_impl<json_structural_type::String, derived_type>::impl(iter, validatorRef)) {
 					validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Invalid_String_Characters>(
 						getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 					return false;
 				}
 
-				if (!*iter || **iter != ':') {
+				if (!*iter || **iter != colon) {
 					validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Missing_Colon>(
 						getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 					return false;
 				}
 
 				++iter;
-				if (!validator<derived_type>::impl(iter, depth, validatorRef)) {
+				if (!validator<derived_type>::impl(iter, end, depth, validatorRef)) {
+					validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Missing_Object_Start>(
+						getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 					return false;
 				}
 
-				if (*iter && **iter == ',') {
+				if (*iter >= *end || **iter == 0) {
+					return true;
+				}
+
+				if (*iter && **iter == comma) {
 					++iter;
 				} else {
-					if (!*iter || **iter == '}') {
+					if (!*iter || **iter == rBrace) {
 						++iter;
-						if (*iter && **iter != ',' && **iter != ']' && **iter != '}') {
+						if (*iter >= *end || **iter == 0) {
+							return true;
+						}
+						if (*iter && **iter != comma && **iter != rBracket && **iter != rBrace) {
 							validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Missing_Comma_Or_Closing_Brace>(
 								getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 							return false;
@@ -86,7 +95,7 @@ namespace jsonifier_internal {
 					}
 				}
 			}
-			if (!*iter || (**iter != ',' && **iter != '}')) {
+			if (!*iter || (**iter != comma && **iter != rBrace)) {
 				validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Missing_Comma_Or_Closing_Brace>(
 					getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 				return false;
@@ -97,8 +106,8 @@ namespace jsonifier_internal {
 	};
 
 	template<typename derived_type> struct validate_impl<json_structural_type::Array_Start, derived_type> {
-		template<typename validator_type, typename iterator> JSONIFIER_INLINE static bool impl(iterator&& iter, uint64_t& depth, validator_type& validatorRef) noexcept {
-			if (!*iter || **iter != '[') {
+		template<typename validator_type, typename iterator> static bool impl(iterator&& iter, iterator&& end, uint64_t& depth, validator_type& validatorRef) noexcept {
+			if (!*iter || **iter != lBracket) {
 				validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Missing_Array_Start>(
 					getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 				return false;
@@ -111,22 +120,24 @@ namespace jsonifier_internal {
 					getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 				return false;
 			}
-			if (*iter && **iter == ']') {
+			if (*iter && **iter == rBracket) {
 				++iter;
 				--depth;
 				return true;
 			}
 
 			while (*iter) {
-				if (!validator<derived_type>::impl(iter, depth, validatorRef)) {
+				if (!validator<derived_type>::impl(iter, end, depth, validatorRef)) {
+					validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Missing_Object_Start>(
+						getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 					return false;
 				}
-				if (*iter && **iter == ',') {
+				if (*iter && **iter == comma) {
 					++iter;
 				} else {
-					if (*iter && **iter == ']') {
+					if (*iter && **iter == rBracket) {
 						++iter;
-						if (*iter && **iter != ',' && **iter != ']' && **iter != '}') {
+						if (*iter && **iter != comma && **iter != rBracket && **iter != rBrace) {
 							validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Missing_Comma_Or_Closing_Brace>(
 								getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 							return false;
@@ -140,7 +151,7 @@ namespace jsonifier_internal {
 					}
 				}
 			}
-			if (!*iter || (**iter != ',' && **iter != ']')) {
+			if (!*iter || (**iter != comma && **iter != rBracket)) {
 				validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Missing_Comma_Or_Closing_Brace>(
 					getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 				return false;
@@ -163,22 +174,23 @@ namespace jsonifier_internal {
 		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false };
 
 	template<typename derived_type> struct validate_impl<json_structural_type::String, derived_type> {
-		template<typename validator_type, typename iterator> JSONIFIER_INLINE static bool impl(iterator&& iter, validator_type& validatorRef) noexcept {
-			auto newPtr = static_cast<const char*>(*iter);
+		template<typename validator_type, typename iterator> static bool impl(iterator&& iter, validator_type& validatorRef) noexcept {
+			auto newPtr = static_cast<string_view_ptr>(*iter);
 			++iter;
-			auto endPtr = static_cast<const char*>(*iter);
-			derailleur<options, iterator>::skipWs(newPtr);
-			if (newPtr == endPtr || *newPtr != '"') {
+			auto endPtr = static_cast<string_view_ptr>(*iter);
+			derailleur<optionsVal, bool, iterator>::skipWs(newPtr);
+			if (newPtr == endPtr || *newPtr != quote) {
 				validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Invalid_String_Characters>(
 					getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 				return false;
 			}
 			++newPtr;
-			while (newPtr != endPtr && *newPtr != '"') {
-				if (*newPtr == '\\') {
+			while (newPtr != endPtr && *newPtr != quote) {
+				if (*newPtr == backslash) {
 					++newPtr;
 
-					if (*newPtr == '"' || *newPtr == '\\' || *newPtr == 0x2Fu || *newPtr == 0x62u || *newPtr == 0x66u || *newPtr == 'n' || *newPtr == 0x72u || *newPtr == 't') {
+					if (*newPtr == quote || *newPtr == backslash || *newPtr == 0x2Fu || *newPtr == 0x62u || *newPtr == 0x66u || *newPtr == n || *newPtr == 0x72u ||
+						*newPtr == 't') {
 						++newPtr;
 					} else {
 						if (*newPtr == 0x75u) {
@@ -208,28 +220,28 @@ namespace jsonifier_internal {
 				}
 			}
 
-			if (*newPtr != '"') {
+			if (*newPtr != quote) {
 				validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Invalid_String_Characters>(
 					getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 				return false;
 			}
 
-			return static_cast<bool>(*iter);
+			return true;
 		}
 	};
 
 	template<typename derived_type> struct validate_impl<json_structural_type::Number, derived_type> {
-		template<typename validator_type, typename iterator> JSONIFIER_INLINE static bool impl(iterator&& iter, validator_type& validatorRef) noexcept {
-			auto newPtr = static_cast<const char*>(*iter);
+		template<typename validator_type, typename iterator> static bool impl(iterator&& iter, validator_type& validatorRef) noexcept {
+			auto newPtr = static_cast<string_view_ptr>(*iter);
 			++iter;
 			if (!*iter || (*newPtr == 0x30u && numberTable[static_cast<uint64_t>(*(newPtr + 1))])) {
 				validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Invalid_Number_Value>(
 					getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 				return false;
 			}
-			auto endPtr = static_cast<const char*>(*iter);
+			auto endPtr = static_cast<string_view_ptr>(*iter);
 
-			derailleur<options, iterator>::skipWs(newPtr);
+			derailleur<optionsVal, bool, iterator>::skipWs(newPtr);
 
 			auto consumeChar = [&](char expected) {
 				if (*newPtr == expected) {
@@ -249,18 +261,19 @@ namespace jsonifier_internal {
 			};
 
 			auto consumeSign = [&] {
-				if (*newPtr == '-' || *newPtr == 0x2Bu) {
+				if (*newPtr == '-' || *newPtr == '+') {
 					++newPtr;
-					return true;
 				}
-				return false;
+				return true;
 			};
 
 			if (!consumeSign()) {
+				validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Invalid_Number_Value>(
+					getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 				return false;
 			}
 
-			consumeDigits(1);
+			consumeDigits();
 
 			if (consumeChar(0x2Eu)) {
 				if (!*iter || !consumeDigits(1)) {
@@ -270,7 +283,7 @@ namespace jsonifier_internal {
 				}
 			}
 			if (consumeChar(0x65u) || consumeChar(0x45u)) {
-				bool didWeFail{ false };
+				bool didWeFail{};
 				consumeSign();
 				didWeFail = !consumeDigits(1);
 				if (!*iter || didWeFail) {
@@ -279,7 +292,7 @@ namespace jsonifier_internal {
 					return false;
 				}
 			}
-			derailleur<options, iterator>::skipWs(newPtr);
+			derailleur<optionsVal, bool, iterator>::skipWs(newPtr);
 			if (newPtr != endPtr) {
 				validatorRef.getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::Invalid_Number_Value>(
 					getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
@@ -291,12 +304,12 @@ namespace jsonifier_internal {
 	};
 
 	template<typename derived_type> struct validate_impl<json_structural_type::Bool, derived_type> {
-		template<typename validator_type, typename iterator> JSONIFIER_INLINE static bool impl(iterator&& iter, validator_type& validatorRef) noexcept {
-			auto newPtr = static_cast<const char*>(*iter);
+		template<typename validator_type, typename iterator> static bool impl(iterator&& iter, validator_type& validatorRef) noexcept {
+			auto newPtr = static_cast<string_view_ptr>(*iter);
 			++iter;
-			static constexpr char falseStr[]{ "false" };
-			static constexpr char trueStr[]{ "true" };
-			derailleur<options, iterator>::skipWs(newPtr);
+			alignas(8) static constexpr char falseStr[]{ "false" };
+			alignas(4) static constexpr char trueStr[]{ "true" };
+			derailleur<optionsVal, bool, iterator>::skipWs(newPtr);
 			if (*iter && std::memcmp(newPtr, trueStr, std::strlen(trueStr)) == 0) {
 				newPtr += std::size(trueStr) - 1;
 			} else {
@@ -309,16 +322,16 @@ namespace jsonifier_internal {
 				}
 			}
 
-			return static_cast<bool>(*iter);
+			return true;
 		}
 	};
 
 	template<typename derived_type> struct validate_impl<json_structural_type::Null, derived_type> {
-		template<typename validator_type, typename iterator> JSONIFIER_INLINE static bool impl(iterator&& iter, validator_type& validatorRef) noexcept {
-			auto newPtr = static_cast<const char*>(*iter);
+		template<typename validator_type, typename iterator> static bool impl(iterator&& iter, validator_type& validatorRef) noexcept {
+			auto newPtr = static_cast<string_view_ptr>(*iter);
 			++iter;
-			derailleur<options, iterator>::skipWs(newPtr);
-			static constexpr char nullStr[]{ "null" };
+			derailleur<optionsVal, bool, iterator>::skipWs(newPtr);
+			alignas(4) static constexpr char nullStr[]{ "null" };
 
 			if (std::memcmp(newPtr, nullStr, std::strlen(nullStr)) == 0) {
 				newPtr += std::size(nullStr) - 1;
@@ -328,7 +341,7 @@ namespace jsonifier_internal {
 				return false;
 			}
 
-			return static_cast<bool>(*iter);
+			return true;
 		}
 	};
 

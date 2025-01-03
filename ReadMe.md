@@ -36,3 +36,4 @@
 - ## [CPU Architecture Selection](https://github.com/RealTimeChris/Jsonifier/blob/main/Documentation/CPU_Architecture_Selection.md)
 - ## [Excluding Keys at Runtime](https://github.com/RealTimeChris/Jsonifier/blob/main/Documentation/Excluding_Keys.md)
 - ## [Custom JSON Parsing/Serializing Behavior](https://github.com/RealTimeChris/Jsonifier/blob/main/Documentation/Custom_Parsing_And_Serializing.md)
+- ## [Parsing Arbitrary/Unknown Data](https://github.com/RealTimeChris/Jsonifier/blob/main/Documentation/Parsing_Arbitrary_Data.md)

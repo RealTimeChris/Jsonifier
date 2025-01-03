@@ -27,7 +27,7 @@
 #include <string>
 #include <vector>
 
- struct audience_sub_category_names {
+struct audience_sub_category_names {
 	std::string the337100890{};
 };
 

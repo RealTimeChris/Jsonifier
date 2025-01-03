@@ -29,6 +29,8 @@
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
 
+	#include <immintrin.h>
+
 using jsonifier_simd_int_128 = __m128i;
 using jsonifier_simd_int_256 = __m256i;
 using jsonifier_simd_int_512 = __m512i;
@@ -71,8 +73,22 @@ static constexpr size_t bytesPerStep{ bitsPerStep / 8 };
 static constexpr size_t sixtyFourBitsPerStep{ bitsPerStep / 64 };
 static constexpr size_t stridesPerStep{ bitsPerStep / bytesPerStep };
 
+alignas(8) static constexpr char falseV[]{ "false" };
+alignas(4) static constexpr char trueV[]{ "true" };
+alignas(4) static constexpr char nullV[]{ "null" };
+alignas(2) static constexpr char backslash{ '\\' };
+alignas(2) static constexpr char newline{ '\n' };
+alignas(2) static constexpr char lBracket{ '[' };
+alignas(2) static constexpr char rBracket{ ']' };
+alignas(2) static constexpr char lBrace{ '{' };
+alignas(2) static constexpr char rBrace{ '}' };
+alignas(2) static constexpr char colon{ ':' };
+alignas(2) static constexpr char comma{ ',' };
+alignas(2) static constexpr char quote{ '"' };
+alignas(2) static constexpr char n{ 'n' };
+
 using string_view_ptr	= const char*;
-using structural_index	= const char*;
+using structural_index	= string_view_ptr;
 using string_buffer_ptr = char*;
 
 template<typename value_type>
@@ -83,3 +99,13 @@ template<typename value_type>
 concept simd_int_128_type = std::same_as<jsonifier_simd_int_128, std::remove_cvref_t<value_type>>;
 template<typename value_type>
 concept simd_int_type = std::same_as<jsonifier_simd_int_t, std::remove_cvref_t<value_type>>;
+
+void jsonifierPrefetchImpl(const void* ptr) noexcept {
+#if defined(JSONIFIER_MAC) && defined(__arm64__)
+	__builtin_prefetch(ptr, 0, 0);
+#elif defined(JSONIFIER_MSVC) || defined(JSONIFIER_GNUCXX) || defined(JSONIFIER_CLANG)
+	_mm_prefetch(static_cast<string_view_ptr>(ptr), _MM_HINT_T0);
+#else
+	#error "Compiler or architecture not supported for prefetching"
+#endif
+}

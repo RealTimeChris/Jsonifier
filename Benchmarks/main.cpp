@@ -24,13 +24,11 @@
 
 int32_t main() {
 	try {
-		std::cout << "CURRENT SIMD TYPE: " << typeid(jsonifier_simd_int_t).name() << std::endl;
 		tests::testFunction();
-
-	} catch (std::runtime_error& e) {
-		std::cout << e.what() << std::endl;
-	} catch (std::out_of_range& e) {
-		std::cout << e.what() << std::endl;
+	} catch (std::runtime_error& error) {
+		std::cout << error.what() << std::endl;
+	} catch (std::out_of_range& error) {
+		std::cout << error.what() << std::endl;
 	}
 	return 0;
 };
