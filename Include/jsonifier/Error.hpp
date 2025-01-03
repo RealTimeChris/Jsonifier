@@ -180,7 +180,7 @@ namespace jsonifier_internal {
 			return errorType == rhs.errorType && errorIndex == rhs.errorIndex;
 		}
 
-		// Sampled from Glaze library: https://github.com/stephenberry/glaze
+		// Sampled from Stephen Berry and his library, Glaze library: https://github.com/stephenberry/glaze
 		void formatError(const jsonifier::string_view& errorString) noexcept {
 			if (static_cast<size_t>(errorIndex) >= errorString.size() || errorString.size() == 0ull) {
 				return;

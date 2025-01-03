@@ -167,7 +167,7 @@ namespace jsonifier {
 
 	template<typename value_type_new, uint64_t sizeVal = 0> class vector;
 
-	// Idea for this interface sampled from Glaze library: https://github.com/stephenberry/glaze
+	// Idea for this interface sampled from Stephen Berry and his library, Glaze library: https://github.com/stephenberry/glaze
 	template<typename value_type> struct core;
 
 	struct skip {};

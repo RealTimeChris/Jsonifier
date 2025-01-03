@@ -167,7 +167,8 @@ namespace jsonifier_internal {
 			jsonifier_internal::writeObjectExit<options, json_entity_type::isItLast>(context);
 		}
 
-		template<typename json_entity_type, typename value_type, typename context_type> JSONIFIER_NON_GCC_INLINE static void processIndexForceInline(value_type& value, context_type& context) noexcept {
+		template<typename json_entity_type, typename value_type, typename context_type>
+		JSONIFIER_NON_GCC_INLINE static void processIndexForceInline(value_type& value, context_type& context) noexcept {
 			static constexpr auto key = json_entity_type::name.operator jsonifier::string_view();
 
 			/// @brief Checks for excluded keys and skips serialization if the key is excluded.
@@ -185,7 +186,7 @@ namespace jsonifier_internal {
 		}
 
 		template<typename json_entity_type, typename... arg_types> JSONIFIER_INLINE static void iterateValuesImpl(arg_types&&... args) {
-			if constexpr (json_entity_type::index < forceInlineLimitSerialize || jsonifier::concepts::force_inlineable_type<typename json_entity_type::member_type>) {
+			if constexpr (json_entity_type::index < forceInlineLimitSerialize) {
 				processIndexForceInline<json_entity_type>(jsonifier_internal::forward<arg_types>(args)...);
 			} else {
 				processIndex<json_entity_type>(jsonifier_internal::forward<arg_types>(args)...);
@@ -425,6 +426,22 @@ namespace jsonifier_internal {
 			}
 		}
 	};
+
+	template<typename value_type> JSONIFIER_INLINE static auto getBeginIterVec(value_type& value) {
+		if constexpr (std::is_same_v<typename value_type::value_type, bool>) {
+			return value.begin();
+		} else {
+			return value.data();
+		}
+	}
+
+	template<typename value_type> JSONIFIER_INLINE static auto getEndIterVec(value_type& value) {
+		if constexpr (std::is_same_v<typename value_type::value_type, bool>) {
+			return value.end();
+		} else {
+			return value.data() + value.size();
+		}
+	}
 
 	template<jsonifier::concepts::vector_t value_type, typename context_type, jsonifier::serialize_options options, typename json_entity_type>
 	struct array_val_serializer<value_type, context_type, options, json_entity_type> {

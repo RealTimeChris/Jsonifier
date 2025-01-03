@@ -269,25 +269,25 @@ namespace jsonifier {
 				switch (jsonDataNew[0]) {
 					case lBrace: {
 						object_type results{};
-						jsonifier_internal::parse_context<typename parser_type::derived_type, const char*, std::string> testContext{};
+						jsonifier_internal::parse_context<typename parser_type::derived_type, const char*> testContext{};
 						testContext.parserPtr = &parser;
 						testContext.rootIter  = jsonDataNew.data();
 						testContext.endIter	  = jsonDataNew.data() + jsonDataNew.size();
 						testContext.iter	  = jsonDataNew.data();
-						jsonifier_internal::object_val_parser<object_type, jsonifier_internal::parse_context<typename parser_type::derived_type, const char*, std::string>,
-							optionsNew, jsonifier_internal::base_json_entity<object_type>, false>::impl(results, testContext);
+						jsonifier_internal::object_val_parser<std::string, jsonifier_internal::parse_context<typename parser_type::derived_type, const char*>, optionsNew,
+							false>::impl(results, testContext);
 						value.emplace<object_type>(jsonifier_internal::move(results));
 						return;
 					}
 					case lBracket: {
 						array_type results{};
-						jsonifier_internal::parse_context<typename parser_type::derived_type, const char*, std::string> testContext{};
+						jsonifier_internal::parse_context<typename parser_type::derived_type, const char*> testContext{};
 						testContext.parserPtr = &parser;
 						testContext.rootIter  = jsonDataNew.data();
 						testContext.endIter	  = jsonDataNew.data() + jsonDataNew.size();
 						testContext.iter	  = jsonDataNew.data();
-						jsonifier_internal::array_val_parser<array_type, jsonifier_internal::parse_context<typename parser_type::derived_type, const char*, std::string>,
-							optionsNew, jsonifier_internal::base_json_entity<array_type>, false>::impl(results, testContext);
+						jsonifier_internal::array_val_parser<std::string, jsonifier_internal::parse_context<typename parser_type::derived_type, const char*>, optionsNew,
+							false>::impl(results, testContext);
 						value.emplace<array_type>(jsonifier_internal::move(results));
 						return;
 					}

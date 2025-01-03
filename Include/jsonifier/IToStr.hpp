@@ -106,7 +106,9 @@ namespace jsonifier_internal {
 	constexpr auto charTable4 = generateCharTable4();
 
 	JSONIFIER_INLINE char* length1(char* buf, uint64_t value) noexcept {
-		buf[0] = value + '0';
+		const uint32_t high = static_cast<uint32_t>(value * 5243) >> 19;
+		const uint32_t low	= static_cast<uint32_t>(value) - high * 100;
+		std::memcpy(buf, charTable1.data() + low, 1);
 		return buf + 1;
 	}
 

@@ -35,21 +35,21 @@
 namespace jsonifier_internal {
 
 	struct xoshiro256 {
-		size_t state[4]{};
+		uint64_t state[4]{};
 
 		constexpr xoshiro256() noexcept {
 			constexpr auto x   = 0x9E3779B185EBCA87ull >> 12ull;
 			constexpr auto x01 = x ^ x << 25ull;
 			constexpr auto x02 = x01 ^ x01 >> 27ull;
-			size_t s		   = x02 * 0x2545F4914F6CDD1Dull;
-			for (size_t y = 0; y < 4; ++y) {
+			uint64_t s		   = x02 * 0x2545F4914F6CDD1Dull;
+			for (uint64_t y = 0; y < 4; ++y) {
 				state[y] = splitmix64(s);
 			}
 		}
 
-		constexpr size_t operator()() noexcept {
-			const size_t result = rotl(state[1ull] * 5ull, 7ull) * 9ull;
-			const size_t t		= state[1ull] << 17ull;
+		constexpr uint64_t operator()() noexcept {
+			const uint64_t result = rotl(state[1ull] * 5ull, 7ull) * 9ull;
+			const uint64_t t	  = state[1ull] << 17ull;
 
 			state[2ull] ^= state[0ull];
 			state[3ull] ^= state[1ull];
@@ -64,14 +64,14 @@ namespace jsonifier_internal {
 		}
 
 	  protected:
-		constexpr size_t rotl(const size_t x, const size_t k) const noexcept {
+		constexpr uint64_t rotl(const uint64_t x, const uint64_t k) const noexcept {
 			return (x << k) | (x >> (64ull - k));
 		}
 
-		constexpr size_t splitmix64(size_t& seed64) const noexcept {
-			size_t result = seed64 += 0x9E3779B97F4A7C15ull;
-			result		  = (result ^ (result >> 30ull)) * 0xBF58476D1CE4E5B9ull;
-			result		  = (result ^ (result >> 27ull)) * 0x94D049BB133111EBull;
+		constexpr uint64_t splitmix64(uint64_t& seed64) const noexcept {
+			uint64_t result = seed64 += 0x9E3779B97F4A7C15ull;
+			result			= (result ^ (result >> 30ull)) * 0xBF58476D1CE4E5B9ull;
+			result			= (result ^ (result >> 27ull)) * 0x94D049BB133111EBull;
 			return result ^ (result >> 31ull);
 		}
 	};
@@ -100,15 +100,15 @@ namespace jsonifier_internal {
 
 	template<typename value_type> constexpr value_type readBitsCt(string_view_ptr ptr) noexcept {
 		value_type returnValue{};
-		for (size_t x = 0; x < sizeof(value_type); ++x) {
+		for (uint64_t x = 0; x < sizeof(value_type); ++x) {
 			returnValue |= static_cast<value_type>(static_cast<uint8_t>(ptr[x])) << (x * 8);
 		}
 		return returnValue;
 	}
 
 	struct ct_key_hasher {
-		size_t seed{};///< seed value for the hashing algorithm.
-		size_t index{};
+		uint64_t seed{};///< seed value for the hashing algorithm.
+		uint64_t index{};
 		/**
 		 * @brief Default constructor that initializes the seed using a random_num value.
 		 */
@@ -133,10 +133,10 @@ namespace jsonifier_internal {
 		 * @param length The length of the value.
 		 * @return The hashed value.
 		 */
-		constexpr size_t hashKeyCt(string_view_ptr value, size_t length) const noexcept {
-			size_t seed64{ seed };
+		constexpr uint64_t hashKeyCt(string_view_ptr value, uint64_t length) const noexcept {
+			uint64_t seed64{ seed };
 			while (length >= 8) {
-				seed64 ^= readBitsCt<size_t>(value);
+				seed64 ^= readBitsCt<uint64_t>(value);
 				value += 8;
 				length -= 8;
 			}
@@ -160,7 +160,7 @@ namespace jsonifier_internal {
 		}
 	};
 
-	template<size_t seedNew> struct rt_key_hasher {
+	template<uint64_t seedNew> struct rt_key_hasher {
 		static constexpr auto seed{ seedNew };
 		/**
 		 * @brief Hashes a key at runtime.
@@ -169,8 +169,11 @@ namespace jsonifier_internal {
 		 * @param length The length of the value.
 		 * @return The hashed value.
 		 */
-		JSONIFIER_INLINE size_t hashKeyRt(string_view_ptr value, size_t length) const noexcept {
-			size_t seed64{ seed };
+		JSONIFIER_INLINE uint64_t hashKeyRt(string_view_ptr value, uint64_t length) const noexcept {
+			uint64_t seed64{ seed };
+			uint64_t returnValue64{};
+			uint32_t returnValue32{};
+			uint16_t returnValue16{};
 			while (length >= 8) {
 				std::memcpy(&returnValue64, value, 8);
 				seed64 ^= returnValue64;
@@ -197,10 +200,5 @@ namespace jsonifier_internal {
 			}
 			return seed64;
 		}
-
-	  protected:
-		mutable size_t returnValue64{};
-		mutable uint32_t returnValue32{};
-		mutable uint16_t returnValue16{};
 	};
 }

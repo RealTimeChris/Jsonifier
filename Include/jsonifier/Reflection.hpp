@@ -73,7 +73,7 @@ namespace jsonifier_internal {
 	constexpr auto pretty_function_tail = ";";
 #endif
 
-	// Sampled from Glaze library: https://github.com/stephenberry/glaze
+	// Sampled from Stephen Berry and his library, Glaze library: https://github.com/stephenberry/glaze
 	/**
 	 * @brief Get the name of a member pointer.
 	 *
