@@ -47,15 +47,15 @@ namespace jsonifier {
 
 		json_number(const string& stringNew) noexcept : rawJson{ stringNew } {};
 
-		uint64_t getUint() {
+		uint64_t getUint() const {
 			return strToUint64(rawJson);
 		}
 
-		int64_t getInt() {
+		int64_t getInt() const {
 			return strToInt64(rawJson);
 		}
 
-		double getDouble() {
+		double getDouble() const {
 			return strToDouble(rawJson);
 		}
 
@@ -107,32 +107,56 @@ namespace jsonifier {
 			}
 		}
 
-		[[nodiscard]] bool& getBool() noexcept {
-			return *std::get<std::unique_ptr<bool>>(value);
-		}
-
-		[[nodiscard]] double getDouble() noexcept {
-			return std::get<std::unique_ptr<number_type>>(value)->getDouble();
-		}
-
-		[[nodiscard]] int64_t getInt() noexcept {
-			return std::get<std::unique_ptr<number_type>>(value)->getInt();
-		}
-
-		[[nodiscard]] uint64_t getUint() noexcept {
-			return std::get<std::unique_ptr<number_type>>(value)->getUint();
-		}
-
-		[[nodiscard]] string& getString() noexcept {
-			return *std::get<std::unique_ptr<string>>(value);
+		[[nodiscard]] const object_type& getObject() const noexcept {
+			return *std::get<std::unique_ptr<object_type>>(value);
 		}
 
 		[[nodiscard]] object_type& getObject() noexcept {
 			return *std::get<std::unique_ptr<object_type>>(value);
 		}
 
+		[[nodiscard]] const array_type& getArray() const noexcept {
+			return *std::get<std::unique_ptr<array_type>>(value);
+		}		
+
 		[[nodiscard]] array_type& getArray() noexcept {
 			return *std::get<std::unique_ptr<array_type>>(value);
+		}
+
+		[[nodiscard]] const string& getString() const noexcept {
+			return *std::get<std::unique_ptr<string>>(value);
+		}
+
+		[[nodiscard]] string& getString() noexcept {
+			return *std::get<std::unique_ptr<string>>(value);
+		}
+
+		[[nodiscard]] const number_type& getNumber() const noexcept {
+			return *std::get<std::unique_ptr<number_type>>(value);
+		}
+
+		[[nodiscard]] number_type& getNumber() noexcept {
+			return *std::get<std::unique_ptr<number_type>>(value);
+		}
+
+		[[nodiscard]] double getDouble() const noexcept {
+			return std::get<std::unique_ptr<number_type>>(value)->getDouble();
+		}
+
+		[[nodiscard]] int64_t getInt() const noexcept {
+			return std::get<std::unique_ptr<number_type>>(value)->getInt();
+		}
+
+		[[nodiscard]] uint64_t getUint() const noexcept {
+			return std::get<std::unique_ptr<number_type>>(value)->getUint();
+		}
+
+		[[nodiscard]] const bool_type& getBool() const noexcept {
+			return *std::get<std::unique_ptr<bool_type>>(value);
+		}
+
+		[[nodiscard]] bool_type& getBool() noexcept {
+			return *std::get<std::unique_ptr<bool_type>>(value);
 		}
 
 		template<std::integral index_type> raw_json_data& operator[](index_type&& index) noexcept {

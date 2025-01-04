@@ -53,34 +53,29 @@ namespace jsonifier_internal {
 		return (x + digitCountTable[31 - simd_internal::lzcnt(x | 1)]) >> 32;
 	}
 
-	template<typename value_type> JSONIFIER_INLINE static char* toCharsByDigitCountUint32Max(char* buf, value_type value) noexcept {
-		uint64_t numDigits{ fastDigitCount(static_cast<uint32_t>(value)) };
-		uint32_t aa, bb, cc, dd, aabb, bbcc, ccdd, ee, ddee;
-		uint64_t aabbcc;
-		switch (numDigits) {
-			case 1: {
+	struct integer_serializer {
+		template<size_t index> JSONIFIER_INLINE static char* impl(char* buf, uint64_t value) noexcept {
+			uint32_t aa, bb, cc, dd, aabb, bbcc, ccdd, ee, ddee;
+			uint64_t aabbcc;
+			if constexpr (index == 1) {
 				std::memcpy(buf, charTable1 + value, 1);
 				return buf + 1;
-			}
-			case 2: {
+			} else if constexpr (index == 2) {
 				std::memcpy(buf, charTable2 + value * 2, 2);
 				return buf + 2;
-			}
-			case 3: {
+			} else if constexpr (index == 3) {
 				aa = (value * 5243) >> 19;
 				bb = value - aa * 100;
 				std::memcpy(buf, charTable1 + aa, 1);
 				std::memcpy(buf + 1, charTable2 + bb * 2, 2);
 				return buf + 3;
-			}
-			case 4: {
+			} else if constexpr (index == 4) {
 				aa = (value * 5243) >> 19;
 				bb = value - aa * 100;
 				std::memcpy(buf, charTable2 + aa * 2, 2);
 				std::memcpy(buf + 2, charTable2 + bb * 2, 2);
 				return buf + 4;
-			}
-			case 5: {
+			} else if constexpr (index == 5) {
 				aa	 = (value * 429497) >> 32;
 				bbcc = value - aa * 10000;
 				bb	 = (bbcc * 5243) >> 19;
@@ -89,8 +84,7 @@ namespace jsonifier_internal {
 				std::memcpy(buf + 1, charTable2 + bb * 2, 2);
 				std::memcpy(buf + 3, charTable2 + cc * 2, 2);
 				return buf + 5;
-			}
-			case 6: {
+			} else if constexpr (index == 6) {
 				aa	 = (value * 429497) >> 32;
 				bbcc = value - aa * 10000;
 				bb	 = (bbcc * 5243) >> 19;
@@ -99,8 +93,7 @@ namespace jsonifier_internal {
 				std::memcpy(buf + 2, charTable2 + bb * 2, 2);
 				std::memcpy(buf + 4, charTable2 + cc * 2, 2);
 				return buf + 6;
-			}
-			case 7: {
+			} else if constexpr (index == 7) {
 				aabb = (value * 109951163) >> 40;
 				ccdd = value - aabb * 10000;
 				aa	 = (aabb * 5243) >> 19;
@@ -112,8 +105,7 @@ namespace jsonifier_internal {
 				std::memcpy(buf + 3, charTable2 + cc * 2, 2);
 				std::memcpy(buf + 5, charTable2 + dd * 2, 2);
 				return buf + 7;
-			}
-			case 8: {
+			} else if constexpr (index == 8) {
 				aabb = (value * 109951163) >> 40;
 				ccdd = value - aabb * 10000;
 				aa	 = (aabb * 5243) >> 19;
@@ -125,8 +117,7 @@ namespace jsonifier_internal {
 				std::memcpy(buf + 4, charTable2 + cc * 2, 2);
 				std::memcpy(buf + 6, charTable2 + dd * 2, 2);
 				return buf + 8;
-			}
-			case 9: {
+			} else if constexpr (index == 9) {
 				aabbcc = (value * 3518437209ul) >> 45;
 				aa	   = (aabbcc * 429497) >> 32;
 				ddee   = value - aabbcc * 10000;
@@ -141,8 +132,7 @@ namespace jsonifier_internal {
 				std::memcpy(buf + 5, charTable2 + dd * 2, 2);
 				std::memcpy(buf + 7, charTable2 + ee * 2, 2);
 				return buf + 9;
-			}
-			case 10: {
+			} else if constexpr (index == 10) {
 				aabbcc = (value * 3518437209ul) >> 45;
 				aa	   = (aabbcc * 429497) >> 32;
 				ddee   = value - aabbcc * 10000;
@@ -157,145 +147,36 @@ namespace jsonifier_internal {
 				std::memcpy(buf + 6, charTable2 + dd * 2, 2);
 				std::memcpy(buf + 8, charTable2 + ee * 2, 2);
 				return buf + 10;
-			}
-			default: {
+			} else {
 				return buf;
 			}
 		}
+	};
+
+	template<size_t... indices> static constexpr auto generateFunctionPtrs(std::index_sequence<indices...>) noexcept {
+		using function_type = decltype(&integer_serializer::impl<0>);
+		return array<function_type, sizeof...(indices)>{ { integer_serializer::impl<indices> }... };
+	}
+
+	static constexpr auto functionPtrsSerialize{ generateFunctionPtrs(std::make_index_sequence<11>{}) };
+
+	template<typename value_type> JSONIFIER_INLINE static char* toCharsByDigitCountUint32Max(char* buf, value_type value) noexcept {
+		uint64_t numDigits{ fastDigitCount(static_cast<uint32_t>(value)) };
+		uint32_t aa, bb, cc, dd, aabb, bbcc, ccdd, ee, ddee;
+		uint64_t aabbcc;
+		return functionPtrsSerialize[numDigits](buf, value);
 	}
 
 	template<typename value_type> JSONIFIER_INLINE static char* toCharsByDigitCount1_8(char* buf, value_type value) noexcept {
 		uint64_t numDigits{ fastDigitCount(static_cast<uint32_t>(value)) };
 		uint64_t aa, bb, cc, dd, aabb, bbcc, ccdd;
-		switch (numDigits) {
-			case 1: {
-				std::memcpy(buf, charTable1 + value, 1);
-				return buf + 1;
-			}
-			case 2: {
-				std::memcpy(buf, charTable2 + value * 2, 2);
-				return buf + 2;
-			}
-			case 3: {
-				aa = (value * 5243) >> 19;
-				bb = value - aa * 100;
-				std::memcpy(buf, charTable1 + aa, 1);
-				std::memcpy(buf + 1, charTable2 + bb * 2, 2);
-				return buf + 3;
-			}
-			case 4: {
-				aa = (value * 5243) >> 19;
-				bb = value - aa * 100;
-				std::memcpy(buf, charTable2 + aa * 2, 2);
-				std::memcpy(buf + 2, charTable2 + bb * 2, 2);
-				return buf + 4;
-			}
-			case 5: {
-				aa	 = (value * 429497) >> 32;
-				bbcc = value - aa * 10000;
-				bb	 = (bbcc * 5243) >> 19;
-				cc	 = bbcc - bb * 100;
-				std::memcpy(buf, charTable1 + aa, 1);
-				std::memcpy(buf + 1, charTable2 + bb * 2, 2);
-				std::memcpy(buf + 3, charTable2 + cc * 2, 2);
-				return buf + 5;
-			}
-			case 6: {
-				aa	 = (value * 429497) >> 32;
-				bbcc = value - aa * 10000;
-				bb	 = (bbcc * 5243) >> 19;
-				cc	 = bbcc - bb * 100;
-				std::memcpy(buf, charTable2 + aa * 2, 2);
-				std::memcpy(buf + 2, charTable2 + bb * 2, 2);
-				std::memcpy(buf + 4, charTable2 + cc * 2, 2);
-				return buf + 6;
-			}
-			case 7: {
-				aabb = (value * 109951163) >> 40;
-				ccdd = value - aabb * 10000;
-				aa	 = (aabb * 5243) >> 19;
-				cc	 = (ccdd * 5243) >> 19;
-				bb	 = aabb - aa * 100;
-				dd	 = ccdd - cc * 100;
-				std::memcpy(buf + 0, charTable1 + aa, 1);
-				std::memcpy(buf + 1, charTable2 + bb * 2, 2);
-				std::memcpy(buf + 3, charTable2 + cc * 2, 2);
-				std::memcpy(buf + 5, charTable2 + dd * 2, 2);
-				return buf + 7;
-			}
-			case 8: {
-				aabb = (value * 109951163) >> 40;
-				ccdd = value - aabb * 10000;
-				aa	 = (aabb * 5243) >> 19;
-				cc	 = (ccdd * 5243) >> 19;
-				bb	 = aabb - aa * 100;
-				dd	 = ccdd - cc * 100;
-				std::memcpy(buf, charTable2 + aa * 2, 2);
-				std::memcpy(buf + 2, charTable2 + bb * 2, 2);
-				std::memcpy(buf + 4, charTable2 + cc * 2, 2);
-				std::memcpy(buf + 6, charTable2 + dd * 2, 2);
-				return buf + 8;
-			}
-			default: {
-				return buf;
-			}
-		}
+		return functionPtrsSerialize[numDigits](buf, value);
 	}
 
 	template<typename value_type> JSONIFIER_INLINE static char* toCharsByDigitCount5_8(char* buf, value_type value) noexcept {
 		uint32_t numDigits{ fastDigitCount(static_cast<uint32_t>(value)) };
 		uint32_t aa, bb, cc, dd, aabb, bbcc, ccdd;
-		switch (numDigits) {
-			case 5: {
-				aa	 = (value * 429497) >> 32;
-				bbcc = value - aa * 10000;
-				bb	 = (bbcc * 5243) >> 19;
-				cc	 = bbcc - bb * 100;
-				std::memcpy(buf, charTable1 + aa, 1);
-				std::memcpy(buf + 1, charTable2 + bb * 2, 2);
-				std::memcpy(buf + 3, charTable2 + cc * 2, 2);
-				return buf + 5;
-			}
-			case 6: {
-				aa	 = (value * 429497) >> 32;
-				bbcc = value - aa * 10000;
-				bb	 = (bbcc * 5243) >> 19;
-				cc	 = bbcc - bb * 100;
-				std::memcpy(buf, charTable2 + aa * 2, 2);
-				std::memcpy(buf + 2, charTable2 + bb * 2, 2);
-				std::memcpy(buf + 4, charTable2 + cc * 2, 2);
-				return buf + 6;
-			}
-			case 7: {
-				aabb = (value * 109951163) >> 40;
-				ccdd = value - aabb * 10000;
-				aa	 = (aabb * 5243) >> 19;
-				cc	 = (ccdd * 5243) >> 19;
-				bb	 = aabb - aa * 100;
-				dd	 = ccdd - cc * 100;
-				std::memcpy(buf + 0, charTable1 + aa, 1);
-				std::memcpy(buf + 1, charTable2 + bb * 2, 2);
-				std::memcpy(buf + 3, charTable2 + cc * 2, 2);
-				std::memcpy(buf + 5, charTable2 + dd * 2, 2);
-				return buf + 7;
-			}
-			case 8: {
-				aabb = (value * 109951163) >> 40;
-				ccdd = value - aabb * 10000;
-				aa	 = (aabb * 5243) >> 19;
-				cc	 = (ccdd * 5243) >> 19;
-				bb	 = aabb - aa * 100;
-				dd	 = ccdd - cc * 100;
-				std::memcpy(buf, charTable2 + aa * 2, 2);
-				std::memcpy(buf + 2, charTable2 + bb * 2, 2);
-				std::memcpy(buf + 4, charTable2 + cc * 2, 2);
-				std::memcpy(buf + 6, charTable2 + dd * 2, 2);
-				return buf + 8;
-			}
-			default: {
-				return buf;
-			}
-		}
+		return functionPtrsSerialize[numDigits](buf, value);
 	}
 
 	template<jsonifier::concepts::uns64_t value_type> JSONIFIER_INLINE static char* toChars(char* buf, value_type value) noexcept {

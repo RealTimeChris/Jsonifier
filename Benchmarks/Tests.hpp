@@ -44,6 +44,52 @@ namespace tests {
 
 	template<json_library lib, test_type type, typename test_data_type, bool minified, size_t iterations, const bnch_swt::string_literal testName> struct json_test_helper;
 
+	template<typename value_type> struct parse_raw_json_data {};
+
+	template<> struct parse_raw_json_data<test_struct> {
+		test_struct impl(jsonifier::raw_json_data& rawJsonData) {
+			test_struct output{};
+			if (rawJsonData.getType() == jsonifier::json_type::object) {
+				auto& json_object = rawJsonData.getObject();
+				for (auto& [key, value]: json_object) {
+					if (key == "testVals01" && value.getType() == jsonifier::json_type::array) {
+						for (auto& element: value.getArray()) {
+							if (element.getType() == jsonifier::json_type::string) {
+								output.testVals01.emplace_back(static_cast<std::string>(element.getString()));
+							}
+						}
+					} else if (key == "testVals02" && value.getType() == jsonifier::json_type::array) {
+						for (auto& element: value.getArray()) {
+							if (element.getType() == jsonifier::json_type::number) {
+								output.testVals02.emplace_back(element.getUint());
+							}
+						}
+					} else if (key == "testVals03" && value.getType() == jsonifier::json_type::array) {
+						for (auto& element: value.getArray()) {
+							if (element.getType() == jsonifier::json_type::number) {
+								output.testVals03.emplace_back(element.getInt());
+							}
+						}
+					} else if (key == "testVals04" && value.getType() == jsonifier::json_type::array) {
+						for (auto& element: value.getArray()) {
+							if (element.getType() == jsonifier::json_type::number) {
+								output.testVals04.emplace_back(element.getDouble());
+							}
+						}
+					} else if (key == "testVals05" && value.getType() == jsonifier::json_type::array) {
+						for (auto& element: value.getArray()) {
+							if (element.getType() == jsonifier::json_type::boolean) {
+								output.testVals05.emplace_back(element.getBool());
+							}
+						}
+					}
+				}
+			}
+			return output;
+		}
+
+	};
+
 	template<typename test_data_type, bool minified, size_t iterations, const bnch_swt::string_literal testNameNew>
 	struct json_test_helper<json_library::jsonifier, test_type::parse_and_serialize_raw_json_data, test_data_type, minified, iterations, testNameNew> {
 		static auto run(std::string& newBuffer) {
