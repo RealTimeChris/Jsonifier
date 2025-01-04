@@ -55,8 +55,6 @@ namespace jsonifier_internal {
 
 	struct integer_serializer {
 		template<size_t index> JSONIFIER_INLINE static char* impl(char* buf, uint64_t value) noexcept {
-			uint32_t aa, bb, cc, dd, aabb, bbcc, ccdd, ee, ddee;
-			uint64_t aabbcc;
 			if constexpr (index == 1) {
 				std::memcpy(buf, charTable1 + value, 1);
 				return buf + 1;
@@ -64,18 +62,21 @@ namespace jsonifier_internal {
 				std::memcpy(buf, charTable2 + value * 2, 2);
 				return buf + 2;
 			} else if constexpr (index == 3) {
+				uint32_t aa, bb;
 				aa = (value * 5243) >> 19;
 				bb = value - aa * 100;
 				std::memcpy(buf, charTable1 + aa, 1);
 				std::memcpy(buf + 1, charTable2 + bb * 2, 2);
 				return buf + 3;
 			} else if constexpr (index == 4) {
+				uint32_t aa, bb;
 				aa = (value * 5243) >> 19;
 				bb = value - aa * 100;
 				std::memcpy(buf, charTable2 + aa * 2, 2);
 				std::memcpy(buf + 2, charTable2 + bb * 2, 2);
 				return buf + 4;
 			} else if constexpr (index == 5) {
+				uint32_t aa, bb, cc, bbcc;
 				aa	 = (value * 429497) >> 32;
 				bbcc = value - aa * 10000;
 				bb	 = (bbcc * 5243) >> 19;
@@ -85,6 +86,7 @@ namespace jsonifier_internal {
 				std::memcpy(buf + 3, charTable2 + cc * 2, 2);
 				return buf + 5;
 			} else if constexpr (index == 6) {
+				uint32_t aa, bb, cc, bbcc;
 				aa	 = (value * 429497) >> 32;
 				bbcc = value - aa * 10000;
 				bb	 = (bbcc * 5243) >> 19;
@@ -94,6 +96,7 @@ namespace jsonifier_internal {
 				std::memcpy(buf + 4, charTable2 + cc * 2, 2);
 				return buf + 6;
 			} else if constexpr (index == 7) {
+				uint32_t aa, bb, cc, dd, aabb, ccdd;
 				aabb = (value * 109951163) >> 40;
 				ccdd = value - aabb * 10000;
 				aa	 = (aabb * 5243) >> 19;
@@ -106,6 +109,7 @@ namespace jsonifier_internal {
 				std::memcpy(buf + 5, charTable2 + dd * 2, 2);
 				return buf + 7;
 			} else if constexpr (index == 8) {
+				uint32_t aa, bb, cc, dd, aabb, ccdd;
 				aabb = (value * 109951163) >> 40;
 				ccdd = value - aabb * 10000;
 				aa	 = (aabb * 5243) >> 19;
@@ -118,6 +122,8 @@ namespace jsonifier_internal {
 				std::memcpy(buf + 6, charTable2 + dd * 2, 2);
 				return buf + 8;
 			} else if constexpr (index == 9) {
+				uint32_t aa, bb, cc, dd, aabb, bbcc, ccdd, ee, ddee;
+				uint64_t aabbcc;
 				aabbcc = (value * 3518437209ul) >> 45;
 				aa	   = (aabbcc * 429497) >> 32;
 				ddee   = value - aabbcc * 10000;
@@ -133,6 +139,8 @@ namespace jsonifier_internal {
 				std::memcpy(buf + 7, charTable2 + ee * 2, 2);
 				return buf + 9;
 			} else if constexpr (index == 10) {
+				uint32_t aa, bb, cc, dd, aabb, bbcc, ccdd, ee, ddee;
+				uint64_t aabbcc;
 				aabbcc = (value * 3518437209ul) >> 45;
 				aa	   = (aabbcc * 429497) >> 32;
 				ddee   = value - aabbcc * 10000;
@@ -151,37 +159,22 @@ namespace jsonifier_internal {
 				return buf;
 			}
 		}
+
+		template<size_t... indices> JSONIFIER_INLINE static char* invokeSerialize(char* buf, uint64_t value, uint64_t index, std::index_sequence<indices...>) noexcept {
+			char* result = nullptr;
+			((index == indices ? (result = impl<indices>(buf, value)) : nullptr), ...);
+			return result;
+		}
 	};
 
-	template<size_t... indices> static constexpr auto generateFunctionPtrs(std::index_sequence<indices...>) noexcept {
-		using function_type = decltype(&integer_serializer::impl<0>);
-		return array<function_type, sizeof...(indices)>{ { integer_serializer::impl<indices> }... };
-	}
-
-	static constexpr auto functionPtrsSerialize{ generateFunctionPtrs(std::make_index_sequence<11>{}) };
-
-	template<typename value_type> JSONIFIER_INLINE static char* toCharsByDigitCountUint32Max(char* buf, value_type value) noexcept {
-		uint64_t numDigits{ fastDigitCount(static_cast<uint32_t>(value)) };
-		uint32_t aa, bb, cc, dd, aabb, bbcc, ccdd, ee, ddee;
-		uint64_t aabbcc;
-		return functionPtrsSerialize[numDigits](buf, value);
-	}
-
-	template<typename value_type> JSONIFIER_INLINE static char* toCharsByDigitCount1_8(char* buf, value_type value) noexcept {
-		uint64_t numDigits{ fastDigitCount(static_cast<uint32_t>(value)) };
-		uint64_t aa, bb, cc, dd, aabb, bbcc, ccdd;
-		return functionPtrsSerialize[numDigits](buf, value);
-	}
-
-	template<typename value_type> JSONIFIER_INLINE static char* toCharsByDigitCount5_8(char* buf, value_type value) noexcept {
+	template<typename value_type> JSONIFIER_INLINE static char* toCharsByDigitCount(char* buf, value_type value) noexcept {
 		uint32_t numDigits{ fastDigitCount(static_cast<uint32_t>(value)) };
-		uint32_t aa, bb, cc, dd, aabb, bbcc, ccdd;
-		return functionPtrsSerialize[numDigits](buf, value);
+		return integer_serializer::invokeSerialize(buf, value, numDigits, std::make_index_sequence<11>{});
 	}
 
 	template<jsonifier::concepts::uns64_t value_type> JSONIFIER_INLINE static char* toChars(char* buf, value_type value) noexcept {
 		if (value < std::numeric_limits<uint32_t>::max()) {
-			return toCharsByDigitCountUint32Max(buf, value);
+			return toCharsByDigitCount(buf, value);
 		} else {
 			static constexpr value_type tenQuadrillion{ 10000000000000000 };
 			uint64_t aa, aaNew, aabb, ccdd, cc, bb, dd, tmp;
@@ -189,7 +182,7 @@ namespace jsonifier_internal {
 				tmp	  = value / 100000000;
 				aa	  = tmp / 10000;
 				aaNew = tmp - aa * 10000;
-				buf	  = toCharsByDigitCount5_8(buf, aa);
+				buf	  = toCharsByDigitCount(buf, aa);
 				aa	  = (aaNew * 5243) >> 19;
 				bb	  = aaNew - aa * 100;
 				std::memcpy(buf, charTable2 + aa * 2, 2);
@@ -208,7 +201,7 @@ namespace jsonifier_internal {
 				return buf + 12;
 			} else {
 				aa	  = value / 100000000;
-				buf	  = toCharsByDigitCount1_8(buf, aa);
+				buf	  = toCharsByDigitCount(buf, aa);
 				aaNew = value - aa * 100000000;
 				aabb  = (aaNew * 109951163) >> 40;
 				ccdd  = aaNew - aabb * 10000;
