@@ -117,7 +117,7 @@ namespace jsonifier {
 
 		[[nodiscard]] const array_type& getArray() const noexcept {
 			return *std::get<std::unique_ptr<array_type>>(value);
-		}		
+		}
 
 		[[nodiscard]] array_type& getArray() noexcept {
 			return *std::get<std::unique_ptr<array_type>>(value);
@@ -206,23 +206,23 @@ namespace jsonifier {
 				switch (jsonDataNew[0]) {
 					case '{': {
 						std::unique_ptr<typename jsonifier::raw_json_data::object_type> results{ std::make_unique<typename jsonifier::raw_json_data::object_type>() };
-						jsonifier_internal::parse_context<typename parser_type::derived_type, const char*> testContext{};
+						jsonifier_internal::parse_context<typename parser_type::derived_type, string_view_ptr> testContext{};
 						testContext.parserPtr = &parser;
 						testContext.rootIter  = jsonDataNew.data();
 						testContext.endIter	  = jsonDataNew.data() + jsonDataNew.size();
 						testContext.iter	  = jsonDataNew.data();
-						jsonifier_internal::object_val_parser<std::string, jsonifier_internal::parse_context<typename parser_type::derived_type, const char*>, optionsNew,
+						jsonifier_internal::object_val_parser<std::string, jsonifier_internal::parse_context<typename parser_type::derived_type, string_view_ptr>, optionsNew,
 							false>::impl(*results, testContext);
 						return results;
 					}
 					case '[': {
 						std::unique_ptr<typename jsonifier::raw_json_data::array_type> results{ std::make_unique<typename jsonifier::raw_json_data::array_type>() };
-						jsonifier_internal::parse_context<typename parser_type::derived_type, const char*> testContext{};
+						jsonifier_internal::parse_context<typename parser_type::derived_type, string_view_ptr> testContext{};
 						testContext.parserPtr = &parser;
 						testContext.rootIter  = jsonDataNew.data();
 						testContext.endIter	  = jsonDataNew.data() + jsonDataNew.size();
 						testContext.iter	  = jsonDataNew.data();
-						jsonifier_internal::array_val_parser<std::string, jsonifier_internal::parse_context<typename parser_type::derived_type, const char*>, optionsNew,
+						jsonifier_internal::array_val_parser<std::string, jsonifier_internal::parse_context<typename parser_type::derived_type, string_view_ptr>, optionsNew,
 							false>::impl(*results, testContext);
 						return results;
 					}

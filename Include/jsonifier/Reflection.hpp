@@ -81,31 +81,24 @@ namespace jsonifier_internal {
 	 * @tparam p The member pointer.
 	 * @return The name of the member pointer.
 	 */
-#if defined(JSONIFIER_MSVC) && !defined(JSONIFIER_CLANG)
-	template<typename value_type, auto p> consteval jsonifier::string_view getNameImpl() noexcept {
-		jsonifier::string_view str = std::source_location::current().function_name();
-		str						   = str.substr(str.find("->") + 2);
-		return str.substr(0, str.find(">"));
-	}
-#else
 	template<auto p> consteval jsonifier::string_view getNameImpl() noexcept {
+#if defined(JSONIFIER_MSVC) && !defined(JSONIFIER_CLANG)
+		jsonifier::string_view str = std::source_location::current().function_name();
+		str						   = str.substr(str.find("getNameImpl<"));
+		str						   = str.substr(str.findLastOf("::") + 1);
+		return str.substr(0, str.find(">"));
+#else
 		jsonifier::string_view str = std::source_location::current().function_name();
 		str						   = str.substr(str.find("&") + 1);
 		str						   = str.substr(0, str.find(pretty_function_tail));
 		return str.substr(str.rfind("::") + 2);
-	}
 #endif
+	}
 
 	template<auto p>
 		requires(std::is_member_pointer_v<decltype(p)>)
 	constexpr auto getName() noexcept {
-#if defined(JSONIFIER_MSVC) && !defined(JSONIFIER_CLANG)
-		using value_type		 = remove_member_pointer_t<decltype(p)>;
-		constexpr auto pNew		 = p;
-		constexpr auto newString = getNameImpl<value_type, &(external<value_type>.*pNew)>();
-#else
 		constexpr auto newString = getNameImpl<p>();
-#endif
 		return newString;
 	}
 

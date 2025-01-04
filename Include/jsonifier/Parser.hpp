@@ -214,7 +214,7 @@ namespace jsonifier_internal {
 		JSONIFIER_INLINE bool parseJson(value_type&& object, buffer_type&& in) noexcept {
 			if constexpr (options.partialRead) {
 				static constexpr jsonifier::parse_options optionsNew{ options };
-				parse_context_partial<derived_type, const char**> context{};
+				parse_context_partial<derived_type, string_view_ptr*> context{};
 				auto rootIter = getBeginIter(in);
 				auto endIter  = getEndIter(in);
 				section.reset<options.minified>(rootIter, static_cast<size_t>(endIter - rootIter));
@@ -241,7 +241,7 @@ namespace jsonifier_internal {
 				return derivedRef.errors.size() > 0 ? false : true;
 			} else {
 				static constexpr jsonifier::parse_options optionsNew{ options };
-				parse_context<derived_type, const char*> context{};
+				parse_context<derived_type, string_view_ptr> context{};
 				context.rootIter  = getBeginIter(in);
 				context.iter	  = context.rootIter;
 				context.endIter	  = getEndIter(in);
@@ -275,7 +275,7 @@ namespace jsonifier_internal {
 				.partialRead													= false,
 				.knownOrder														= options.knownOrder,
 				.minified														= options.minified };
-			parse_context<derived_type, const char*> context{};
+			parse_context<derived_type, string_view_ptr> context{};
 			context.rootIter  = getBeginIter(in);
 			context.iter	  = context.rootIter;
 			context.endIter	  = getEndIter(in);
@@ -308,7 +308,7 @@ namespace jsonifier_internal {
 		JSONIFIER_INLINE value_type parseJson(buffer_type&& in) noexcept {
 			if constexpr (options.partialRead) {
 				static constexpr jsonifier::parse_options optionsNew{ options };
-				parse_context_partial<derived_type, const char**> context{};
+				parse_context_partial<derived_type, string_view_ptr*> context{};
 				auto rootIter = getBeginIter(in);
 				auto endIter  = getEndIter(in);
 				section.reset<options.minified>(rootIter, static_cast<size_t>(endIter - rootIter));
@@ -336,7 +336,7 @@ namespace jsonifier_internal {
 				return derivedRef.errors.size() > 0 ? std::remove_cvref_t<value_type>{} : object;
 			} else {
 				static constexpr jsonifier::parse_options optionsNew{ options };
-				parse_context<derived_type, const char*> context{};
+				parse_context<derived_type, string_view_ptr> context{};
 				context.rootIter  = getBeginIter(in);
 				context.iter	  = context.rootIter;
 				context.endIter	  = getEndIter(in);

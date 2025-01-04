@@ -142,7 +142,7 @@ namespace jsonifier_internal {
 		return x < 2 ? x : 1 + numbits(x >> 1);
 	}
 
-	template<typename value_type> JSONIFIER_INLINE static string_buffer_ptr toChars(string_buffer_ptr buf, value_type value) noexcept {
+	template<jsonifier::concepts::float_t value_type> JSONIFIER_INLINE static string_buffer_ptr toChars(string_buffer_ptr buf, value_type value) noexcept {
 		static_assert(std::numeric_limits<value_type>::is_iec559);
 		static_assert(std::numeric_limits<value_type>::radix == 2);
 		static_assert(std::same_as<float, value_type> || std::same_as<double, value_type>);

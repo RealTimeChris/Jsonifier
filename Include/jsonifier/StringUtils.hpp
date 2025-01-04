@@ -797,7 +797,7 @@ namespace jsonifier_internal {
 		return returnValue;
 	}
 
-	template<string_literal stringNew> JSONIFIER_INLINE bool compareStringAsInt(const char* src) {
+	template<string_literal stringNew> JSONIFIER_INLINE bool compareStringAsInt(string_view_ptr src) {
 		static constexpr auto string{ stringNew };
 		static constexpr auto stringInt{ getStringAsInt<string>() };
 		if constexpr (string.size() == 4) {
@@ -1017,9 +1017,9 @@ namespace jsonifier_internal {
 			}
 		}
 
-		template<char start, char end> JSONIFIER_INLINE static const char* getNextOpenOrClose(parse_context_type& context, size_t length) {
-			const char* nextOpen  = char_comparison<start, char>::memchar(context.iter, length);
-			const char* nextClose = char_comparison<end, char>::memchar(context.iter, length);
+		template<char start, char end> JSONIFIER_INLINE static string_view_ptr getNextOpenOrClose(parse_context_type& context, size_t length) {
+			string_view_ptr nextOpen  = char_comparison<start, char>::memchar(context.iter, length);
+			string_view_ptr nextClose = char_comparison<end, char>::memchar(context.iter, length);
 			return (nextClose && (nextClose < nextOpen || !nextOpen)) ? nextClose : nextOpen;
 		}
 
@@ -1052,15 +1052,15 @@ namespace jsonifier_internal {
 				size_t depth		   = 1;
 				size_t remainingLength = static_cast<size_t>(context.endIter - context.iter);
 				if (context.iter + bytesPerStep < context.endIter) {
-					const char* nextQuote		= char_comparison<'"', char>::memchar(context.iter, remainingLength);
-					const char* nextOpenOrClose = getNextOpenOrClose<valueStart, valueEnd>(context, remainingLength);
+					string_view_ptr nextQuote		= char_comparison<'"', char>::memchar(context.iter, remainingLength);
+					string_view_ptr nextOpenOrClose = getNextOpenOrClose<valueStart, valueEnd>(context, remainingLength);
 
 					while (nextOpenOrClose && depth > 0 && context.iter + bytesPerStep < context.endIter) {
 						if (nextQuote && (nextQuote < nextOpenOrClose)) {
 							skipString(context);
 							++context.iter;
 							remainingLength = static_cast<size_t>(context.endIter - context.iter);
-							nextQuote		= static_cast<const char*>(std::memchr(context.iter, '"', remainingLength));
+							nextQuote		= static_cast<string_view_ptr>(std::memchr(context.iter, '"', remainingLength));
 						} else {
 							if (*nextOpenOrClose == valueEnd) {
 								--depth;

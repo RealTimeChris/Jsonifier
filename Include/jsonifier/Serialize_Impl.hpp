@@ -106,7 +106,7 @@ namespace jsonifier_internal {
 		}
 	}
 
-	JSONIFIER_INLINE static void writeValues(const char* src, char*& dst, size_t length) {
+	JSONIFIER_INLINE static void writeValues(string_view_ptr src, string_buffer_ptr& dst, size_t length) {
 		std::memcpy(dst, src, length);
 		dst += length;
 	}
@@ -666,7 +666,7 @@ namespace jsonifier_internal {
 	struct number_val_serializer<value_type, context_type, options, json_entity_type> {
 		template<jsonifier::concepts::num_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
 			if constexpr (sizeof(value_type) == 8) {
-				context.bufferPtr = toChars<value_type>(context.bufferPtr, value);
+				context.bufferPtr = toChars(context.bufferPtr, value);
 			} else {
 				if constexpr (jsonifier::concepts::unsigned_t<value_type>) {
 					context.bufferPtr = toChars<uint64_t>(context.bufferPtr, static_cast<uint64_t>(value));

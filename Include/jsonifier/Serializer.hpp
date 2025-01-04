@@ -81,10 +81,10 @@ namespace jsonifier_internal {
 	template<typename buffer_type> struct serialize_context {
 		JSONIFIER_INLINE serialize_context() noexcept = default;
 
-		JSONIFIER_INLINE serialize_context(char* ptrNew, buffer_type& bufferNew) noexcept : buffer{ bufferNew }, bufferPtr{ ptrNew } {};
+		JSONIFIER_INLINE serialize_context(string_buffer_ptr ptrNew, buffer_type& bufferNew) noexcept : buffer{ bufferNew }, bufferPtr{ ptrNew } {};
 
 		buffer_type& buffer{};
-		char* bufferPtr{};
+		string_buffer_ptr bufferPtr{};
 		size_t indent{};
 		size_t index{};
 	};

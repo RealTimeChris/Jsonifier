@@ -129,7 +129,7 @@ namespace jsonifier_internal {
 	}
 
 	template<jsonifier::parse_options options, typename value_type, typename context_type, bool newLines = true>
-	JSONIFIER_INLINE static void checkForEntryComma(context_type& context, const char* wsStart, size_t wsSize) {
+	JSONIFIER_INLINE static void checkForEntryComma(context_type& context, string_view_ptr wsStart, size_t wsSize) {
 		using base = derailleur<options, context_type>;
 		if JSONIFIER_LIKELY (*context.iter == comma) {
 			++context.iter;
@@ -186,12 +186,12 @@ namespace jsonifier_internal {
 		constexpr json_entity_parse() noexcept = default;
 
 		template<typename buffer_type, typename value_type, typename context_type>
-		static void processIndexCall(value_type& value, context_type& context, const char* wsStart, size_t wsSize) {
+		static void processIndexCall(value_type& value, context_type& context, string_view_ptr wsStart, size_t wsSize) {
 			return processIndex<buffer_type, value_type, context_type, true>(value, context, wsStart, wsSize);
 		}
 
 		template<typename buffer_type, typename value_type, typename context_type>
-		static void processIndexImpl(value_type& value, context_type& context, const char* wsStart, size_t wsSize) {
+		static void processIndexImpl(value_type& value, context_type& context, string_view_ptr wsStart, size_t wsSize) {
 			using base = derailleur<options, context_type>;
 			if constexpr (options.knownOrder) {
 				if (antiHashStates[json_entity_type::index] == json_entity_type::index) {
@@ -253,7 +253,7 @@ namespace jsonifier_internal {
 		}
 
 		template<typename buffer_type, typename value_type, typename context_type, bool haveWeStarted = false>
-		JSONIFIER_INLINE static void processIndex(value_type& value, context_type& context, const char* wsStart, size_t wsSize) {
+		JSONIFIER_INLINE static void processIndex(value_type& value, context_type& context, string_view_ptr wsStart, size_t wsSize) {
 			using base = derailleur<options, context_type>;
 			if constexpr (memberCount > 0 && json_entity_type::index < memberCount) {
 				if JSONIFIER_LIKELY (context.iter < context.endIter) {
