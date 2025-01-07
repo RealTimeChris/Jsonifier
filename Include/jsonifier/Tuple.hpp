@@ -24,8 +24,9 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <cstddef>
+#include <jsonifier/TypeEntities.hpp>
 #include <type_traits>
+#include <cstddef>
 #include <utility>
 
 #if defined(JSONIFIER_TUPLET_NO_UNIQUE_ADDRESS) && !JSONIFIER_TUPLET_NO_UNIQUE_ADDRESS
@@ -52,8 +53,6 @@
 #endif
 
 namespace jsonifier_internal {
-
-	template<typename... value_type> struct type_list {};
 
 	template<typename... Ls, typename... Rs> constexpr auto operator+(type_list<Ls...>, type_list<Rs...>) {
 		return type_list<Ls..., Rs...>{};
@@ -105,15 +104,13 @@ namespace jsonifier_internal {
 		JSONIFIER_TUPLET_NO_UNIQUE_ADDRESS value_type value{};
 
 		constexpr decltype(auto) operator[](tag<I>) & {
-			return value;
+			return (value);
 		}
-
 		constexpr decltype(auto) operator[](tag<I>) const& {
-			return value;
+			return (value);
 		}
-
 		constexpr decltype(auto) operator[](tag<I>) && {
-			return static_cast<tuple_elem&&>(*this).value;
+			return (jsonifier_internal::move(*this).value);
 		}
 	};
 
@@ -161,8 +158,8 @@ namespace jsonifier_internal {
 		return (base_list_t<type_t<inner>>{} + ...);
 	}
 
-	template<typename value_type, typename... outer, typename... inner> constexpr auto tupleCatImpl(value_type tupleVal, type_list<outer...>, type_list<inner...>)
-		-> tuple<type_t<inner>...> {
+	template<typename value_type, typename... outer, typename... inner>
+	constexpr auto tupleCatImpl(value_type tupleVal, type_list<outer...>, type_list<inner...>) -> tuple<type_t<inner>...> {
 		return { { { static_cast<forward_as_t<type_t<outer>&&, inner>>(tupleVal.identity_t<outer>::value).value }... } };
 	}
 

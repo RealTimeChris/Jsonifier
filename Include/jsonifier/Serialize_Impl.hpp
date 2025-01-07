@@ -538,7 +538,7 @@ namespace jsonifier_internal {
 					++context.bufferPtr;
 				}
 				auto iter = getBeginIterVec(value);
-				static constexpr int64_t vecSize{ static_cast<int64_t>(value.size()) };
+				static constexpr int64_t vecSize{ static_cast<int64_t>(size) };
 				serialize<options, json_entity_type>::impl(iter[0], context);
 				for (int64_t index{ 1 }; index != vecSize; ++index) {
 					if constexpr (options.prettify) {

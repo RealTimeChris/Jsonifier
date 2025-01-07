@@ -24,7 +24,6 @@
 #pragma once
 
 #include <jsonifier/ISA/SimdTypes.hpp>
-#include <jsonifier/Tuple.hpp>
 #include <source_location>
 #include <type_traits>
 #include <functional>
@@ -49,7 +48,7 @@
 
 namespace jsonifier_internal {
 
-	template<typename value_type> constexpr std::remove_reference_t<value_type>&& move(value_type&& value) noexcept {
+	template<typename value_type> JSONIFIER_INLINE constexpr std::remove_reference_t<value_type>&& move(value_type&& value) noexcept {
 		return static_cast<std::remove_reference_t<value_type>&&>(value);
 	}
 
@@ -81,6 +80,8 @@ namespace jsonifier_internal {
 		using type		   = simd_type;
 		using integer_type = integer_type_new;
 	};
+
+	template<typename... value_type> struct type_list {};
 
 	template<typename value_type, typename... rest> struct type_list<value_type, rest...> {
 		using current_type			   = value_type;
@@ -164,8 +165,6 @@ namespace jsonifier {
 	using string_view = string_view_base<char>;
 
 	class raw_json_data;
-
-	template<typename value_type_new, uint64_t sizeVal = 0> class vector;
 
 	// Idea for this interface sampled from Stephen Berry and his library, Glaze library: https://github.com/stephenberry/glaze
 	template<typename value_type> struct core;

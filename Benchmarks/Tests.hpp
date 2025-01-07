@@ -487,23 +487,23 @@ Performance profiling of JSON libraries (Compiled and run on )" +
 		bnch_swt::string_literal{ OPERATING_SYSTEM_NAME } + " " + OPERATING_SYSTEM_VERSION + R"( using the )" + COMPILER_ID + " " + COMPILER_VERSION +
 		" compiler).  \n\nLatest Results: (" };
 
-	std::string generateSection(const std::string& testName, const std::string& currentPath) {
+	std::string generateSection(const std::string& testName, const std::string& currentPathNew) {
 		return R"(
 
 ### )" + testName +
-			R"( Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/)" + currentPath + R"(/)" +
+			R"( Results [(View the data used in the following test)](https://github.com/RealTimeChris/Json-Performance/blob/main/Json/)" + currentPathNew + R"(/)" +
 			bnch_swt::urlEncode(testName) +
 			R"(.json):
 
 ----
 <p align="left"><a href="https://github.com/RealTimeChris/Json-Performance/blob/main/Graphs/)" +
-			currentPath + R"(/)" + bnch_swt::urlEncode(testName) +
-			R"(_Results.png" target="_blank"><img src="https://github.com/RealTimeChris/Json-Performance/blob/main/Graphs/)" + currentPath + R"(/)" +
+			currentPathNew + R"(/)" + bnch_swt::urlEncode(testName) +
+			R"(_Results.png" target="_blank"><img src="https://github.com/RealTimeChris/Json-Performance/blob/main/Graphs/)" + currentPathNew + R"(/)" +
 			bnch_swt::urlEncode(testName) + R"(_Results.png?raw=true" 
 alt="" width="400"/></p>
 <p align="left"><a href="https://github.com/RealTimeChris/Json-Performance/blob/main/Graphs/)" +
-			currentPath + R"(/)" + bnch_swt::urlEncode(testName) +
-			R"(_Cumulative_Speedup.png" target="_blank"><img src="https://github.com/RealTimeChris/Json-Performance/blob/main/Graphs/)" + currentPath + R"(/)" + testName +
+			currentPathNew + R"(/)" + bnch_swt::urlEncode(testName) +
+			R"(_Cumulative_Speedup.png" target="_blank"><img src="https://github.com/RealTimeChris/Json-Performance/blob/main/Graphs/)" + currentPathNew + R"(/)" + testName +
 			R"(_Cumulative_Speedup.png?raw=true" 
 alt="" width="400"/></p>
 

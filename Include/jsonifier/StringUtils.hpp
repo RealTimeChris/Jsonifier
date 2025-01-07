@@ -191,12 +191,12 @@ namespace jsonifier_internal {
 		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
 		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu } };
 
-	// Taken from simdjson: https://github.com/simdjson/simdjson
+	/// Sampled from Simdjson library: https://github.com/simdjson/simdjson
 	JSONIFIER_INLINE uint32_t hexToU32NoCheck(string_view_ptr string1) noexcept {
 		return digitToVal32[630ull + string1[0]] | digitToVal32[420ull + string1[1]] | digitToVal32[210ull + string1[2]] | digitToVal32[0ull + string1[3]];
 	}
 
-	// Taken from simdjson: https://github.com/simdjson/simdjson
+	/// Sampled from Simdjson library: https://github.com/simdjson/simdjson
 	JSONIFIER_INLINE size_t codePointToUtf8(uint32_t cp, string_buffer_ptr c) noexcept {
 		if (cp <= 0x7F) {
 			c[0] = static_cast<char>(cp);
@@ -221,7 +221,7 @@ namespace jsonifier_internal {
 		return 0;
 	}
 
-	// Taken from simdjson: https://github.com/simdjson/simdjson
+	/// Sampled from Simdjson library: https://github.com/simdjson/simdjson
 	template<typename basic_iterator01, typename basic_iterator02> JSONIFIER_INLINE bool handleUnicodeCodePoint(basic_iterator01& srcPtr, basic_iterator02& dstPtr) noexcept {
 		static constexpr uint32_t subCodePoint = 0xFffd;
 		uint32_t codePoint					   = hexToU32NoCheck(srcPtr + 2);
@@ -296,6 +296,7 @@ namespace jsonifier_internal {
 		return static_cast<integer_type>(simd_internal::tzcnt(next) >> 3u);
 	}
 
+	/// Sampled from Stephen Berry and his library, Glaze library: https://github.com/StephenBerry/Glaze
 	template<typename basic_iterator01> JSONIFIER_INLINE static void skipStringImpl(basic_iterator01& string1, size_t lengthNew) noexcept {
 		if (static_cast<int64_t>(lengthNew) > 0) {
 			const auto endIter = string1 + lengthNew;

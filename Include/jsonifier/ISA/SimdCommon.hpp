@@ -126,32 +126,29 @@ namespace simd_internal {
 		return gatherValues<jsonifier_simd_int_t>(values + sixtyFourBitsPerStep);
 	}
 
-#define opShl(amount, value, result) \
-	{ \
-		JSONIFIER_ALIGN uint64_t values[sixtyFourBitsPerStep * 2]; \
-		simd_internal::store(value, values); \
-		static constexpr uint64_t shiftAmount{ 64 - amount }; \
-		values[sixtyFourBitsPerStep]	 = values[0] << amount; \
-		values[1 + sixtyFourBitsPerStep] = values[1] << amount | values[1 - 1] >> (shiftAmount); \
-		if constexpr (sixtyFourBitsPerStep > 2) { \
-			values[2 + sixtyFourBitsPerStep] = values[2] << amount | values[2 - 1] >> (shiftAmount); \
-			values[3 + sixtyFourBitsPerStep] = values[3] << amount | values[3 - 1] >> (shiftAmount); \
-		} \
-		if constexpr (sixtyFourBitsPerStep > 4) { \
-			values[4 + sixtyFourBitsPerStep] = values[4] << amount | values[4 - 1] >> (shiftAmount); \
-			values[5 + sixtyFourBitsPerStep] = values[5] << amount | values[5 - 1] >> (shiftAmount); \
-			values[6 + sixtyFourBitsPerStep] = values[6] << amount | values[6 - 1] >> (shiftAmount); \
-			values[7 + sixtyFourBitsPerStep] = values[7] << amount | values[7 - 1] >> (shiftAmount); \
-		} \
-		result = simd_internal::gatherValues<jsonifier_simd_int_t>(values + sixtyFourBitsPerStep); \
+	template<size_t amount, typename simd_int_t01> JSONIFIER_INLINE jsonifier_simd_int_t opShl(const simd_int_t01& value) noexcept {
+		JSONIFIER_ALIGN uint64_t values[sixtyFourBitsPerStep * 2];
+		simd_internal::store(value, values);
+		static constexpr uint64_t shiftAmount{ 64 - amount };
+		values[sixtyFourBitsPerStep]	 = values[0] << amount;
+		values[1 + sixtyFourBitsPerStep] = values[1] << amount | values[1 - 1] >> (shiftAmount);
+		if constexpr (sixtyFourBitsPerStep > 2) {
+			values[2 + sixtyFourBitsPerStep] = values[2] << amount | values[2 - 1] >> (shiftAmount);
+			values[3 + sixtyFourBitsPerStep] = values[3] << amount | values[3 - 1] >> (shiftAmount);
+		}
+		if constexpr (sixtyFourBitsPerStep > 4) {
+			values[4 + sixtyFourBitsPerStep] = values[4] << amount | values[4 - 1] >> (shiftAmount);
+			values[5 + sixtyFourBitsPerStep] = values[5] << amount | values[5 - 1] >> (shiftAmount);
+			values[6 + sixtyFourBitsPerStep] = values[6] << amount | values[6 - 1] >> (shiftAmount);
+			values[7 + sixtyFourBitsPerStep] = values[7] << amount | values[7 - 1] >> (shiftAmount);
+		}
+		return gatherValues<jsonifier_simd_int_t>(values + sixtyFourBitsPerStep);
 	}
 
 	template<typename simd_int_t01> JSONIFIER_INLINE jsonifier_simd_int_t opFollows(const simd_int_t01& value, bool& overflow) noexcept {
 		bool oldOverflow = overflow;
 		overflow		 = opGetMSB(value);
-		jsonifier_simd_int_t result;
-		opShl(1, value, result);
-		return opSetLSB(result, oldOverflow);
+		return opSetLSB(opShl<1>(value), oldOverflow);
 	}
 
 	struct simd_int_t_holder {

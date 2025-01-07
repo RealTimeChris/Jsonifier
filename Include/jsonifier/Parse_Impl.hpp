@@ -525,7 +525,7 @@ namespace jsonifier_internal {
 		template<typename... arg_types> JSONIFIER_CLANG_INLINE static void processIndices(arg_types&&... args) {
 			(( void )(args), ...);
 			if constexpr (sizeof...(values) > 0) {
-				(parse_type<value_type, buffer_type, context_type, options, values, minifiedOrInsideRepeated>::processIndex(std::forward<arg_types>(args)...), ...);
+				(parse_type<value_type, buffer_type, context_type, options, values, minifiedOrInsideRepeated>::processIndex(jsonifier_internal::forward<arg_types>(args)...), ...);
 			}
 		}
 	};

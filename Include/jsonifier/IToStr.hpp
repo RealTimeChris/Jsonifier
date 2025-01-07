@@ -32,24 +32,38 @@
 
 namespace jsonifier_internal {
 
-	alignas(2) JSONIFIER_INLINE_VARIABLE char charTable1[]{ 0x30u, 0x31u, 0x32u, 0x33u, 0x34u, 0x35u, 0x36u, 0x37u, 0x38u, 0x39u };
+	struct alignas(2ull) char_pair {
+		char values[2]{};
+	};
 
-	alignas(2) JSONIFIER_INLINE_VARIABLE char charTable2[]{ 0x30u, 0x30u, 0x30u, 0x31u, 0x30u, 0x32u, 0x30u, 0x33u, 0x30u, 0x34u, 0x30u, 0x35u, 0x30u, 0x36u, 0x30u, 0x37u, 0x30u,
-		0x38u, 0x30u, 0x39u, 0x31u, 0x30u, 0x31u, 0x31u, 0x31u, 0x32u, 0x31u, 0x33u, 0x31u, 0x34u, 0x31u, 0x35u, 0x31u, 0x36u, 0x31u, 0x37u, 0x31u, 0x38u, 0x31u, 0x39u, 0x32u,
-		0x30u, 0x32u, 0x31u, 0x32u, 0x32u, 0x32u, 0x33u, 0x32u, 0x34u, 0x32u, 0x35u, 0x32u, 0x36u, 0x32u, 0x37u, 0x32u, 0x38u, 0x32u, 0x39u, 0x33u, 0x30u, 0x33u, 0x31u, 0x33u,
-		0x32u, 0x33u, 0x33u, 0x33u, 0x34u, 0x33u, 0x35u, 0x33u, 0x36u, 0x33u, 0x37u, 0x33u, 0x38u, 0x33u, 0x39u, 0x34u, 0x30u, 0x34u, 0x31u, 0x34u, 0x32u, 0x34u, 0x33u, 0x34u,
-		0x34u, 0x34u, 0x35u, 0x34u, 0x36u, 0x34u, 0x37u, 0x34u, 0x38u, 0x34u, 0x39u, 0x35u, 0x30u, 0x35u, 0x31u, 0x35u, 0x32u, 0x35u, 0x33u, 0x35u, 0x34u, 0x35u, 0x35u, 0x35u,
-		0x36u, 0x35u, 0x37u, 0x35u, 0x38u, 0x35u, 0x39u, 0x36u, 0x30u, 0x36u, 0x31u, 0x36u, 0x32u, 0x36u, 0x33u, 0x36u, 0x34u, 0x36u, 0x35u, 0x36u, 0x36u, 0x36u, 0x37u, 0x36u,
-		0x38u, 0x36u, 0x39u, 0x37u, 0x30u, 0x37u, 0x31u, 0x37u, 0x32u, 0x37u, 0x33u, 0x37u, 0x34u, 0x37u, 0x35u, 0x37u, 0x36u, 0x37u, 0x37u, 0x37u, 0x38u, 0x37u, 0x39u, 0x38u,
-		0x30u, 0x38u, 0x31u, 0x38u, 0x32u, 0x38u, 0x33u, 0x38u, 0x34u, 0x38u, 0x35u, 0x38u, 0x36u, 0x38u, 0x37u, 0x38u, 0x38u, 0x38u, 0x39u, 0x39u, 0x30u, 0x39u, 0x31u, 0x39u,
-		0x32u, 0x39u, 0x33u, 0x39u, 0x34u, 0x39u, 0x35u, 0x39u, 0x36u, 0x39u, 0x37u, 0x39u, 0x38u, 0x39u, 0x39u };
+	alignas(2ull) JSONIFIER_INLINE_VARIABLE char charTable1[]{ 0x30u, 0x31u, 0x32u, 0x33u, 0x34u, 0x35u, 0x36u, 0x37u, 0x38u, 0x39u };
 
-	JSONIFIER_INLINE_VARIABLE uint8_t digitCounts[]{ 19, 19, 19, 19, 18, 18, 18, 17, 17, 17, 16, 16, 16, 16, 15, 15, 15, 14, 14, 14, 13, 13, 13, 13, 12, 12, 12, 11, 11, 11, 10, 10,
-		10, 10, 9, 9, 9, 8, 8, 8, 7, 7, 7, 7, 6, 6, 6, 5, 5, 5, 4, 4, 4, 4, 3, 3, 3, 2, 2, 2, 1, 1, 1, 1, 1 };
+	alignas(2ull) JSONIFIER_INLINE_VARIABLE char_pair charTable2Real[100]{ 0x30u, 0x30u, 0x30u, 0x31u, 0x30u, 0x32u, 0x30u, 0x33u, 0x30u, 0x34u, 0x30u, 0x35u, 0x30u, 0x36u, 0x30u,
+		0x37u, 0x30u, 0x38u, 0x30u, 0x39u, 0x31u, 0x30u, 0x31u, 0x31u, 0x31u, 0x32u, 0x31u, 0x33u, 0x31u, 0x34u, 0x31u, 0x35u, 0x31u, 0x36u, 0x31u, 0x37u, 0x31u, 0x38u, 0x31u,
+		0x39u, 0x32u, 0x30u, 0x32u, 0x31u, 0x32u, 0x32u, 0x32u, 0x33u, 0x32u, 0x34u, 0x32u, 0x35u, 0x32u, 0x36u, 0x32u, 0x37u, 0x32u, 0x38u, 0x32u, 0x39u, 0x33u, 0x30u, 0x33u,
+		0x31u, 0x33u, 0x32u, 0x33u, 0x33u, 0x33u, 0x34u, 0x33u, 0x35u, 0x33u, 0x36u, 0x33u, 0x37u, 0x33u, 0x38u, 0x33u, 0x39u, 0x34u, 0x30u, 0x34u, 0x31u, 0x34u, 0x32u, 0x34u,
+		0x33u, 0x34u, 0x34u, 0x34u, 0x35u, 0x34u, 0x36u, 0x34u, 0x37u, 0x34u, 0x38u, 0x34u, 0x39u, 0x35u, 0x30u, 0x35u, 0x31u, 0x35u, 0x32u, 0x35u, 0x33u, 0x35u, 0x34u, 0x35u,
+		0x35u, 0x35u, 0x36u, 0x35u, 0x37u, 0x35u, 0x38u, 0x35u, 0x39u, 0x36u, 0x30u, 0x36u, 0x31u, 0x36u, 0x32u, 0x36u, 0x33u, 0x36u, 0x34u, 0x36u, 0x35u, 0x36u, 0x36u, 0x36u,
+		0x37u, 0x36u, 0x38u, 0x36u, 0x39u, 0x37u, 0x30u, 0x37u, 0x31u, 0x37u, 0x32u, 0x37u, 0x33u, 0x37u, 0x34u, 0x37u, 0x35u, 0x37u, 0x36u, 0x37u, 0x37u, 0x37u, 0x38u, 0x37u,
+		0x39u, 0x38u, 0x30u, 0x38u, 0x31u, 0x38u, 0x32u, 0x38u, 0x33u, 0x38u, 0x34u, 0x38u, 0x35u, 0x38u, 0x36u, 0x38u, 0x37u, 0x38u, 0x38u, 0x38u, 0x39u, 0x39u, 0x30u, 0x39u,
+		0x31u, 0x39u, 0x32u, 0x39u, 0x33u, 0x39u, 0x34u, 0x39u, 0x35u, 0x39u, 0x36u, 0x39u, 0x37u, 0x39u, 0x38u, 0x39u, 0x39u };
 
-	JSONIFIER_INLINE_VARIABLE uint64_t digitCountThresholds[]{ 0ull, 9ull, 99ull, 999ull, 9999ull, 99999ull, 999999ull, 9999999ull, 99999999ull, 999999999ull, 9999999999ull,
-		99999999999ull, 999999999999ull, 9999999999999ull, 99999999999999ull, 999999999999999ull, 9999999999999999ull, 99999999999999999ull, 999999999999999999ull,
-		9999999999999999999ull };
+	alignas(2ull) JSONIFIER_INLINE_VARIABLE char charTable2[]{ 0x30u, 0x30u, 0x30u, 0x31u, 0x30u, 0x32u, 0x30u, 0x33u, 0x30u, 0x34u, 0x30u, 0x35u, 0x30u, 0x36u, 0x30u, 0x37u,
+		0x30u, 0x38u, 0x30u, 0x39u, 0x31u, 0x30u, 0x31u, 0x31u, 0x31u, 0x32u, 0x31u, 0x33u, 0x31u, 0x34u, 0x31u, 0x35u, 0x31u, 0x36u, 0x31u, 0x37u, 0x31u, 0x38u, 0x31u, 0x39u,
+		0x32u, 0x30u, 0x32u, 0x31u, 0x32u, 0x32u, 0x32u, 0x33u, 0x32u, 0x34u, 0x32u, 0x35u, 0x32u, 0x36u, 0x32u, 0x37u, 0x32u, 0x38u, 0x32u, 0x39u, 0x33u, 0x30u, 0x33u, 0x31u,
+		0x33u, 0x32u, 0x33u, 0x33u, 0x33u, 0x34u, 0x33u, 0x35u, 0x33u, 0x36u, 0x33u, 0x37u, 0x33u, 0x38u, 0x33u, 0x39u, 0x34u, 0x30u, 0x34u, 0x31u, 0x34u, 0x32u, 0x34u, 0x33u,
+		0x34u, 0x34u, 0x34u, 0x35u, 0x34u, 0x36u, 0x34u, 0x37u, 0x34u, 0x38u, 0x34u, 0x39u, 0x35u, 0x30u, 0x35u, 0x31u, 0x35u, 0x32u, 0x35u, 0x33u, 0x35u, 0x34u, 0x35u, 0x35u,
+		0x35u, 0x36u, 0x35u, 0x37u, 0x35u, 0x38u, 0x35u, 0x39u, 0x36u, 0x30u, 0x36u, 0x31u, 0x36u, 0x32u, 0x36u, 0x33u, 0x36u, 0x34u, 0x36u, 0x35u, 0x36u, 0x36u, 0x36u, 0x37u,
+		0x36u, 0x38u, 0x36u, 0x39u, 0x37u, 0x30u, 0x37u, 0x31u, 0x37u, 0x32u, 0x37u, 0x33u, 0x37u, 0x34u, 0x37u, 0x35u, 0x37u, 0x36u, 0x37u, 0x37u, 0x37u, 0x38u, 0x37u, 0x39u,
+		0x38u, 0x30u, 0x38u, 0x31u, 0x38u, 0x32u, 0x38u, 0x33u, 0x38u, 0x34u, 0x38u, 0x35u, 0x38u, 0x36u, 0x38u, 0x37u, 0x38u, 0x38u, 0x38u, 0x39u, 0x39u, 0x30u, 0x39u, 0x31u,
+		0x39u, 0x32u, 0x39u, 0x33u, 0x39u, 0x34u, 0x39u, 0x35u, 0x39u, 0x36u, 0x39u, 0x37u, 0x39u, 0x38u, 0x39u, 0x39u };
+
+	JSONIFIER_INLINE_VARIABLE array<uint8_t, 65> digitCounts{ { 19, 19, 19, 19, 18, 18, 18, 17, 17, 17, 16, 16, 16, 16, 15, 15, 15, 14, 14, 14, 13, 13, 13, 13, 12, 12, 12, 11, 11,
+		11, 10, 10, 10, 10, 9, 9, 9, 8, 8, 8, 7, 7, 7, 7, 6, 6, 6, 5, 5, 5, 4, 4, 4, 4, 3, 3, 3, 2, 2, 2, 1, 1, 1, 1, 1 } };
+
+	JSONIFIER_INLINE_VARIABLE array<uint64_t, 20> digitCountThresholds{ { 0ull, 9ull, 99ull, 999ull, 9999ull, 99999ull, 999999ull, 9999999ull, 99999999ull, 999999999ull,
+		9999999999ull, 99999999999ull, 999999999999ull, 9999999999999ull, 99999999999999ull, 999999999999999ull, 9999999999999999ull, 99999999999999999ull, 999999999999999999ull,
+		9999999999999999999ull } };
 
 	JSONIFIER_INLINE uint64_t fastDigitCount(const uint64_t inputValue) {
 		const uint64_t originalDigitCount{ static_cast<uint64_t>(digitCounts[simd_internal::lzcnt(inputValue)]) };
@@ -57,359 +71,318 @@ namespace jsonifier_internal {
 	}
 
 	JSONIFIER_INLINE static string_buffer_ptr length1(string_buffer_ptr buf, const uint64_t value) noexcept {
-		std::memcpy(buf, charTable1 + value, 1);
-		return buf + 1;
+		std::memcpy(buf, charTable1 + value, 1ull);
+		return buf + 1ull;
 	}
 
 	JSONIFIER_INLINE static string_buffer_ptr length2(string_buffer_ptr buf, const uint64_t value) noexcept {
-		std::memcpy(buf, charTable2 + value * 2, 2);
-		return buf + 2;
+		std::memcpy(buf, charTable2Real + value, 2ull);
+		return buf + 2ull;
 	}
 
 	JSONIFIER_INLINE static string_buffer_ptr length3(string_buffer_ptr buf, const uint64_t value) noexcept {
-		const uint64_t aa = (value * 5243) >> 19;
-		std::memcpy(buf, charTable1 + aa, 2);
-		std::memcpy(buf + 1, charTable2 + (value - aa * 100) * 2, 2);
-		return buf + 3;
+		static constexpr uint64_t multiplier{ uint64_t(10 * 0x1p24 / 1e3 + 1) };
+		static constexpr uint64_t bitMask{ uint64_t(0x1p24) - 1 };
+		const uint64_t f0 = (multiplier * value);
+		const uint64_t f2 = ((f0 & bitMask) * 100);
+		std::memcpy(buf, charTable1 + (f0 >> 24), 2ull);
+		std::memcpy(buf + 1, charTable2Real + (f2 >> 24), 2ull);
+		return buf + 3ull;
 	}
 
 	JSONIFIER_INLINE static string_buffer_ptr length4(string_buffer_ptr buf, const uint64_t value) noexcept {
-		const uint64_t aa = (value * 5243) >> 19;
-		std::memcpy(buf, charTable2 + aa * 2, 2);
-		std::memcpy(buf + 2, charTable2 + (value - aa * 100) * 2, 2);
-		return buf + 4;
+		static constexpr uint64_t multiplier{ uint64_t(10 * 0x1p24 / 1e3 + 1) };
+		static constexpr uint64_t bitMask{ uint64_t(0x1p24) - 1 };
+		const uint64_t f0 = (multiplier * value);
+		const uint64_t f2 = ((f0 & bitMask) * 100);
+		std::memcpy(buf, charTable2Real + (f0 >> 24), 2ull);
+		std::memcpy(buf + 2, charTable2Real + (f2 >> 24), 2ull);
+		return buf + 4ull;
 	}
 
 	JSONIFIER_INLINE static string_buffer_ptr length5(string_buffer_ptr buf, const uint64_t value) noexcept {
-		const uint64_t aa	= (value * 429497) >> 32;
-		const uint64_t bbcc = value - aa * 10000;
-		const uint64_t bb	= (bbcc * 5243) >> 19;
-		std::memcpy(buf, charTable1 + aa, 2);
-		std::memcpy(buf + 1, charTable2 + bb * 2, 2);
-		std::memcpy(buf + 3, charTable2 + (bbcc - bb * 100) * 2, 2);
-		return buf + 5;
+		static constexpr uint64_t multiplier{ uint64_t(10 * 0x1p32 / 1e5 + 1) };
+		static constexpr uint64_t bitMask{ uint64_t(0x1p32) - 1 };
+		const uint64_t f0 = multiplier * value;
+		const uint64_t f2 = (f0 & bitMask) * 100;
+		const uint64_t f4 = (f2 & bitMask) * 100;
+		std::memcpy(buf, charTable1 + (f0 >> 32), 1ull);
+		std::memcpy(buf + 1, charTable2Real + (f2 >> 32), 2ull);
+		std::memcpy(buf + 3, charTable2Real + (f4 >> 32), 2ull);
+		return buf + 5ull;
 	}
 
 	JSONIFIER_INLINE static string_buffer_ptr length6(string_buffer_ptr buf, const uint64_t value) noexcept {
-		const uint64_t aa	= (value * 429497) >> 32;
-		const uint64_t bbcc = value - aa * 10000;
-		const uint64_t bb	= (bbcc * 5243) >> 19;
-		std::memcpy(buf, charTable2 + aa * 2, 2);
-		std::memcpy(buf + 2, charTable2 + bb * 2, 2);
-		std::memcpy(buf + 4, charTable2 + (bbcc - bb * 100) * 2, 2);
-		return buf + 6;
+		static constexpr uint64_t multiplier{ uint64_t(10 * 0x1p32 / 1e5 + 1) };
+		static constexpr uint64_t bitMask{ uint64_t(0x1p32) - 1 };
+		const uint64_t f0 = multiplier * value;
+		const uint64_t f2 = (f0 & bitMask) * 100;
+		const uint64_t f4 = (f2 & bitMask) * 100;
+		std::memcpy(buf, charTable2Real + (f0 >> 32), 2ull);
+		std::memcpy(buf + 2, charTable2Real + (f2 >> 32), 2ull);
+		std::memcpy(buf + 4, charTable2Real + (f4 >> 32), 2ull);
+		return buf + 6ull;
 	}
 
 	JSONIFIER_INLINE static string_buffer_ptr length7(string_buffer_ptr buf, const uint64_t value) noexcept {
-		const uint64_t aabb = (value * 109951163) >> 40;
-		const uint64_t ccdd = value - aabb * 10000;
-		const uint64_t aa	= (aabb * 5243) >> 19;
-		const uint64_t cc	= (ccdd * 5243) >> 19;
-		std::memcpy(buf, charTable1 + aa, 2);
-		std::memcpy(buf + 1, charTable2 + (aabb - aa * 100) * 2, 2);
-		std::memcpy(buf + 3, charTable2 + cc * 2, 2);
-		std::memcpy(buf + 5, charTable2 + (ccdd - cc * 100) * 2, 2);
-		return buf + 7;
+		static constexpr uint64_t multiplier{ uint64_t(10 * 0x1p48 / 1e7 + 1) };
+		static constexpr uint64_t bitMask{ uint64_t(0x1p32) - 1 };
+		const uint64_t f0 = multiplier * value >> 16;
+		const uint64_t f2 = (f0 & bitMask) * 100;
+		const uint64_t f4 = (f2 & bitMask) * 100;
+		std::memcpy(buf, charTable1 + (f0 >> 32), 1ull);
+		std::memcpy(buf + 1, charTable2Real + (f2 >> 32), 2ull);
+		std::memcpy(buf + 3, charTable2Real + (f4 >> 32), 2ull);
+		std::memcpy(buf + 5, charTable2Real + (((f4 & bitMask) * 100) >> 32), 2ull);
+		return buf + 7ull;
 	}
 
 	JSONIFIER_INLINE static string_buffer_ptr length8(string_buffer_ptr buf, const uint64_t value) noexcept {
-		const uint64_t aabb = (value * 109951163) >> 40;
-		const uint64_t ccdd = value - aabb * 10000;
-		const uint64_t aa	= (aabb * 5243) >> 19;
-		const uint64_t cc	= (ccdd * 5243) >> 19;
-		std::memcpy(buf, charTable2 + aa * 2, 2);
-		std::memcpy(buf + 2, charTable2 + (aabb - aa * 100) * 2, 2);
-		std::memcpy(buf + 4, charTable2 + cc * 2, 2);
-		std::memcpy(buf + 6, charTable2 + (ccdd - cc * 100) * 2, 2);
-		return buf + 8;
+		static constexpr uint64_t multiplier{ uint64_t(10 * 0x1p48 / 1e7 + 1) };
+		static constexpr uint64_t bitMask{ uint64_t(0x1p32) - 1 };
+		const uint64_t f0 = multiplier * value >> 16;
+		const uint64_t f2 = (f0 & bitMask) * 100;
+		const uint64_t f4 = (f2 & bitMask) * 100;
+		std::memcpy(buf, charTable2Real + (f0 >> 32), 2ull);
+		std::memcpy(buf + 2, charTable2Real + (f2 >> 32), 2ull);
+		std::memcpy(buf + 4, charTable2Real + (f4 >> 32), 2ull);
+		std::memcpy(buf + 6, charTable2Real + (((f4 & bitMask) * 100) >> 32), 2ull);
+		return buf + 8ull;
 	}
 
 	JSONIFIER_INLINE static string_buffer_ptr length9(string_buffer_ptr buf, const uint64_t value) noexcept {
-		const uint64_t high = value / 100000000ull;
-		const uint64_t low	= value - high * 100000000ull;
-		const uint64_t aabb = (low * 109951163ull) >> 40ull;
-		const uint64_t ccdd = low - aabb * 10000ull;
-		const uint64_t aa	= (aabb * 5243ull) >> 19ull;
-		const uint64_t bb	= aabb - aa * 100ull;
-		const uint64_t cc	= (ccdd * 5243ull) >> 19ull;
-		std::memcpy(buf, charTable1 + high, 1ull);
-		std::memcpy(buf + 1ull, charTable2 + aa * 2ull, 2ull);
-		std::memcpy(buf + 3ull, charTable2 + bb * 2ull, 2ull);
-		std::memcpy(buf + 5ull, charTable2 + cc * 2ull, 2ull);
-		std::memcpy(buf + 7ull, charTable2 + (ccdd - cc * 100ull) * 2ull, 2ull);
+		static constexpr uint64_t multiplier{ uint64_t(10 * uint64_t(0x1p57) / uint64_t(1e9) + 1) };
+		static constexpr uint64_t bitMask{ uint64_t(0x1p57) - 1 };
+		const uint64_t f0 = multiplier * value;
+		const uint64_t f2 = (f0 & bitMask) * 100;
+		const uint64_t f4 = (f2 & bitMask) * 100;
+		const uint64_t f6 = (f4 & bitMask) * 100;
+		std::memcpy(buf, charTable1 + (f0 >> 57), 1ull);
+		std::memcpy(buf + 1, charTable2Real + (f2 >> 57), 2ull);
+		std::memcpy(buf + 3, charTable2Real + (f4 >> 57), 2ull);
+		std::memcpy(buf + 5, charTable2Real + (f6 >> 57), 2ull);
+		std::memcpy(buf + 7, charTable2Real + (((f6 & bitMask) * 100) >> 57), 2ull);
 		return buf + 9ull;
 	}
 
 	JSONIFIER_INLINE static string_buffer_ptr length10(string_buffer_ptr buf, const uint64_t value) noexcept {
-		const uint64_t high = value / 100000000ull;
-		const uint64_t low	= value - high * 100000000ull;
-		const uint64_t aabb = (low * 109951163ull) >> 40ull;
-		const uint64_t ccdd = low - aabb * 10000ull;
-		const uint64_t aa	= (aabb * 5243ull) >> 19ull;
-		const uint64_t bb	= aabb - aa * 100ull;
-		const uint64_t cc	= (ccdd * 5243ull) >> 19ull;
-		std::memcpy(buf, charTable2 + high * 2ull, 2ull);
-		std::memcpy(buf + 2ull, charTable2 + aa * 2ull, 2ull);
-		std::memcpy(buf + 4ull, charTable2 + bb * 2ull, 2ull);
-		std::memcpy(buf + 6ull, charTable2 + cc * 2ull, 2ull);
-		std::memcpy(buf + 8ull, charTable2 + (ccdd - cc * 100ull) * 2ull, 2ull);
-		return buf + 10ull;
+		static constexpr uint64_t multiplier{ uint64_t(10 * 0x1p48 / 1e7 + 1) };
+		static constexpr uint64_t bitMask{ uint64_t(0x1p32) - 1 };
+		const uint64_t ab = value / 100000000ull;
+		std::memcpy(buf, charTable2Real + ab, 2ull);
+		const uint64_t cdefghijk = value - ab * 100000000ull;
+		const uint64_t f0		 = multiplier * cdefghijk >> 16;
+		const uint64_t f2		 = (f0 & bitMask) * 100;
+		const uint64_t f4		 = (f2 & bitMask) * 100;
+		std::memcpy(buf + 2, charTable2Real + (f0 >> 32), 2ull);
+		std::memcpy(buf + 4, charTable2Real + (f2 >> 32), 2ull);
+		std::memcpy(buf + 6, charTable2Real + (f4 >> 32), 2ull);
+		std::memcpy(buf + 8, charTable2Real + (((f4 & bitMask) * 100) >> 32), 2ull);
+		return buf + 10;
 	}
 
 	JSONIFIER_INLINE static string_buffer_ptr length11(string_buffer_ptr buf, const uint64_t value) noexcept {
-		const uint64_t high = value / 100000000ull;
-		const uint64_t low	= value - high * 100000000ull;
-		uint64_t aa			= (high * 5243ull) >> 19ull;
-		uint64_t bb			= high - aa * 100ull;
-		const uint64_t aabb = (low * 109951163ull) >> 40ull;
-		const uint64_t ccdd = low - aabb * 10000ull;
-		std::memcpy(buf, charTable1 + aa, 1ull);
-		std::memcpy(buf + 1ull, charTable2 + bb * 2ull, 2ull);
-		aa				  = (aabb * 5243ull) >> 19ull;
-		bb				  = aabb - aa * 100ull;
-		const uint64_t cc = (ccdd * 5243ull) >> 19ull;
-		std::memcpy(buf + 3ull, charTable2 + aa * 2ull, 2ull);
-		std::memcpy(buf + 5ull, charTable2 + bb * 2ull, 2ull);
-		std::memcpy(buf + 7ull, charTable2 + cc * 2ull, 2ull);
-		std::memcpy(buf + 9ull, charTable2 + (ccdd - cc * 100ull) * 2ull, 2ull);
-		return buf + 11ull;
+		uint64_t abc = value / 100000000ull;
+		static constexpr uint64_t multiplier3{ uint64_t(10 * 0x1p24 / 1e3 + 1) };
+		static constexpr uint64_t bitMask3{ uint64_t(0x1p24) - 1 };
+		uint64_t f0 = (multiplier3 * abc);
+		uint64_t f2 = ((f0 & bitMask3) * 100);
+		std::memcpy(buf, charTable1 + (f0 >> 24), 2ull);
+		std::memcpy(buf + 1, charTable2Real + (f2 >> 24), 2ull);
+		static constexpr uint64_t multiplier{ uint64_t(10 * 0x1p48 / 1e7 + 1) };
+		static constexpr uint64_t bitMask{ uint64_t(0x1p32) - 1 };
+		const uint64_t defghijkl = value - abc * 100000000ull;
+		f0						 = multiplier * defghijkl >> 16;
+		f2						 = (f0 & bitMask) * 100;
+		const uint64_t f4		 = (f2 & bitMask) * 100;
+		std::memcpy(buf + 3, charTable2Real + (f0 >> 32), 2ull);
+		std::memcpy(buf + 5, charTable2Real + (f2 >> 32), 2ull);
+		std::memcpy(buf + 7, charTable2Real + (f4 >> 32), 2ull);
+		std::memcpy(buf + 9, charTable2Real + (((f4 & bitMask) * 100) >> 32), 2ull);
+		return buf + 11;
 	}
 
 	JSONIFIER_INLINE static string_buffer_ptr length12(string_buffer_ptr buf, const uint64_t value) noexcept {
-		const uint64_t high = value / 100000000ull;
-		const uint64_t low	= value - high * 100000000ull;
-		uint64_t aa			= (high * 5243ull) >> 19ull;
-		uint64_t bb			= high - aa * 100ull;
-		std::memcpy(buf, charTable2 + aa * 2ull, 2ull);
-		std::memcpy(buf + 2ull, charTable2 + bb * 2ull, 2ull);
-		const uint64_t aabb = (low * 109951163ull) >> 40ull;
-		const uint64_t ccdd = low - aabb * 10000ull;
-		aa					= (aabb * 5243ull) >> 19ull;
-		bb					= aabb - aa * 100ull;
-		const uint64_t cc	= (ccdd * 5243ull) >> 19ull;
-		std::memcpy(buf + 4ull, charTable2 + aa * 2ull, 2ull);
-		std::memcpy(buf + 6ull, charTable2 + bb * 2ull, 2ull);
-		std::memcpy(buf + 8ull, charTable2 + cc * 2ull, 2ull);
-		std::memcpy(buf + 10ull, charTable2 + (ccdd - cc * 100ull) * 2ull, 2ull);
-		return buf + 12ull;
+		uint64_t abcd = value / 100000000ull;
+		static constexpr uint64_t multiplier4{ uint64_t(10 * 0x1p24 / 1e3 + 1) };
+		static constexpr uint64_t bitMask4{ uint64_t(0x1p24) - 1 };
+		uint64_t f0 = (multiplier4 * abcd);
+		uint64_t f2 = ((f0 & bitMask4) * 100);
+		std::memcpy(buf, charTable2Real + (f0 >> 24), 2ull);
+		std::memcpy(buf + 2, charTable2Real + (f2 >> 24), 2ull);
+		static constexpr uint64_t multiplier{ uint64_t(10 * 0x1p48 / 1e7 + 1) };
+		static constexpr uint64_t bitMask{ uint64_t(0x1p32) - 1 };
+		f0				  = multiplier * (value - abcd * 100000000ull) >> 16;
+		f2				  = (f0 & bitMask) * 100;
+		const uint64_t f4 = (f2 & bitMask) * 100;
+		std::memcpy(buf + 4, charTable2Real + (f0 >> 32), 2ull);
+		std::memcpy(buf + 6, charTable2Real + (f2 >> 32), 2ull);
+		std::memcpy(buf + 8, charTable2Real + (f4 >> 32), 2ull);
+		std::memcpy(buf + 10, charTable2Real + (((f4 & bitMask) * 100) >> 32), 2ull);
+		return buf + 12;
 	}
 
 	JSONIFIER_INLINE static string_buffer_ptr length13(string_buffer_ptr buf, const uint64_t value) noexcept {
-		const uint64_t high = value / 100000000ull;
-		const uint64_t low	= value - high * 100000000ull;
-		uint64_t aa			= (high * 429497ull) >> 32ull;
-		const uint64_t bbcc = high - aa * 10000ull;
-		uint64_t bb			= (bbcc * 5243ull) >> 19ull;
-		uint64_t cc			= bbcc - bb * 100ull;
-		std::memcpy(buf, charTable1 + aa, 1ull);
-		std::memcpy(buf + 1ull, charTable2 + bb * 2ull, 2ull);
-		std::memcpy(buf + 3ull, charTable2 + cc * 2ull, 2ull);
-		const uint64_t aabb = (low * 109951163ull) >> 40ull;
-		const uint64_t ccdd = low - aabb * 10000ull;
-		aa					= (aabb * 5243ull) >> 19ull;
-		bb					= aabb - aa * 100ull;
-		cc					= (ccdd * 5243ull) >> 19ull;
-		std::memcpy(buf + 5ull, charTable2 + aa * 2ull, 2ull);
-		std::memcpy(buf + 7ull, charTable2 + bb * 2ull, 2ull);
-		std::memcpy(buf + 9ull, charTable2 + cc * 2ull, 2ull);
-		std::memcpy(buf + 11ull, charTable2 + (ccdd - cc * 100ull) * 2ull, 2ull);
-		return buf + 13ull;
+		uint64_t abcde = value / 100000000ull;
+		static constexpr uint64_t multiplier5{ uint64_t(10 * 0x1p32 / 1e5 + 1) };
+		static constexpr uint64_t bitMask5{ uint64_t(0x1p32) - 1 };
+		uint64_t f0 = multiplier5 * abcde;
+		uint64_t f2 = (f0 & bitMask5) * 100;
+		uint64_t f4 = (f2 & bitMask5) * 100;
+		std::memcpy(buf, charTable1 + (f0 >> 32), 1ull);
+		std::memcpy(buf + 1, charTable2Real + (f2 >> 32), 2ull);
+		std::memcpy(buf + 3, charTable2Real + (f4 >> 32), 2ull);
+		static constexpr uint64_t multiplier{ uint64_t(10 * 0x1p48 / 1e7 + 1) };
+		static constexpr uint64_t bitMask{ uint64_t(0x1p32) - 1 };
+		f0 = multiplier * (value - abcde * 100000000ull) >> 16;
+		f2 = (f0 & bitMask) * 100;
+		f4 = (f2 & bitMask) * 100;
+		std::memcpy(buf + 5, charTable2Real + (f0 >> 32), 2ull);
+		std::memcpy(buf + 7, charTable2Real + (f2 >> 32), 2ull);
+		std::memcpy(buf + 9, charTable2Real + (f4 >> 32), 2ull);
+		std::memcpy(buf + 11, charTable2Real + (((f4 & bitMask) * 100) >> 32), 2ull);
+		return buf + 13;
 	}
 
 	JSONIFIER_INLINE static string_buffer_ptr length14(string_buffer_ptr buf, const uint64_t value) noexcept {
-		const uint64_t high = value / 100000000ull;
-		const uint64_t low	= value - high * 100000000ull;
-		const uint64_t aabb = (low * 109951163ull) >> 40ull;
-		const uint64_t ccdd = low - aabb * 10000ull;
-		uint64_t aa			= (high * 429497ull) >> 32ull;
-		const uint64_t bbcc = high - aa * 10000ull;
-		uint64_t bb			= (bbcc * 5243ull) >> 19ull;
-		uint64_t cc			= bbcc - bb * 100ull;
-		std::memcpy(buf, charTable2 + aa * 2ull, 2ull);
-		std::memcpy(buf + 2ull, charTable2 + bb * 2ull, 2ull);
-		std::memcpy(buf + 4ull, charTable2 + cc * 2ull, 2ull);
-		aa = (aabb * 5243ull) >> 19ull;
-		bb = aabb - aa * 100ull;
-		cc = (ccdd * 5243ull) >> 19ull;
-		std::memcpy(buf + 6ull, charTable2 + aa * 2ull, 2ull);
-		std::memcpy(buf + 8ull, charTable2 + bb * 2ull, 2ull);
-		std::memcpy(buf + 10ull, charTable2 + cc * 2ull, 2ull);
-		std::memcpy(buf + 12ull, charTable2 + (ccdd - cc * 100ull) * 2ull, 2ull);
-		return buf + 14ull;
+		uint64_t abcdef = value / 100000000ull;
+		static constexpr uint64_t multiplier6{ uint64_t(10 * 0x1p32 / 1e5 + 1) };
+		static constexpr uint64_t bitMask6{ uint64_t(0x1p32) - 1 };
+		uint64_t f0 = multiplier6 * abcdef;
+		uint64_t f2 = (f0 & bitMask6) * 100;
+		uint64_t f4 = (f2 & bitMask6) * 100;
+		std::memcpy(buf, charTable2Real + (f0 >> 32), 2ull);
+		std::memcpy(buf + 2, charTable2Real + (f2 >> 32), 2ull);
+		std::memcpy(buf + 4, charTable2Real + (f4 >> 32), 2ull);
+		static constexpr uint64_t multiplier{ uint64_t(10 * 0x1p48 / 1e7 + 1) };
+		static constexpr uint64_t bitMask{ uint64_t(0x1p32) - 1 };
+		f0 = multiplier * (value - abcdef * 100000000ull) >> 16;
+		f2 = (f0 & bitMask) * 100;
+		f4 = (f2 & bitMask) * 100;
+		std::memcpy(buf + 6, charTable2Real + (f0 >> 32), 2ull);
+		std::memcpy(buf + 8, charTable2Real + (f2 >> 32), 2ull);
+		std::memcpy(buf + 10, charTable2Real + (f4 >> 32), 2ull);
+		std::memcpy(buf + 12, charTable2Real + (((f4 & bitMask) * 100) >> 32), 2ull);
+		return buf + 14;
 	}
 
 	JSONIFIER_INLINE static string_buffer_ptr length15(string_buffer_ptr buf, const uint64_t value) noexcept {
-		const uint64_t high = value / 100000000ull;
-		const uint64_t low	= value - high * 100000000ull;
-		uint64_t aabb		= (high * 109951163ull) >> 40ull;
-		uint64_t ccdd		= high - aabb * 10000ull;
-		uint64_t aa			= (aabb * 5243ull) >> 19ull;
-		uint64_t bb			= aabb - aa * 100ull;
-		uint64_t cc			= (ccdd * 5243ull) >> 19ull;
-		uint64_t dd			= ccdd - cc * 100ull;
-		std::memcpy(buf, charTable1 + aa, 1ull);
-		std::memcpy(buf + 1ull, charTable2 + bb * 2ull, 2ull);
-		std::memcpy(buf + 3ull, charTable2 + cc * 2ull, 2ull);
-		std::memcpy(buf + 5ull, charTable2 + dd * 2ull, 2ull);
-		aabb = (low * 109951163ull) >> 40ull;
-		ccdd = low - aabb * 10000ull;
-		aa	 = (aabb * 5243ull) >> 19ull;
-		bb	 = aabb - aa * 100ull;
-		cc	 = (ccdd * 5243ull) >> 19ull;
-		dd	 = ccdd - cc * 100ull;
-		std::memcpy(buf + 7ull, charTable2 + aa * 2ull, 2ull);
-		std::memcpy(buf + 9ull, charTable2 + bb * 2ull, 2ull);
-		std::memcpy(buf + 11ull, charTable2 + cc * 2ull, 2ull);
-		std::memcpy(buf + 13ull, charTable2 + dd * 2ull, 2ull);
-		return buf + 15ull;
+		uint64_t abcdefg = value / 100000000ull;
+		static constexpr uint64_t multiplier7{ uint64_t(10 * 0x1p48 / 1e7 + 1) };
+		static constexpr uint64_t bitMask7{ uint64_t(0x1p32) - 1 };
+		uint64_t f0 = multiplier7 * abcdefg >> 16;
+		uint64_t f2 = (f0 & bitMask7) * 100;
+		uint64_t f4 = (f2 & bitMask7) * 100;
+		uint64_t f6 = (f4 & bitMask7) * 100;
+		std::memcpy(buf, charTable1 + (f0 >> 32), 1ull);
+		std::memcpy(buf + 1, charTable2Real + (f2 >> 32), 2ull);
+		std::memcpy(buf + 3, charTable2Real + (f4 >> 32), 2ull);
+		std::memcpy(buf + 5, charTable2Real + (((f4 & bitMask7) * 100) >> 32), 2ull);
+		static constexpr uint64_t multiplier{ uint64_t(10 * 0x1p48 / 1e7 + 1) };
+		static constexpr uint64_t bitMask{ uint64_t(0x1p32) - 1 };
+		f0 = multiplier * (value - abcdefg * 100000000ull) >> 16;
+		f2 = (f0 & bitMask) * 100;
+		f4 = (f2 & bitMask) * 100;
+		std::memcpy(buf + 7, charTable2Real + (f0 >> 32), 2ull);
+		std::memcpy(buf + 9, charTable2Real + (f2 >> 32), 2ull);
+		std::memcpy(buf + 11, charTable2Real + (f4 >> 32), 2ull);
+		std::memcpy(buf + 13, charTable2Real + (((f4 & bitMask) * 100) >> 32), 2ull);
+		return buf + 15;
 	}
 
 	JSONIFIER_INLINE static string_buffer_ptr length16(string_buffer_ptr buf, const uint64_t value) noexcept {
-		const uint64_t high = value / 100000000ull;
-		const uint64_t low	= value - high * 100000000ull;
-		uint64_t aabb		= (high * 109951163ull) >> 40ull;
-		uint64_t ccdd		= high - aabb * 10000ull;
-		uint64_t aa			= (aabb * 5243ull) >> 19ull;
-		uint64_t bb			= aabb - aa * 100ull;
-		uint64_t cc			= (ccdd * 5243ull) >> 19ull;
-		uint64_t dd			= ccdd - cc * 100ull;
-		std::memcpy(buf, charTable2 + aa * 2ull, 2ull);
-		std::memcpy(buf + 2ull, charTable2 + bb * 2ull, 2ull);
-		std::memcpy(buf + 4ull, charTable2 + cc * 2ull, 2ull);
-		std::memcpy(buf + 6ull, charTable2 + dd * 2ull, 2ull);
-		aabb = (low * 109951163ull) >> 40ull;
-		ccdd = low - aabb * 10000ull;
-		aa	 = (aabb * 5243ull) >> 19ull;
-		bb	 = aabb - aa * 100ull;
-		cc	 = (ccdd * 5243ull) >> 19ull;
-		dd	 = ccdd - cc * 100ull;
-		std::memcpy(buf + 8ull, charTable2 + aa * 2ull, 2ull);
-		std::memcpy(buf + 10ull, charTable2 + bb * 2ull, 2ull);
-		std::memcpy(buf + 12ull, charTable2 + cc * 2ull, 2ull);
-		std::memcpy(buf + 14ull, charTable2 + dd * 2ull, 2ull);
-		return buf + 16ull;
+		uint64_t abcdefgh = value / 100000000ull;
+		static constexpr uint64_t multiplier{ uint64_t(10 * 0x1p48 / 1e7 + 1) };
+		static constexpr uint64_t bitMask{ uint64_t(0x1p32) - 1 };
+		uint64_t f0 = multiplier * abcdefgh >> 16;
+		uint64_t f2 = (f0 & bitMask) * 100;
+		uint64_t f4 = (f2 & bitMask) * 100;
+		uint64_t f6 = (f4 & bitMask) * 100;
+		std::memcpy(buf, charTable2Real + (f0 >> 32), 2ull);
+		std::memcpy(buf + 2, charTable2Real + (f2 >> 32), 2ull);
+		std::memcpy(buf + 4, charTable2Real + (f4 >> 32), 2ull);
+		std::memcpy(buf + 6, charTable2Real + (f6 >> 32), 2ull);
+		f0 = multiplier * (value - abcdefgh * 100000000ull) >> 16;
+		f2 = (f0 & bitMask) * 100;
+		f4 = (f2 & bitMask) * 100;
+		std::memcpy(buf + 8, charTable2Real + (f0 >> 32), 2ull);
+		std::memcpy(buf + 10, charTable2Real + (f2 >> 32), 2ull);
+		std::memcpy(buf + 12, charTable2Real + (f4 >> 32), 2ull);
+		std::memcpy(buf + 14, charTable2Real + (((f4 & bitMask) * 100) >> 32), 2ull);
+		return buf + 16;
 	}
 
 	JSONIFIER_INLINE static string_buffer_ptr length17(string_buffer_ptr buf, const uint64_t value) noexcept {
-		const uint64_t tmp	= value / 100000000ull;
-		const uint64_t low	= value - tmp * 100000000ull;
-		const uint64_t high = tmp / 10000ull;
-		const uint64_t mid	= tmp - high * 10000ull;
-		const uint64_t aabb = (low * 109951163ull) >> 40ull;
-		const uint64_t ccdd = low - aabb * 10000ull;
-		uint64_t aa			= (high * 429497ull) >> 32ull;
-		const uint64_t bbcc = high - aa * 10000ull;
-		uint64_t bb			= (bbcc * 5243ull) >> 19ull;
-		uint64_t cc			= bbcc - bb * 100ull;
-		std::memcpy(buf, charTable1 + aa, 1ull);
-		std::memcpy(buf + 1ull, charTable2 + bb * 2ull, 2ull);
-		std::memcpy(buf + 3ull, charTable2 + cc * 2ull, 2ull);
-		aa = (mid * 5243ull) >> 19ull;
-		bb = mid - aa * 100ull;
-		std::memcpy(buf + 5ull, charTable2 + aa * 2ull, 2ull);
-		std::memcpy(buf + 7ull, charTable2 + bb * 2ull, 2ull);
-		aa				  = (aabb * 5243ull) >> 19ull;
-		bb				  = aabb - aa * 100ull;
-		cc				  = (ccdd * 5243ull) >> 19ull;
-		const uint64_t dd = ccdd - cc * 100ull;
-		std::memcpy(buf + 9ull, charTable2 + aa * 2ull, 2ull);
-		std::memcpy(buf + 11ull, charTable2 + bb * 2ull, 2ull);
-		std::memcpy(buf + 13ull, charTable2 + cc * 2ull, 2ull);
-		std::memcpy(buf + 15ull, charTable2 + dd * 2ull, 2ull);
-		return buf + 17ull;
+		uint64_t abcdefghi = value / 100000000ull;
+		static constexpr uint64_t multiplier9{ uint64_t(10 * uint64_t(0x1p57) / uint64_t(1e9) + 1) };
+		static constexpr uint64_t bitMask9{ uint64_t(0x1p57) - 1 };
+		uint64_t f0		  = multiplier9 * abcdefghi;
+		uint64_t f2		  = (f0 & bitMask9) * 100;
+		uint64_t f4		  = (f2 & bitMask9) * 100;
+		uint64_t f6		  = (f4 & bitMask9) * 100;
+		const uint64_t f8 = (f6 & bitMask9) * 100;
+		std::memcpy(buf, charTable1 + (f0 >> 57), 1ull);
+		std::memcpy(buf + 1, charTable2Real + (f2 >> 57), 2ull);
+		std::memcpy(buf + 3, charTable2Real + (f4 >> 57), 2ull);
+		std::memcpy(buf + 5, charTable2Real + (f6 >> 57), 2ull);
+		std::memcpy(buf + 7, charTable2Real + (f8 >> 57), 2ull);
+		static constexpr uint64_t multiplier{ uint64_t(10 * 0x1p48 / 1e7 + 1) };
+		static constexpr uint64_t bitMask{ uint64_t(0x1p32) - 1 };
+		f0 = multiplier * (value - abcdefghi * 100000000ull) >> 16;
+		f2 = (f0 & bitMask) * 100;
+		f4 = (f2 & bitMask) * 100;
+		std::memcpy(buf + 9, charTable2Real + (f0 >> 32), 2ull);
+		std::memcpy(buf + 11, charTable2Real + (f2 >> 32), 2ull);
+		std::memcpy(buf + 13, charTable2Real + (f4 >> 32), 2ull);
+		std::memcpy(buf + 15, charTable2Real + (((f4 & bitMask) * 100) >> 32), 2ull);
+		return buf + 17;
 	}
 
 	JSONIFIER_INLINE static string_buffer_ptr length18(string_buffer_ptr buf, const uint64_t value) noexcept {
-		const uint64_t tmp	= value / 100000000ull;
-		const uint64_t low	= value - tmp * 100000000ull;
-		const uint64_t high = tmp / 10000ull;
-		const uint64_t mid	= tmp - high * 10000ull;
-		const uint64_t aabb = (low * 109951163ull) >> 40ull;
-		const uint64_t ccdd = low - aabb * 10000ull;
-		uint64_t aa			= (high * 429497ull) >> 32ull;
-		const uint64_t bbcc = high - aa * 10000ull;
-		uint64_t bb			= (bbcc * 5243ull) >> 19ull;
-		uint64_t cc			= bbcc - bb * 100ull;
-		std::memcpy(buf, charTable2 + aa * 2ull, 2ull);
-		std::memcpy(buf + 2ull, charTable2 + bb * 2ull, 2ull);
-		std::memcpy(buf + 4ull, charTable2 + cc * 2ull, 2ull);
-		aa = (mid * 5243ull) >> 19ull;
-		bb = mid - aa * 100ull;
-		std::memcpy(buf + 6ull, charTable2 + aa * 2ull, 2ull);
-		std::memcpy(buf + 8ull, charTable2 + bb * 2ull, 2ull);
-		aa				  = (aabb * 5243ull) >> 19ull;
-		bb				  = aabb - aa * 100ull;
-		cc				  = (ccdd * 5243ull) >> 19ull;
-		const uint64_t dd = ccdd - cc * 100ull;
-		std::memcpy(buf + 10ull, charTable2 + aa * 2ull, 2ull);
-		std::memcpy(buf + 12ull, charTable2 + bb * 2ull, 2ull);
-		std::memcpy(buf + 14ull, charTable2 + cc * 2ull, 2ull);
-		std::memcpy(buf + 16ull, charTable2 + dd * 2ull, 2ull);
-		return buf + 18ull;
+		uint64_t abcdefghij = value / 100000000ull;
+		static constexpr uint64_t multiplier10{ uint64_t(10 * 0x1p48 / 1e7 + 1) };
+		static constexpr uint64_t bitMask10{ uint64_t(0x1p32) - 1 };
+		const uint64_t ab = abcdefghij / 100000000ull;
+		std::memcpy(buf, charTable2Real + ab, 2ull);
+		const uint64_t cdefghijk = abcdefghij - ab * 100000000ull;
+		uint64_t f0				 = multiplier10 * cdefghijk >> 16;
+		uint64_t f2				 = (f0 & bitMask10) * 100;
+		uint64_t f4				 = (f2 & bitMask10) * 100;
+		uint64_t f6				 = (f4 & bitMask10) * 100;
+		std::memcpy(buf + 2, charTable2Real + (f0 >> 32), 2ull);
+		std::memcpy(buf + 4, charTable2Real + (f2 >> 32), 2ull);
+		std::memcpy(buf + 6, charTable2Real + (f4 >> 32), 2ull);
+		std::memcpy(buf + 8, charTable2Real + (f6 >> 32), 2ull);
+		static constexpr uint64_t multiplier{ uint64_t(10 * 0x1p48 / 1e7 + 1) };
+		static constexpr uint64_t bitMask{ uint64_t(0x1p32) - 1 };
+		f0 = multiplier * (value - abcdefghij * 100000000ull) >> 16;
+		f2 = (f0 & bitMask) * 100;
+		f4 = (f2 & bitMask) * 100;
+		std::memcpy(buf + 10, charTable2Real + (f0 >> 32), 2ull);
+		std::memcpy(buf + 12, charTable2Real + (f2 >> 32), 2ull);
+		std::memcpy(buf + 14, charTable2Real + (f4 >> 32), 2ull);
+		std::memcpy(buf + 16, charTable2Real + (((f4 & bitMask) * 100) >> 32), 2ull);
+		return buf + 18;
 	}
 
 	JSONIFIER_INLINE static string_buffer_ptr length19(string_buffer_ptr buf, const uint64_t value) noexcept {
-		const uint64_t tmp	= value / 100000000ull;
-		const uint64_t low	= value - tmp * 100000000ull;
-		const uint64_t high = tmp / 10000ull;
-		const uint64_t mid	= tmp - high * 10000ull;
-		uint64_t aabb		= (high * 109951163ull) >> 40ull;
-		uint64_t ccdd		= high - aabb * 10000ull;
-		uint64_t aa			= (aabb * 5243ull) >> 19ull;
-		uint64_t bb			= aabb - aa * 100ull;
-		uint64_t cc			= (ccdd * 5243ull) >> 19ull;
-		uint64_t dd			= ccdd - cc * 100ull;
-		std::memcpy(buf, charTable1 + aa, 1ull);
-		std::memcpy(buf + 1ull, charTable2 + bb * 2ull, 2ull);
-		std::memcpy(buf + 3ull, charTable2 + cc * 2ull, 2ull);
-		std::memcpy(buf + 5ull, charTable2 + dd * 2ull, 2ull);
-		aa = (mid * 5243ull) >> 19ull;
-		bb = mid - aa * 100ull;
-		std::memcpy(buf + 7ull, charTable2 + aa * 2ull, 2ull);
-		std::memcpy(buf + 9ull, charTable2 + bb * 2ull, 2ull);
-		aabb = (low * 109951163ull) >> 40ull;
-		ccdd = low - aabb * 10000ull;
-		aa	 = (aabb * 5243ull) >> 19ull;
-		bb	 = aabb - aa * 100ull;
-		cc	 = (ccdd * 5243ull) >> 19ull;
-		dd	 = ccdd - cc * 100ull;
-		std::memcpy(buf + 11ull, charTable2 + aa * 2ull, 2ull);
-		std::memcpy(buf + 13ull, charTable2 + bb * 2ull, 2ull);
-		std::memcpy(buf + 15ull, charTable2 + cc * 2ull, 2ull);
-		std::memcpy(buf + 17ull, charTable2 + dd * 2ull, 2ull);
-		return buf + 19ull;
+		const uint64_t tmp = value / 100000;
+		const uint64_t hgh = tmp / 100000;
+		const uint64_t mid = tmp - hgh * 100000;
+		const uint64_t low = value - tmp * 100000;
+		buf				   = length9(buf, hgh);
+		buf				   = length5(buf, mid);
+		return length5(buf, low);
 	}
 
 	JSONIFIER_INLINE static string_buffer_ptr length20(string_buffer_ptr buf, const uint64_t value) noexcept {
-		const uint64_t tmp	= value / 100000000ull;
-		const uint64_t low	= value - tmp * 100000000ull;
-		const uint64_t high = tmp / 10000ull;
-		const uint64_t mid	= tmp - high * 10000ull;
-		uint64_t aabb		= (high * 109951163ull) >> 40ull;
-		uint64_t ccdd		= high - aabb * 10000ull;
-		uint64_t aa			= (aabb * 5243ull) >> 19ull;
-		uint64_t bb			= aabb - aa * 100ull;
-		uint64_t cc			= (ccdd * 5243ull) >> 19ull;
-		uint64_t dd			= ccdd - cc * 100ull;
-		std::memcpy(buf, charTable2 + aa * 2ull, 2ull);
-		std::memcpy(buf + 2ull, charTable2 + bb * 2ull, 2ull);
-		std::memcpy(buf + 4ull, charTable2 + cc * 2ull, 2ull);
-		std::memcpy(buf + 6ull, charTable2 + dd * 2ull, 2ull);
-		aa = (mid * 5243ull) >> 19ull;
-		bb = mid - aa * 100ull;
-		std::memcpy(buf + 8ull, charTable2 + aa * 2ull, 2ull);
-		std::memcpy(buf + 10ull, charTable2 + bb * 2ull, 2ull);
-		aabb = (low * 109951163ull) >> 40ull;
-		ccdd = low - aabb * 10000ull;
-		aa	 = (aabb * 5243ull) >> 19ull;
-		bb	 = aabb - aa * 100ull;
-		cc	 = (ccdd * 5243ull) >> 19ull;
-		dd	 = ccdd - cc * 100ull;
-		std::memcpy(buf + 12ull, charTable2 + aa * 2ull, 2ull);
-		std::memcpy(buf + 14ull, charTable2 + bb * 2ull, 2ull);
-		std::memcpy(buf + 16ull, charTable2 + cc * 2ull, 2ull);
-		std::memcpy(buf + 18ull, charTable2 + dd * 2ull, 2ull);
-		return buf + 20ull;
+		const uint64_t tmp = value / 100000;
+		const uint64_t hgh = tmp / 100000;
+		const uint64_t mid = tmp - hgh * 100000;
+		const uint64_t low = value - tmp * 100000;
+		buf				   = length10(buf, hgh);
+		buf				   = length5(buf, mid);
+		return length5(buf, low);
 	}
 
 	JSONIFIER_INLINE static string_buffer_ptr impl64(string_buffer_ptr buf, const uint64_t value) noexcept {
@@ -481,13 +454,13 @@ namespace jsonifier_internal {
 		}
 	}
 
-	template<jsonifier::concepts::uns64_t value_type_new> JSONIFIER_INLINE static string_buffer_ptr toChars(string_buffer_ptr buf, const value_type_new value) noexcept {
-		return impl64(buf, value);
-	}
-
-	template<jsonifier::concepts::sig64_t value_type_new> JSONIFIER_INLINE static string_buffer_ptr toChars(string_buffer_ptr buf, const value_type_new value) noexcept {
-		*buf = '-';
-		return toChars(buf + (value < 0), static_cast<const uint64_t>(value ^ (value >> 63)) - (value >> 63));
+	template<typename value_type_new> JSONIFIER_INLINE static string_buffer_ptr toChars(string_buffer_ptr buf, const value_type_new value) noexcept {
+		if constexpr (jsonifier::concepts::sig64_t<value_type_new>) {
+			*buf = '-';
+			return impl64(buf + (value < 0), uint64_t(value ^ (value >> 63)) - (value >> 63));
+		} else {
+			return impl64(buf, value);
+		}
 	}
 
 }// namespace jsonifier_internal
