@@ -94,7 +94,7 @@ target_link_options(
     "$<$<CXX_COMPILER_ID:MSVC>:/INCREMENTAL:NO>"
     "$<$<CXX_COMPILER_ID:MSVC>:/OPT:ICF>"
     "$<$<CXX_COMPILER_ID:MSVC>:/OPT:REF>"
-    #"$<$<CXX_COMPILER_ID:MSVC>:/LTCG>"
+    "$<$<CXX_COMPILER_ID:MSVC>:/LTCG>"
     "$<$<CXX_COMPILER_ID:CLANG>:-flto>"
     "$<$<CXX_COMPILER_ID:GNU>:-flto>"
     "$<$<CXX_COMPILER_ID:CLANG>:-Wl,-O2>"

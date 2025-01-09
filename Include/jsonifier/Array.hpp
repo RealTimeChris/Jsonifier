@@ -26,7 +26,7 @@
 #include <jsonifier/Config.hpp>
 #include <jsonifier/Iterator.hpp>
 
-namespace jsonifier_internal {
+namespace jsonifier::internal {
 
 	template<typename value_type_new, size_t sizeNew> struct array {
 		using value_type			 = value_type_new;

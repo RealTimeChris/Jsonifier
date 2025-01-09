@@ -27,7 +27,7 @@
 #include <jsonifier/ISA/SimdTypes.hpp>
 #include <jsonifier/ISA/Bmi.hpp>
 
-namespace simd_internal {
+namespace jsonifier::simd {
 
 #if !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) && \
 	!JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)

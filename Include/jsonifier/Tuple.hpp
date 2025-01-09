@@ -52,7 +52,7 @@
 	#endif
 #endif
 
-namespace jsonifier_internal {
+namespace jsonifier::internal {
 
 	template<typename... Ls, typename... Rs> constexpr auto operator+(type_list<Ls...>, type_list<Rs...>) {
 		return type_list<Ls..., Rs...>{};
@@ -101,7 +101,7 @@ namespace jsonifier_internal {
 		static value_type decl_elem(tag<I>);
 		using type = value_type;
 
-		JSONIFIER_TUPLET_NO_UNIQUE_ADDRESS value_type value{};
+		JSONIFIER_TUPLET_NO_UNIQUE_ADDRESS value_type value;
 
 		constexpr decltype(auto) operator[](tag<I>) & {
 			return (value);
@@ -110,7 +110,7 @@ namespace jsonifier_internal {
 			return (value);
 		}
 		constexpr decltype(auto) operator[](tag<I>) && {
-			return (jsonifier_internal::move(*this).value);
+			return (jsonifier::internal::move(*this).value);
 		}
 	};
 
@@ -158,8 +158,8 @@ namespace jsonifier_internal {
 		return (base_list_t<type_t<inner>>{} + ...);
 	}
 
-	template<typename value_type, typename... outer, typename... inner>
-	constexpr auto tupleCatImpl(value_type tupleVal, type_list<outer...>, type_list<inner...>) -> tuple<type_t<inner>...> {
+	template<typename value_type, typename... outer, typename... inner> constexpr auto tupleCatImpl(value_type tupleVal, type_list<outer...>, type_list<inner...>)
+		-> tuple<type_t<inner>...> {
 		return { { { static_cast<forward_as_t<type_t<outer>&&, inner>>(tupleVal.identity_t<outer>::value).value }... } };
 	}
 
@@ -205,10 +205,10 @@ namespace jsonifier_internal {
 
 namespace std {
 
-	template<typename... value_type> struct tuple_size<jsonifier_internal::tuple<value_type...>> : std::integral_constant<size_t, sizeof...(value_type)> {};
+	template<typename... value_type> struct tuple_size<jsonifier::internal::tuple<value_type...>> : std::integral_constant<size_t, sizeof...(value_type)> {};
 
-	template<size_t I, typename... value_type> struct tuple_element<I, jsonifier_internal::tuple<value_type...>> {
-		using type = decltype(jsonifier_internal::tuple<value_type...>::decl_elem(jsonifier_internal::tag<I>()));
+	template<size_t I, typename... value_type> struct tuple_element<I, jsonifier::internal::tuple<value_type...>> {
+		using type = decltype(jsonifier::internal::tuple<value_type...>::decl_elem(jsonifier::internal::tag<I>()));
 	};
 
 }

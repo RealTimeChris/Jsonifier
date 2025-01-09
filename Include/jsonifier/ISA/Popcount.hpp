@@ -25,7 +25,7 @@
 
 #include <jsonifier/TypeEntities.hpp>
 
-namespace simd_internal {
+namespace jsonifier::simd {
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_POPCNT) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
 
@@ -48,7 +48,7 @@ namespace simd_internal {
 		return count;
 	}
 
-	#define popcnt(value) simd_internal::popcnt(value)
+	#define popcnt(value) jsonifier::simd::popcnt(value)
 
 #endif
 

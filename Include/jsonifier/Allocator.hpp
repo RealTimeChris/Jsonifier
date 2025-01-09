@@ -27,7 +27,7 @@
 #include <memory_resource>
 #include <stdlib.h>
 
-namespace jsonifier_internal {
+namespace jsonifier::internal {
 
 	template<typename value_type> JSONIFIER_INLINE constexpr value_type&& forward(std::remove_reference_t<value_type>& value) noexcept {
 		return static_cast<value_type&&>(value);
@@ -89,7 +89,7 @@ namespace jsonifier_internal {
 		}
 
 		template<typename... arg_types> JSONIFIER_INLINE void construct(pointer ptr, arg_types&&... args) noexcept {
-			new (ptr) value_type(jsonifier_internal::forward<arg_types>(args)...);
+			new (ptr) value_type(jsonifier::internal::forward<arg_types>(args)...);
 		}
 
 		JSONIFIER_INLINE static size_type maxSize() noexcept {
@@ -101,4 +101,4 @@ namespace jsonifier_internal {
 		}
 	};
 
-}// namespace jsonifier_internal
+}// namespace jsonifier::internal

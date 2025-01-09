@@ -27,7 +27,7 @@
 #include <jsonifier/StringView.hpp>
 #include <jsonifier/Tuple.hpp>
 
-namespace jsonifier_internal {
+namespace jsonifier::internal {
 
 	struct tuple_reference {
 		jsonifier::string_view key{};
@@ -45,7 +45,7 @@ namespace jsonifier_internal {
 	template<size_t maxIndex, size_t currentIndex = 0, typename tuple_type>
 	constexpr auto collectTupleRefsImpl(const tuple_type& tuple, array<tuple_reference, maxIndex>& tupleRefsRaw) {
 		if constexpr (currentIndex < maxIndex) {
-			auto potentialKey = jsonifier_internal::get<currentIndex>(tuple);
+			auto potentialKey = jsonifier::internal::get<currentIndex>(tuple);
 			if constexpr (has_name<decltype(potentialKey)>) {
 				tupleRefsRaw[currentIndex].key = potentialKey.name.operator jsonifier::string_view();
 			}
@@ -96,4 +96,4 @@ namespace jsonifier_internal {
 	// Idea for this interface sampled from Stephen Berry and his library, Glaze library: https://github.com/stephenberry/glaze
 	template<typename value_type> using core_tuple_type = decltype(jsonifier::core<std::remove_cvref_t<value_type>>::parseValue);
 
-}// namespace jsonifier_internal
+}// namespace jsonifier::internal

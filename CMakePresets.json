@@ -149,6 +149,20 @@
       "configuration": "Debug",
       "name": "Jsonifier-Windows-Debug-Benchmarks",
       "verbose": true
+    },
+    {
+      "configurePreset": "Jsonifier-Windows-Release-Tests",
+      "inheritConfigureEnvironment": true,
+      "configuration": "Release",
+      "name": "Jsonifier-Windows-Release-Tests",
+      "verbose": true
+    },
+    {
+      "configurePreset": "Jsonifier-Windows-Debug-Tests",
+      "inheritConfigureEnvironment": true,
+      "configuration": "Debug",
+      "name": "Jsonifier-Windows-Debug-Tests",
+      "verbose": true
     }
   ]
 }

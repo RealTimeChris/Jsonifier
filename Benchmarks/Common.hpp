@@ -31,14 +31,14 @@
 #include <thread>
 
 #if defined(NDEBUG)
-static constexpr auto maxIterationCount{ 100 };
+static constexpr auto maxIterations{ 100 };
 #else
-static constexpr auto maxIterationCount{ 1 };
+static constexpr auto maxIterations{ 10 };
 #endif
 
 constexpr auto getCurrentOperatingSystem() {
 	constexpr bnch_swt::string_literal osName{ OPERATING_SYSTEM_NAME };
-	constexpr auto osNameNew = bnch_swt::toLower(osName);
+	constexpr auto osNameNew = bnch_swt::internal::toLower(osName);
 	if constexpr (osNameNew.operator std::string_view().contains("linux")) {
 		return bnch_swt::string_literal{ "Ubuntu" };
 	} else if constexpr (osNameNew.operator std::string_view().contains("windows")) {
@@ -52,7 +52,7 @@ constexpr auto getCurrentOperatingSystem() {
 
 constexpr auto getCurrentCompilerId() {
 	constexpr bnch_swt::string_literal compilerId{ COMPILER_ID };
-	constexpr auto osCompilerIdNew = bnch_swt::toLower(compilerId);
+	constexpr auto osCompilerIdNew = bnch_swt::internal::toLower(compilerId);
 	if constexpr (osCompilerIdNew.operator std::string_view().contains("gnu") || osCompilerIdNew.operator std::string_view().contains("gcc") ||
 		osCompilerIdNew.operator std::string_view().contains("g++") || osCompilerIdNew.operator std::string_view().contains("apple")) {
 		return bnch_swt::string_literal{ "GNUCXX" };
@@ -100,7 +100,7 @@ class test_base {
 std::string getCPUInfo() {
 	char brand[49]{};
 	int32_t regs[12]{};
-	size_t length{};
+	uint64_t length{};
 #if defined(__x86_64__) || defined(_M_AMD64)
 	static constexpr auto cpuid = [](int32_t* eax, int32_t* ebx, int32_t* ecx, int32_t* edx) {
 	#if defined(_MSC_VER)
@@ -236,14 +236,13 @@ static constexpr std::string_view charset{ "!#$%&'()*+,-./0123456789:;<=>?@ABCDE
 template<typename value_type> struct test_generator {
 	std::vector<value_type> a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z;
 
-	static constexpr std::string_view charset{ "!#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~\"\\\r\b\f\t\n" };
 	inline static std::uniform_real_distribution<double> disDouble{ log(std::numeric_limits<double>::min()), log(std::numeric_limits<double>::max()) };
 	inline static std::uniform_int_distribution<int64_t> disInt{ std::numeric_limits<int64_t>::min(), std::numeric_limits<int64_t>::max() };
-	inline static std::uniform_int_distribution<size_t> disUint{ std::numeric_limits<size_t>::min(), std::numeric_limits<size_t>::max() };
-	inline static std::uniform_int_distribution<size_t> disCharSet{ 0ull, charset.size() - 1 };
-	inline static std::uniform_int_distribution<size_t> disString{ 32ull, 64ull };
-	inline static std::uniform_int_distribution<size_t> disUnicodeEmoji{ 0ull, std::size(unicode_emoji::unicodeEmoji) - 1 };
-	inline static std::uniform_int_distribution<size_t> disBool{ 0, 100 };
+	inline static std::uniform_int_distribution<uint64_t> disUint{ std::numeric_limits<uint64_t>::min(), std::numeric_limits<uint64_t>::max() };
+	inline static std::uniform_int_distribution<uint64_t> disCharSet{ 0ull, charset.size() - 1 };
+	inline static std::uniform_int_distribution<uint64_t> disString{ 32ull, 64ull };
+	inline static std::uniform_int_distribution<uint64_t> disUnicodeEmoji{ 0ull, std::size(unicode_emoji::unicodeEmoji) - 1 };
+	inline static std::uniform_int_distribution<uint64_t> disBool{ 0, 100 };
 	inline static std::random_device randomEngine{};
 	inline static std::mt19937_64 gen{ randomEngine() };
 
@@ -261,7 +260,7 @@ template<typename value_type> struct test_generator {
 	static std::string generateString() {
 		auto length{ disString(gen) };
 		auto unicodeCount = length / 32ull;
-		std::vector<size_t> unicodeIndices{};
+		std::vector<uint64_t> unicodeIndices{};
 		static constexpr auto checkForPresenceOfIndex = [](auto& indices, auto index, auto length, auto&& checkForPresenceOfIndexNew) -> void {
 			if (std::find(indices.begin(), indices.end(), index) != indices.end()) {
 				index = randomizeNumberUniform(0ull, length);
@@ -270,16 +269,16 @@ template<typename value_type> struct test_generator {
 				indices.emplace_back(index);
 			}
 		};
-		for (size_t x = 0; x < unicodeCount; ++x) {
+		for (uint64_t x = 0; x < unicodeCount; ++x) {
 			auto newValue = randomizeNumberUniform(0ull, length);
 			checkForPresenceOfIndex(unicodeIndices, newValue, length, checkForPresenceOfIndex);
 		}
-		std::sort(unicodeIndices.begin(), unicodeIndices.end(), std::less<size_t>{});
+		std::sort(unicodeIndices.begin(), unicodeIndices.end(), std::less<uint64_t>{});
 
 		std::string result{};
-		size_t insertedUnicode = 0;
+		uint64_t insertedUnicode = 0;
 		auto iter			   = unicodeIndices.begin();
-		for (size_t x = 0; x < length; ++x) {
+		for (uint64_t x = 0; x < length; ++x) {
 			if (iter < unicodeIndices.end() && x == *iter) [[unlikely]] {
 				insertUnicodeInJSON(result);
 				insertedUnicode++;
@@ -302,7 +301,7 @@ template<typename value_type> struct test_generator {
 		return static_cast<bool>(disBool(gen) >= 50);
 	}
 
-	static size_t generateUint() {
+	static uint64_t generateUint() {
 		return disUint(gen);
 	}
 
@@ -314,28 +313,28 @@ template<typename value_type> struct test_generator {
 		auto fill = [&](auto& v) {
 			auto arraySize01 = randomizeNumberUniform(5ull, 15ull);
 			v.resize(arraySize01);
-			for (size_t x = 0; x < arraySize01; ++x) {
+			for (uint64_t x = 0; x < arraySize01; ++x) {
 				auto arraySize02 = randomizeNumberUniform(5ull, 15ull);
 				auto arraySize03 = randomizeNumberUniform(0ull, arraySize02);
-				for (size_t y = 0; y < arraySize03; ++y) {
+				for (uint64_t y = 0; y < arraySize03; ++y) {
 					auto newString = generateString();
 					v[x].testVals01.emplace_back(newString);
 				}
 				arraySize03 = randomizeNumberUniform(0ull, arraySize02);
-				for (size_t y = 0; y < arraySize03; ++y) {
+				for (uint64_t y = 0; y < arraySize03; ++y) {
 					v[x].testVals02.emplace_back(generateUint());
 				}
 				arraySize03 = randomizeNumberUniform(0ull, arraySize02);
-				for (size_t y = 0; y < arraySize03; ++y) {
+				for (uint64_t y = 0; y < arraySize03; ++y) {
 					v[x].testVals03.emplace_back(generateInt());
 				}
 				arraySize03 = randomizeNumberUniform(0ull, arraySize02);
-				for (size_t y = 0; y < arraySize03; ++y) {
+				for (uint64_t y = 0; y < arraySize03; ++y) {
 					auto newBool = generateBool();
 					v[x].testVals05.emplace_back(newBool);
 				}
 				arraySize03 = randomizeNumberUniform(0ull, arraySize02);
-				for (size_t y = 0; y < arraySize03; ++y) {
+				for (uint64_t y = 0; y < arraySize03; ++y) {
 					v[x].testVals04.emplace_back(generateDouble());
 				}
 			}
@@ -455,7 +454,7 @@ struct results_data {
 	std::unordered_set<std::string> jsonifierExcludedKeys{};
 	result<result_type::write> writeResult{};
 	result<result_type::read> readResult{};
-	size_t iterations{};
+	uint64_t iterations{};
 	std::string name{};
 	std::string test{};
 	std::string url{};
@@ -477,7 +476,7 @@ struct results_data {
 
 	results_data() noexcept = default;
 
-	results_data(const std::string& nameNew, const std::string& testNew, const std::string& urlNew, size_t iterationsNew) {
+	results_data(const std::string& nameNew, const std::string& testNew, const std::string& urlNew, uint64_t iterationsNew) {
 		iterations = iterationsNew;
 		name	   = nameNew;
 		test	   = testNew;
@@ -532,4 +531,22 @@ std::tm getTime() {
 	std::time_t result = std::time(nullptr);
 	return *localtime(&result);
 #endif
+}
+
+JSONIFIER_INLINE static std::string urlEncode(std::string value) {
+	std::ostringstream escaped;
+	escaped.fill('0');
+	escaped << std::hex;
+
+	for (char c: value) {
+		if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
+			escaped << c;
+		} else if (c == ':') {
+			escaped << '%' << std::setw(2) << int32_t(( unsigned char )' ');
+		} else {
+			escaped << '%' << std::setw(2) << int32_t(( unsigned char )c);
+		}
+	}
+
+	return escaped.str();
 }

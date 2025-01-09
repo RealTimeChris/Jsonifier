@@ -147,12 +147,12 @@
 static constexpr uint64_t forceInlineLimitParse{ 1 };
 static constexpr uint64_t forceInlineLimitSerialize{ 1 };
 #elif defined(JSONIFIER_GNUCXX)
-static constexpr uint64_t forceInlineLimitParse{ 4 };
-static constexpr uint64_t forceInlineLimitSerialize{ 4 };
+static constexpr uint64_t forceInlineLimitParse{ 2 };
+static constexpr uint64_t forceInlineLimitSerialize{ 2 };
 #elif defined(JSONIFIER_CLANG) && defined(JSONIFIER_MAC)
-static constexpr uint64_t forceInlineLimitParse{ 20 };
-static constexpr uint64_t forceInlineLimitSerialize{ 20 };
+static constexpr uint64_t forceInlineLimitParse{ 16 };
+static constexpr uint64_t forceInlineLimitSerialize{ 16 };
 #else
-static constexpr uint64_t forceInlineLimitParse{ 4 };
-static constexpr uint64_t forceInlineLimitSerialize{ 4 };
+static constexpr uint64_t forceInlineLimitParse{ 8 };
+static constexpr uint64_t forceInlineLimitSerialize{ 8 };
 #endif

@@ -28,19 +28,23 @@
 
 namespace string_validation_tests {
 
-	std::unordered_map<std::string_view, std::string> testValues = { { "test1.json", "" }, { "test2.json", "Hello" }, { "test3.json", "Hello\nWorld" },
-		{ "test5.json", "Hello\u0000World" }, { "test6.json", "\"\\/\b\f\n\r\t" }, { "test8.json", "\u0024" }, { "test9.json", "\u00A2" }, { "test10.json", "\u20AC" },
-		{ "test11.json", "\U0001D11E" } };
+	constexpr jsonifier::internal::array<std::string_view, 9> stringViews01 = { "\"\"", "\"Hello\"", "\"Hello\\nWorld\"", "\"Hello\u0000World\"", "\"\\\"\\\\/\\b\\f\\n\\r\\t\"",
+		"\"\\u0024\"",
+		"\"\\u00A2\"", "\"\\u20AC\"", "\"\\uD834\\uDD1E\"" };
 
-	auto runTest(const std::string_view& testName, const std::string& dataToParse, jsonifier::jsonifier_core<>& parser) noexcept {
+	constexpr jsonifier::internal::array<std::string_view, 9> stringViews02 = { "", "Hello", "Hello\nWorld", "Hello\0World", "\"\\/\b\f\n\r\t", "\x24", "\xC2\xA2", "\xE2\x82\xAC",
+		"\xF0\x9D\x84\x9E" };
+
+	auto runTest(const std::string_view& testName, const std::string_view& dataToParse, const std::string_view& valueToCompare, jsonifier::jsonifier_core<>& parser) noexcept {
 		std::cout << testName << " Input: " << dataToParse << std::endl;
-		std::vector<std::string> data;
+		std::string data{};
 		if (parser.parseJson(data, dataToParse) && parser.getErrors().size() == 0) {
-			if (data.size() == 1) {
-				std::cout << testName << " Succeeded - Output: " << data[0] << std::endl;
-				std::cout << testName << " Succeeded - Expected Output: " << testValues[testName] << std::endl;
+			if (data == valueToCompare) {
+				std::cout << testName << " Succeeded - Output: " << data << std::endl;
+				std::cout << testName << " Succeeded - Expected Output: " << valueToCompare << std::endl;
 			} else {
-				std::cout << testName << " Failed." << std::endl;
+				std::cout << testName << " Failed - Output: " << data << std::endl;
+				std::cout << testName << " Failed - Expected Output: " << valueToCompare<< std::endl;
 			}
 		} else {
 			std::cout << testName << " Failed." << std::endl;
@@ -53,18 +57,10 @@ namespace string_validation_tests {
 
 	bool stringTests() noexcept {
 		jsonifier::jsonifier_core parser{};
-		std::unordered_map<std::string, test_base> jsonTests{};
-		processFilesInFolder(jsonTests, "/StringValidation");
 		std::cout << "String Tests: " << std::endl;
-		runTest("test1.json", jsonTests["test1.json"].fileContents, parser);
-		runTest("test2.json", jsonTests["test2.json"].fileContents, parser);
-		runTest("test3.json", jsonTests["test3.json"].fileContents, parser);
-		runTest("test5.json", jsonTests["test5.json"].fileContents, parser);
-		runTest("test6.json", jsonTests["test6.json"].fileContents, parser);
-		runTest("test8.json", jsonTests["test8.json"].fileContents, parser);
-		runTest("test9.json", jsonTests["test9.json"].fileContents, parser);
-		runTest("test10.json", jsonTests["test10.json"].fileContents, parser);
-		runTest("test11.json", jsonTests["test11.json"].fileContents, parser);
+		for (size_t x = 0; x < std::size(stringViews01); ++x) {
+			runTest("String Test #" + std::to_string(x), stringViews01[x], stringViews02[x], parser);
+		}
 		return true;
 	}
 

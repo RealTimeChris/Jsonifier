@@ -283,10 +283,10 @@ namespace jsonifier_jkj {
 		// The default provided by the library is to treat the given floating-point type Float as either
 		// IEEE-754 binary32 or IEEE-754 binary64, depending on the bitwise size of Float.
 		template<typename Float> struct default_float_bit_carrier_conversion_traits {
-			// Guards against types that have different internal representations than IEEE-754
+			// Guards against types that have different jsonifier::internal representations than IEEE-754
 			// binary32/64. I don't know if there is a truly reliable way of detecting IEEE-754 binary
 			// formats. I just did my best here. Note that in some cases
-			// numeric_limits<Float>::is_iec559 may report false even if the internal representation is
+			// numeric_limits<Float>::is_iec559 may report false even if the jsonifier::internal representation is
 			// IEEE-754 compatible. In such a case, the user can specialize this traits template and
 			// remove this static sanity check in order to make Dragonbox work for Float.
 			static_assert(std::numeric_limits<Float>::is_iec559 && std::numeric_limits<Float>::radix == 2 &&
@@ -1071,7 +1071,7 @@ namespace jsonifier_jkj {
 			static constexpr int32_t cache_bits																										 = 64;
 			static constexpr int32_t min_k																											 = -31;
 			static constexpr int32_t max_k																											 = 46;
-			static constexpr jsonifier_internal::array<cache_entry_type, static_cast<size_t>(max_k - min_k + 1)> cache JSONIFIER_STATIC_DATA_SECTION = {
+			static constexpr jsonifier::internal::array<cache_entry_type, static_cast<size_t>(max_k - min_k + 1)> cache JSONIFIER_STATIC_DATA_SECTION = {
 				{ UINT64_C(0x81ceb32c4b43fcf5), UINT64_C(0xa2425ff75e14fc32), UINT64_C(0xcad2f7f5359a3b3f), UINT64_C(0xfd87b5f28300ca0e), UINT64_C(0x9e74d1b791e07e49),
 					UINT64_C(0xc612062576589ddb), UINT64_C(0xf79687aed3eec552), UINT64_C(0x9abe14cd44753b53), UINT64_C(0xc16d9a0095928a28), UINT64_C(0xf1c90080baf72cb2),
 					UINT64_C(0x971da05074da7bef), UINT64_C(0xbce5086492111aeb), UINT64_C(0xec1e4a7db69561a6), UINT64_C(0x9392ee8e921d5d08), UINT64_C(0xb877aa3236a4b44a),
@@ -1101,7 +1101,7 @@ namespace jsonifier_jkj {
 			static constexpr int32_t cache_bits																										 = 128;
 			static constexpr int32_t min_k																											 = -292;
 			static constexpr int32_t max_k																											 = 326;
-			static constexpr jsonifier_internal::array<cache_entry_type, static_cast<size_t>(max_k - min_k + 1)> cache JSONIFIER_STATIC_DATA_SECTION = {
+			static constexpr jsonifier::internal::array<cache_entry_type, static_cast<size_t>(max_k - min_k + 1)> cache JSONIFIER_STATIC_DATA_SECTION = {
 				{ { UINT64_C(0xff77b1fcbebcdc4f), UINT64_C(0x25e8e89c13bb0f7b) }, { UINT64_C(0x9faacf3df73609b1), UINT64_C(0x77b191618c54e9ad) },
 					{ UINT64_C(0xc795830d75038c1d), UINT64_C(0xd59df5b9ef6a2418) }, { UINT64_C(0xf97ae3d0d2446f25), UINT64_C(0x4b0573286b44ad1e) },
 					{ UINT64_C(0x9becce62836ac577), UINT64_C(0x4ee367f9430aec33) }, { UINT64_C(0xc2e801fb244576d5), UINT64_C(0x229c41f793cda740) },
@@ -1441,8 +1441,8 @@ namespace jsonifier_jkj {
 			static constexpr size_t compressed_table_size = static_cast<size_t>((max_k - min_k + compression_ratio) / compression_ratio);
 			static constexpr size_t pow5_table_size		  = static_cast<size_t>((compression_ratio + 1) / 2);
 
-			using cache_holder_t												= jsonifier_internal::array<cache_entry_type, compressed_table_size>;
-			using pow5_holder_t													= jsonifier_internal::array<std::uint_least16_t, pow5_table_size>;
+			using cache_holder_t												= jsonifier::internal::array<cache_entry_type, compressed_table_size>;
+			using pow5_holder_t													= jsonifier::internal::array<std::uint_least16_t, pow5_table_size>;
 			static constexpr cache_holder_t cache JSONIFIER_STATIC_DATA_SECTION = [] {
 				cache_holder_t res{};
 				for (size_t i = 0; i < compressed_table_size; ++i) {
@@ -1504,8 +1504,8 @@ namespace jsonifier_jkj {
 			static constexpr size_t compressed_table_size = static_cast<size_t>((max_k - min_k + compression_ratio) / compression_ratio);
 			static constexpr size_t pow5_table_size		  = static_cast<size_t>(compression_ratio);
 
-			using cache_holder_t = jsonifier_internal::array<cache_entry_type, compressed_table_size>;
-			using pow5_holder_t	 = jsonifier_internal::array<std::uint_least64_t, pow5_table_size>;
+			using cache_holder_t = jsonifier::internal::array<cache_entry_type, compressed_table_size>;
+			using pow5_holder_t	 = jsonifier::internal::array<std::uint_least64_t, pow5_table_size>;
 
 			static constexpr cache_holder_t cache JSONIFIER_STATIC_DATA_SECTION = [] {
 				cache_holder_t res{};

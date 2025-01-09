@@ -24,21 +24,17 @@
 
 #include <BnchSwt/BenchmarkSuite.hpp>
 #include "UnicodeEmoji.hpp"
-#include "CitmCatalog.hpp"
-#include "Twitter.hpp"
-#include "Discord.hpp"
-#include "Canada.hpp"
 #include <thread>
 
 #if defined(NDEBUG)
-static constexpr auto maxIterationCount{ 100 };
+static constexpr auto maxIterations{ 100 };
 #else
-static constexpr auto maxIterationCount{ 1 };
+static constexpr auto maxIterations{ 10 };
 #endif
 
 constexpr auto getCurrentOperatingSystem() {
 	constexpr bnch_swt::string_literal osName{ OPERATING_SYSTEM_NAME };
-	constexpr auto osNameNew = bnch_swt::toLower(osName);
+	constexpr auto osNameNew = bnch_swt::internal::toLower(osName);
 	if constexpr (osNameNew.operator std::string_view().contains("linux")) {
 		return bnch_swt::string_literal{ "Ubuntu" };
 	} else if constexpr (osNameNew.operator std::string_view().contains("windows")) {
@@ -52,7 +48,7 @@ constexpr auto getCurrentOperatingSystem() {
 
 constexpr auto getCurrentCompilerId() {
 	constexpr bnch_swt::string_literal compilerId{ COMPILER_ID };
-	constexpr auto osCompilerIdNew = bnch_swt::toLower(compilerId);
+	constexpr auto osCompilerIdNew = bnch_swt::internal::toLower(compilerId);
 	if constexpr (osCompilerIdNew.operator std::string_view().contains("gnu") || osCompilerIdNew.operator std::string_view().contains("gcc") ||
 		osCompilerIdNew.operator std::string_view().contains("g++") || osCompilerIdNew.operator std::string_view().contains("apple")) {
 		return bnch_swt::string_literal{ "GNUCXX" };
@@ -71,7 +67,7 @@ constexpr auto getCurrentPathImpl() {
 
 constexpr bnch_swt::string_literal currentPath{ getCurrentPathImpl() };
 constexpr bnch_swt::string_literal basePath{ BASE_PATH };
-constexpr bnch_swt::string_literal testPath{ basePath + "/Source" };
+constexpr bnch_swt::string_literal testPath{ basePath };
 constexpr bnch_swt::string_literal readMePath{ BASE_PATH };
 constexpr bnch_swt::string_literal jsonPath{ basePath + "/Json" };
 constexpr bnch_swt::string_literal jsonOutPath{ jsonPath + "/" + getCurrentPathImpl() };
@@ -532,4 +528,22 @@ std::tm getTime() {
 	std::time_t result = std::time(nullptr);
 	return *localtime(&result);
 #endif
+}
+
+JSONIFIER_INLINE static std::string urlEncode(std::string value) {
+	std::ostringstream escaped;
+	escaped.fill('0');
+	escaped << std::hex;
+
+	for (char c: value) {
+		if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
+			escaped << c;
+		} else if (c == ':') {
+			escaped << '%' << std::setw(2) << int32_t(( unsigned char )' ');
+		} else {
+			escaped << '%' << std::setw(2) << int32_t(( unsigned char )c);
+		}
+	}
+
+	return escaped.str();
 }

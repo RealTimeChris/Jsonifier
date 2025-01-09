@@ -46,7 +46,7 @@
 	template<typename T> \
 	concept entity##_has_##value = requires(T t) { t.value; };
 
-namespace jsonifier_internal {
+namespace jsonifier::internal {
 
 	template<typename value_type> JSONIFIER_INLINE constexpr std::remove_reference_t<value_type>&& move(value_type&& value) noexcept {
 		return static_cast<std::remove_reference_t<value_type>&&>(value);
@@ -63,6 +63,8 @@ namespace jsonifier_internal {
 	}
 
 	template<typename derived_type> class parser;
+
+	template<typename derived_type, size_t = 0> class vector;
 
 	// from
 	// https://stackoverflow.com/questions/16337610/how-to-know-if-a-type-is-a-specialization-of-stdvector
@@ -110,33 +112,33 @@ namespace jsonifier_internal {
 
 	template<const auto& function, typename... arg_types, size_t... indices> constexpr void forEachImpl(std::index_sequence<indices...>, arg_types&&... args) noexcept {
 		(( void )(args, ...));
-		(function.operator()(std::integral_constant<size_t, indices>{}, std::integral_constant<size_t, sizeof...(indices)>{}, jsonifier_internal::forward<arg_types>(args)...),
+		(function.operator()(std::integral_constant<size_t, indices>{}, std::integral_constant<size_t, sizeof...(indices)>{}, jsonifier::internal::forward<arg_types>(args)...),
 			...);
 	}
 
 	template<size_t limit, const auto& function, typename... arg_types> constexpr void forEach(arg_types&&... args) noexcept {
-		forEachImpl<function>(std::make_index_sequence<limit>{}, jsonifier_internal::forward<arg_types>(args)...);
+		forEachImpl<function>(std::make_index_sequence<limit>{}, jsonifier::internal::forward<arg_types>(args)...);
 	}
 
 	template<typename function_type, typename... arg_types, size_t... indices>
 	constexpr void forEachImpl(function_type&& function, std::index_sequence<indices...>, arg_types&&... args) noexcept {
 		(( void )(args, ...));
-		(function.operator()(std::integral_constant<size_t, indices>{}, std::integral_constant<size_t, sizeof...(indices)>{}, jsonifier_internal::forward<arg_types>(args)...),
+		(function.operator()(std::integral_constant<size_t, indices>{}, std::integral_constant<size_t, sizeof...(indices)>{}, jsonifier::internal::forward<arg_types>(args)...),
 			...);
 	}
 
 	template<size_t limit, typename function_type, typename... arg_types> constexpr void forEach(function_type&& function, arg_types&&... args) noexcept {
-		forEachImpl(jsonifier_internal::forward<function_type>(function), std::make_index_sequence<limit>{}, jsonifier_internal::forward<arg_types>(args)...);
+		forEachImpl(jsonifier::internal::forward<function_type>(function), std::make_index_sequence<limit>{}, jsonifier::internal::forward<arg_types>(args)...);
 	}
 
 	template<auto function, uint64_t currentIndex = 0, typename variant_type, typename... arg_types> constexpr void visit(variant_type&& variant, arg_types&&... args) noexcept {
 		if constexpr (currentIndex < std::variant_size_v<std::remove_cvref_t<variant_type>>) {
-			variant_type&& variantNew = jsonifier_internal::forward<variant_type>(variant);
+			variant_type&& variantNew = jsonifier::internal::forward<variant_type>(variant);
 			if JSONIFIER_UNLIKELY (variantNew.index() == currentIndex) {
-				function(std::get<currentIndex>(jsonifier_internal::forward<variant_type>(variantNew)), jsonifier_internal::forward<arg_types>(args)...);
+				function(std::get<currentIndex>(jsonifier::internal::forward<variant_type>(variantNew)), jsonifier::internal::forward<arg_types>(args)...);
 				return;
 			}
-			visit<function, currentIndex + 1>(jsonifier_internal::forward<variant_type>(variantNew), jsonifier_internal::forward<arg_types>(args)...);
+			visit<function, currentIndex + 1>(jsonifier::internal::forward<variant_type>(variantNew), jsonifier::internal::forward<arg_types>(args)...);
 		}
 	}
 
@@ -176,7 +178,7 @@ namespace jsonifier {
 	namespace concepts {
 
 		template<typename value_type, auto... values>
-		concept value_holder_t = jsonifier_internal::is_specialization_v_values<value_type, value_holder>;
+		concept value_holder_t = jsonifier::internal::is_specialization_v_values<value_type, value_holder>;
 
 		template<typename value_type>
 		concept skip_t = std::is_same_v<std::remove_cvref_t<value_type>, skip>;
@@ -417,7 +419,7 @@ namespace jsonifier {
 		concept accessor_t = optional_t<value_type> || variant_t<value_type> || pointer_t<value_type> || shared_ptr_t<value_type> || unique_ptr_t<value_type>;
 
 		template<typename value_type>
-		concept time_t = jsonifier_internal::is_specialization_v<std::chrono::duration<std::remove_cvref_t<value_type>>, std::chrono::duration>;
+		concept time_t = jsonifier::internal::is_specialization_v<std::chrono::duration<std::remove_cvref_t<value_type>>, std::chrono::duration>;
 
 		template<typename value_type>
 		concept integer_t = std::integral<std::remove_cvref_t<value_type>> && !bool_t<value_type> && !std::floating_point<std::remove_cvref_t<value_type>>;
@@ -457,13 +459,13 @@ namespace jsonifier {
 	#undef min
 #endif
 
-namespace jsonifier_internal {
+namespace jsonifier::internal {
 
-	template<typename value_type01, typename value_type02> constexpr value_type01 max(value_type01 value1, value_type02 value2) {
+	template<typename value_type01, typename value_type02> JSONIFIER_INLINE constexpr value_type01 max(value_type01 value1, value_type02 value2) {
 		return value1 > static_cast<value_type01>(value2) ? value1 : static_cast<value_type01>(value2);
 	}
 
-	template<typename value_type01, typename value_type02> constexpr value_type01 min(value_type01 value1, value_type02 value2) {
+	template<typename value_type01, typename value_type02> JSONIFIER_INLINE constexpr value_type01 min(value_type01 value1, value_type02 value2) {
 		return value1 < static_cast<value_type01>(value2) ? value1 : static_cast<value_type01>(value2);
 	}
 

@@ -25,7 +25,7 @@
 
 #include <jsonifier/TypeEntities.hpp>
 
-namespace simd_internal {
+namespace jsonifier::simd {
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_LZCNT) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
 

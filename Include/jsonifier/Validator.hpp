@@ -25,9 +25,10 @@
 
 #include <jsonifier/TypeEntities.hpp>
 #include <jsonifier/StringUtils.hpp>
+#include <jsonifier/Vector.hpp>
 #include <jsonifier/Error.hpp>
 
-namespace jsonifier_internal {
+namespace jsonifier::internal {
 
 	enum class validate_errors {
 		Success						   = 0,
@@ -116,11 +117,11 @@ namespace jsonifier_internal {
 			return *static_cast<derived_type*>(this);
 		}
 
-		std::vector<error>& getErrors() noexcept {
+		jsonifier::vector<error>& getErrors() noexcept {
 			return derivedRef.errors;
 		}
 
 		~validator() noexcept = default;
 	};
 
-}// namespace jsonifier_internal
+}// namespace jsonifier::internal

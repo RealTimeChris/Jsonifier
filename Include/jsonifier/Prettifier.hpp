@@ -36,7 +36,7 @@ namespace jsonifier {
 
 }
 
-namespace jsonifier_internal {
+namespace jsonifier::internal {
 
 	enum class prettify_errors {
 		Success					   = 0,
@@ -109,7 +109,7 @@ namespace jsonifier_internal {
 
 	  protected:
 		derived_type& derivedRef{ initializeSelfRef() };
-		std::vector<json_structural_type> state{};
+		jsonifier::vector<json_structural_type> state{};
 		string_view_ptr rootIter{};
 		string_view_ptr endIter{};
 
@@ -121,7 +121,7 @@ namespace jsonifier_internal {
 			return *static_cast<derived_type*>(this);
 		}
 
-		JSONIFIER_INLINE std::vector<error>& getErrors() noexcept {
+		JSONIFIER_INLINE jsonifier::vector<error>& getErrors() noexcept {
 			return derivedRef.errors;
 		}
 
@@ -131,4 +131,4 @@ namespace jsonifier_internal {
 		JSONIFIER_INLINE ~prettifier() noexcept = default;
 	};
 
-}// namespace jsonifier_internal
+}// namespace jsonifier::internal

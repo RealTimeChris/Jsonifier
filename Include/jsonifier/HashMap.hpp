@@ -19,6 +19,7 @@
 	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 	DEALINGS IN THE SOFTWARE.
 */
+/// Note: Some of the code in this header was sampled from Glaze library: https://github.com/StephenBerry/Glaze
 /// https://github.com/RealTimeChris/jsonifier
 /// Feb 20, 2023
 #pragma once
@@ -33,7 +34,7 @@
 #include <numeric>
 #include <utility>
 
-namespace jsonifier_internal {
+namespace jsonifier::internal {
 
 	template<typename value_type, size_t size> std::ostream& operator<<(std::ostream& os, const array<value_type, size>& values) {
 		os << "[";
@@ -424,7 +425,6 @@ namespace jsonifier_internal {
 		}
 	}
 
-	/// Sampled from Stephen Berry and his library, Glaze library: https://github.com/StephenBerry/Glaze
 	template<typename value_type> constexpr auto collectFirstByteAndUniqueIndexHashMapData(const tuple_references& pairsNew) {
 		constexpr auto keyStatsValNewer		= keyStatsImpl(tupleReferencesByFirstByte<value_type>);
 		constexpr auto uniqueFirstByteCount = countFirstBytes(tupleReferencesByFirstByte<value_type>);
@@ -448,7 +448,6 @@ namespace jsonifier_internal {
 		return returnValues;
 	}
 
-	/// Sampled from Stephen Berry and his library, Glaze library: https://github.com/StephenBerry/Glaze
 	template<typename value_type> constexpr auto collectSingleByteHashMapData(const tuple_references& pairsNew) noexcept {
 		hash_map_construction_data<value_type> returnValues{};
 		returnValues.uniqueIndex = keyStatsVal<value_type>.uniqueIndex;
@@ -466,7 +465,6 @@ namespace jsonifier_internal {
 		}
 	}
 
-	/// Sampled from Stephen Berry and his library, Glaze library: https://github.com/StephenBerry/Glaze
 	template<typename value_type> constexpr auto collectTripleElementHashMapData(const tuple_references& pairsNew) noexcept {
 		hash_map_construction_data<value_type> returnValues{};
 		returnValues.uniqueIndex = keyStatsVal<value_type>.uniqueIndex;
@@ -700,9 +698,9 @@ namespace jsonifier_internal {
 						const auto hash			 = hasher.hashKeyRt(iter, length);
 						const size_t group		 = (hash >> 8) & (sizeMask);
 						const size_t resultIndex = group * hashData<value_type>.bucketSize;
-						uint64_t matches{ simd_internal::opCmpEq(simd_internal::gatherValue<simd_type>(static_cast<uint8_t>(hash)),
-							simd_internal::gatherValues<simd_type>(ctrlBytesPtr + resultIndex)) };
-						const size_t tz = simd_internal::postCmpTzcnt(matches);
+						uint64_t matches{ jsonifier::simd::opCmpEq(jsonifier::simd::gatherValue<simd_type>(static_cast<uint8_t>(hash)),
+							jsonifier::simd::gatherValues<simd_type>(ctrlBytesPtr + resultIndex)) };
+						const size_t tz = jsonifier::simd::postCmpTzcnt(matches);
 						return hashData<value_type>.indices[resultIndex + tz];
 					}
 				}

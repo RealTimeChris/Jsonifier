@@ -25,7 +25,7 @@
 
 #include <jsonifier/Validator.hpp>
 
-namespace jsonifier_internal {
+namespace jsonifier::internal {
 
 	static constexpr bool optionsVal{};
 

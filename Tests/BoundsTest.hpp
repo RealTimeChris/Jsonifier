@@ -28,6 +28,62 @@
 #include <filesystem>
 #include <fstream>
 
+template<> struct jsonifier::core<test_struct> {
+	using value_type				 = test_struct;
+	static constexpr auto parseValue = createValue<&value_type::testVals02, &value_type::testVals05, &value_type::testVals01, &value_type::testVals03, &value_type::testVals04>();
+};
+
+template<> struct jsonifier::core<partial_test_struct> {
+	using value_type				 = partial_test_struct;
+	static constexpr auto parseValue = createValue<&value_type::testVals05, &value_type::testVals01>();
+};
+
+template<> struct jsonifier::core<abc_test_struct> {
+	using value_type				 = abc_test_struct;
+	static constexpr auto parseValue = createValue<&value_type::testVals04, &value_type::testVals03, &value_type::testVals01, &value_type::testVals05, &value_type::testVals02>();
+};
+
+template<typename value_type_new> struct jsonifier::core<test<value_type_new>> {
+	using value_type				 = test<value_type_new>;
+	static constexpr auto parseValue = createValue<&value_type::a, &value_type::b, &value_type::c, &value_type::d, &value_type::e, &value_type::f, &value_type::g, &value_type::h,
+		&value_type::i, &value_type::j, &value_type::k, &value_type::l, &value_type::m, &value_type::n, &value_type::o, &value_type::p, &value_type::q, &value_type::r,
+		&value_type::s, &value_type::t, &value_type::u, &value_type::v, &value_type::w, &value_type::x, &value_type::y, &value_type::z>();
+};
+
+template<typename value_type_new> struct jsonifier::core<partial_test<value_type_new>> {
+	using value_type				 = partial_test<value_type_new>;
+	static constexpr auto parseValue = createValue<&value_type::m>();
+};
+
+template<typename value_type_new> struct jsonifier::core<test_generator<value_type_new>> {
+	using value_type				 = test_generator<value_type_new>;
+	static constexpr auto parseValue = createValue<&value_type::a, &value_type::b, &value_type::c, &value_type::d, &value_type::e, &value_type::f, &value_type::g, &value_type::h,
+		&value_type::i, &value_type::j, &value_type::k, &value_type::l, &value_type::m, &value_type::n, &value_type::o, &value_type::p, &value_type::q, &value_type::r,
+		&value_type::s, &value_type::t, &value_type::u, &value_type::v, &value_type::w, &value_type::x, &value_type::y, &value_type::z>();
+};
+
+template<typename value_type_new> struct jsonifier::core<abc_test<value_type_new>> {
+	using value_type				 = abc_test<value_type_new>;
+	static constexpr auto parseValue = createValue<&value_type::z, &value_type::y, &value_type::x, &value_type::w, &value_type::v, &value_type::u, &value_type::t, &value_type::s,
+		&value_type::r, &value_type::q, &value_type::p, &value_type::o, &value_type::n, &value_type::m, &value_type::l, &value_type::k, &value_type::j, &value_type::i,
+		&value_type::h, &value_type::g, &value_type::f, &value_type::e, &value_type::d, &value_type::c, &value_type::b, &value_type::a>();
+};
+
+template<result_type type> struct jsonifier::core<result<type>> {
+	using value_type				 = result<type>;
+	static constexpr auto parseValue = createValue<&value_type::byteLength, &value_type::jsonSpeed, &value_type::jsonTime, &value_type::color>();
+};
+
+template<> struct jsonifier::core<results_data> {
+	using value_type				 = results_data;
+	static constexpr auto parseValue = createValue<&value_type::name, &value_type::readResult, &value_type::writeResult, &value_type::test, &value_type::url>();
+};
+
+template<> struct jsonifier::core<test_results> {
+	using value_type				 = test_results;
+	static constexpr auto parseValue = createValue<&value_type::results, &value_type::testName>();
+};
+
 namespace bounds_tests {
 
 	bool boundsTests() noexcept {

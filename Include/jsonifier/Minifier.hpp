@@ -25,7 +25,7 @@
 
 #include <jsonifier/Simd.hpp>
 
-namespace jsonifier_internal {
+namespace jsonifier::internal {
 
 	enum class minify_errors {
 		Success					   = 0,
@@ -109,11 +109,11 @@ namespace jsonifier_internal {
 			return *static_cast<derived_type*>(this);
 		}
 
-		JSONIFIER_INLINE std::vector<error>& getErrors() noexcept {
+		JSONIFIER_INLINE jsonifier::vector<error>& getErrors() noexcept {
 			return derivedRef.errors;
 		}
 
 		JSONIFIER_INLINE ~minifier() noexcept = default;
 	};
 
-}// namespace jsonifier_internal
+}// namespace jsonifier::internal

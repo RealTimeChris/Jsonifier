@@ -202,19 +202,21 @@ template<bool_t value_type> void getValue(value_type& data, simdjson::ondemand::
 }
 
 simdjson::ondemand::array getArray(simdjson::ondemand::value jsonData) {
-	auto newArr = jsonData.get_array();
-	if (auto result = newArr.error()) {
-		throwError(result);
+	simdjson::ondemand::array newerArray{};
+	auto newArr = jsonData.get_array().get(newerArray);
+	if (newArr) {
+		throwError(newArr);
 	}
-	return newArr.value();
+	return newerArray;
 }
 
 simdjson::ondemand::object getObject(simdjson::ondemand::value jsonData) {
-	auto newObj = jsonData.get_object();
-	if (auto result = newObj.error()) {
-		throwError(result);
+	simdjson::ondemand::object newerObject{};
+	auto newObj = jsonData.get_object().get(newerObject);
+	if (newObj) {
+		throwError(newObj);
 	}
-	return newObj.value();
+	return newerObject;
 }
 
 template<vector_t value_type> void getValue(value_type& value, simdjson::ondemand::value jsonData) {
@@ -226,12 +228,12 @@ template<vector_t value_type> void getValue(value_type& value, simdjson::ondeman
 	for (size_t x = 0; (x < size) && (iter != newArray.end()); ++x, ++iter) {
 		resultNew = iter.value().operator*().value();
 		getValue(valueNew, resultNew.value());
-		value[x] = jsonifier_internal::move(valueNew);
+		value[x] = jsonifier::internal::move(valueNew);
 	}
 	for (; iter != newArray.end(); ++iter) {
 		resultNew = iter.value().operator*().value();
 		getValue(valueNew, resultNew.value());
-		value.emplace_back(jsonifier_internal::move(valueNew));
+		value.emplace_back(jsonifier::internal::move(valueNew));
 	}
 }
 
@@ -260,7 +262,7 @@ template<map_t value_type> void getValue(value_type& value, simdjson::ondemand::
 		simdjson::ondemand::value field_value = field.value();
 		typename std::remove_cvref_t<decltype(value)>::mapped_type newValue;
 		getValue(newValue, field_value);
-		value[key] = jsonifier_internal::move(newValue);
+		value[key] = jsonifier::internal::move(newValue);
 	}
 
 	return;
@@ -274,6 +276,9 @@ template<unique_ptr_t value_type> void getValue(value_type& e, simdjson::ondeman
 }
 
 template<shared_ptr_t value_type> void getValue(value_type& e, simdjson::ondemand::value jsonData) {
+	if (jsonData.type() == simdjson::ondemand::json_type::null) {
+		return;
+	}
 	if (!e) {
 		e = std::make_shared<std::remove_cvref_t<decltype(*e)>>();
 	}

@@ -25,7 +25,7 @@
 
 #include <jsonifier/Reflection.hpp>
 
-namespace jsonifier_internal {
+namespace jsonifier::internal {
 
 	template<typename value_type> struct base_json_entity {
 		using member_type = std::remove_cvref_t<value_type>;
@@ -35,14 +35,14 @@ namespace jsonifier_internal {
 	template<auto memberPtrNew, string_literal nameNew> struct json_entity_temp {
 		using member_type = remove_class_pointer_t<std::remove_cvref_t<decltype(memberPtrNew)>>;
 		using class_type  = remove_member_pointer_t<std::remove_cvref_t<decltype(memberPtrNew)>>;
-		static constexpr member_type class_type::* memberPtr{ memberPtrNew };
+		static constexpr member_type class_type::*memberPtr{ memberPtrNew };
 		static constexpr string_literal name{ nameNew };
 	};
 
 	template<auto memberPtrNew, string_literal nameNew, size_t indexNew, size_t maxIndex> struct json_entity {
 		using member_type = remove_class_pointer_t<std::remove_cvref_t<decltype(memberPtrNew)>>;
 		using class_type  = remove_member_pointer_t<std::remove_cvref_t<decltype(memberPtrNew)>>;
-		static constexpr member_type class_type::* memberPtr{ memberPtrNew };
+		static constexpr member_type class_type::*memberPtr{ memberPtrNew };
 		static constexpr bool isItLast{ indexNew == maxIndex - 1 };
 		static constexpr string_literal name{ nameNew };
 		static constexpr size_t index{ indexNew };
@@ -56,7 +56,6 @@ namespace jsonifier_internal {
 		typename std::remove_cvref_t<value_type>::class_type;
 		std::remove_cvref_t<value_type>::memberPtr;
 	} && is_base_json_entity<value_type>;
-
 
 	template<size_t maxIndex, size_t index, auto value> constexpr auto makeJsonEntityAuto() noexcept {
 		if constexpr (is_json_entity_temp<decltype(value)>) {
@@ -81,16 +80,16 @@ namespace jsonifier_internal {
 
 namespace jsonifier {
 
-	template<auto memberPtr, jsonifier_internal::string_literal nameNew> constexpr auto makeJsonEntity() {
-		return jsonifier_internal::json_entity_temp<memberPtr, nameNew>{};
+	template<auto memberPtr, jsonifier::internal::string_literal nameNew> constexpr auto makeJsonEntity() {
+		return jsonifier::internal::json_entity_temp<memberPtr, nameNew>{};
 	}
 
 	template<auto memberPtr> constexpr auto makeJsonEntity() {
-		return jsonifier_internal::json_entity_temp<memberPtr, jsonifier_internal::getName<memberPtr>()>{};
+		return jsonifier::internal::json_entity_temp<memberPtr, jsonifier::internal::getName<memberPtr>()>{};
 	}
 
 	template<auto... values> constexpr auto createValue() noexcept {
-		return jsonifier_internal::createValueImpl<values...>(std::make_index_sequence<sizeof...(values)>{});
+		return jsonifier::internal::createValueImpl<values...>(std::make_index_sequence<sizeof...(values)>{});
 	}
 
 }

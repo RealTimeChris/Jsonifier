@@ -32,7 +32,7 @@
 #include <cstring>
 #include <array>
 
-namespace jsonifier_internal {
+namespace jsonifier::internal {
 
 	JSONIFIER_INLINE_VARIABLE uint8_t decTrailingZeroTable[]{ 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
 		0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
@@ -106,38 +106,6 @@ namespace jsonifier_internal {
 		}
 	}
 
-	JSONIFIER_INLINE string_buffer_ptr writeU32Len1To9(string_buffer_ptr buf, uint32_t value) noexcept {
-		if (value < 10) {
-			*buf = static_cast<char>(value + '0');
-			return buf + 1;
-		}
-
-		if (value < 100) {
-			std::memcpy(buf, charTable2 + (value * 2), 2);
-			return buf + 2;
-		}
-
-		const uint64_t digits = fastDigitCount(value);
-
-		auto* end = buf + digits;
-		auto* p	  = end;
-		while (value >= 100) {
-			const uint32_t q = value / 100;
-			const uint32_t r = value % 100;
-			value			 = q;
-			std::memcpy(p - 2, charTable2 + (r * 2), 2);
-			p -= 2;
-		}
-
-		if (value < 10) {
-			*--p = static_cast<char>(value + '0');
-		} else {
-			std::memcpy(p - 2, charTable2 + (value * 2), 2);
-		}
-
-		return end;
-	}
-
 	JSONIFIER_INLINE consteval uint32_t numbits(uint32_t x) noexcept {
 		return x < 2 ? x : 1 + numbits(x >> 1);
 	}
@@ -170,7 +138,7 @@ namespace jsonifier_internal {
 				const auto v =
 					jsonifier_jkj::dragonbox::to_decimal_ex(s, expBits, jsonifier_jkj::dragonbox::policy::sign::ignore, jsonifier_jkj::dragonbox::policy::trailing_zero::remove);
 
-				uint32_t sigDec			= uint32_t(v.significand);
+				uint64_t sigDec			= uint32_t(v.significand);
 				int32_t expDec			= v.exponent;
 				const int32_t numDigits = int32_t(fastDigitCount(sigDec));
 				int32_t dotPos			= numDigits + expDec;
@@ -183,9 +151,9 @@ namespace jsonifier_internal {
 							*buf++ = '0';
 							++dotPos;
 						}
-						return writeU32Len1To9(buf, sigDec);
+						return toChars(buf, sigDec);
 					} else {
-						auto numEnd			  = writeU32Len1To9(buf, sigDec);
+						auto numEnd			  = toChars(buf, sigDec);
 						int32_t digitsWritten = int32_t(numEnd - buf);
 						if (dotPos < digitsWritten) {
 							std::memmove(buf + dotPos + 1, buf + dotPos, digitsWritten - dotPos);
@@ -199,7 +167,7 @@ namespace jsonifier_internal {
 						}
 					}
 				} else {
-					auto end = writeU32Len1To9(buf + 1, sigDec);
+					auto end = toChars(buf + 1, sigDec);
 					expDec += int32_t(end - (buf + 1)) - 1;
 					buf[0] = buf[1];
 					buf[1] = '.';

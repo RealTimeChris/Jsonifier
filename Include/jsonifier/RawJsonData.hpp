@@ -74,7 +74,7 @@ namespace jsonifier {
 	  public:
 		using object_type = std::unordered_map<string, raw_json_data>;
 		using string_type = string;
-		using array_type  = std::vector<raw_json_data>;
+		using array_type  = vector<raw_json_data>;
 		using number_type = json_number;
 		using bool_type	  = bool;
 		using value_type  = std::variant<std::unique_ptr<object_type>, std::unique_ptr<array_type>, std::unique_ptr<string_type>, std::unique_ptr<number_type>,
@@ -206,23 +206,23 @@ namespace jsonifier {
 				switch (jsonDataNew[0]) {
 					case '{': {
 						std::unique_ptr<typename jsonifier::raw_json_data::object_type> results{ std::make_unique<typename jsonifier::raw_json_data::object_type>() };
-						jsonifier_internal::parse_context<typename parser_type::derived_type, string_view_ptr> testContext{};
+						jsonifier::internal::parse_context<typename parser_type::derived_type, string_view_ptr> testContext{};
 						testContext.parserPtr = &parser;
 						testContext.rootIter  = jsonDataNew.data();
 						testContext.endIter	  = jsonDataNew.data() + jsonDataNew.size();
 						testContext.iter	  = jsonDataNew.data();
-						jsonifier_internal::object_val_parser<std::string, jsonifier_internal::parse_context<typename parser_type::derived_type, string_view_ptr>, optionsNew,
+						jsonifier::internal::object_val_parser<std::string, jsonifier::internal::parse_context<typename parser_type::derived_type, string_view_ptr>, optionsNew,
 							false>::impl(*results, testContext);
 						return results;
 					}
 					case '[': {
 						std::unique_ptr<typename jsonifier::raw_json_data::array_type> results{ std::make_unique<typename jsonifier::raw_json_data::array_type>() };
-						jsonifier_internal::parse_context<typename parser_type::derived_type, string_view_ptr> testContext{};
+						jsonifier::internal::parse_context<typename parser_type::derived_type, string_view_ptr> testContext{};
 						testContext.parserPtr = &parser;
 						testContext.rootIter  = jsonDataNew.data();
 						testContext.endIter	  = jsonDataNew.data() + jsonDataNew.size();
 						testContext.iter	  = jsonDataNew.data();
-						jsonifier_internal::array_val_parser<std::string, jsonifier_internal::parse_context<typename parser_type::derived_type, string_view_ptr>, optionsNew,
+						jsonifier::internal::array_val_parser<std::string, jsonifier::internal::parse_context<typename parser_type::derived_type, string_view_ptr>, optionsNew,
 							false>::impl(*results, testContext);
 						return results;
 					}

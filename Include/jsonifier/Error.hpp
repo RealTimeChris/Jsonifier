@@ -31,7 +31,7 @@
 #include <algorithm>
 #include <string>
 
-namespace jsonifier_internal {
+namespace jsonifier::internal {
 
 	enum class error_classes : uint8_t {
 		Unset		= 0,
@@ -63,7 +63,7 @@ namespace jsonifier_internal {
 	};
 
 	std::ostream& operator<<(std::ostream& os, parse_errors error) {
-		os << simd_internal::tzcnt(static_cast<uint64_t>(error));
+		os << jsonifier::simd::tzcnt(static_cast<uint64_t>(error));
 		return os;
 	}
 

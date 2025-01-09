@@ -32,7 +32,7 @@
 #include <array>
 #include <bit>
 
-namespace jsonifier_internal {
+namespace jsonifier::internal {
 
 	struct xoshiro256 {
 		uint64_t state[4]{};

@@ -30,7 +30,7 @@
 #include <jsonifier/Error.hpp>
 #include <jsonifier/Simd.hpp>
 
-namespace jsonifier_internal {
+namespace jsonifier::internal {
 
 	JSONIFIER_INLINE void printIterValues(auto iter, const std::source_location& title = std::source_location::current()) {
 		//std::cout<< "File: " << title.file_name() << ", Line: " << title.line() << std::endl;
@@ -135,7 +135,7 @@ namespace jsonifier_internal {
 
 	template<typename value_type, size_t currentIndex = 0> constexpr size_t countTotalNonRepeatedMembers(size_t currentCount = 1) {
 		if constexpr (currentIndex < tuple_size_v<core_tuple_type<value_type>>) {
-			constexpr auto newSubTuple = jsonifier_internal::get<currentIndex>(jsonifier::core<std::remove_cvref_t<value_type>>::parseValue);
+			constexpr auto newSubTuple = jsonifier::internal::get<currentIndex>(jsonifier::core<std::remove_cvref_t<value_type>>::parseValue);
 			using member_type		   = typename std::remove_cvref_t<decltype(newSubTuple)>::member_type;
 			if constexpr (jsonifier::concepts::jsonifier_object_t<member_type>) {
 				currentCount += countTotalNonRepeatedMembers<member_type>();

@@ -70,7 +70,7 @@ target_link_options(
 
 target_compile_definitions(
 	"Json-Performance" PUBLIC 
-	"BASE_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/../\""
+	"BASE_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/\""
 	"JSONIFIER_COMMIT=\"${JSONIFIER_COMMIT_HASH}\""
 	"SIMDJSON_COMMIT=\"${SIMDJSON_COMMIT_HASH}\""
 	"GLAZE_COMMIT=\"${GLAZE_COMMIT_HASH}\""

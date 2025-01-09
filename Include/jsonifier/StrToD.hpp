@@ -25,7 +25,7 @@
 
 #include <jsonifier/FastFloat.hpp>
 
-namespace jsonifier_internal {
+namespace jsonifier::internal {
 
 	JSONIFIER_INLINE_VARIABLE bool expTable[]{ false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
 		false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,

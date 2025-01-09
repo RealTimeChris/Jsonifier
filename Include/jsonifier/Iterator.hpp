@@ -25,7 +25,7 @@
 
 #include <iterator>
 
-namespace jsonifier_internal {
+namespace jsonifier::internal {
 
 	template<typename value_type_new> class basic_iterator {
 	  public:
@@ -137,4 +137,4 @@ namespace jsonifier_internal {
 		pointer ptr;
 	};
 
-}// namespace jsonifier_internal
+}// namespace jsonifier::internal

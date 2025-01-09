@@ -25,7 +25,7 @@
 
 #include <jsonifier/Config.hpp>
 
-namespace jsonifier_internal {
+namespace jsonifier::internal {
 
 	template<size_t sizeVal> struct string_literal {
 		using value_type	  = char;
@@ -213,8 +213,8 @@ namespace jsonifier_internal {
 				JSONIFIER_ALIGN static constexpr auto valuesNew{ packValues<stringLiteral>() };
 				jsonifier_simd_int_128 data1{};
 				std::memcpy(&data1, str, newCount);
-				jsonifier_simd_int_128 data2{ simd_internal::gatherValues<jsonifier_simd_int_128>(valuesNew.data()) };
-				return !simd_internal::opTest(simd_internal::opXor(data1, data2));
+				jsonifier_simd_int_128 data2{ jsonifier::simd::gatherValues<jsonifier_simd_int_128>(valuesNew.data()) };
+				return !jsonifier::simd::opTest(jsonifier::simd::opXor(data1, data2));
 			} else if constexpr (newCount == 8) {
 				static constexpr auto valuesNew{ packValues<stringLiteral>() };
 				uint64_t l;
@@ -262,9 +262,9 @@ namespace jsonifier_internal {
 		JSONIFIER_INLINE static bool impl(string_view_ptr str) noexcept {
 			static constexpr auto newLiteral{ stringNew };
 			JSONIFIER_ALIGN static constexpr auto valuesNew{ packValues<newLiteral>() };
-			jsonifier_simd_int_128 data1{ simd_internal::gatherValuesU<jsonifier_simd_int_128>(str) };
-			jsonifier_simd_int_128 data2{ simd_internal::gatherValues<jsonifier_simd_int_128>(valuesNew.data()) };
-			return !simd_internal::opTest(simd_internal::opXor(data1, data2));
+			jsonifier_simd_int_128 data1{ jsonifier::simd::gatherValuesU<jsonifier_simd_int_128>(str) };
+			jsonifier_simd_int_128 data2{ jsonifier::simd::gatherValues<jsonifier_simd_int_128>(valuesNew.data()) };
+			return !jsonifier::simd::opTest(jsonifier::simd::opXor(data1, data2));
 		}
 	};
 
@@ -274,9 +274,9 @@ namespace jsonifier_internal {
 		JSONIFIER_INLINE static bool impl(string_view_ptr str) noexcept {
 			static constexpr auto newLiteral{ stringNew };
 			JSONIFIER_ALIGN static constexpr auto valuesNew{ packValues<newLiteral>() };
-			jsonifier_simd_int_256 data1{ simd_internal::gatherValuesU<jsonifier_simd_int_256>(str) };
-			jsonifier_simd_int_256 data2{ simd_internal::gatherValues<jsonifier_simd_int_256>(valuesNew.data()) };
-			return !simd_internal::opTest(simd_internal::opXor(data1, data2));
+			jsonifier_simd_int_256 data1{ jsonifier::simd::gatherValuesU<jsonifier_simd_int_256>(str) };
+			jsonifier_simd_int_256 data2{ jsonifier::simd::gatherValues<jsonifier_simd_int_256>(valuesNew.data()) };
+			return !jsonifier::simd::opTest(jsonifier::simd::opXor(data1, data2));
 		}
 	};
 
@@ -287,9 +287,9 @@ namespace jsonifier_internal {
 		JSONIFIER_INLINE static bool impl(string_view_ptr str) noexcept {
 			static constexpr auto newLiteral{ stringNew };
 			JSONIFIER_ALIGN static constexpr auto valuesNew{ packValues<newLiteral>() };
-			jsonifier_simd_int_512 data1{ simd_internal::gatherValuesU<jsonifier_simd_int_512>(str) };
-			jsonifier_simd_int_512 data2{ simd_internal::gatherValues<jsonifier_simd_int_512>(valuesNew.data()) };
-			return !simd_internal::opTest(simd_internal::opXor(data1, data2));
+			jsonifier_simd_int_512 data1{ jsonifier::simd::gatherValuesU<jsonifier_simd_int_512>(str) };
+			jsonifier_simd_int_512 data2{ jsonifier::simd::gatherValues<jsonifier_simd_int_512>(valuesNew.data()) };
+			return !jsonifier::simd::opTest(jsonifier::simd::opXor(data1, data2));
 		}
 	};
 #endif

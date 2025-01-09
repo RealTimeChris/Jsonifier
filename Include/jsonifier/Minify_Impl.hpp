@@ -26,7 +26,7 @@
 #include <jsonifier/Minifier.hpp>
 #include <jsonifier/Simd.hpp>
 
-namespace jsonifier_internal {
+namespace jsonifier::internal {
 
 	template<typename derived_type> template<jsonifier::concepts::string_t string_type, typename iterator>
 	JSONIFIER_INLINE uint64_t minifier<derived_type>::impl(iterator& iter, string_type&& out) noexcept {
@@ -150,4 +150,4 @@ namespace jsonifier_internal {
 		return index;
 	}
 
-}// namespace jsonifier_internal
+}// namespace jsonifier::internal

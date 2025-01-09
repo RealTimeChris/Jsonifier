@@ -41,20 +41,20 @@ namespace jsonifier {
 		string_base<value_type_new> returnstring{};
 		returnstring.resize(64);
 		if constexpr (sizeof(std::remove_cvref_t<value_type01>) == 8) {
-			auto newPtr = jsonifier_internal::toChars(returnstring.data(), value);
+			auto newPtr = jsonifier::internal::toChars(returnstring.data(), value);
 			returnstring.resize(static_cast<uint64_t>(newPtr - returnstring.data()));
 		} else {
 			if constexpr (jsonifier::concepts::unsigned_t<value_type01>) {
 				uint64_t newValue{ static_cast<uint64_t>(value) };
-				auto newPtr = jsonifier_internal::toChars(returnstring.data(), newValue);
+				auto newPtr = jsonifier::internal::toChars(returnstring.data(), newValue);
 				returnstring.resize(static_cast<uint64_t>(newPtr - returnstring.data()));
 			} else if constexpr (jsonifier::concepts::signed_t<value_type01>) {
 				int64_t newValue{ static_cast<int64_t>(value) };
-				auto newPtr = jsonifier_internal::toChars(returnstring.data(), newValue);
+				auto newPtr = jsonifier::internal::toChars(returnstring.data(), newValue);
 				returnstring.resize(static_cast<uint64_t>(newPtr - returnstring.data()));
 			} else {
 				double newValue{ static_cast<double>(value) };
-				auto newPtr = jsonifier_internal::toChars(returnstring.data(), newValue);
+				auto newPtr = jsonifier::internal::toChars(returnstring.data(), newValue);
 				returnstring.resize(static_cast<uint64_t>(newPtr - returnstring.data()));
 			}
 		}
@@ -66,7 +66,7 @@ namespace jsonifier {
 		if JSONIFIER_LIKELY (string.size() > 0) {
 			auto iter = static_cast<string_view_ptr>(string.data());
 			auto end  = static_cast<string_view_ptr>(string.data()) + string.size();
-			jsonifier_internal::parseFloat(newValue, iter, end);
+			jsonifier::internal::parseFloat(newValue, iter, end);
 		}
 		return newValue;
 	}
@@ -84,7 +84,7 @@ namespace jsonifier {
 		if JSONIFIER_LIKELY (string.size() > 0) {
 			auto iter = static_cast<string_view_ptr>(string.data());
 			auto end  = static_cast<string_view_ptr>(string.data()) + string.size();
-			jsonifier_internal::integer_parser<int64_t>::parseInt(newValue, iter, end);
+			jsonifier::internal::integer_parser<int64_t>::parseInt(newValue, iter, end);
 		}
 		return newValue;
 	}
@@ -102,7 +102,7 @@ namespace jsonifier {
 		if JSONIFIER_LIKELY (string.size() > 0) {
 			auto iter = static_cast<string_view_ptr>(string.data());
 			auto end  = static_cast<string_view_ptr>(string.data()) + string.size();
-			jsonifier_internal::integer_parser<uint64_t>::parseInt(newValue, iter, end);
+			jsonifier::internal::integer_parser<uint64_t>::parseInt(newValue, iter, end);
 		}
 		return newValue;
 	}
@@ -116,7 +116,7 @@ namespace jsonifier {
 	}
 }
 
-namespace jsonifier_internal {
+namespace jsonifier::internal {
 
 	template<typename value_type_new, typename iterator> JSONIFIER_INLINE bool parseNumber(value_type_new& value, iterator&& iter, iterator&& end) noexcept {
 		using value_type = std::remove_cvref_t<value_type_new>;

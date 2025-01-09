@@ -29,7 +29,7 @@
 
 #include <memory>
 
-namespace jsonifier_internal {
+namespace jsonifier::internal {
 
 	static constexpr auto falseV{ "false" };
 	static constexpr auto trueV{ "true" };
@@ -47,7 +47,7 @@ namespace jsonifier_internal {
 	template<typename value_type, typename buffer_type, typename context_type, jsonifier::parse_options options, bool minifiedOrInsideRepeated> struct parse_types_impl {
 		using base						  = derailleur<options, context_type>;
 		static constexpr auto memberCount = tuple_size_v<core_tuple_type<value_type>>;
-		template<size_t index> JSONIFIER_INLINE static bool processIndex(value_type& value, context_type& context) {
+		template<size_t index> JSONIFIER_CLANG_INLINE static bool processIndex(value_type& value, context_type& context) {
 			static constexpr auto tupleElem		= get<index>(jsonifier::core<std::remove_cvref_t<value_type>>::parseValue);
 			static constexpr auto key			= tupleElem.name.operator jsonifier::string_view();
 			static constexpr auto ptrNew		= tupleElem.memberPtr;
@@ -87,7 +87,7 @@ namespace jsonifier_internal {
 	template<typename value_type, typename buffer_type, typename context_type, jsonifier::parse_options options, bool minifiedOrInsideRepeated> struct parse_types_impl_partial {
 		using base						  = derailleur<options, context_type>;
 		static constexpr auto memberCount = tuple_size_v<core_tuple_type<value_type>>;
-		template<size_t index> JSONIFIER_INLINE static bool processIndex(value_type& value, context_type& context) {
+		template<size_t index> JSONIFIER_CLANG_INLINE static bool processIndex(value_type& value, context_type& context) {
 			static constexpr auto tupleElem		= get<index>(jsonifier::core<std::remove_cvref_t<value_type>>::parseValue);
 			static constexpr auto key			= tupleElem.name.operator jsonifier::string_view();
 			static constexpr auto ptrNew		= tupleElem.memberPtr;
@@ -253,7 +253,7 @@ namespace jsonifier_internal {
 		}
 
 		template<typename buffer_type, typename value_type, typename context_type, bool haveWeStarted = false>
-		JSONIFIER_INLINE static void processIndex(value_type& value, context_type& context, string_view_ptr wsStart, size_t wsSize) {
+		JSONIFIER_CLANG_INLINE static void processIndex(value_type& value, context_type& context, string_view_ptr wsStart, size_t wsSize) {
 			using base = derailleur<options, context_type>;
 			if constexpr (memberCount > 0 && json_entity_type::index < memberCount) {
 				if JSONIFIER_LIKELY (context.iter < context.endIter) {
@@ -371,7 +371,7 @@ namespace jsonifier_internal {
 		}
 
 		template<typename buffer_type, typename value_type, typename context_type, bool haveWeStarted = false>
-		JSONIFIER_INLINE static void processIndex(value_type& value, context_type& context) {
+		JSONIFIER_CLANG_INLINE static void processIndex(value_type& value, context_type& context) {
 			using base = derailleur<options, context_type>;
 			if constexpr (memberCount > 0 && json_entity_type::index < memberCount) {
 				if JSONIFIER_LIKELY (context.iter < context.endIter) {
@@ -525,7 +525,7 @@ namespace jsonifier_internal {
 		template<typename... arg_types> JSONIFIER_CLANG_INLINE static void processIndices(arg_types&&... args) {
 			(( void )(args), ...);
 			if constexpr (sizeof...(values) > 0) {
-				(parse_type<value_type, buffer_type, context_type, options, values, minifiedOrInsideRepeated>::processIndex(jsonifier_internal::forward<arg_types>(args)...), ...);
+				(parse_type<value_type, buffer_type, context_type, options, values, minifiedOrInsideRepeated>::processIndex(std::forward<arg_types>(args)...), ...);
 			}
 		}
 	};
@@ -669,6 +669,22 @@ namespace jsonifier_internal {
 		}
 	};
 
+	template<typename value_type> JSONIFIER_INLINE static auto getBeginIterVec(value_type& value) {
+		if constexpr (std::is_same_v<typename value_type::value_type, bool>) {
+			return value.begin();
+		} else {
+			return value.data();
+		}
+	}
+
+	template<typename value_type> JSONIFIER_INLINE static auto getEndIterVec(value_type& value) {
+		if constexpr (std::is_same_v<typename value_type::value_type, bool>) {
+			return value.end();
+		} else {
+			return value.data() + value.size();
+		}
+	}
+
 	JSONIFIER_INLINE void noop() noexcept {};
 
 	template<typename buffer_type, typename context_type, jsonifier::parse_options optionsNew> struct array_val_parser<buffer_type, context_type, optionsNew, false> {
@@ -709,8 +725,8 @@ namespace jsonifier_internal {
 		template<jsonifier::concepts::vector_t value_type, bool newLines>
 		JSONIFIER_INLINE static void parseObjectsWithSize(value_type& value, context_type& context, size_t size, const auto wsStart = {}, size_t wsSize = {}) {
 			size_t i	 = 0;
-			auto newIter = value.begin();
-			auto endIter = value.end();
+			auto newIter = getBeginIterVec(value);
+			auto endIter = getEndIterVec(value);
 
 			for (; newIter != endIter; ++i, ++newIter) {
 				parse<getJsonType<typename value_type::value_type>(), options, false>::template impl<buffer_type>(*newIter, context);
@@ -1451,8 +1467,6 @@ namespace jsonifier_internal {
 				}
 			}
 			JSONIFIER_ELSE_UNLIKELY(else) {
-				context.parserPtr->template reportError<parse_errors::Unexpected_String_End>(context);
-				base::skipToNextValue(context);
 				return;
 			}
 		}
@@ -1509,8 +1523,6 @@ namespace jsonifier_internal {
 				}
 			}
 			JSONIFIER_ELSE_UNLIKELY(else) {
-				context.parserPtr->template reportError<parse_errors::Unexpected_String_End>(context);
-				base::skipToNextValue(context);
 				return;
 			}
 		}
@@ -1538,8 +1550,6 @@ namespace jsonifier_internal {
 				}
 			}
 			JSONIFIER_ELSE_UNLIKELY(else) {
-				context.parserPtr->template reportError<parse_errors::Unexpected_String_End>(context);
-				base::skipToNextValue(context);
 				return;
 			}
 		}
@@ -1593,15 +1603,11 @@ namespace jsonifier_internal {
 											return (value.size() == (i) + 1) ? noop() : value.resize((i) + 1);
 										}
 										JSONIFIER_ELSE_UNLIKELY(else) {
-											context.parserPtr->template reportError<parse_errors::Missing_Array_End>(context);
-											base::skipToNextValue(context);
 											return;
 										}
 									}
 								}
 								JSONIFIER_ELSE_UNLIKELY(else) {
-									context.parserPtr->template reportError<parse_errors::Unexpected_String_End>(context);
-									base::skipToNextValue(context);
 									return;
 								}
 							}
@@ -1620,15 +1626,11 @@ namespace jsonifier_internal {
 										return;
 									}
 									JSONIFIER_ELSE_UNLIKELY(else) {
-										context.parserPtr->template reportError<parse_errors::Missing_Array_End>(context);
-										base::skipToNextValue(context);
 										return;
 									}
 								}
 							}
 							JSONIFIER_ELSE_UNLIKELY(else) {
-								context.parserPtr->template reportError<parse_errors::Unexpected_String_End>(context);
-								base::skipToNextValue(context);
 								return;
 							}
 						}
@@ -1643,8 +1645,6 @@ namespace jsonifier_internal {
 				}
 			}
 			JSONIFIER_ELSE_UNLIKELY(else) {
-				context.parserPtr->template reportError<parse_errors::Unexpected_String_End>(context);
-				base::skipToNextValue(context);
 				return;
 			}
 		}
@@ -1670,8 +1670,6 @@ namespace jsonifier_internal {
 									return;
 								}
 								JSONIFIER_ELSE_UNLIKELY(else) {
-									context.parserPtr->template reportError<parse_errors::Missing_Array_End>(context);
-									base::skipToNextValue(context);
 									return;
 								}
 							}
@@ -1687,8 +1685,6 @@ namespace jsonifier_internal {
 				}
 			}
 			JSONIFIER_ELSE_UNLIKELY(else) {
-				context.parserPtr->template reportError<parse_errors::Unexpected_String_End>(context);
-				base::skipToNextValue(context);
 				return;
 			}
 		}
@@ -1716,8 +1712,6 @@ namespace jsonifier_internal {
 				}
 			}
 			JSONIFIER_ELSE_UNLIKELY(else) {
-				context.parserPtr->template reportError<parse_errors::Unexpected_String_End>(context);
-				base::skipToNextValue(context);
 				return;
 			}
 		}

@@ -29,7 +29,7 @@
 #include <cstdint>
 #include <utility>
 
-namespace simd_internal {
+namespace jsonifier::simd {
 
 	union __m128x {
 		template<typename value_type> constexpr __m128x(value_type arg01, value_type arg02, value_type arg03, value_type arg04, value_type arg05, value_type arg06,
