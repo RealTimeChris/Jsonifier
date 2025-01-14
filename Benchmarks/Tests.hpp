@@ -177,7 +177,7 @@ namespace tests {
 			currentIndex = 0;
 			bnch_swt::performance_metrics writeResult =
 				bnch_swt::benchmark_stage<testNameWrite, iterations>::template runBenchmark<jsonifierLibraryName, "steelblue">([&]() mutable {
-					parser.serializeJson<jsonifier::serialize_options{ .prettify = !minified }>(testDatas[currentIndex], newStrings[currentIndex]);
+					newStrings[currentIndex] = static_cast<std::string>(parser.serializeJson<jsonifier::serialize_options{ .prettify = !minified }>(testDatas[currentIndex]));
 					bnch_swt::doNotOptimizeAway(newStrings[currentIndex]);
 					auto newSize = newStrings[currentIndex].size();
 					++currentIndex;

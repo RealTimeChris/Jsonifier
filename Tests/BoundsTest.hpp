@@ -69,21 +69,6 @@ template<typename value_type_new> struct jsonifier::core<abc_test<value_type_new
 		&value_type::h, &value_type::g, &value_type::f, &value_type::e, &value_type::d, &value_type::c, &value_type::b, &value_type::a>();
 };
 
-template<result_type type> struct jsonifier::core<result<type>> {
-	using value_type				 = result<type>;
-	static constexpr auto parseValue = createValue<&value_type::byteLength, &value_type::jsonSpeed, &value_type::jsonTime, &value_type::color>();
-};
-
-template<> struct jsonifier::core<results_data> {
-	using value_type				 = results_data;
-	static constexpr auto parseValue = createValue<&value_type::name, &value_type::readResult, &value_type::writeResult, &value_type::test, &value_type::url>();
-};
-
-template<> struct jsonifier::core<test_results> {
-	using value_type				 = test_results;
-	static constexpr auto parseValue = createValue<&value_type::results, &value_type::testName>();
-};
-
 namespace bounds_tests {
 
 	bool boundsTests() noexcept {

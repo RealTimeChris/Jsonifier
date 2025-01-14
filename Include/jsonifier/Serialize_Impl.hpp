@@ -151,51 +151,43 @@ namespace jsonifier::internal {
 		/// @param value The object containing the member to be serialized.
 		/// @param context The serialization context (e.g., JSON builder or buffer).
 		template<typename json_entity_type, typename value_type, typename context_type> static void processIndex(value_type& value, context_type& context) noexcept {
-			static constexpr auto key		= json_entity_type::name;
-			static constexpr auto memberPtr = json_entity_type::memberPtr;
 
 			/// @brief Checks for excluded keys and skips serialization if the key is excluded.
 			if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
 				auto& keys = value.jsonifierExcludedKeys;
-				if JSONIFIER_LIKELY (keys.find(static_cast<typename std::remove_reference_t<decltype(keys)>::key_type>(key)) != keys.end()) {
+				if JSONIFIER_LIKELY (keys.find(static_cast<typename std::remove_reference_t<decltype(keys)>::key_type>(json_entity_type::name)) != keys.end()) {
 					return;
 				}
 			}
 
 			/// @brief Writes the object entry and serializes the member.
-			writeObjectEntry<options, key>(context);
-			serialize<options, json_entity_type>::impl(value.*memberPtr, context);
+			writeObjectEntry<options, json_entity_type::name>(context);
+			serialize<options, json_entity_type>::impl(value.*json_entity_type::memberPtr, context);
 			writeObjectExit<options, json_entity_type::isItLast>(context);
 		}
 
 		template<typename json_entity_type, typename value_type, typename context_type>
 		JSONIFIER_NON_GCC_INLINE static void processIndexForceInline(value_type& value, context_type& context) noexcept {
-			static constexpr auto key		= json_entity_type::name;
-			static constexpr auto memberPtr = json_entity_type::memberPtr;
 
 			/// @brief Checks for excluded keys and skips serialization if the key is excluded.
 			if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
 				auto& keys = value.jsonifierExcludedKeys;
-				if JSONIFIER_LIKELY (keys.find(static_cast<typename std::remove_reference_t<decltype(keys)>::key_type>(key)) != keys.end()) {
+				if JSONIFIER_LIKELY (keys.find(static_cast<typename std::remove_reference_t<decltype(keys)>::key_type>(json_entity_type::name)) != keys.end()) {
 					return;
 				}
 			}
 
 			/// @brief Writes the object entry and serializes the member.
-			writeObjectEntry<options, key>(context);
-			serialize<options, json_entity_type>::impl(value.*memberPtr, context);
+			writeObjectEntry<options, json_entity_type::name>(context);
+			serialize<options, json_entity_type>::impl(value.*json_entity_type::memberPtr, context);
 			writeObjectExit<options, json_entity_type::isItLast>(context);
 		}
 
 		template<typename json_entity_type, typename... arg_types> JSONIFIER_INLINE static void iterateValuesImpl(arg_types&&... args) {
-			if constexpr (json_entity_type::index < forceInlineLimitSerialize) {
-				processIndexForceInline<json_entity_type>(jsonifier::internal::forward<arg_types>(args)...);
-			} else {
-				processIndex<json_entity_type>(jsonifier::internal::forward<arg_types>(args)...);
-			}
+			processIndexForceInline<json_entity_type>(jsonifier::internal::forward<arg_types>(args)...);
 		}
 
-		template<typename... arg_types> JSONIFIER_INLINE static void iterateValues(arg_types&&... args) {
+		template<typename... arg_types> static void iterateValues(arg_types&&... args) {
 			((iterateValuesImpl<bases>(jsonifier::internal::forward<arg_types>(args)...)), ...);
 		}
 	};
@@ -241,11 +233,11 @@ namespace jsonifier::internal {
 		alignas(2) static constexpr char packedValues04[]{ "{}" };
 		template<jsonifier::concepts::jsonifier_object_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
 			static constexpr auto memberCount{ tuple_size_v<core_tuple_type<value_type>> };
-			static constexpr auto paddingSize{ getPaddingSize<options, std::remove_cvref_t<value_type>>() * 2 };
+			static constexpr auto paddingSize{ getPaddingSize<options, std::remove_cvref_t<value_type>>() * 4 };
 
 			if constexpr (memberCount > 0) {
 				if constexpr (options.prettify) {
-					const auto additionalSize = (paddingSize + (memberCount * context.indent * 2));
+					const auto additionalSize = (paddingSize + (memberCount * context.indent * 4));
 					context.index			  = static_cast<size_t>(context.bufferPtr - context.buffer.data());
 					if (context.buffer.size() <= context.index + additionalSize) {
 						context.buffer.resize((context.index + additionalSize) * 4);
@@ -439,7 +431,7 @@ namespace jsonifier::internal {
 			static constexpr auto paddingSize{ getPaddingSize<options, typename std::remove_cvref_t<value_type>::value_type>() };
 			if JSONIFIER_LIKELY (newSize > 0) {
 				if constexpr (options.prettify) {
-					const auto additionalSize = newSize * (paddingSize + context.indent) * 2;
+					const auto additionalSize = newSize * (paddingSize + context.indent) * 4;
 					context.index			  = static_cast<size_t>(context.bufferPtr - context.buffer.data());
 					if (context.buffer.size() <= context.index + additionalSize) {
 						context.buffer.resize((context.index + additionalSize) * 4);

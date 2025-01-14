@@ -101,7 +101,7 @@ namespace jsonifier::internal {
 			serialize<options, base_json_entity<value_type>>::impl(object, context);
 			context.index = static_cast<size_t>(context.bufferPtr - context.buffer.data());
 			buffer.resize(context.index);
-			std::memcpy(buffer.data(), stringBuffer.data(), context.index);
+			std::copy(stringBuffer.data(), stringBuffer.data() + context.index, buffer.data());
 			return true;
 		}
 

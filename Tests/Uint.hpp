@@ -30,64 +30,22 @@
 
 namespace uint_validation_tests {
 
-	constexpr jsonifier::internal::array<uint64_t, 16> expectedInt64Values{ 0, 1, 42, 123456789, 2147483647, std::numeric_limits<uint64_t>::max(), 0, 1, 3, 123, 100000, 2000,
-		31400000000LL, 0, 500, 1 };
+	constexpr std::array<std::string_view, 16> stringViews01{ "0", "1", "42", "123456789", "2147483647", "18446744073709551615", "0.0", "1.5", "3.14159",
+		"123.456", "1e5", "2e3", "3.14e10", "4.2e-1", "5E2", "10000000e-7" };
 
-	template<bool passTest = true, typename value_type>
-	auto runTest(value_type& expectedValue, const std::string_view& testName, const std::string& dataToParse, jsonifier::jsonifier_core<>& parser) noexcept {
-		std::cout << testName << " Input: " << dataToParse.substr(1, dataToParse.size() - 2) << std::endl;
-		std::vector<uint64_t> data;
-		auto result = parser.parseJson(data, dataToParse);
-		if constexpr (passTest) {
-			if (result && parser.getErrors().size() == 0) {
-				if (data.size() == 1 && data[0] == expectedValue) {
-					std::cout << testName << " Succeeded - Output: " << data[0] << std::endl;
-					std::cout << testName << " Succeeded - Expected Output: " << expectedValue << std::endl;
-					return;
-				}
-			}
-			if (data.size() == 1) {
-				std::cout << testName << " Failed - Output: " << data[0] << std::endl;
-			}
-			std::cout << testName << " Failed - Expected Output: " << expectedValue << std::endl;
-			for (auto& value: parser.getErrors()) {
-				std::cout << "Jsonifier Error: " << value << std::endl;
-			}
-		} else {
-			if (!result) {
-				std::cout << testName << " Succeeded - Output: " << data[0] << std::endl;
-				std::cout << testName << " Succeeded - Expected Output: " << expectedValue.substr(1, expectedValue.size() - 2) << std::endl;
-			} else {
-				if (data.size() == 1) {
-					std::cout << testName << " Failed - Output: " << data[0] << std::endl;
-				}
-				std::cout << testName << " Failed - Expected Output: " << expectedValue.substr(1, expectedValue.size() - 2) << std::endl;
-				for (auto& value: parser.getErrors()) {
-					std::cout << "Jsonifier Error: " << value << std::endl;
-				}
-			}
-		}
-		return;
-	}
+	constexpr std::array<uint64_t, 16> uint64Values{ 0, 1, 42, 123456789, 2147483647, 18446744073709551615ULL, 0, 1, 3, 123, 100000, 2000, 31400000000ULL, 0, 500, 1 };
+
+	constexpr std::array<std::string_view, 11> stringViews02{ "18446744073709551616", "-9223372036854775809", "-", "1.2.3", "1e", "1e+", "1e-", "\"abc\"", "true",
+		"null", "{}" };
 
 	bool uintTests() noexcept {
-		std::cout << "Uint Tests: " << std::endl;
-		std::string filePath01{ testPath.operator std::string() };
-		filePath01 += "/UintValidation/passTests.json";
-		auto file = bnch_swt::file_loader::loadFile(filePath01);
-		std::vector<std::string> passTests{};
 		jsonifier::jsonifier_core parser{};
-		parser.parseJson(passTests, file);
-		for (size_t x = 0; x < passTests.size(); ++x) {
-			runTest(expectedInt64Values[x], "Unsigned-Integer-Pass-Test " + std::to_string(x + 1), passTests[x], parser);
+		std::cout << "Uint Tests: " << std::endl;
+		for (size_t x = 0; x < std::size(stringViews01); ++x) {
+			runTest<true>("Uint Pass Test #" + std::to_string(x), stringViews01[x], uint64Values[x], parser);
 		}
-		std::string filePath02{ testPath.operator std::string() };
-		filePath02 += "/UintValidation/failTests.json";
-		file = bnch_swt::file_loader::loadFile(filePath02);
-		std::vector<std::string> failTests{};
-		parser.parseJson(failTests, file);
-		for (size_t x = 0; x < failTests.size(); ++x) {
-			runTest<false>(failTests[x], "Unsigned-Integer-Fail-Test " + std::to_string(x + 1), failTests[x], parser);
+		for (size_t x = 0; x < std::size(stringViews02); ++x) {
+			runTest<false>("Uint Fail Test #" + std::to_string(x), stringViews02[x], 0, parser);
 		}
 		return true;
 	}

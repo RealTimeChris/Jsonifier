@@ -277,7 +277,7 @@ template<typename value_type> struct test_generator {
 
 		std::string result{};
 		uint64_t insertedUnicode = 0;
-		auto iter			   = unicodeIndices.begin();
+		auto iter				 = unicodeIndices.begin();
 		for (uint64_t x = 0; x < length; ++x) {
 			if (iter < unicodeIndices.end() && x == *iter) [[unlikely]] {
 				insertUnicodeInJSON(result);

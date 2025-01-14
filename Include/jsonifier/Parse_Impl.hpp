@@ -31,19 +31,6 @@
 
 namespace jsonifier::internal {
 
-	static constexpr auto falseV{ "false" };
-	static constexpr auto trueV{ "true" };
-	static constexpr auto nullV{ "null" };
-	static constexpr char newline{ '\n' };
-	static constexpr char lBracket{ '[' };
-	static constexpr char rBracket{ ']' };
-	static constexpr char lBrace{ '{' };
-	static constexpr char rBrace{ '}' };
-	static constexpr char colon{ ':' };
-	static constexpr char comma{ ',' };
-	static constexpr char quote{ '"' };
-	static constexpr char n{ 'n' };
-
 	template<typename value_type, typename buffer_type, typename context_type, jsonifier::parse_options options, bool minifiedOrInsideRepeated> struct parse_types_impl {
 		using base						  = derailleur<options, context_type>;
 		static constexpr auto memberCount = tuple_size_v<core_tuple_type<value_type>>;
@@ -191,7 +178,7 @@ namespace jsonifier::internal {
 		}
 
 		template<typename buffer_type, typename value_type, typename context_type>
-		static void processIndexImpl(value_type& value, context_type& context, string_view_ptr wsStart, size_t wsSize) {
+		JSONIFIER_CLANG_INLINE static void processIndexImpl(value_type& value, context_type& context, string_view_ptr wsStart, size_t wsSize) {
 			using base = derailleur<options, context_type>;
 			if constexpr (options.knownOrder) {
 				if (antiHashStates[json_entity_type::index] == json_entity_type::index) {
@@ -312,7 +299,7 @@ namespace jsonifier::internal {
 			return processIndex<buffer_type, value_type, context_type, true>(value, context);
 		}
 
-		template<typename buffer_type, typename value_type, typename context_type> static void processIndexImpl(value_type& value, context_type& context) {
+		template<typename buffer_type, typename value_type, typename context_type> JSONIFIER_CLANG_INLINE static void processIndexImpl(value_type& value, context_type& context) {
 			using base = derailleur<options, context_type>;
 			if constexpr (options.knownOrder) {
 				if (antiHashStates[json_entity_type::index] == json_entity_type::index) {
@@ -413,9 +400,13 @@ namespace jsonifier::internal {
 	};
 
 	template<typename... bases> struct parse_map : public bases... {
+		template<typename json_entity_type, typename buffer_type, typename... arg_types> JSONIFIER_INLINE static void iterateValuesImpl(arg_types&&... args) {
+			json_entity_type::template processIndex<buffer_type>(jsonifier::internal::forward<arg_types>(args)...);
+		}
+
 		template<typename buffer_type, typename... arg_types> constexpr static void iterateValues(arg_types&&... args) {
 			(( void )(args), ...);
-			(bases::template processIndex<buffer_type>(args...), ...);
+			((iterateValuesImpl<bases, buffer_type>(jsonifier::internal::forward<arg_types>(args)...)), ...);
 		}
 	};
 
