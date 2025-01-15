@@ -34,7 +34,7 @@ namespace jsonifier::internal {
 
 	JSONIFIER_INLINE void printIterValues(auto iter, const std::source_location& title = std::source_location::current()) {
 		//std::cout<< "File: " << title.file_name() << ", Line: " << title.line() << std::endl;
-		//std::cout<< "Values: " << jsonifier::string_view{ iter, 32 } << std::endl;
+		//std::cout<< "Values: " << string_view{ iter, 32 } << std::endl;
 	}
 
 	template<typename derived_type> class parser;
@@ -51,7 +51,7 @@ namespace jsonifier::internal {
 	};
 
 	template<typename value_type> constexpr bool areWeInsideRepeated() {
-		return jsonifier::concepts::map_t<value_type> || jsonifier::concepts::vector_t<value_type> || jsonifier::concepts::raw_array_t<value_type>;
+		return concepts::map_t<value_type> || concepts::vector_t<value_type> || concepts::raw_array_t<value_type>;
 	}
 
 	template<typename derived_type, typename iterator_type> struct parse_context_partial {
@@ -75,69 +75,69 @@ namespace jsonifier::internal {
 		{ value.getState() } -> std::same_as<bool>;
 	};
 
-	template<jsonifier::concepts::pointer_t value_type> JSONIFIER_INLINE string_view_ptr getEndIter(value_type value) noexcept {
+	template<concepts::pointer_t value_type> JSONIFIER_INLINE string_view_ptr getEndIter(value_type value) noexcept {
 		return reinterpret_cast<string_view_ptr>(char_comparison<'\0', decltype(*value)>::memchar(value, std::numeric_limits<size_t>::max()));
 	}
 
-	template<jsonifier::concepts::pointer_t value_type> JSONIFIER_INLINE string_view_ptr getBeginIter(value_type value) noexcept {
+	template<concepts::pointer_t value_type> JSONIFIER_INLINE string_view_ptr getBeginIter(value_type value) noexcept {
 		return reinterpret_cast<string_view_ptr>(value);
 	}
 
-	template<jsonifier::concepts::has_data value_type> JSONIFIER_INLINE string_view_ptr getEndIter(value_type& value) noexcept {
+	template<concepts::has_data value_type> JSONIFIER_INLINE string_view_ptr getEndIter(value_type& value) noexcept {
 		return reinterpret_cast<string_view_ptr>(value.data() + value.size());
 	}
 
-	template<jsonifier::concepts::has_data value_type> JSONIFIER_INLINE string_view_ptr getBeginIter(value_type& value) noexcept {
+	template<concepts::has_data value_type> JSONIFIER_INLINE string_view_ptr getBeginIter(value_type& value) noexcept {
 		return reinterpret_cast<string_view_ptr>(value.data());
 	}
 
-	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool minified> struct object_val_parser;
-	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool insideRepeated> struct object_val_parser_partial;
+	template<typename buffer_type, typename parse_context_type, parse_options optionsNew, bool minified> struct object_val_parser;
+	template<typename buffer_type, typename parse_context_type, parse_options optionsNew, bool insideRepeated> struct object_val_parser_partial;
 
-	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool minified> struct array_val_parser;
-	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool insideRepeated> struct array_val_parser_partial;
+	template<typename buffer_type, typename parse_context_type, parse_options optionsNew, bool minified> struct array_val_parser;
+	template<typename buffer_type, typename parse_context_type, parse_options optionsNew, bool insideRepeated> struct array_val_parser_partial;
 
-	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool minified> struct string_val_parser;
-	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool insideRepeated> struct string_val_parser_partial;
+	template<typename buffer_type, typename parse_context_type, parse_options optionsNew, bool minified> struct string_val_parser;
+	template<typename buffer_type, typename parse_context_type, parse_options optionsNew, bool insideRepeated> struct string_val_parser_partial;
 
-	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool minified> struct number_val_parser;
-	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool insideRepeated> struct number_val_parser_partial;
+	template<typename buffer_type, typename parse_context_type, parse_options optionsNew, bool minified> struct number_val_parser;
+	template<typename buffer_type, typename parse_context_type, parse_options optionsNew, bool insideRepeated> struct number_val_parser_partial;
 
-	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool minified> struct bool_val_parser;
-	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool insideRepeated> struct bool_val_parser_partial;
+	template<typename buffer_type, typename parse_context_type, parse_options optionsNew, bool minified> struct bool_val_parser;
+	template<typename buffer_type, typename parse_context_type, parse_options optionsNew, bool insideRepeated> struct bool_val_parser_partial;
 
-	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool minified> struct null_val_parser;
-	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool insideRepeated> struct null_val_parser_partial;
+	template<typename buffer_type, typename parse_context_type, parse_options optionsNew, bool minified> struct null_val_parser;
+	template<typename buffer_type, typename parse_context_type, parse_options optionsNew, bool insideRepeated> struct null_val_parser_partial;
 
-	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool minified> struct accessor_val_parser;
-	template<typename buffer_type, typename parse_context_type, jsonifier::parse_options optionsNew, bool insideRepeated> struct accessor_val_parser_partial;
+	template<typename buffer_type, typename parse_context_type, parse_options optionsNew, bool minified> struct accessor_val_parser;
+	template<typename buffer_type, typename parse_context_type, parse_options optionsNew, bool insideRepeated> struct accessor_val_parser_partial;
 
-	template<typename buffer_type, typename parse_context_type, typename value_type, jsonifier::parse_options optionsNew, bool insideRepeated> struct custom_val_parser;
-	template<typename buffer_type, typename parse_context_type, typename value_type, jsonifier::parse_options optionsNew, bool insideRepeated> struct custom_val_parser_partial;
+	template<typename buffer_type, typename parse_context_type, typename value_type, parse_options optionsNew, bool insideRepeated> struct custom_val_parser;
+	template<typename buffer_type, typename parse_context_type, typename value_type, parse_options optionsNew, bool insideRepeated> struct custom_val_parser_partial;
 
 	template<typename value_type> static constexpr auto getJsonType() {
-		if constexpr (jsonifier::concepts::jsonifier_object_t<value_type> || jsonifier::concepts::map_t<value_type>) {
-			return jsonifier::json_type::object;
-		} else if constexpr (jsonifier::concepts::raw_array_t<value_type> || jsonifier::concepts::tuple_t<value_type> || jsonifier::concepts::vector_t<value_type>) {
-			return jsonifier::json_type::array;
-		} else if constexpr (jsonifier::concepts::string_t<value_type> || jsonifier::concepts::string_view_t<value_type>) {
-			return jsonifier::json_type::string;
-		} else if constexpr (jsonifier::concepts::bool_t<value_type>) {
-			return jsonifier::json_type::boolean;
-		} else if constexpr (jsonifier::concepts::num_t<value_type> || jsonifier::concepts::enum_t<value_type>) {
-			return jsonifier::json_type::number;
-		} else if constexpr (jsonifier::concepts::always_null_t<value_type>) {
-			return jsonifier::json_type::null;
+		if constexpr (concepts::jsonifier_object_t<value_type> || concepts::map_t<value_type>) {
+			return json_type::object;
+		} else if constexpr (concepts::raw_array_t<value_type> || concepts::tuple_t<value_type> || concepts::vector_t<value_type>) {
+			return json_type::array;
+		} else if constexpr (concepts::string_t<value_type> || concepts::string_view_t<value_type>) {
+			return json_type::string;
+		} else if constexpr (concepts::bool_t<value_type>) {
+			return json_type::boolean;
+		} else if constexpr (concepts::num_t<value_type> || concepts::enum_t<value_type>) {
+			return json_type::number;
+		} else if constexpr (concepts::always_null_t<value_type>) {
+			return json_type::null;
 		} else {
-			return jsonifier::json_type::accessor;
+			return json_type::accessor;
 		}
 	}
 
 	template<typename value_type, size_t currentIndex = 0> constexpr size_t countTotalNonRepeatedMembers(size_t currentCount = 1) {
 		if constexpr (currentIndex < tuple_size_v<core_tuple_type<value_type>>) {
-			constexpr auto newSubTuple = jsonifier::internal::get<currentIndex>(jsonifier::core<std::remove_cvref_t<value_type>>::parseValue);
+			constexpr auto newSubTuple = internal::get<currentIndex>(core<std::remove_cvref_t<value_type>>::parseValue);
 			using member_type		   = typename std::remove_cvref_t<decltype(newSubTuple)>::member_type;
-			if constexpr (jsonifier::concepts::jsonifier_object_t<member_type>) {
+			if constexpr (concepts::jsonifier_object_t<member_type>) {
 				currentCount += countTotalNonRepeatedMembers<member_type>();
 			}
 			++currentCount;
@@ -147,29 +147,29 @@ namespace jsonifier::internal {
 		}
 	}
 
-	template<jsonifier::json_type type, jsonifier::parse_options options, bool... values> struct parse;
+	template<json_type type, parse_options options, bool... values> struct parse;
 
-	template<jsonifier::json_type type, jsonifier::parse_options options, bool insideRepeated> struct parse<type, options, insideRepeated> {
+	template<json_type type, parse_options options, bool insideRepeated> struct parse<type, options, insideRepeated> {
 		template<typename buffer_type, typename value_type, typename parse_context_type>
 		JSONIFIER_INLINE static void impl(value_type&& value, parse_context_type&& context) noexcept {
 			if constexpr (options.partialRead) {
-				if constexpr (type == jsonifier::json_type::object) {
-					if constexpr (jsonifier::concepts::map_t<value_type> || insideRepeated) {
+				if constexpr (type == json_type::object) {
+					if constexpr (concepts::map_t<value_type> || insideRepeated) {
 						object_val_parser_partial<buffer_type, parse_context_type, options, true>::impl(value, context);
 					} else {
 						object_val_parser_partial<buffer_type, parse_context_type, options, false>::impl(value, context);
 					}
-				} else if constexpr (type == jsonifier::json_type::array) {
+				} else if constexpr (type == json_type::array) {
 					array_val_parser_partial<buffer_type, parse_context_type, options, true>::impl(value, context);
-				} else if constexpr (type == jsonifier::json_type::string) {
+				} else if constexpr (type == json_type::string) {
 					string_val_parser_partial<buffer_type, parse_context_type, options, insideRepeated>::impl(value, context);
-				} else if constexpr (type == jsonifier::json_type::number) {
+				} else if constexpr (type == json_type::number) {
 					number_val_parser_partial<buffer_type, parse_context_type, options, insideRepeated>::impl(value, context);
-				} else if constexpr (type == jsonifier::json_type::boolean) {
+				} else if constexpr (type == json_type::boolean) {
 					bool_val_parser_partial<buffer_type, parse_context_type, options, insideRepeated>::impl(value, context);
-				} else if constexpr (type == jsonifier::json_type::null) {
+				} else if constexpr (type == json_type::null) {
 					null_val_parser_partial<buffer_type, parse_context_type, options, insideRepeated>::impl(value, context);
-				} else if constexpr (type == jsonifier::json_type::custom) {
+				} else if constexpr (type == json_type::custom) {
 					custom_val_parser_partial<buffer_type, parse_context_type, value_type, options, insideRepeated>::impl(value, context);
 				} else {
 					accessor_val_parser_partial<buffer_type, parse_context_type, options, insideRepeated>::impl(value, context);
@@ -182,19 +182,19 @@ namespace jsonifier::internal {
 					return;
 				}
 			} else {
-				if constexpr (type == jsonifier::json_type::object) {
+				if constexpr (type == json_type::object) {
 					object_val_parser<buffer_type, parse_context_type, options, insideRepeated>::impl(value, context);
-				} else if constexpr (type == jsonifier::json_type::array) {
+				} else if constexpr (type == json_type::array) {
 					array_val_parser<buffer_type, parse_context_type, options, insideRepeated>::impl(value, context);
-				} else if constexpr (type == jsonifier::json_type::string) {
+				} else if constexpr (type == json_type::string) {
 					string_val_parser<buffer_type, parse_context_type, options, insideRepeated>::impl(value, context);
-				} else if constexpr (type == jsonifier::json_type::number) {
+				} else if constexpr (type == json_type::number) {
 					number_val_parser<buffer_type, parse_context_type, options, insideRepeated>::impl(value, context);
-				} else if constexpr (type == jsonifier::json_type::boolean) {
+				} else if constexpr (type == json_type::boolean) {
 					bool_val_parser<buffer_type, parse_context_type, options, insideRepeated>::impl(value, context);
-				} else if constexpr (type == jsonifier::json_type::null) {
+				} else if constexpr (type == json_type::null) {
 					null_val_parser<buffer_type, parse_context_type, options, insideRepeated>::impl(value, context);
-				} else if constexpr (type == jsonifier::json_type::custom) {
+				} else if constexpr (type == json_type::custom) {
 					custom_val_parser<buffer_type, parse_context_type, value_type, options, insideRepeated>::impl(value, context);
 				} else {
 					accessor_val_parser<buffer_type, parse_context_type, options, insideRepeated>::impl(value, context);
@@ -210,10 +210,10 @@ namespace jsonifier::internal {
 		parser& operator=(const parser& other) = delete;
 		parser(const parser& other)			   = delete;
 
-		template<jsonifier::parse_options options = jsonifier::parse_options{}, typename value_type, typename buffer_type>
+		template<parse_options options = parse_options{}, typename value_type, typename buffer_type>
 		JSONIFIER_INLINE bool parseJson(value_type&& object, buffer_type&& in) noexcept {
 			if constexpr (options.partialRead) {
-				static constexpr jsonifier::parse_options optionsNew{ options };
+				static constexpr parse_options optionsNew{ options };
 				parse_context_partial<derived_type, string_view_ptr*> context{};
 				auto rootIter = getBeginIter(in);
 				auto endIter  = getEndIter(in);
@@ -240,7 +240,7 @@ namespace jsonifier::internal {
 				parse<getJsonType<value_type>(), optionsNew, areWeInsideRepeated<value_type>()>::template impl<buffer_type>(object, context);
 				return derivedRef.errors.size() > 0 ? false : true;
 			} else {
-				static constexpr jsonifier::parse_options optionsNew{ options };
+				static constexpr parse_options optionsNew{ options };
 				parse_context<derived_type, string_view_ptr> context{};
 				context.rootIter  = getBeginIter(in);
 				context.iter	  = context.rootIter;
@@ -269,12 +269,9 @@ namespace jsonifier::internal {
 			}
 		}
 
-		template<typename value_type, jsonifier::parse_options options = jsonifier::parse_options{}, typename buffer_type>
+		template<typename value_type, parse_options options = parse_options{}, typename buffer_type>
 		JSONIFIER_INLINE bool parseManyJson(value_type&& object, buffer_type&& in) noexcept {
-			static constexpr jsonifier::parse_options optionsNew{ .validateJson = options.validateJson,
-				.partialRead													= false,
-				.knownOrder														= options.knownOrder,
-				.minified														= options.minified };
+			static constexpr parse_options optionsNew{ .validateJson = options.validateJson, .partialRead = false, .knownOrder = options.knownOrder, .minified = options.minified };
 			parse_context<derived_type, string_view_ptr> context{};
 			context.rootIter  = getBeginIter(in);
 			context.iter	  = context.rootIter;
@@ -304,10 +301,9 @@ namespace jsonifier::internal {
 																			  : true;
 		}
 
-		template<typename value_type, jsonifier::parse_options options = jsonifier::parse_options{}, jsonifier::concepts::string_t buffer_type>
-		JSONIFIER_INLINE value_type parseJson(buffer_type&& in) noexcept {
+		template<typename value_type, parse_options options = parse_options{}, concepts::string_t buffer_type> JSONIFIER_INLINE value_type parseJson(buffer_type&& in) noexcept {
 			if constexpr (options.partialRead) {
-				static constexpr jsonifier::parse_options optionsNew{ options };
+				static constexpr parse_options optionsNew{ options };
 				parse_context_partial<derived_type, string_view_ptr*> context{};
 				auto rootIter = getBeginIter(in);
 				auto endIter  = getEndIter(in);
@@ -335,7 +331,7 @@ namespace jsonifier::internal {
 				parse<getJsonType<value_type>(), optionsNew, areWeInsideRepeated<value_type>()>::template impl<buffer_type>(object, context);
 				return derivedRef.errors.size() > 0 ? std::remove_cvref_t<value_type>{} : object;
 			} else {
-				static constexpr jsonifier::parse_options optionsNew{ options };
+				static constexpr parse_options optionsNew{ options };
 				parse_context<derived_type, string_view_ptr> context{};
 				context.rootIter  = getBeginIter(in);
 				context.iter	  = context.rootIter;

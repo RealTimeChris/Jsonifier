@@ -110,7 +110,7 @@ namespace jsonifier::internal {
 			return (value);
 		}
 		constexpr decltype(auto) operator[](tag<I>) && {
-			return (jsonifier::internal::move(*this).value);
+			return (internal::move(*this).value);
 		}
 	};
 

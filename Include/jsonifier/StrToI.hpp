@@ -19,7 +19,6 @@
 	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 	DEALINGS IN THE SOFTWARE.
 */
-/// Note: Most of the code in this header was sampled from Glaze library: https://github.com/stephenberry/glaze
 /// https://github.com/RealTimeChris/jsonifier
 /// Nov 13, 2023
 #pragma once
@@ -35,48 +34,50 @@
 
 namespace jsonifier::internal {
 
-	JSONIFIER_INLINE_VARIABLE uint64_t powerOfTenUint[]{ 1ull, 10ull, 100ull, 1000ull, 10000ull, 100000ull, 1000000ull, 10000000ull, 100000000ull, 1000000000ull, 10000000000ull,
-		100000000000ull, 1000000000000ull, 10000000000000ull, 100000000000000ull, 1000000000000000ull, 10000000000000000ull, 100000000000000000ull, 1000000000000000000ull,
-		10000000000000000000ull };
+	template<typename = void> struct pow_tables {
+		static constexpr uint64_t powerOfTenUint[]{ 1ull, 10ull, 100ull, 1000ull, 10000ull, 100000ull, 1000000ull, 10000000ull, 100000000ull, 1000000000ull, 10000000000ull,
+			100000000000ull, 1000000000000ull, 10000000000000ull, 100000000000000ull, 1000000000000000ull, 10000000000000000ull, 100000000000000000ull, 1000000000000000000ull,
+			10000000000000000000ull };
 
-	JSONIFIER_INLINE_VARIABLE int64_t powerOfTenInt[]{ 1ll, 10ll, 100ll, 1000ll, 10000ll, 100000ll, 1000000ll, 10000000ll, 100000000ll, 1000000000ll, 10000000000ll, 100000000000ll,
-		1000000000000ll, 10000000000000ll, 100000000000000ll, 1000000000000000ll, 10000000000000000ll, 100000000000000000ll, 1000000000000000000ll };
+		static constexpr int64_t powerOfTenInt[]{ 1ll, 10ll, 100ll, 1000ll, 10000ll, 100000ll, 1000000ll, 10000000ll, 100000000ll, 1000000000ll, 10000000000ll, 100000000000ll,
+			1000000000000ll, 10000000000000ll, 100000000000000ll, 1000000000000000ll, 10000000000000000ll, 100000000000000000ll, 1000000000000000000ll };
 
-	template<typename value_type> JSONIFIER_INLINE_VARIABLE array<uint64_t, 256> rawCompValsPos{ [] {
-		constexpr auto maxValue{ (std::numeric_limits<std::decay_t<value_type>>::max)() };
-		array<uint64_t, 256> returnValues{};
-		returnValues['0'] = (maxValue - 0) / 10;
-		returnValues['1'] = (maxValue - 1) / 10;
-		returnValues['2'] = (maxValue - 2) / 10;
-		returnValues['3'] = (maxValue - 3) / 10;
-		returnValues['4'] = (maxValue - 4) / 10;
-		returnValues['5'] = (maxValue - 5) / 10;
-		returnValues['6'] = (maxValue - 6) / 10;
-		returnValues['7'] = (maxValue - 7) / 10;
-		returnValues['8'] = (maxValue - 8) / 10;
-		returnValues['9'] = (maxValue - 9) / 10;
-		return returnValues;
-	}() };
+		template<typename value_type> static constexpr array<uint64_t, 256> rawCompValsPos{ [] {
+			constexpr auto maxValue{ (std::numeric_limits<std::decay_t<value_type>>::max)() };
+			array<uint64_t, 256> returnValues{};
+			returnValues['0'] = (maxValue - 0) / 10;
+			returnValues['1'] = (maxValue - 1) / 10;
+			returnValues['2'] = (maxValue - 2) / 10;
+			returnValues['3'] = (maxValue - 3) / 10;
+			returnValues['4'] = (maxValue - 4) / 10;
+			returnValues['5'] = (maxValue - 5) / 10;
+			returnValues['6'] = (maxValue - 6) / 10;
+			returnValues['7'] = (maxValue - 7) / 10;
+			returnValues['8'] = (maxValue - 8) / 10;
+			returnValues['9'] = (maxValue - 9) / 10;
+			return returnValues;
+		}() };
 
-	JSONIFIER_INLINE_VARIABLE array<uint64_t, 256> rawCompValsNeg{ [] {
-		constexpr auto maxValue{ uint64_t((std::numeric_limits<int64_t>::max)()) + 1 };
-		array<uint64_t, 256> returnValues{};
-		returnValues['0'] = (maxValue - 0) / 10;
-		returnValues['1'] = (maxValue - 1) / 10;
-		returnValues['2'] = (maxValue - 2) / 10;
-		returnValues['3'] = (maxValue - 3) / 10;
-		returnValues['4'] = (maxValue - 4) / 10;
-		returnValues['5'] = (maxValue - 5) / 10;
-		returnValues['6'] = (maxValue - 6) / 10;
-		returnValues['7'] = (maxValue - 7) / 10;
-		returnValues['8'] = (maxValue - 8) / 10;
-		returnValues['9'] = (maxValue - 9) / 10;
-		return returnValues;
-	}() };
+		static constexpr array<uint64_t, 256> rawCompValsNeg{ [] {
+			constexpr auto maxValue{ uint64_t((std::numeric_limits<int64_t>::max)()) + 1 };
+			array<uint64_t, 256> returnValues{};
+			returnValues['0'] = (maxValue - 0) / 10;
+			returnValues['1'] = (maxValue - 1) / 10;
+			returnValues['2'] = (maxValue - 2) / 10;
+			returnValues['3'] = (maxValue - 3) / 10;
+			returnValues['4'] = (maxValue - 4) / 10;
+			returnValues['5'] = (maxValue - 5) / 10;
+			returnValues['6'] = (maxValue - 6) / 10;
+			returnValues['7'] = (maxValue - 7) / 10;
+			returnValues['8'] = (maxValue - 8) / 10;
+			returnValues['9'] = (maxValue - 9) / 10;
+			return returnValues;
+		}() };
+	};
 
 	template<typename value_type> struct integer_parser;
 
-	template<jsonifier::concepts::signed_t value_type> struct integer_parser<value_type> {
+	template<concepts::signed_t value_type> struct integer_parser<value_type> : public pow_tables<>, public exp_tables<> {
 		constexpr integer_parser() noexcept = default;
 
 		JSONIFIER_INLINE static value_type mul128Generic(value_type ab, value_type cd, value_type& hi) noexcept {
@@ -690,7 +691,7 @@ namespace jsonifier::internal {
 		}
 	};
 
-	template<jsonifier::concepts::unsigned_t value_type> struct integer_parser<value_type> {
+	template<concepts::unsigned_t value_type> struct integer_parser<value_type> : public pow_tables<>, public exp_tables<> {
 		constexpr integer_parser() noexcept = default;
 
 		JSONIFIER_INLINE static value_type umul128Generic(value_type ab, value_type cd, value_type& hi) noexcept {

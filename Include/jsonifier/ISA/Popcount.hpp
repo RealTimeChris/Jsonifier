@@ -37,7 +37,7 @@ namespace jsonifier::simd {
 
 #else
 
-	template<jsonifier::concepts::unsigned_t value_type> JSONIFIER_INLINE value_type popcnt(const value_type value) noexcept {
+	template<concepts::unsigned_t value_type> JSONIFIER_INLINE value_type popcnt(const value_type value) noexcept {
 		value_type count{};
 
 		while (value > 0) {
@@ -48,7 +48,7 @@ namespace jsonifier::simd {
 		return count;
 	}
 
-	#define popcnt(value) jsonifier::simd::popcnt(value)
+	#define popcnt(value) simd::popcnt(value)
 
 #endif
 

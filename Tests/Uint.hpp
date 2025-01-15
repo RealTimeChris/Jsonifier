@@ -30,13 +30,12 @@
 
 namespace uint_validation_tests {
 
-	constexpr std::array<std::string_view, 16> stringViews01{ "0", "1", "42", "123456789", "2147483647", "18446744073709551615", "0.0", "1.5", "3.14159",
-		"123.456", "1e5", "2e3", "3.14e10", "4.2e-1", "5E2", "10000000e-7" };
+	constexpr std::array<std::string_view, 16> stringViews01{ "0", "1", "42", "123456789", "2147483647", "18446744073709551615", "0.0", "1.5", "3.14159", "123.456", "1e5", "2e3",
+		"3.14e10", "4.2e-1", "5E2", "10000000e-7" };
 
 	constexpr std::array<uint64_t, 16> uint64Values{ 0, 1, 42, 123456789, 2147483647, 18446744073709551615ULL, 0, 1, 3, 123, 100000, 2000, 31400000000ULL, 0, 500, 1 };
 
-	constexpr std::array<std::string_view, 11> stringViews02{ "18446744073709551616", "-9223372036854775809", "-", "1.2.3", "1e", "1e+", "1e-", "\"abc\"", "true",
-		"null", "{}" };
+	constexpr std::array<std::string_view, 11> stringViews02{ "18446744073709551616", "-9223372036854775809", "-", "1.2.3", "1e", "1e+", "1e-", "\"abc\"", "true", "null", "{}" };
 
 	bool uintTests() noexcept {
 		jsonifier::jsonifier_core parser{};

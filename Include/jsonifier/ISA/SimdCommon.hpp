@@ -39,28 +39,26 @@
 namespace jsonifier::simd {
 
 #if defined(JSONIFIER_MAC)
-	using avx_list = jsonifier::internal::type_list<jsonifier::internal::type_holder<16, jsonifier_simd_int_128, uint64_t, std::numeric_limits<uint64_t>::max()>,
-		jsonifier::internal::type_holder<32, jsonifier_simd_int_256, uint32_t, std::numeric_limits<uint32_t>::max()>,
-		jsonifier::internal::type_holder<64, jsonifier_simd_int_512, uint64_t, std::numeric_limits<uint64_t>::max()>>;
+	using avx_list = internal::type_list<internal::type_holder<16, jsonifier_simd_int_128, uint64_t, std::numeric_limits<uint64_t>::max()>,
+		internal::type_holder<32, jsonifier_simd_int_256, uint32_t, std::numeric_limits<uint32_t>::max()>,
+		internal::type_holder<64, jsonifier_simd_int_512, uint64_t, std::numeric_limits<uint64_t>::max()>>;
 #else
-	using avx_list = jsonifier::internal::type_list<jsonifier::internal::type_holder<16, jsonifier_simd_int_128, uint16_t, std::numeric_limits<uint16_t>::max()>,
-		jsonifier::internal::type_holder<32, jsonifier_simd_int_256, uint32_t, std::numeric_limits<uint32_t>::max()>,
-		jsonifier::internal::type_holder<64, jsonifier_simd_int_512, uint64_t, std::numeric_limits<uint64_t>::max()>>;
+	using avx_list = internal::type_list<internal::type_holder<16, jsonifier_simd_int_128, uint16_t, std::numeric_limits<uint16_t>::max()>,
+		internal::type_holder<32, jsonifier_simd_int_256, uint32_t, std::numeric_limits<uint32_t>::max()>,
+		internal::type_holder<64, jsonifier_simd_int_512, uint64_t, std::numeric_limits<uint64_t>::max()>>;
 #endif
 
 #if defined(JSONIFIER_MAC)
-	using avx_integer_list =
-		jsonifier::internal::type_list<jsonifier::internal::type_holder<8, uint64_t, uint64_t, 8>, jsonifier::internal::type_holder<16, jsonifier_simd_int_128, uint64_t, 16>,
-			jsonifier::internal::type_holder<32, jsonifier_simd_int_256, uint32_t, 32>, jsonifier::internal::type_holder<64, jsonifier_simd_int_512, uint64_t, 64>>;
+	using avx_integer_list = internal::type_list<internal::type_holder<8, uint64_t, uint64_t, 8>, internal::type_holder<16, jsonifier_simd_int_128, uint64_t, 16>,
+		internal::type_holder<32, jsonifier_simd_int_256, uint32_t, 32>, internal::type_holder<64, jsonifier_simd_int_512, uint64_t, 64>>;
 #else
-	using avx_integer_list =
-		jsonifier::internal::type_list<jsonifier::internal::type_holder<8, uint64_t, uint64_t, 8>, jsonifier::internal::type_holder<16, jsonifier_simd_int_128, uint16_t, 16>,
-			jsonifier::internal::type_holder<32, jsonifier_simd_int_256, uint32_t, 32>, jsonifier::internal::type_holder<64, jsonifier_simd_int_512, uint64_t, 64>>;
+	using avx_integer_list = internal::type_list<internal::type_holder<8, uint64_t, uint64_t, 8>, internal::type_holder<16, jsonifier_simd_int_128, uint16_t, 16>,
+		internal::type_holder<32, jsonifier_simd_int_256, uint32_t, 32>, internal::type_holder<64, jsonifier_simd_int_512, uint64_t, 64>>;
 #endif
 
-	template<jsonifier::concepts::unsigned_t value_type> void printBits(value_type values, const std::string& valuesTitle);
+	template<concepts::unsigned_t value_type> void printBits(value_type values, const string& valuesTitle);
 
-	template<simd_int_type simd_type> const simd_type& printBits(const simd_type& value, const std::string& valuesTitle) noexcept;
+	template<simd_int_type simd_type> const simd_type& printBits(const simd_type& value, const string& valuesTitle) noexcept;
 
 	JSONIFIER_INLINE static uint64_t prefixXor(uint64_t prevInString) noexcept {
 		prevInString ^= prevInString << 1;
@@ -126,32 +124,29 @@ namespace jsonifier::simd {
 		return gatherValues<jsonifier_simd_int_t>(values + sixtyFourBitsPerStep);
 	}
 
-#define opShl(amount, value, result) \
-	{ \
-		JSONIFIER_ALIGN uint64_t values[sixtyFourBitsPerStep * 2]; \
-		jsonifier::simd::store(value, values); \
-		static constexpr uint64_t shiftAmount{ 64 - amount }; \
-		values[sixtyFourBitsPerStep]	 = values[0] << amount; \
-		values[1 + sixtyFourBitsPerStep] = values[1] << amount | values[1 - 1] >> (shiftAmount); \
-		if constexpr (sixtyFourBitsPerStep > 2) { \
-			values[2 + sixtyFourBitsPerStep] = values[2] << amount | values[2 - 1] >> (shiftAmount); \
-			values[3 + sixtyFourBitsPerStep] = values[3] << amount | values[3 - 1] >> (shiftAmount); \
-		} \
-		if constexpr (sixtyFourBitsPerStep > 4) { \
-			values[4 + sixtyFourBitsPerStep] = values[4] << amount | values[4 - 1] >> (shiftAmount); \
-			values[5 + sixtyFourBitsPerStep] = values[5] << amount | values[5 - 1] >> (shiftAmount); \
-			values[6 + sixtyFourBitsPerStep] = values[6] << amount | values[6 - 1] >> (shiftAmount); \
-			values[7 + sixtyFourBitsPerStep] = values[7] << amount | values[7 - 1] >> (shiftAmount); \
-		} \
-		result = jsonifier::simd::gatherValues<jsonifier_simd_int_t>(values + sixtyFourBitsPerStep); \
+	template<size_t amount, typename simd_int_t01> JSONIFIER_INLINE jsonifier_simd_int_t opShl(const simd_int_t01& value) noexcept {
+		JSONIFIER_ALIGN uint64_t values[sixtyFourBitsPerStep * 2];
+		simd::store(value, values);
+		static constexpr uint64_t shiftAmount{ 64 - amount };
+		values[sixtyFourBitsPerStep]	 = values[0] << amount;
+		values[1 + sixtyFourBitsPerStep] = values[1] << amount | values[1 - 1] >> (shiftAmount);
+		if constexpr (sixtyFourBitsPerStep > 2) {
+			values[2 + sixtyFourBitsPerStep] = values[2] << amount | values[2 - 1] >> (shiftAmount);
+			values[3 + sixtyFourBitsPerStep] = values[3] << amount | values[3 - 1] >> (shiftAmount);
+		}
+		if constexpr (sixtyFourBitsPerStep > 4) {
+			values[4 + sixtyFourBitsPerStep] = values[4] << amount | values[4 - 1] >> (shiftAmount);
+			values[5 + sixtyFourBitsPerStep] = values[5] << amount | values[5 - 1] >> (shiftAmount);
+			values[6 + sixtyFourBitsPerStep] = values[6] << amount | values[6 - 1] >> (shiftAmount);
+			values[7 + sixtyFourBitsPerStep] = values[7] << amount | values[7 - 1] >> (shiftAmount);
+		}
+		return simd::gatherValues<jsonifier_simd_int_t>(values + sixtyFourBitsPerStep);
 	}
 
 	template<typename simd_int_t01> JSONIFIER_INLINE jsonifier_simd_int_t opFollows(const simd_int_t01& value, bool& overflow) noexcept {
 		bool oldOverflow = overflow;
 		overflow		 = opGetMSB(value);
-		jsonifier_simd_int_t result;
-		opShl(1, value, result);
-		return opSetLSB(result, oldOverflow);
+		return opSetLSB(opShl<1>(value), oldOverflow);
 	}
 
 	struct simd_int_t_holder {
@@ -161,36 +156,36 @@ namespace jsonifier::simd {
 		jsonifier_simd_int_t op;
 	};
 
-	template<size_t size> JSONIFIER_ALIGN constexpr jsonifier::internal::array<char, size> escapeableArray00{ [] {
+	template<size_t size> JSONIFIER_ALIGN constexpr internal::array<char, size> escapeableArray00{ [] {
 		constexpr const char values[]{ 0x00u, 0x00u, '"', 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, '\\', 0x00u, 0x00u, 0x00u };
-		jsonifier::internal::array<char, size> returnValues{};
+		internal::array<char, size> returnValues{};
 		for (uint64_t x = 0; x < size; ++x) {
 			returnValues[x] = values[x % 16];
 		}
 		return returnValues;
 	}() };
 
-	template<size_t size> JSONIFIER_ALIGN constexpr jsonifier::internal::array<char, size> escapeableArray01{ [] {
+	template<size_t size> JSONIFIER_ALIGN constexpr internal::array<char, size> escapeableArray01{ [] {
 		constexpr const char values[]{ 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, '\b', 0x00u, 0x00u, 0x00u, 0x0Cu, '\r', 0x00u, 0x00u };
-		jsonifier::internal::array<char, size> returnValues{};
+		internal::array<char, size> returnValues{};
 		for (uint64_t x = 0; x < size; ++x) {
 			returnValues[x] = values[x % 16];
 		}
 		return returnValues;
 	}() };
 
-	template<size_t size> JSONIFIER_ALIGN constexpr jsonifier::internal::array<char, size> whitespaceArray{ [] {
+	template<size_t size> JSONIFIER_ALIGN constexpr internal::array<char, size> whitespaceArray{ [] {
 		constexpr const char values[]{ 0x20u, 0x64u, 0x64u, 0x64u, 0x11u, 0x64u, 0x71u, 0x02u, 0x64u, '\t', '\n', 0x70u, 0x64u, '\r', 0x64u, 0x64u };
-		jsonifier::internal::array<char, size> returnValues{};
+		internal::array<char, size> returnValues{};
 		for (uint64_t x = 0; x < size; ++x) {
 			returnValues[x] = values[x % 16];
 		}
 		return returnValues;
 	}() };
 
-	template<size_t size> JSONIFIER_ALIGN constexpr jsonifier::internal::array<char, size> opArray{ [] {
+	template<size_t size> JSONIFIER_ALIGN constexpr internal::array<char, size> opArray{ [] {
 		constexpr const char values[]{ 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, ':', '{', ',', '}', 0x00u, 0x00u };
-		jsonifier::internal::array<char, size> returnValues{};
+		internal::array<char, size> returnValues{};
 		for (uint64_t x = 0; x < size; ++x) {
 			returnValues[x] = values[x % 16];
 		}

@@ -32,12 +32,12 @@ namespace jsonifier {
 		using value_type			 = value_type_new;
 		using const_pointer			 = const value_type*;
 		using const_reference		 = const value_type&;
-		using iterator				 = jsonifier::internal::basic_iterator<value_type>;
-		using const_iterator		 = jsonifier::internal::basic_iterator<const value_type>;
+		using iterator				 = internal::basic_iterator<value_type>;
+		using const_iterator		 = internal::basic_iterator<const value_type>;
 		using difference_type		 = std::ptrdiff_t;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 		using size_type				 = uint64_t;
-		using traits_type			 = jsonifier::internal::char_traits<value_type>;
+		using traits_type			 = internal::char_traits<value_type>;
 
 		static constexpr size_type npos{ std::numeric_limits<size_type>::max() };
 
@@ -54,25 +54,24 @@ namespace jsonifier {
 			*this = stringNew;
 		}
 
-		template<jsonifier::concepts::string_t value_type_newer> JSONIFIER_INLINE constexpr string_view_base& operator=(value_type_newer&& stringNew) noexcept {
+		template<concepts::string_t value_type_newer> JSONIFIER_INLINE constexpr string_view_base& operator=(value_type_newer&& stringNew) noexcept {
 			dataVal = stringNew.data();
 			sizeVal = stringNew.size();
 			return *this;
 		}
 
-		template<jsonifier::concepts::string_t value_type_newer> JSONIFIER_INLINE constexpr string_view_base(value_type_newer&& stringNew) noexcept {
+		template<concepts::string_t value_type_newer> JSONIFIER_INLINE constexpr string_view_base(value_type_newer&& stringNew) noexcept {
 			*this = stringNew;
 		}
 
-		template<typename value_type_newer, jsonifier::concepts::same_character_size<value_type>>
+		template<typename value_type_newer, concepts::same_character_size<value_type>>
 		JSONIFIER_INLINE constexpr string_view_base& operator=(const value_type_newer& stringNew) noexcept {
 			dataVal = stringNew.data();
 			sizeVal = stringNew.size();
 			return *this;
 		}
 
-		template<typename value_type_newer, jsonifier::concepts::same_character_size<value_type>>
-		JSONIFIER_INLINE constexpr string_view_base(const value_type_newer& stringNew) noexcept {
+		template<typename value_type_newer, concepts::same_character_size<value_type>> JSONIFIER_INLINE constexpr string_view_base(const value_type_newer& stringNew) noexcept {
 			*this = stringNew;
 		}
 
@@ -129,7 +128,7 @@ namespace jsonifier {
 		}
 
 		JSONIFIER_INLINE constexpr size_type maxSize() const noexcept {
-			return jsonifier::internal::min(static_cast<uint64_t>(std::numeric_limits<std::ptrdiff_t>::max()), static_cast<uint64_t>(-1) / sizeof(value_type));
+			return internal::min(static_cast<uint64_t>(std::numeric_limits<std::ptrdiff_t>::max()), static_cast<uint64_t>(-1) / sizeof(value_type));
 		}
 
 		JSONIFIER_INLINE constexpr const_reference at(const size_type offsetNew) const noexcept {
@@ -185,12 +184,12 @@ namespace jsonifier {
 				throw std::out_of_range("Substring position is out of range.");
 			}
 
-			countNew = jsonifier::internal::min(countNew, sizeVal - offsetNew);
+			countNew = internal::min(countNew, sizeVal - offsetNew);
 			return string_view_base(dataVal + offsetNew, countNew);
 		}
 
-		template<typename value_type_newer = value_type> JSONIFIER_INLINE constexpr explicit operator jsonifier::string_base<value_type_newer>() const noexcept {
-			jsonifier::string_base<value_type_newer> returnValue{};
+		template<typename value_type_newer = value_type> JSONIFIER_INLINE constexpr explicit operator string_base<value_type_newer>() const noexcept {
+			string_base<value_type_newer> returnValue{};
 			returnValue.resize(sizeVal);
 			if JSONIFIER_LIKELY (sizeVal > 0 && dataVal) {
 				std::memcpy(returnValue.data(), data(), returnValue.size());
@@ -211,14 +210,13 @@ namespace jsonifier {
 			return { data(), size() };
 		}
 
-		template<jsonifier::concepts::pointer_t value_type_newer>
+		template<concepts::pointer_t value_type_newer>
 		JSONIFIER_INLINE constexpr friend std::enable_if_t<!std::is_array_v<value_type_newer>, bool> operator==(const string_view_base& lhs, const value_type_newer& rhs) noexcept {
-			auto rhsLength = jsonifier::internal::char_traits<std::remove_pointer_t<value_type_newer>>::length(rhs);
-			return rhsLength == lhs.size() && jsonifier::internal::comparison::compare(lhs.data(), rhs, rhsLength);
+			auto rhsLength = internal::char_traits<std::remove_pointer_t<value_type_newer>>::length(rhs);
+			return rhsLength == lhs.size() && internal::comparison::compare(lhs.data(), rhs, rhsLength);
 		}
 
-		template<jsonifier::concepts::string_t value_type_newer>
-		JSONIFIER_INLINE constexpr friend bool operator==(const string_view_base& lhs, const value_type_newer& rhs) noexcept {
+		template<concepts::string_t value_type_newer> JSONIFIER_INLINE constexpr friend bool operator==(const string_view_base& lhs, const value_type_newer& rhs) noexcept {
 			if (std::is_constant_evaluated()) {
 				auto compareValues = [=]() -> bool {
 					for (uint64_t x = 0; x < rhs.size(); ++x) {
@@ -230,7 +228,7 @@ namespace jsonifier {
 				}();
 				return lhs.size() == rhs.size() && compareValues;
 			} else {
-				return rhs.size() == lhs.size() && jsonifier::internal::comparison::compare(lhs.data(), rhs.data(), rhs.size());
+				return rhs.size() == lhs.size() && internal::comparison::compare(lhs.data(), rhs.data(), rhs.size());
 			}
 		}
 
@@ -248,14 +246,14 @@ namespace jsonifier {
 			return newLhs;
 		}
 
-		template<jsonifier::concepts::pointer_t string_type_newer>
+		template<concepts::pointer_t string_type_newer>
 		JSONIFIER_INLINE constexpr friend string_base<string_type_newer> operator+(string_type_newer&& lhs, const string_view_base& rhs) noexcept {
 			string_base<std::remove_pointer_t<string_type_newer>> newLhs{ lhs };
 			newLhs += rhs;
 			return newLhs;
 		}
 
-		template<jsonifier::concepts::pointer_t string_type_newer>
+		template<concepts::pointer_t string_type_newer>
 		JSONIFIER_INLINE constexpr friend string_base<string_type_newer> operator+=(string_type_newer&& lhs, const string_view_base& rhs) noexcept {
 			string_base<std::remove_pointer_t<string_type_newer>> newLhs{ lhs };
 			newLhs += rhs;
@@ -274,13 +272,13 @@ namespace jsonifier {
 			return newLhs;
 		}
 
-		template<jsonifier::concepts::string_t string_type_new> JSONIFIER_INLINE constexpr string_base<value_type_new> operator+(const string_type_new& rhs) const noexcept {
+		template<concepts::string_t string_type_new> JSONIFIER_INLINE constexpr string_base<value_type_new> operator+(const string_type_new& rhs) const noexcept {
 			string_base<value_type_new> newLhs{ *this };
 			newLhs += rhs;
 			return newLhs;
 		}
 
-		template<jsonifier::concepts::string_t string_type_new> JSONIFIER_INLINE constexpr string_base<value_type_new> operator+=(const string_type_new& rhs) noexcept {
+		template<concepts::string_t string_type_new> JSONIFIER_INLINE constexpr string_base<value_type_new> operator+=(const string_type_new& rhs) noexcept {
 			string_base<value_type_new> newLhs{ *this };
 			newLhs.append(rhs.data(), rhs.size());
 			return newLhs;
@@ -304,8 +302,8 @@ namespace jsonifier {
 
 	using string_view = string_view_base<char>;
 
-	std::ostream& operator<<(std::ostream& oStream, const jsonifier::string_view& string) noexcept {
-		oStream << string.operator jsonifier::string_base<char>();
+	std::ostream& operator<<(std::ostream& oStream, const string_view& string) noexcept {
+		oStream << string.operator string_base<char>();
 		return oStream;
 	}
 

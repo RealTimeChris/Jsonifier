@@ -30,7 +30,7 @@
 namespace jsonifier::internal {
 
 	struct tuple_reference {
-		jsonifier::string_view key{};
+		string_view key{};
 		size_t oldIndex{};
 	};
 
@@ -45,9 +45,9 @@ namespace jsonifier::internal {
 	template<size_t maxIndex, size_t currentIndex = 0, typename tuple_type>
 	constexpr auto collectTupleRefsImpl(const tuple_type& tuple, array<tuple_reference, maxIndex>& tupleRefsRaw) {
 		if constexpr (currentIndex < maxIndex) {
-			auto potentialKey = jsonifier::internal::get<currentIndex>(tuple);
+			auto potentialKey = internal::get<currentIndex>(tuple);
 			if constexpr (has_name<decltype(potentialKey)>) {
-				tupleRefsRaw[currentIndex].key = potentialKey.name.operator jsonifier::string_view();
+				tupleRefsRaw[currentIndex].key = potentialKey.name.operator string_view();
 			}
 			tupleRefsRaw[currentIndex].oldIndex = currentIndex;
 			return collectTupleRefsImpl<maxIndex, currentIndex + 1>(tuple, tupleRefsRaw);
@@ -86,7 +86,7 @@ namespace jsonifier::internal {
 		return returnValues;
 	}
 
-	template<typename value_type> JSONIFIER_INLINE_VARIABLE auto tupleRefs{ collectTupleRefs(jsonifier::core<std::remove_cvref_t<value_type>>::parseValue) };
+	template<typename value_type> JSONIFIER_INLINE_VARIABLE auto tupleRefs{ collectTupleRefs(core<std::remove_cvref_t<value_type>>::parseValue) };
 	template<typename value_type> JSONIFIER_INLINE_VARIABLE auto tupleReferences{ consolidateTupleRefs(tupleRefs<value_type>) };
 	template<typename value_type> JSONIFIER_INLINE_VARIABLE auto sortedTupleReferencesByLength{ sortTupleRefsByLength(tupleRefs<value_type>) };
 	template<typename value_type> JSONIFIER_INLINE_VARIABLE auto tupleReferencesByLength{ consolidateTupleRefs(sortedTupleReferencesByLength<value_type>) };
@@ -94,6 +94,6 @@ namespace jsonifier::internal {
 	template<typename value_type> JSONIFIER_INLINE_VARIABLE auto tupleReferencesByFirstByte{ consolidateTupleRefs(sortedTupleReferencesByFirstByte<value_type>) };
 
 	// Idea for this interface sampled from Stephen Berry and his library, Glaze library: https://github.com/stephenberry/glaze
-	template<typename value_type> using core_tuple_type = decltype(jsonifier::core<std::remove_cvref_t<value_type>>::parseValue);
+	template<typename value_type> using core_tuple_type = decltype(core<std::remove_cvref_t<value_type>>::parseValue);
 
-}// namespace jsonifier::internal
+}// namespace internal

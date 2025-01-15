@@ -83,16 +83,16 @@ namespace jsonifier::internal {
 	 * @return The name of the member pointer.
 	 */
 #if defined(JSONIFIER_MSVC) && !defined(JSONIFIER_CLANG)
-	template<typename value_type, auto p> consteval jsonifier::string_view getNameImpl() noexcept {
-		jsonifier::string_view str = std::source_location::current().function_name();
-		str						   = str.substr(str.find("->") + 2);
+	template<typename value_type, auto p> consteval string_view getNameImpl() noexcept {
+		string_view str = std::source_location::current().function_name();
+		str				= str.substr(str.find("->") + 2);
 		return str.substr(0, str.find(">"));
 	}
 #else
-	template<auto p> consteval jsonifier::string_view getNameImpl() noexcept {
-		jsonifier::string_view str = std::source_location::current().function_name();
-		str						   = str.substr(str.find("&") + 1);
-		str						   = str.substr(0, str.find(pretty_function_tail));
+	template<auto p> consteval string_view getNameImpl() noexcept {
+		string_view str = std::source_location::current().function_name();
+		str				= str.substr(str.find("&") + 1);
+		str				= str.substr(0, str.find(pretty_function_tail));
 		return str.substr(str.rfind("::") + 2);
 	}
 #endif

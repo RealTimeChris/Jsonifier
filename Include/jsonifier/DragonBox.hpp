@@ -36,43 +36,9 @@
 #include <limits>
 #include <type_traits>
 
-#ifdef __has_include
-	#if __has_include(<version>)
-		#include <version>
-	#endif
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////////////
 // Language feature detections.
 ////////////////////////////////////////////////////////////////////////////////////////
-
-// C++14 constexpr
-#if defined(__cpp_constexpr) && __cpp_constexpr >= 201304L
-	#define JSONIFIER_HAS_CONSTEXPR14 1
-#elif __cplusplus >= 201402L
-	#define JSONIFIER_HAS_CONSTEXPR14 1
-#elif defined(JSONIFIER_MSVC) && JSONIFIER_MSVC >= 1910 && _MSVC_LANG >= 201402L
-	#define JSONIFIER_HAS_CONSTEXPR14 1
-#else
-	#define JSONIFIER_HAS_CONSTEXPR14 0
-#endif
-
-// C++17 if constexpr
-#if defined(__cpp_if_constexpr) && __cpp_if_constexpr >= 201606L
-	#define JSONIFIER_HAS_IF_CONSTEXPR 1
-#elif __cplusplus >= 201703L
-	#define JSONIFIER_HAS_IF_CONSTEXPR 1
-#elif defined(JSONIFIER_MSVC) && JSONIFIER_MSVC >= 1911 && _MSVC_LANG >= 201703L
-	#define JSONIFIER_HAS_IF_CONSTEXPR 1
-#else
-	#define JSONIFIER_HAS_IF_CONSTEXPR 0
-#endif
-
-#if JSONIFIER_HAS_IF_CONSTEXPR
-	#define JSONIFIER_IF_CONSTEXPR if constexpr
-#else
-	#define JSONIFIER_IF_CONSTEXPR if
-#endif
 
 // C++20 std::bit_cast
 #if defined(__cpp_lib_bit_cast) && __cpp_lib_bit_cast >= 201806L
@@ -93,24 +59,8 @@
 		#define JSONIFIER_IF_CONSTEVAL if (std::is_constant_evaluated())
 		#define JSONIFIER_IF_NOT_CONSTEVAL if (!std::is_constant_evaluated())
 		#define JSONIFIER_CAN_BRANCH_ON_CONSTEVAL 1
-		#define JSONIFIER_USE_IS_CONSTANT_EVALUATED 1
-	#elif JSONIFIER_HAS_IF_CONSTEXPR
-		#define JSONIFIER_IF_CONSTEVAL if constexpr (false)
-		#define JSONIFIER_IF_NOT_CONSTEVAL if constexpr (true)
-		#define JSONIFIER_CAN_BRANCH_ON_CONSTEVAL 0
-		#define JSONIFIER_USE_IS_CONSTANT_EVALUATED 0
-	#else
-		#define JSONIFIER_IF_CONSTEVAL if (false)
-		#define JSONIFIER_IF_NOT_CONSTEVAL if (true)
-		#define JSONIFIER_CAN_BRANCH_ON_CONSTEVAL 0
-		#define JSONIFIER_USE_IS_CONSTANT_EVALUATED 0
 	#endif
-#endif
-
-#if JSONIFIER_CAN_BRANCH_ON_CONSTEVAL && JSONIFIER_HAS_BIT_CAST
-	#define JSONIFIER_CONSTEXPR20 constexpr
-#else
-	#define JSONIFIER_CONSTEXPR20
+	#define JSONIFIER_USE_IS_CONSTANT_EVALUATED 1
 #endif
 
 // Suppress additional buffer overrun check.
@@ -138,13 +88,13 @@ namespace jsonifier_jkj {
 		////////////////////////////////////////////////////////////////////////////////////////
 		namespace detail {
 			template<typename value_type> struct physical_bits {
-				static constexpr size_t value = sizeof(value_type) * std::numeric_limits<uint8_t>::digits;
+				inline static constexpr size_t value = sizeof(value_type) * std::numeric_limits<uint8_t>::digits;
 			};
 			template<typename value_type> struct value_bits {
 				static constexpr size_t value = std::numeric_limits<typename std::enable_if<std::is_integral<value_type>::value, value_type>::type>::digits;
 			};
 
-			template<typename To, typename From> JSONIFIER_CONSTEXPR20 To bit_cast(const From& from) noexcept {
+			template<typename To, typename From> JSONIFIER_INLINE constexpr To bit_cast(const From& from) noexcept {
 #if JSONIFIER_HAS_BIT_CAST
 				return std::bit_cast<To>(from);
 #else
@@ -207,36 +157,39 @@ namespace jsonifier_jkj {
 			// Extract exponent bits from a bit pattern.
 			// The result must be aligned to the LSB so that there is no additional zero paddings
 			// on the right. This function does not do bias adjustment.
-			static constexpr exponent_int extract_exponent_bits(carrier_uint u) noexcept {
-				constexpr exponent_int value{ 1 };
-				return exponent_int((u >> format::significand_bits) & ((value << format::exponent_bits) - 1));
+			JSONIFIER_INLINE static constexpr exponent_int extract_exponent_bits(carrier_uint u) noexcept {
+				constexpr auto bitMask{ (1 << format::exponent_bits) - 1 };
+				return exponent_int((u >> format::significand_bits) & bitMask);
 			}
 
 			// Extract significand bits from a bit pattern.
 			// The result must be aligned to the LSB so that there is no additional zero paddings
 			// on the right. The result does not contain the implicit bit.
-			static constexpr carrier_uint extract_significand_bits(carrier_uint u) noexcept {
-				return carrier_uint(u & ((carrier_uint_val << format::significand_bits) - 1u));
+			JSONIFIER_INLINE static constexpr carrier_uint extract_significand_bits(carrier_uint u) noexcept {
+				constexpr auto bitMask{ (carrier_uint_val << format::significand_bits) - 1u };
+				return carrier_uint(u & bitMask);
 			}
 
 			// Remove the exponent bits and extract significand bits together with the sign bit.
-			static constexpr carrier_uint remove_exponent_bits(carrier_uint u) noexcept {
-				return carrier_uint(u & ~(((carrier_uint_val << format::exponent_bits) - 1u) << format::significand_bits));
+			JSONIFIER_INLINE static constexpr carrier_uint remove_exponent_bits(carrier_uint u) noexcept {
+				constexpr auto bitMask{ ~(((carrier_uint_val << format::exponent_bits) - 1u) << format::significand_bits) };
+				return carrier_uint(u & bitMask);
 			}
 
 			// Shift the obtained signed significand bits to the left by 1 to remove the sign bit.
-			static constexpr carrier_uint remove_sign_bit_and_shift(carrier_uint u) noexcept {
-				return carrier_uint((carrier_uint(u) << 1) & ((((carrier_uint_val << (Format::total_bits - 1)) - 1u) << 1) | 1u));
+			JSONIFIER_INLINE static constexpr carrier_uint remove_sign_bit_and_shift(carrier_uint u) noexcept {
+				constexpr auto bitMask{ ((((carrier_uint_val << (Format::total_bits - 1)) - 1u) << 1) | 1u) };
+				return carrier_uint((carrier_uint(u) << 1) & bitMask);
 			}
 
 			// Obtain the actual value of the binary exponent from the extracted exponent bits.
-			static constexpr exponent_int binary_exponent(exponent_int exponent_bits) noexcept {
+			JSONIFIER_INLINE static constexpr exponent_int binary_exponent(exponent_int exponent_bits) noexcept {
 				return exponent_int(exponent_bits == 0 ? format::min_exponent : exponent_bits + format::exponent_bias);
 			}
 
 			// Obtain the actual value of the binary significand from the extracted significand bits
 			// and exponent bits.
-			static constexpr carrier_uint binary_significand(carrier_uint significand_bits, exponent_int exponent_bits) noexcept {
+			JSONIFIER_INLINE static constexpr carrier_uint binary_significand(carrier_uint significand_bits, exponent_int exponent_bits) noexcept {
 				return carrier_uint(exponent_bits == 0 ? significand_bits : (significand_bits | (carrier_uint_val << format::significand_bits)));
 			}
 
@@ -246,31 +199,31 @@ namespace jsonifier_jkj {
 			static constexpr auto shiftedUintCarrier{ (carrier_uint_val << total_bits) };
 			static constexpr carrier_uint mask{ (carrier_uint_val << total_bits) - 1u };
 
-			static constexpr bool is_nonzero(carrier_uint u) noexcept {
+			JSONIFIER_INLINE static constexpr bool is_nonzero(carrier_uint u) noexcept {
 				return (u & mask) != 0;
 			}
 
-			static constexpr bool is_positive(carrier_uint u) noexcept {
+			JSONIFIER_INLINE static constexpr bool is_positive(carrier_uint u) noexcept {
 				return u < shiftedUintCarrier;
 			}
 
-			static constexpr bool is_negative(carrier_uint u) noexcept {
+			JSONIFIER_INLINE static constexpr bool is_negative(carrier_uint u) noexcept {
 				return !is_positive(u);
 			}
 
 			static constexpr auto max_exponent_bits = (exponent_int(1) << format::exponent_bits) - 1;
 
-			static constexpr bool is_finite(exponent_int exponent_bits) noexcept {
+			JSONIFIER_INLINE static constexpr bool is_finite(exponent_int exponent_bits) noexcept {
 				return exponent_bits != max_exponent_bits;
 			}
 
 			static constexpr auto significand_mask = ((((carrier_uint_val << (Format::total_bits - 1)) - 1u) << 1) | 1u);
 
-			static constexpr bool has_all_zero_significand_bits(carrier_uint u) noexcept {
+			JSONIFIER_INLINE static constexpr bool has_all_zero_significand_bits(carrier_uint u) noexcept {
 				return ((u << 1) & significand_mask) == 0;
 			}
 
-			static constexpr bool has_even_significand_bits(carrier_uint u) noexcept {
+			JSONIFIER_INLINE static constexpr bool has_even_significand_bits(carrier_uint u) noexcept {
 				return (u & 1) == 0;
 			}
 		};
@@ -283,10 +236,10 @@ namespace jsonifier_jkj {
 		// The default provided by the library is to treat the given floating-point type Float as either
 		// IEEE-754 binary32 or IEEE-754 binary64, depending on the bitwise size of Float.
 		template<typename Float> struct default_float_bit_carrier_conversion_traits {
-			// Guards against types that have different jsonifier::internal representations than IEEE-754
+			// Guards against types that have different internal representations than IEEE-754
 			// binary32/64. I don't know if there is a truly reliable way of detecting IEEE-754 binary
 			// formats. I just did my best here. Note that in some cases
-			// numeric_limits<Float>::is_iec559 may report false even if the jsonifier::internal representation is
+			// numeric_limits<Float>::is_iec559 may report false even if the internal representation is
 			// IEEE-754 compatible. In such a case, the user can specialize this traits template and
 			// remove this static sanity check in order to make Dragonbox work for Float.
 			static_assert(std::numeric_limits<Float>::is_iec559 && std::numeric_limits<Float>::radix == 2 &&
@@ -300,12 +253,12 @@ namespace jsonifier_jkj {
 			using format = typename std::conditional<detail::physical_bits<Float>::value == 32, ieee754_binary32, ieee754_binary64>::type;
 
 			// Converts the floating-point type into the bit-carrier unsigned integer type.
-			static JSONIFIER_CONSTEXPR20 carrier_uint float_to_carrier(Float x) noexcept {
+			JSONIFIER_INLINE static constexpr carrier_uint float_to_carrier(Float x) noexcept {
 				return detail::bit_cast<carrier_uint>(x);
 			}
 
 			// Converts the bit-carrier unsigned integer type into the floating-point type.
-			static JSONIFIER_CONSTEXPR20 Float carrier_to_float(carrier_uint x) noexcept {
+			JSONIFIER_INLINE static constexpr Float carrier_to_float(carrier_uint x) noexcept {
 				return detail::bit_cast<Float>(x);
 			}
 		};
@@ -321,25 +274,25 @@ namespace jsonifier_jkj {
 
 			carrier_uint u;
 
-			signed_significand_bits() = default;
-			constexpr explicit signed_significand_bits(carrier_uint bit_pattern) noexcept : u{ bit_pattern } {
+			JSONIFIER_INLINE signed_significand_bits() = default;
+			JSONIFIER_INLINE constexpr explicit signed_significand_bits(carrier_uint bit_pattern) noexcept : u{ bit_pattern } {
 			}
 
 			// Shift the obtained signed significand bits to the left by 1 to remove the sign bit.
-			constexpr carrier_uint remove_sign_bit_and_shift() const noexcept {
+			JSONIFIER_INLINE constexpr carrier_uint remove_sign_bit_and_shift() const noexcept {
 				return format_traits::remove_sign_bit_and_shift(u);
 			}
 
-			constexpr bool is_positive() const noexcept {
+			JSONIFIER_INLINE constexpr bool is_positive() const noexcept {
 				return format_traits::is_positive(u);
 			}
-			constexpr bool is_negative() const noexcept {
+			JSONIFIER_INLINE constexpr bool is_negative() const noexcept {
 				return format_traits::is_negative(u);
 			}
-			constexpr bool has_all_zero_significand_bits() const noexcept {
+			JSONIFIER_INLINE constexpr bool has_all_zero_significand_bits() const noexcept {
 				return format_traits::has_all_zero_significand_bits(u);
 			}
-			constexpr bool has_even_significand_bits() const noexcept {
+			JSONIFIER_INLINE constexpr bool has_even_significand_bits() const noexcept {
 				return format_traits::has_even_significand_bits(u);
 			}
 		};
@@ -351,69 +304,69 @@ namespace jsonifier_jkj {
 
 			carrier_uint u;
 
-			float_bits() = default;
-			constexpr explicit float_bits(carrier_uint bit_pattern) noexcept : u{ bit_pattern } {
+			JSONIFIER_INLINE float_bits() = default;
+			JSONIFIER_INLINE constexpr explicit float_bits(carrier_uint bit_pattern) noexcept : u{ bit_pattern } {
 			}
 
 			// Extract exponent bits from a bit pattern.
 			// The result must be aligned to the LSB so that there is no additional zero paddings
 			// on the right. This function does not do bias adjustment.
-			constexpr exponent_int extract_exponent_bits() const noexcept {
+			JSONIFIER_INLINE constexpr exponent_int extract_exponent_bits() const noexcept {
 				return format_traits::extract_exponent_bits(u);
 			}
 
 			// Extract significand bits from a bit pattern.
 			// The result must be aligned to the LSB so that there is no additional zero paddings
 			// on the right. The result does not contain the implicit bit.
-			constexpr carrier_uint extract_significand_bits() const noexcept {
+			JSONIFIER_INLINE constexpr carrier_uint extract_significand_bits() const noexcept {
 				return format_traits::extract_significand_bits(u);
 			}
 
 			// Remove the exponent bits and extract significand bits together with the sign bit.
-			constexpr signed_significand_bits<format_traits> remove_exponent_bits() const noexcept {
+			JSONIFIER_INLINE constexpr signed_significand_bits<format_traits> remove_exponent_bits() const noexcept {
 				return signed_significand_bits<format_traits>(format_traits::remove_exponent_bits(u));
 			}
 
 			// Obtain the actual value of the binary exponent from the extracted exponent bits.
-			static constexpr exponent_int binary_exponent(exponent_int exponent_bits) noexcept {
+			JSONIFIER_INLINE static constexpr exponent_int binary_exponent(exponent_int exponent_bits) noexcept {
 				return format_traits::binary_exponent(exponent_bits);
 			}
-			constexpr exponent_int binary_exponent() const noexcept {
+			JSONIFIER_INLINE constexpr exponent_int binary_exponent() const noexcept {
 				return binary_exponent(extract_exponent_bits());
 			}
 
 			// Obtain the actual value of the binary exponent from the extracted significand bits
 			// and exponent bits.
-			static constexpr carrier_uint binary_significand(carrier_uint significand_bits, exponent_int exponent_bits) noexcept {
+			JSONIFIER_INLINE static constexpr carrier_uint binary_significand(carrier_uint significand_bits, exponent_int exponent_bits) noexcept {
 				return format_traits::binary_significand(significand_bits, exponent_bits);
 			}
-			constexpr carrier_uint binary_significand() const noexcept {
+			JSONIFIER_INLINE constexpr carrier_uint binary_significand() const noexcept {
 				return binary_significand(extract_significand_bits(), extract_exponent_bits());
 			}
 
-			constexpr bool is_nonzero() const noexcept {
+			JSONIFIER_INLINE constexpr bool is_nonzero() const noexcept {
 				return format_traits::is_nonzero(u);
 			}
-			constexpr bool is_positive() const noexcept {
+			JSONIFIER_INLINE constexpr bool is_positive() const noexcept {
 				return format_traits::is_positive(u);
 			}
-			constexpr bool is_negative() const noexcept {
+			JSONIFIER_INLINE constexpr bool is_negative() const noexcept {
 				return format_traits::is_negative(u);
 			}
-			constexpr bool is_finite(exponent_int exponent_bits) const noexcept {
+			JSONIFIER_INLINE constexpr bool is_finite(exponent_int exponent_bits) const noexcept {
 				return format_traits::is_finite(exponent_bits);
 			}
-			constexpr bool is_finite() const noexcept {
+			JSONIFIER_INLINE constexpr bool is_finite() const noexcept {
 				return format_traits::is_finite(extract_exponent_bits());
 			}
-			constexpr bool has_even_significand_bits() const noexcept {
+			JSONIFIER_INLINE constexpr bool has_even_significand_bits() const noexcept {
 				return format_traits::has_even_significand_bits(u);
 			}
 		};
 
 		template<typename Float, typename ConversionTraits = default_float_bit_carrier_conversion_traits<Float>,
 			class FormatTraits = ieee754_binary_traits<typename ConversionTraits::format, typename ConversionTraits::carrier_uint>>
-		JSONIFIER_CONSTEXPR20 float_bits<FormatTraits> make_float_bits(Float x) noexcept {
+		JSONIFIER_INLINE constexpr float_bits<FormatTraits> make_float_bits(Float x) noexcept {
 			return float_bits<FormatTraits>(ConversionTraits::float_to_carrier(x));
 		}
 
@@ -425,7 +378,7 @@ namespace jsonifier_jkj {
 			namespace bits {
 				// Most compilers should be able to optimize this into the ROR instruction.
 				// num is assumed to be at most of bit_width bits.
-				template<size_t bit_width, typename UInt> JSONIFIER_CONSTEXPR20 UInt rotr(UInt num, uint32_t r) noexcept {
+				template<size_t bit_width, typename UInt> JSONIFIER_INLINE constexpr UInt rotr(UInt num, uint32_t r) noexcept {
 					static_assert(bit_width > 0, "jsonifier_jkj::dragonbox: rotation bit-width must be positive");
 					static_assert(bit_width <= value_bits<UInt>::value, "jsonifier_jkj::dragonbox: rotation bit-width is too large");
 					r &= (bit_width - 1);
@@ -454,22 +407,22 @@ namespace jsonifier_jkj {
 				// clang-format on
 
 				struct uint128 {
-					uint128() = default;
+					JSONIFIER_INLINE uint128() = default;
 
 					std::uint_least64_t high_;
 					std::uint_least64_t low_;
 
-					constexpr uint128(std::uint_least64_t high, std::uint_least64_t low) noexcept : high_{ high }, low_{ low } {
+					JSONIFIER_INLINE constexpr uint128(std::uint_least64_t high, std::uint_least64_t low) noexcept : high_{ high }, low_{ low } {
 					}
 
-					constexpr std::uint_least64_t high() const noexcept {
+					JSONIFIER_INLINE constexpr std::uint_least64_t high() const noexcept {
 						return high_;
 					}
-					constexpr std::uint_least64_t low() const noexcept {
+					JSONIFIER_INLINE constexpr std::uint_least64_t low() const noexcept {
 						return low_;
 					}
 
-					JSONIFIER_CONSTEXPR20 uint128& operator+=(std::uint_least64_t num) & noexcept {
+					JSONIFIER_INLINE constexpr uint128& operator+=(std::uint_least64_t num) & noexcept {
 						const auto generic_impl = [&] {
 							auto const sum = (low_ + num) & UINT64_C(0xffffffffffffffff);
 							high_ += (sum < low_ ? 1 : 0);
@@ -478,7 +431,7 @@ namespace jsonifier_jkj {
 						// To suppress warning.
 						static_cast<void>(generic_impl);
 
-						JSONIFIER_IF_CONSTEXPR(value_bits<std::uint_least64_t>::value > 64) {
+						if constexpr (value_bits<std::uint_least64_t>::value > 64) {
 							generic_impl();
 							return *this;
 						}
@@ -490,7 +443,7 @@ namespace jsonifier_jkj {
 
 						// See https://github.com/fmtlib/fmt/pull/2985.
 #if JSONIFIER_HAS_BUILTIN(__builtin_addcll) && !defined(__ibmxl__)
-						JSONIFIER_IF_CONSTEXPR(std::is_same<std::uint_least64_t, uint64_t>::value) {
+						if constexpr (std::is_same<std::uint_least64_t, uint64_t>::value) {
 							unsigned long long carry{};
 							low_  = std::uint_least64_t(__builtin_addcll(low_, num, 0, &carry));
 							high_ = std::uint_least64_t(__builtin_addcll(high_, 0, carry, &carry));
@@ -498,7 +451,7 @@ namespace jsonifier_jkj {
 						}
 #endif
 #if JSONIFIER_HAS_BUILTIN(__builtin_addcl) && !defined(__ibmxl__)
-						JSONIFIER_IF_CONSTEXPR(std::is_same<std::uint_least64_t, uint64_t>::value) {
+						if constexpr (std::is_same<std::uint_least64_t, uint64_t>::value) {
 							unsigned long carry{};
 							low_  = std::uint_least64_t(__builtin_addcl(static_cast<uint64_t>(low_), static_cast<uint64_t>(num), 0, &carry));
 							high_ = std::uint_least64_t(__builtin_addcl(static_cast<uint64_t>(high_), 0, carry, &carry));
@@ -506,7 +459,7 @@ namespace jsonifier_jkj {
 						}
 #endif
 #if JSONIFIER_HAS_BUILTIN(__builtin_addc) && !defined(__ibmxl__)
-						JSONIFIER_IF_CONSTEXPR(std::is_same<std::uint_least64_t, uint32_t>::value) {
+						if constexpr (std::is_same<std::uint_least64_t, uint32_t>::value) {
 							uint32_t carry{};
 							low_  = std::uint_least64_t(__builtin_addc(static_cast<uint32_t>(low_), static_cast<uint32_t>(num), 0, &carry));
 							high_ = std::uint_least64_t(__builtin_addc(static_cast<uint32_t>(high_), 0, carry, &carry));
@@ -542,7 +495,7 @@ namespace jsonifier_jkj {
 					}
 				};
 
-				JSONIFIER_INLINE JSONIFIER_CONSTEXPR20 std::uint_least64_t umul64(std::uint_least32_t x, std::uint_least32_t y) noexcept {
+				JSONIFIER_INLINE constexpr std::uint_least64_t umul64(std::uint_least32_t x, std::uint_least32_t y) noexcept {
 #if defined(JSONIFIER_MSVC) && defined(_M_IX86)
 					JSONIFIER_IF_NOT_CONSTEVAL {
 						return __emulu(x, y);
@@ -552,7 +505,7 @@ namespace jsonifier_jkj {
 				}
 
 				// Get 128-bit result of multiplication of two 64-bit unsigned integers.
-				JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS JSONIFIER_CONSTEXPR20 uint128 umul128(std::uint_least64_t x, std::uint_least64_t y) noexcept {
+				JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS constexpr uint128 umul128(std::uint_least64_t x, std::uint_least64_t y) noexcept {
 					const auto generic_impl = [=]() -> uint128 {
 						auto const a = std::uint_least32_t(x >> 32);
 						auto const b = std::uint_least32_t(x);
@@ -595,7 +548,7 @@ namespace jsonifier_jkj {
 
 				// Get high half of the 128-bit result of multiplication of two 64-bit unsigned
 				// integers.
-				JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS JSONIFIER_CONSTEXPR20 std::uint_least64_t umul128_upper64(std::uint_least64_t x, std::uint_least64_t y) noexcept {
+				JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS constexpr std::uint_least64_t umul128_upper64(std::uint_least64_t x, std::uint_least64_t y) noexcept {
 					const auto generic_impl = [=]() -> std::uint_least64_t {
 						auto const a = std::uint_least32_t(x >> 32);
 						auto const b = std::uint_least32_t(x);
@@ -638,7 +591,7 @@ namespace jsonifier_jkj {
 
 				// Get upper 128-bits of multiplication of a 64-bit unsigned integer and a 128-bit
 				// unsigned integer.
-				JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS JSONIFIER_CONSTEXPR20 uint128 umul192_upper128(std::uint_least64_t x, uint128 y) noexcept {
+				JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS constexpr uint128 umul192_upper128(std::uint_least64_t x, uint128 y) noexcept {
 					auto r = umul128(x, y.high());
 					r += umul128_upper64(x, y.low());
 					return r;
@@ -646,7 +599,7 @@ namespace jsonifier_jkj {
 
 				// Get upper 64-bits of multiplication of a 32-bit unsigned integer and a 64-bit
 				// unsigned integer.
-				JSONIFIER_INLINE JSONIFIER_CONSTEXPR20 std::uint_least64_t umul96_upper64(std::uint_least32_t x, std::uint_least64_t y) noexcept {
+				JSONIFIER_INLINE constexpr std::uint_least64_t umul96_upper64(std::uint_least32_t x, std::uint_least64_t y) noexcept {
 #if defined(__SIZEOF_INT128__) || (defined(JSONIFIER_MSVC) && defined(_M_X64))
 					return umul128_upper64(std::uint_least64_t(x) << 32, y);
 #else
@@ -662,7 +615,7 @@ namespace jsonifier_jkj {
 
 				// Get lower 128-bits of multiplication of a 64-bit unsigned integer and a 128-bit
 				// unsigned integer.
-				JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS JSONIFIER_CONSTEXPR20 uint128 umul192_lower128(std::uint_least64_t x, uint128 y) noexcept {
+				JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS constexpr uint128 umul192_lower128(std::uint_least64_t x, uint128 y) noexcept {
 					const auto high		= x * y.high();
 					const auto high_low = umul128(x, y.low());
 					return { (high + high_low.high()) & UINT64_C(0xffffffffffffffff), high_low.low() };
@@ -670,7 +623,7 @@ namespace jsonifier_jkj {
 
 				// Get lower 64-bits of multiplication of a 32-bit unsigned integer and a 64-bit
 				// unsigned integer.
-				constexpr std::uint_least64_t umul96_lower64(std::uint_least32_t x, std::uint_least64_t y) noexcept {
+				JSONIFIER_INLINE constexpr std::uint_least64_t umul96_lower64(std::uint_least32_t x, std::uint_least64_t y) noexcept {
 					return (x * y) & UINT64_C(0xffffffffffffffff);
 				}
 			}
@@ -679,31 +632,23 @@ namespace jsonifier_jkj {
 			// Some simple utilities for constexpr computation.
 			////////////////////////////////////////////////////////////////////////////////////////
 
-			template<int32_t k, typename Int> constexpr Int compute_power(Int a) noexcept {
+			template<int32_t k, typename Int> JSONIFIER_INLINE constexpr Int compute_power(Int a) noexcept {
 				static_assert(k >= 0, "");
-#if JSONIFIER_HAS_CONSTEXPR14
 				Int p = 1;
 				for (int32_t i = 0; i < k; ++i) {
 					p *= a;
 				}
 				return p;
-#else
-				return k == 0 ? 1 : k % 2 == 0 ? compute_power<k / 2, Int>(a * a) : a * compute_power<k / 2, Int>(a * a);
-#endif
 			}
 
-			template<int32_t a, typename UInt> constexpr int32_t count_factors(UInt num) noexcept {
+			template<int32_t a, typename UInt> JSONIFIER_INLINE constexpr int32_t count_factors(UInt num) noexcept {
 				static_assert(a > 1, "");
-#if JSONIFIER_HAS_CONSTEXPR14
 				int32_t c = 0;
 				while (num % a == 0) {
 					num /= a;
 					++c;
 				}
 				return c;
-#else
-				return num % a == 0 ? count_factors<a, UInt>(num / a) + 1 : 0;
-#endif
 			}
 
 			////////////////////////////////////////////////////////////////////////////////////////
@@ -716,26 +661,22 @@ namespace jsonifier_jkj {
 
 				// For constexpr computation.
 				// Returns -1 when num = 0.
-				template<typename UInt> constexpr int32_t floor_log2(UInt num) noexcept {
-#if JSONIFIER_HAS_CONSTEXPR14
+				template<typename UInt> JSONIFIER_INLINE constexpr int32_t floor_log2(UInt num) noexcept {
 					int32_t count = -1;
 					while (num != 0) {
 						++count;
 						num >>= 1;
 					}
 					return count;
-#else
-					return num == 0 ? -1 : floor_log2<UInt>(num / 2) + 1;
-#endif
 				}
 
 				template<template<size_t> class Info, std::int_least32_t min_exponent, std::int_least32_t max_exponent, size_t current_tier,
 					std::int_least32_t supported_min_exponent = Info<current_tier>::min_exponent, std::int_least32_t supported_max_exponent = Info<current_tier>::max_exponent>
-				constexpr bool is_in_range(int32_t) noexcept {
+				JSONIFIER_INLINE constexpr bool is_in_range(int32_t) noexcept {
 					return min_exponent >= supported_min_exponent && max_exponent <= supported_max_exponent;
 				}
 				template<template<size_t> class Info, std::int_least32_t min_exponent, std::int_least32_t max_exponent, size_t current_tier>
-				constexpr bool is_in_range(...) noexcept {
+				JSONIFIER_INLINE constexpr bool is_in_range(...) noexcept {
 					// Supposed to be always false, but formally dependent on the template parameters.
 					static_assert(min_exponent > max_exponent, "jsonifier_jkj::dragonbox: exponent range is too wide");
 					return false;
@@ -749,10 +690,8 @@ namespace jsonifier_jkj {
 				struct compute_impl<Info, min_exponent, max_exponent, current_tier, true> {
 					using info				  = Info<current_tier>;
 					using default_return_type = typename info::default_return_type;
-					template<typename ReturnType, typename Int> static constexpr ReturnType compute(Int e) noexcept {
-#if JSONIFIER_HAS_CONSTEXPR14
+					template<typename ReturnType, typename Int> JSONIFIER_INLINE static constexpr ReturnType compute(Int e) noexcept {
 						assert(min_exponent <= e && e <= max_exponent);
-#endif
 						// The sign is irrelevant for the mathematical validity of the formula, but
 						// assuming positivity makes the overflow analysis simpler.
 						static_assert(info::multiply >= 0 && info::subtract >= 0, "");
@@ -764,7 +703,7 @@ namespace jsonifier_jkj {
 				struct compute_impl<Info, min_exponent, max_exponent, current_tier, false> {
 					using next_tier			  = compute_impl<Info, min_exponent, max_exponent, current_tier + 1>;
 					using default_return_type = typename next_tier::default_return_type;
-					template<typename ReturnType, typename Int> static constexpr ReturnType compute(Int e) noexcept {
+					template<typename ReturnType, typename Int> JSONIFIER_INLINE static constexpr ReturnType compute(Int e) noexcept {
 						return next_tier::template compute<ReturnType>(e);
 					}
 				};
@@ -799,7 +738,7 @@ namespace jsonifier_jkj {
 				};
 				template<std::int_least32_t min_exponent = -2620, std::int_least32_t max_exponent = 2620,
 					class ReturnType = typename compute_impl<floor_log10_pow2_info, min_exponent, max_exponent>::default_return_type, typename Int>
-				constexpr ReturnType floor_log10_pow2(Int e) noexcept {
+				JSONIFIER_INLINE constexpr ReturnType floor_log10_pow2(Int e) noexcept {
 					return compute_impl<floor_log10_pow2_info, min_exponent, max_exponent>::template compute<ReturnType>(e);
 				}
 
@@ -832,7 +771,7 @@ namespace jsonifier_jkj {
 				};
 				template<std::int_least32_t min_exponent = -1233, std::int_least32_t max_exponent = 1233,
 					class ReturnType = typename compute_impl<floor_log2_pow10_info, min_exponent, max_exponent>::default_return_type, typename Int>
-				constexpr ReturnType floor_log2_pow10(Int e) noexcept {
+				JSONIFIER_INLINE constexpr ReturnType floor_log2_pow10(Int e) noexcept {
 					return compute_impl<floor_log2_pow10_info, min_exponent, max_exponent>::template compute<ReturnType>(e);
 				}
 
@@ -866,7 +805,7 @@ namespace jsonifier_jkj {
 				};
 				template<std::int_least32_t min_exponent = -2985, std::int_least32_t max_exponent = 2936,
 					class ReturnType = typename compute_impl<floor_log10_pow2_minus_log10_4_over_3_info, min_exponent, max_exponent>::default_return_type, typename Int>
-				constexpr ReturnType floor_log10_pow2_minus_log10_4_over_3(Int e) noexcept {
+				JSONIFIER_INLINE constexpr ReturnType floor_log10_pow2_minus_log10_4_over_3(Int e) noexcept {
 					return compute_impl<floor_log10_pow2_minus_log10_4_over_3_info, min_exponent, max_exponent>::template compute<ReturnType>(e);
 				}
 
@@ -881,7 +820,7 @@ namespace jsonifier_jkj {
 				};
 				template<std::int_least32_t min_exponent = -1831, std::int_least32_t max_exponent = 1831,
 					class ReturnType = typename compute_impl<floor_log5_pow2_info, min_exponent, max_exponent>::default_return_type, typename Int>
-				constexpr ReturnType floor_log5_pow2(Int e) noexcept {
+				JSONIFIER_INLINE constexpr ReturnType floor_log5_pow2(Int e) noexcept {
 					return compute_impl<floor_log5_pow2_info, min_exponent, max_exponent>::template compute<ReturnType>(e);
 				}
 
@@ -896,7 +835,7 @@ namespace jsonifier_jkj {
 				};
 				template<std::int_least32_t min_exponent = -3543, std::int_least32_t max_exponent = 2427,
 					class ReturnType = typename compute_impl<floor_log5_pow2_minus_log5_3_info, min_exponent, max_exponent>::default_return_type, typename Int>
-				constexpr ReturnType floor_log5_pow2_minus_log5_3(Int e) noexcept {
+				JSONIFIER_INLINE constexpr ReturnType floor_log5_pow2_minus_log5_3(Int e) noexcept {
 					return compute_impl<floor_log5_pow2_minus_log5_3_info, min_exponent, max_exponent>::template compute<ReturnType>(e);
 				}
 			}
@@ -937,7 +876,7 @@ namespace jsonifier_jkj {
 					static constexpr int32_t shift_amount			 = 12;
 				};
 
-				template<int32_t N, typename UInt> JSONIFIER_CONSTEXPR20 bool check_divisibility_and_divide_by_pow10(UInt& num) noexcept {
+				template<int32_t N, typename UInt> JSONIFIER_INLINE constexpr bool check_divisibility_and_divide_by_pow10(UInt& num) noexcept {
 					// Make sure the computation for max_n does not overflow.
 					static_assert(N + 1 <= log::floor_log10_pow2(static_cast<int32_t>(value_bits<UInt>::value)), "");
 					assert(num <= compute_power<N + 1>(UInt(10)));
@@ -955,7 +894,7 @@ namespace jsonifier_jkj {
 
 				// Compute floor(num / 10^N) for small num and N.
 				// Precondition: num <= 10^(N+1)
-				template<int32_t N, typename UInt> JSONIFIER_CONSTEXPR20 UInt small_division_by_pow10(UInt num) noexcept {
+				template<int32_t N, typename UInt> JSONIFIER_INLINE constexpr UInt small_division_by_pow10(UInt num) noexcept {
 					// Make sure the computation for max_n does not overflow.
 					static_assert(N + 1 <= log::floor_log10_pow2(static_cast<int32_t>(value_bits<UInt>::value)), "");
 					assert(num <= compute_power<N + 1>(UInt(10)));
@@ -965,7 +904,7 @@ namespace jsonifier_jkj {
 
 				// Compute floor(num / 10^N) for small N.
 				// Precondition: num <= n_max
-				template<int32_t N, typename UInt, UInt n_max> JSONIFIER_CONSTEXPR20 UInt divide_by_pow10(UInt num) noexcept {
+				template<int32_t N, typename UInt, UInt n_max> JSONIFIER_INLINE constexpr UInt divide_by_pow10(UInt num) noexcept {
 					static_assert(N >= 0, "");
 
 					// Specialize for 32-bit division by 10.
@@ -974,28 +913,27 @@ namespace jsonifier_jkj {
 					// code for 32-bit or smaller architectures. Even for 64-bit architectures, it seems
 					// compilers tend to generate mov + mul instead of a single imul for an unknown
 					// reason if we just write num / 10.
-					JSONIFIER_IF_CONSTEXPR(std::is_same<UInt, std::uint_least32_t>::value && N == 1 && n_max <= UINT32_C(1073741828)) {
+					if constexpr (std::is_same<UInt, std::uint_least32_t>::value && N == 1 && n_max <= UINT32_C(1073741828)) {
 						return UInt(wuint::umul64(num, UINT32_C(429496730)) >> 32);
 					}
 					// Specialize for 64-bit division by 10.
 					// Without the bound on n_max (which compilers these days never leverage), the
 					// minimum needed amount of shift is larger than 64.
-					else JSONIFIER_IF_CONSTEXPR(std::is_same<UInt, std::uint_least64_t>::value && N == 1 && n_max <= UINT64_C(4611686018427387908)) {
+					else if constexpr (std::is_same<UInt, std::uint_least64_t>::value && N == 1 && n_max <= UINT64_C(4611686018427387908)) {
 						return UInt(wuint::umul128_upper64(num, UINT64_C(1844674407370955162)));
 					}
 					// Specialize for 32-bit division by 100.
 					// It seems compilers tend to generate mov + mul instead of a single imul for an
 					// unknown reason if we just write num / 100.
-					else JSONIFIER_IF_CONSTEXPR(std::is_same<UInt, std::uint_least32_t>::value && N == 2) {
+					else if constexpr (std::is_same<UInt, std::uint_least32_t>::value && N == 2) {
 						return UInt(wuint::umul64(num, UINT32_C(1374389535)) >> 37);
 					}
 					// Specialize for 64-bit division by 1000.
 					// Without the bound on n_max (which compilers these days never leverage), the
 					// smallest magic number for this computation does not fit into 64-bits.
-					else JSONIFIER_IF_CONSTEXPR(std::is_same<UInt, std::uint_least64_t>::value && N == 3 && n_max <= UINT64_C(15534100272597517998)) {
+					else if constexpr (std::is_same<UInt, std::uint_least64_t>::value && N == 3 && n_max <= UINT64_C(15534100272597517998)) {
 						return UInt(wuint::umul128_upper64(num, UINT64_C(4722366482869645214)) >> 8);
-					}
-					else {
+					} else {
 						constexpr auto divisor = compute_power<N>(UInt(10));
 						return num / divisor;
 					}
@@ -1039,13 +977,13 @@ namespace jsonifier_jkj {
 		template<typename SignificandType, typename ExponentType, bool trailing_zero_flag = false> using signed_decimal_fp =
 			decimal_fp<SignificandType, ExponentType, true, trailing_zero_flag>;
 
-		template<typename SignificandType, typename ExponentType> constexpr signed_decimal_fp<SignificandType, ExponentType, false> add_sign_to_unsigned_decimal_fp(
-			bool is_negative, unsigned_decimal_fp<SignificandType, ExponentType, false> r) noexcept {
+		template<typename SignificandType, typename ExponentType> JSONIFIER_INLINE constexpr signed_decimal_fp<SignificandType, ExponentType, false>
+		add_sign_to_unsigned_decimal_fp(bool is_negative, unsigned_decimal_fp<SignificandType, ExponentType, false> r) noexcept {
 			return { r.significand, r.exponent, is_negative };
 		}
 
-		template<typename SignificandType, typename ExponentType> constexpr signed_decimal_fp<SignificandType, ExponentType, true> add_sign_to_unsigned_decimal_fp(bool is_negative,
-			unsigned_decimal_fp<SignificandType, ExponentType, true> r) noexcept {
+		template<typename SignificandType, typename ExponentType> JSONIFIER_INLINE constexpr signed_decimal_fp<SignificandType, ExponentType, true> add_sign_to_unsigned_decimal_fp(
+			bool is_negative, unsigned_decimal_fp<SignificandType, ExponentType, true> r) noexcept {
 			return { r.significand, r.exponent, r.may_have_trailing_zeros, is_negative };
 		}
 
@@ -1067,10 +1005,10 @@ namespace jsonifier_jkj {
 		template<typename FloatFormat, typename Dummy = void> struct cache_holder;
 
 		template<typename Dummy> struct cache_holder<ieee754_binary32, Dummy> {
-			using cache_entry_type																													 = std::uint_least64_t;
-			static constexpr int32_t cache_bits																										 = 64;
-			static constexpr int32_t min_k																											 = -31;
-			static constexpr int32_t max_k																											 = 46;
+			using cache_entry_type																													  = std::uint_least64_t;
+			static constexpr int32_t cache_bits																										  = 64;
+			static constexpr int32_t min_k																											  = -31;
+			static constexpr int32_t max_k																											  = 46;
 			static constexpr jsonifier::internal::array<cache_entry_type, static_cast<size_t>(max_k - min_k + 1)> cache JSONIFIER_STATIC_DATA_SECTION = {
 				{ UINT64_C(0x81ceb32c4b43fcf5), UINT64_C(0xa2425ff75e14fc32), UINT64_C(0xcad2f7f5359a3b3f), UINT64_C(0xfd87b5f28300ca0e), UINT64_C(0x9e74d1b791e07e49),
 					UINT64_C(0xc612062576589ddb), UINT64_C(0xf79687aed3eec552), UINT64_C(0x9abe14cd44753b53), UINT64_C(0xc16d9a0095928a28), UINT64_C(0xf1c90080baf72cb2),
@@ -1097,10 +1035,10 @@ namespace jsonifier_jkj {
 #endif
 
 		template<typename Dummy> struct cache_holder<ieee754_binary64, Dummy> {
-			using cache_entry_type																													 = detail::wuint::uint128;
-			static constexpr int32_t cache_bits																										 = 128;
-			static constexpr int32_t min_k																											 = -292;
-			static constexpr int32_t max_k																											 = 326;
+			using cache_entry_type																													  = detail::wuint::uint128;
+			static constexpr int32_t cache_bits																										  = 128;
+			static constexpr int32_t min_k																											  = -292;
+			static constexpr int32_t max_k																											  = 326;
 			static constexpr jsonifier::internal::array<cache_entry_type, static_cast<size_t>(max_k - min_k + 1)> cache JSONIFIER_STATIC_DATA_SECTION = {
 				{ { UINT64_C(0xff77b1fcbebcdc4f), UINT64_C(0x25e8e89c13bb0f7b) }, { UINT64_C(0x9faacf3df73609b1), UINT64_C(0x77b191618c54e9ad) },
 					{ UINT64_C(0xc795830d75038c1d), UINT64_C(0xd59df5b9ef6a2418) }, { UINT64_C(0xf97ae3d0d2446f25), UINT64_C(0x4b0573286b44ad1e) },
@@ -1427,7 +1365,7 @@ namespace jsonifier_jkj {
 			static constexpr int32_t min_k		= cache_holder<FloatFormat>::min_k;
 			static constexpr int32_t max_k		= cache_holder<FloatFormat>::max_k;
 
-			template<typename ShiftAmountType, typename DecimalExponentType> static constexpr cache_entry_type get_cache(DecimalExponentType k) noexcept {
+			template<typename ShiftAmountType, typename DecimalExponentType> JSONIFIER_INLINE static constexpr cache_entry_type get_cache(DecimalExponentType k) noexcept {
 				return cache_holder<FloatFormat>::cache[k - min_k];
 			}
 		};
@@ -1460,7 +1398,7 @@ namespace jsonifier_jkj {
 				return res;
 			}();
 
-			template<typename ShiftAmountType, typename DecimalExponentType> static JSONIFIER_CONSTEXPR20 cache_entry_type get_cache(DecimalExponentType k) noexcept {
+			template<typename ShiftAmountType, typename DecimalExponentType> JSONIFIER_INLINE static constexpr cache_entry_type get_cache(DecimalExponentType k) noexcept {
 				// Compute the base index.
 				// Supposed to compute (k - min_k) / compression_ratio.
 				static_assert(max_k - min_k <= 89 && compression_ratio == 13, "");
@@ -1524,7 +1462,7 @@ namespace jsonifier_jkj {
 				return res;
 			}();
 
-			template<typename ShiftAmountType, typename DecimalExponentType> static JSONIFIER_CONSTEXPR20 cache_entry_type get_cache(DecimalExponentType k) noexcept {
+			template<typename ShiftAmountType, typename DecimalExponentType> JSONIFIER_INLINE static constexpr cache_entry_type get_cache(DecimalExponentType k) noexcept {
 				// Compute the base index.
 				// Supposed to compute (k - min_k) / compression_ratio.
 				static_assert(max_k - min_k <= 619 && compression_ratio == 27, "");
@@ -1617,18 +1555,18 @@ namespace jsonifier_jkj {
 					// See
 					// https://developercommunity.visualstudio.com/t/Failure-to-optimize-intrinsics/10628226
 					template<typename SignedSignificandBits, typename DecimalSignificand, typename DecimalExponentType>
-					static constexpr decimal_fp<DecimalSignificand, DecimalExponentType, false, false> handle_sign(SignedSignificandBits,
+					JSONIFIER_INLINE static constexpr decimal_fp<DecimalSignificand, DecimalExponentType, false, false> handle_sign(SignedSignificandBits,
 						decimal_fp<DecimalSignificand, DecimalExponentType, false, false> r) noexcept {
 						return { r.significand, r.exponent };
 					}
 					template<typename SignedSignificandBits, typename DecimalSignificand, typename DecimalExponentType>
-					static constexpr decimal_fp<DecimalSignificand, DecimalExponentType, false, true> handle_sign(SignedSignificandBits,
+					JSONIFIER_INLINE static constexpr decimal_fp<DecimalSignificand, DecimalExponentType, false, true> handle_sign(SignedSignificandBits,
 						decimal_fp<DecimalSignificand, DecimalExponentType, false, true> r) noexcept {
 						return { r.significand, r.exponent, r.may_have_trailing_zeros };
 					}
 #else
 					template<typename SignedSignificandBits, typename UnsignedDecimalFp>
-					static constexpr UnsignedDecimalFp handle_sign(SignedSignificandBits, UnsignedDecimalFp r) noexcept {
+					JSONIFIER_INLINE static constexpr UnsignedDecimalFp handle_sign(SignedSignificandBits, UnsignedDecimalFp r) noexcept {
 						return r;
 					}
 #endif
@@ -1639,7 +1577,8 @@ namespace jsonifier_jkj {
 					static constexpr bool return_has_sign = true;
 
 					template<typename SignedSignificandBits, typename UnsignedDecimalFp>
-					static constexpr detail::unsigned_decimal_fp_to_signed_t<UnsignedDecimalFp> handle_sign(SignedSignificandBits s, UnsignedDecimalFp r) noexcept {
+					JSONIFIER_INLINE static constexpr detail::unsigned_decimal_fp_to_signed_t<UnsignedDecimalFp> handle_sign(SignedSignificandBits s,
+						UnsignedDecimalFp r) noexcept {
 						return add_sign_to_unsigned_decimal_fp(s.is_negative(), r);
 					}
 				} return_sign{};
@@ -1651,13 +1590,13 @@ namespace jsonifier_jkj {
 					static constexpr bool report_trailing_zeros = false;
 
 					template<typename Format, typename DecimalSignificand, typename DecimalExponentType>
-					static constexpr unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, false> on_trailing_zeros(DecimalSignificand significand,
+					JSONIFIER_INLINE static constexpr unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, false> on_trailing_zeros(DecimalSignificand significand,
 						DecimalExponentType exponent) noexcept {
 						return { significand, exponent };
 					}
 
 					template<typename Format, typename DecimalSignificand, typename DecimalExponentType>
-					static constexpr unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, false> no_trailing_zeros(DecimalSignificand significand,
+					JSONIFIER_INLINE static constexpr unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, false> no_trailing_zeros(DecimalSignificand significand,
 						DecimalExponentType exponent) noexcept {
 						return { significand, exponent };
 					}
@@ -1668,14 +1607,14 @@ namespace jsonifier_jkj {
 					static constexpr bool report_trailing_zeros = false;
 
 					template<typename Format, typename DecimalSignificand, typename DecimalExponentType>
-					JSONIFIER_INLINE static JSONIFIER_CONSTEXPR20 unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, false> on_trailing_zeros(
-						DecimalSignificand significand, DecimalExponentType exponent) noexcept {
+					JSONIFIER_INLINE static constexpr unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, false> on_trailing_zeros(DecimalSignificand significand,
+						DecimalExponentType exponent) noexcept {
 						remove_trailing_zeros_traits<remove_t, Format, DecimalSignificand, DecimalExponentType>::remove_trailing_zeros(significand, exponent);
 						return { significand, exponent };
 					}
 
 					template<typename Format, typename DecimalSignificand, typename DecimalExponentType>
-					static constexpr unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, false> no_trailing_zeros(DecimalSignificand significand,
+					JSONIFIER_INLINE static constexpr unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, false> no_trailing_zeros(DecimalSignificand significand,
 						DecimalExponentType exponent) noexcept {
 						return { significand, exponent };
 					}
@@ -1686,14 +1625,14 @@ namespace jsonifier_jkj {
 					static constexpr bool report_trailing_zeros = false;
 
 					template<typename Format, typename DecimalSignificand, typename DecimalExponentType>
-					JSONIFIER_INLINE static JSONIFIER_CONSTEXPR20 unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, false> on_trailing_zeros(
-						DecimalSignificand significand, DecimalExponentType exponent) noexcept {
+					JSONIFIER_INLINE static constexpr unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, false> on_trailing_zeros(DecimalSignificand significand,
+						DecimalExponentType exponent) noexcept {
 						remove_trailing_zeros_traits<remove_compact_t, Format, DecimalSignificand, DecimalExponentType>::remove_trailing_zeros(significand, exponent);
 						return { significand, exponent };
 					}
 
 					template<typename Format, typename DecimalSignificand, typename DecimalExponentType>
-					static constexpr unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, false> no_trailing_zeros(DecimalSignificand significand,
+					JSONIFIER_INLINE static constexpr unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, false> no_trailing_zeros(DecimalSignificand significand,
 						DecimalExponentType exponent) noexcept {
 						return { significand, exponent };
 					}
@@ -1704,13 +1643,13 @@ namespace jsonifier_jkj {
 					static constexpr bool report_trailing_zeros = true;
 
 					template<typename Format, typename DecimalSignificand, typename DecimalExponentType>
-					static constexpr unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, true> on_trailing_zeros(DecimalSignificand significand,
+					JSONIFIER_INLINE static constexpr unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, true> on_trailing_zeros(DecimalSignificand significand,
 						DecimalExponentType exponent) noexcept {
 						return { significand, exponent, true };
 					}
 
 					template<typename Format, typename DecimalSignificand, typename DecimalExponentType>
-					static constexpr unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, true> no_trailing_zeros(DecimalSignificand significand,
+					JSONIFIER_INLINE static constexpr unsigned_decimal_fp<DecimalSignificand, DecimalExponentType, true> no_trailing_zeros(DecimalSignificand significand,
 						DecimalExponentType exponent) noexcept {
 						return { significand, exponent, false };
 					}
@@ -1724,56 +1663,56 @@ namespace jsonifier_jkj {
 					struct symmetric_boundary {
 						static constexpr bool is_symmetric = true;
 						bool is_closed;
-						constexpr bool include_left_endpoint() const noexcept {
+						JSONIFIER_INLINE constexpr bool include_left_endpoint() const noexcept {
 							return is_closed;
 						}
-						constexpr bool include_right_endpoint() const noexcept {
+						JSONIFIER_INLINE constexpr bool include_right_endpoint() const noexcept {
 							return is_closed;
 						}
 					};
 					struct asymmetric_boundary {
 						static constexpr bool is_symmetric = false;
 						bool is_left_closed;
-						constexpr bool include_left_endpoint() const noexcept {
+						JSONIFIER_INLINE constexpr bool include_left_endpoint() const noexcept {
 							return is_left_closed;
 						}
-						constexpr bool include_right_endpoint() const noexcept {
+						JSONIFIER_INLINE constexpr bool include_right_endpoint() const noexcept {
 							return !is_left_closed;
 						}
 					};
 					struct closed {
 						static constexpr bool is_symmetric = true;
-						static constexpr bool include_left_endpoint() noexcept {
+						JSONIFIER_INLINE static constexpr bool include_left_endpoint() noexcept {
 							return true;
 						}
-						static constexpr bool include_right_endpoint() noexcept {
+						JSONIFIER_INLINE static constexpr bool include_right_endpoint() noexcept {
 							return true;
 						}
 					};
 					struct open {
 						static constexpr bool is_symmetric = true;
-						static constexpr bool include_left_endpoint() noexcept {
+						JSONIFIER_INLINE static constexpr bool include_left_endpoint() noexcept {
 							return false;
 						}
-						static constexpr bool include_right_endpoint() noexcept {
+						JSONIFIER_INLINE static constexpr bool include_right_endpoint() noexcept {
 							return false;
 						}
 					};
 					struct left_closed_right_open {
 						static constexpr bool is_symmetric = false;
-						static constexpr bool include_left_endpoint() noexcept {
+						JSONIFIER_INLINE static constexpr bool include_left_endpoint() noexcept {
 							return true;
 						}
-						static constexpr bool include_right_endpoint() noexcept {
+						JSONIFIER_INLINE static constexpr bool include_right_endpoint() noexcept {
 							return false;
 						}
 					};
 					struct right_closed_left_open {
 						static constexpr bool is_symmetric = false;
-						static constexpr bool include_left_endpoint() noexcept {
+						JSONIFIER_INLINE static constexpr bool include_left_endpoint() noexcept {
 							return false;
 						}
-						static constexpr bool include_right_endpoint() noexcept {
+						JSONIFIER_INLINE static constexpr bool include_right_endpoint() noexcept {
 							return true;
 						}
 					};
@@ -1790,11 +1729,11 @@ namespace jsonifier_jkj {
 						return f(nearest_to_even_t{}, args...);
 					}
 
-					template<typename SignedSignificandBits> static constexpr interval_type::symmetric_boundary normal_interval(SignedSignificandBits s) noexcept {
+					template<typename SignedSignificandBits> JSONIFIER_INLINE static constexpr interval_type::symmetric_boundary normal_interval(SignedSignificandBits s) noexcept {
 						return { s.has_even_significand_bits() };
 					}
 
-					template<typename SignedSignificandBits> static constexpr interval_type::closed shorter_interval(SignedSignificandBits) noexcept {
+					template<typename SignedSignificandBits> JSONIFIER_INLINE static constexpr interval_type::closed shorter_interval(SignedSignificandBits) noexcept {
 						return {};
 					}
 				} nearest_to_even{};
@@ -1810,10 +1749,10 @@ namespace jsonifier_jkj {
 						return f(nearest_to_odd_t{}, args...);
 					}
 
-					template<typename SignedSignificandBits> static constexpr interval_type::symmetric_boundary normal_interval(SignedSignificandBits s) noexcept {
+					template<typename SignedSignificandBits> JSONIFIER_INLINE static constexpr interval_type::symmetric_boundary normal_interval(SignedSignificandBits s) noexcept {
 						return { !s.has_even_significand_bits() };
 					}
-					template<typename SignedSignificandBits> static constexpr interval_type::open shorter_interval(SignedSignificandBits) noexcept {
+					template<typename SignedSignificandBits> JSONIFIER_INLINE static constexpr interval_type::open shorter_interval(SignedSignificandBits) noexcept {
 						return {};
 					}
 				} nearest_to_odd{};
@@ -1829,10 +1768,12 @@ namespace jsonifier_jkj {
 						return f(nearest_toward_plus_infinity_t{}, args...);
 					}
 
-					template<typename SignedSignificandBits> static constexpr interval_type::asymmetric_boundary normal_interval(SignedSignificandBits s) noexcept {
+					template<typename SignedSignificandBits>
+					JSONIFIER_INLINE static constexpr interval_type::asymmetric_boundary normal_interval(SignedSignificandBits s) noexcept {
 						return { !s.is_negative() };
 					}
-					template<typename SignedSignificandBits> static constexpr interval_type::asymmetric_boundary shorter_interval(SignedSignificandBits s) noexcept {
+					template<typename SignedSignificandBits>
+					JSONIFIER_INLINE static constexpr interval_type::asymmetric_boundary shorter_interval(SignedSignificandBits s) noexcept {
 						return { !s.is_negative() };
 					}
 				} nearest_toward_plus_infinity{};
@@ -1848,10 +1789,12 @@ namespace jsonifier_jkj {
 						return f(nearest_toward_minus_infinity_t{}, args...);
 					}
 
-					template<typename SignedSignificandBits> static constexpr interval_type::asymmetric_boundary normal_interval(SignedSignificandBits s) noexcept {
+					template<typename SignedSignificandBits>
+					JSONIFIER_INLINE static constexpr interval_type::asymmetric_boundary normal_interval(SignedSignificandBits s) noexcept {
 						return { s.is_negative() };
 					}
-					template<typename SignedSignificandBits> static constexpr interval_type::asymmetric_boundary shorter_interval(SignedSignificandBits s) noexcept {
+					template<typename SignedSignificandBits>
+					JSONIFIER_INLINE static constexpr interval_type::asymmetric_boundary shorter_interval(SignedSignificandBits s) noexcept {
 						return { s.is_negative() };
 					}
 				} nearest_toward_minus_infinity{};
@@ -1867,10 +1810,12 @@ namespace jsonifier_jkj {
 						return f(nearest_toward_zero_t{}, args...);
 					}
 
-					template<typename SignedSignificandBits> static constexpr interval_type::right_closed_left_open normal_interval(SignedSignificandBits) noexcept {
+					template<typename SignedSignificandBits>
+					JSONIFIER_INLINE static constexpr interval_type::right_closed_left_open normal_interval(SignedSignificandBits) noexcept {
 						return {};
 					}
-					template<typename SignedSignificandBits> static constexpr interval_type::right_closed_left_open shorter_interval(SignedSignificandBits) noexcept {
+					template<typename SignedSignificandBits>
+					JSONIFIER_INLINE static constexpr interval_type::right_closed_left_open shorter_interval(SignedSignificandBits) noexcept {
 						return {};
 					}
 				} nearest_toward_zero{};
@@ -1886,10 +1831,12 @@ namespace jsonifier_jkj {
 						return f(nearest_away_from_zero_t{}, args...);
 					}
 
-					template<typename SignedSignificandBits> static constexpr interval_type::left_closed_right_open normal_interval(SignedSignificandBits) noexcept {
+					template<typename SignedSignificandBits>
+					JSONIFIER_INLINE static constexpr interval_type::left_closed_right_open normal_interval(SignedSignificandBits) noexcept {
 						return {};
 					}
-					template<typename SignedSignificandBits> static constexpr interval_type::left_closed_right_open shorter_interval(SignedSignificandBits) noexcept {
+					template<typename SignedSignificandBits>
+					JSONIFIER_INLINE static constexpr interval_type::left_closed_right_open shorter_interval(SignedSignificandBits) noexcept {
 						return {};
 					}
 				} nearest_away_from_zero{};
@@ -1899,10 +1846,10 @@ namespace jsonifier_jkj {
 						using interval_type_provider = nearest_always_closed_t;
 						static constexpr auto tag	 = tag_t::to_nearest;
 
-						template<typename SignedSignificandBits> static constexpr interval_type::closed normal_interval(SignedSignificandBits) noexcept {
+						template<typename SignedSignificandBits> JSONIFIER_INLINE static constexpr interval_type::closed normal_interval(SignedSignificandBits) noexcept {
 							return {};
 						}
-						template<typename SignedSignificandBits> static constexpr interval_type::closed shorter_interval(SignedSignificandBits) noexcept {
+						template<typename SignedSignificandBits> JSONIFIER_INLINE static constexpr interval_type::closed shorter_interval(SignedSignificandBits) noexcept {
 							return {};
 						}
 					};
@@ -1910,10 +1857,10 @@ namespace jsonifier_jkj {
 						using interval_type_provider = nearest_always_open_t;
 						static constexpr auto tag	 = tag_t::to_nearest;
 
-						template<typename SignedSignificandBits> static constexpr interval_type::open normal_interval(SignedSignificandBits) noexcept {
+						template<typename SignedSignificandBits> JSONIFIER_INLINE static constexpr interval_type::open normal_interval(SignedSignificandBits) noexcept {
 							return {};
 						}
-						template<typename SignedSignificandBits> static constexpr interval_type::open shorter_interval(SignedSignificandBits) noexcept {
+						template<typename SignedSignificandBits> JSONIFIER_INLINE static constexpr interval_type::open shorter_interval(SignedSignificandBits) noexcept {
 							return {};
 						}
 					};
@@ -2020,7 +1967,7 @@ namespace jsonifier_jkj {
 					using binary_to_decimal_rounding_policy = do_not_care_t;
 					static constexpr auto tag				= tag_t::do_not_care;
 
-					template<typename CarrierUInt> static constexpr bool prefer_round_down(CarrierUInt) noexcept {
+					template<typename CarrierUInt> JSONIFIER_INLINE static constexpr bool prefer_round_down(CarrierUInt) noexcept {
 						return false;
 					}
 				} do_not_care{};
@@ -2029,7 +1976,7 @@ namespace jsonifier_jkj {
 					using binary_to_decimal_rounding_policy = to_even_t;
 					static constexpr auto tag				= tag_t::to_even;
 
-					template<typename CarrierUInt> static constexpr bool prefer_round_down(CarrierUInt significand) noexcept {
+					template<typename CarrierUInt> JSONIFIER_INLINE static constexpr bool prefer_round_down(CarrierUInt significand) noexcept {
 						return significand % 2 != 0;
 					}
 				} to_even{};
@@ -2038,7 +1985,7 @@ namespace jsonifier_jkj {
 					using binary_to_decimal_rounding_policy = to_odd_t;
 					static constexpr auto tag				= tag_t::to_odd;
 
-					template<typename CarrierUInt> static constexpr bool prefer_round_down(CarrierUInt significand) noexcept {
+					template<typename CarrierUInt> JSONIFIER_INLINE static constexpr bool prefer_round_down(CarrierUInt significand) noexcept {
 						return significand % 2 == 0;
 					}
 				} to_odd{};
@@ -2047,7 +1994,7 @@ namespace jsonifier_jkj {
 					using binary_to_decimal_rounding_policy = away_from_zero_t;
 					static constexpr auto tag				= tag_t::away_from_zero;
 
-					template<typename CarrierUInt> static constexpr bool prefer_round_down(CarrierUInt) noexcept {
+					template<typename CarrierUInt> JSONIFIER_INLINE static constexpr bool prefer_round_down(CarrierUInt) noexcept {
 						return false;
 					}
 				} away_from_zero{};
@@ -2056,7 +2003,7 @@ namespace jsonifier_jkj {
 					using binary_to_decimal_rounding_policy = toward_zero_t;
 					static constexpr auto tag				= tag_t::toward_zero;
 
-					template<typename CarrierUInt> static constexpr bool prefer_round_down(CarrierUInt) noexcept {
+					template<typename CarrierUInt> JSONIFIER_INLINE static constexpr bool prefer_round_down(CarrierUInt) noexcept {
 						return true;
 					}
 				} toward_zero{};
@@ -2068,7 +2015,7 @@ namespace jsonifier_jkj {
 					template<typename FloatFormat> using cache_holder_type = cache_holder<FloatFormat>;
 
 					template<typename FloatFormat, typename ShiftAmountType, typename DecimalExponentType>
-					static constexpr typename cache_holder_type<FloatFormat>::cache_entry_type get_cache(DecimalExponentType k) noexcept {
+					JSONIFIER_INLINE static constexpr typename cache_holder_type<FloatFormat>::cache_entry_type get_cache(DecimalExponentType k) noexcept {
 #if JSONIFIER_HAS_CONSTEXPR14
 						assert(k >= cache_holder_type<FloatFormat>::min_k && k <= cache_holder_type<FloatFormat>::max_k);
 #endif
@@ -2081,7 +2028,7 @@ namespace jsonifier_jkj {
 					template<typename FloatFormat> using cache_holder_type = compressed_cache_holder<FloatFormat>;
 
 					template<typename FloatFormat, typename ShiftAmountType, typename DecimalExponentType>
-					static JSONIFIER_CONSTEXPR20 typename cache_holder<FloatFormat>::cache_entry_type get_cache(DecimalExponentType k) noexcept {
+					JSONIFIER_INLINE static constexpr typename cache_holder<FloatFormat>::cache_entry_type get_cache(DecimalExponentType k) noexcept {
 						assert(k >= cache_holder<FloatFormat>::min_k && k <= cache_holder<FloatFormat>::max_k);
 
 						return cache_holder_type<FloatFormat>::template get_cache<ShiftAmountType>(k);
@@ -2142,7 +2089,7 @@ namespace jsonifier_jkj {
 		////////////////////////////////////////////////////////////////////////////////////////
 
 		template<typename DecimalExponentType> struct remove_trailing_zeros_traits<policy::trailing_zero::remove_t, ieee754_binary32, std::uint_least32_t, DecimalExponentType> {
-			JSONIFIER_INLINE static JSONIFIER_CONSTEXPR20 void remove_trailing_zeros(std::uint_least32_t& significand, DecimalExponentType& exponent) noexcept {
+			JSONIFIER_INLINE static constexpr void remove_trailing_zeros(std::uint_least32_t& significand, DecimalExponentType& exponent) noexcept {
 				// See https://github.com/jk-jeon/rtz_benchmark.
 				// The idea of branchless search below is by reddit users r/pigeon768 and
 				// r/TheoreticalDumbass.
@@ -2167,7 +2114,7 @@ namespace jsonifier_jkj {
 		};
 
 		template<typename DecimalExponentType> struct remove_trailing_zeros_traits<policy::trailing_zero::remove_t, ieee754_binary64, std::uint_least64_t, DecimalExponentType> {
-			JSONIFIER_INLINE static JSONIFIER_CONSTEXPR20 void remove_trailing_zeros(std::uint_least64_t& significand, DecimalExponentType& exponent) noexcept {
+			JSONIFIER_INLINE static constexpr void remove_trailing_zeros(std::uint_least64_t& significand, DecimalExponentType& exponent) noexcept {
 				// See https://github.com/jk-jeon/rtz_benchmark.
 				// The idea of branchless search below is by reddit users r/pigeon768 and
 				// r/TheoreticalDumbass.
@@ -2198,7 +2145,7 @@ namespace jsonifier_jkj {
 
 		template<typename DecimalExponentType>
 		struct remove_trailing_zeros_traits<policy::trailing_zero::remove_compact_t, ieee754_binary32, std::uint_least32_t, DecimalExponentType> {
-			JSONIFIER_INLINE static JSONIFIER_CONSTEXPR20 void remove_trailing_zeros(std::uint_least32_t& significand, DecimalExponentType& exponent) noexcept {
+			JSONIFIER_INLINE static constexpr void remove_trailing_zeros(std::uint_least32_t& significand, DecimalExponentType& exponent) noexcept {
 				// See https://github.com/jk-jeon/rtz_benchmark.
 				while (true) {
 					const auto r = std::uint_least32_t(significand * UINT32_C(1288490189));
@@ -2214,7 +2161,7 @@ namespace jsonifier_jkj {
 
 		template<typename DecimalExponentType>
 		struct remove_trailing_zeros_traits<policy::trailing_zero::remove_compact_t, ieee754_binary64, std::uint_least64_t, DecimalExponentType> {
-			JSONIFIER_INLINE static JSONIFIER_CONSTEXPR20 void remove_trailing_zeros(std::uint_least64_t& significand, DecimalExponentType& exponent) noexcept {
+			JSONIFIER_INLINE static constexpr void remove_trailing_zeros(std::uint_least64_t& significand, DecimalExponentType& exponent) noexcept {
 				// See https://github.com/jk-jeon/rtz_benchmark.
 				while (true) {
 					const auto r = std::uint_least64_t(significand * UINT64_C(5534023222112865485));
@@ -2230,17 +2177,17 @@ namespace jsonifier_jkj {
 
 		template<typename ExponentInt> struct multiplication_traits<ieee754_binary_traits<ieee754_binary32, std::uint_least32_t, ExponentInt>, std::uint_least64_t, 64>
 			: public multiplication_traits_base<ieee754_binary_traits<ieee754_binary32, std::uint_least32_t>, std::uint_least64_t, 64> {
-			static JSONIFIER_CONSTEXPR20 compute_mul_result compute_mul(carrier_uint u, const cache_entry_type& cache) noexcept {
+			JSONIFIER_INLINE static constexpr compute_mul_result compute_mul(carrier_uint u, const cache_entry_type& cache) noexcept {
 				const auto r = detail::wuint::umul96_upper64(u, cache);
 				return { carrier_uint(r >> 32), carrier_uint(r) == 0 };
 			}
 
-			template<typename ShiftAmountType> static constexpr std::uint_least64_t compute_delta(const cache_entry_type& cache, ShiftAmountType beta) noexcept {
+			template<typename ShiftAmountType> JSONIFIER_INLINE static constexpr std::uint_least64_t compute_delta(const cache_entry_type& cache, ShiftAmountType beta) noexcept {
 				return std::uint_least64_t(cache >> ShiftAmountType(cache_bits - 1 - beta));
 			}
 
 			template<typename ShiftAmountType>
-			static JSONIFIER_CONSTEXPR20 compute_mul_parity_result compute_mul_parity(carrier_uint two_f, const cache_entry_type& cache, ShiftAmountType beta) noexcept {
+			JSONIFIER_INLINE static constexpr compute_mul_parity_result compute_mul_parity(carrier_uint two_f, const cache_entry_type& cache, ShiftAmountType beta) noexcept {
 				assert(beta >= 1);
 				assert(beta <= 32);
 
@@ -2249,34 +2196,34 @@ namespace jsonifier_jkj {
 			}
 
 			template<typename ShiftAmountType>
-			static constexpr carrier_uint compute_left_endpoint_for_shorter_interval_case(const cache_entry_type& cache, ShiftAmountType beta) noexcept {
+			JSONIFIER_INLINE static constexpr carrier_uint compute_left_endpoint_for_shorter_interval_case(const cache_entry_type& cache, ShiftAmountType beta) noexcept {
 				return carrier_uint((cache - (cache >> (significand_bits + 2))) >> ShiftAmountType(cache_bits - significand_bits - 1 - beta));
 			}
 
 			template<typename ShiftAmountType>
-			static constexpr carrier_uint compute_right_endpoint_for_shorter_interval_case(const cache_entry_type& cache, ShiftAmountType beta) noexcept {
+			JSONIFIER_INLINE static constexpr carrier_uint compute_right_endpoint_for_shorter_interval_case(const cache_entry_type& cache, ShiftAmountType beta) noexcept {
 				return carrier_uint((cache + (cache >> (significand_bits + 1))) >> ShiftAmountType(cache_bits - significand_bits - 1 - beta));
 			}
 
 			template<typename ShiftAmountType>
-			static constexpr carrier_uint compute_round_up_for_shorter_interval_case(const cache_entry_type& cache, ShiftAmountType beta) noexcept {
+			JSONIFIER_INLINE static constexpr carrier_uint compute_round_up_for_shorter_interval_case(const cache_entry_type& cache, ShiftAmountType beta) noexcept {
 				return (carrier_uint(cache >> ShiftAmountType(cache_bits - significand_bits - 2 - beta)) + 1) / 2;
 			}
 		};
 
 		template<typename ExponentInt> struct multiplication_traits<ieee754_binary_traits<ieee754_binary64, std::uint_least64_t, ExponentInt>, detail::wuint::uint128, 128>
 			: public multiplication_traits_base<ieee754_binary_traits<ieee754_binary64, std::uint_least64_t>, detail::wuint::uint128, 128> {
-			static JSONIFIER_CONSTEXPR20 compute_mul_result compute_mul(carrier_uint u, const cache_entry_type& cache) noexcept {
+			static constexpr compute_mul_result compute_mul(carrier_uint u, const cache_entry_type& cache) noexcept {
 				const auto r = detail::wuint::umul192_upper128(u, cache);
 				return { r.high(), r.low() == 0 };
 			}
 
-			template<typename ShiftAmountType> static constexpr std::uint_least64_t compute_delta(const cache_entry_type& cache, ShiftAmountType beta) noexcept {
+			template<typename ShiftAmountType> JSONIFIER_INLINE static constexpr std::uint_least64_t compute_delta(const cache_entry_type& cache, ShiftAmountType beta) noexcept {
 				return std::uint_least64_t(cache.high() >> ShiftAmountType(total_bits - 1 - beta));
 			}
 
 			template<typename ShiftAmountType>
-			static JSONIFIER_CONSTEXPR20 compute_mul_parity_result compute_mul_parity(carrier_uint two_f, const cache_entry_type& cache, ShiftAmountType beta) noexcept {
+			JSONIFIER_INLINE static constexpr compute_mul_parity_result compute_mul_parity(carrier_uint two_f, const cache_entry_type& cache, ShiftAmountType beta) noexcept {
 				assert(beta >= 1);
 				assert(beta < 64);
 
@@ -2286,17 +2233,17 @@ namespace jsonifier_jkj {
 			}
 
 			template<typename ShiftAmountType>
-			static constexpr carrier_uint compute_left_endpoint_for_shorter_interval_case(const cache_entry_type& cache, ShiftAmountType beta) noexcept {
+			JSONIFIER_INLINE static constexpr carrier_uint compute_left_endpoint_for_shorter_interval_case(const cache_entry_type& cache, ShiftAmountType beta) noexcept {
 				return (cache.high() - (cache.high() >> (significand_bits + 2))) >> ShiftAmountType(total_bits - significand_bits - 1 - beta);
 			}
 
 			template<typename ShiftAmountType>
-			static constexpr carrier_uint compute_right_endpoint_for_shorter_interval_case(const cache_entry_type& cache, ShiftAmountType beta) noexcept {
+			JSONIFIER_INLINE static constexpr carrier_uint compute_right_endpoint_for_shorter_interval_case(const cache_entry_type& cache, ShiftAmountType beta) noexcept {
 				return (cache.high() + (cache.high() >> (significand_bits + 1))) >> ShiftAmountType(total_bits - significand_bits - 1 - beta);
 			}
 
 			template<typename ShiftAmountType>
-			static constexpr carrier_uint compute_round_up_for_shorter_interval_case(const cache_entry_type& cache, ShiftAmountType beta) noexcept {
+			JSONIFIER_INLINE static constexpr carrier_uint compute_round_up_for_shorter_interval_case(const cache_entry_type& cache, ShiftAmountType beta) noexcept {
 				return ((cache.high() >> ShiftAmountType(total_bits - significand_bits - 2 - beta)) + 1) / 2;
 			}
 		};
@@ -2322,10 +2269,10 @@ namespace jsonifier_jkj {
 				static_assert(kappa >= 1, "");
 				static_assert(carrier_bits >= significand_bits + 2 + log::floor_log2_pow10(kappa + 1), "");
 
-				static constexpr int32_t min(int32_t x, int32_t y) noexcept {
+				JSONIFIER_INLINE static constexpr int32_t min(int32_t x, int32_t y) noexcept {
 					return x < y ? x : y;
 				}
-				static constexpr int32_t max(int32_t x, int32_t y) noexcept {
+				JSONIFIER_INLINE static constexpr int32_t max(int32_t x, int32_t y) noexcept {
 					return x > y ? x : y;
 				}
 
@@ -2361,7 +2308,7 @@ namespace jsonifier_jkj {
 
 				template<typename SignPolicy, typename TrailingZeroPolicy, typename IntervalTypeProvider, typename BinaryToDecimalRoundingPolicy, typename CachePolicy,
 					class PreferredIntegerTypesPolicy>
-				JSONIFIER_SAFEBUFFERS static JSONIFIER_CONSTEXPR20 return_type<SignPolicy, TrailingZeroPolicy, PreferredIntegerTypesPolicy> compute_nearest(
+				JSONIFIER_SAFEBUFFERS static constexpr return_type<SignPolicy, TrailingZeroPolicy, PreferredIntegerTypesPolicy> compute_nearest(
 					signed_significand_bits<FormatTraits> s, exponent_int exponent_bits) noexcept {
 					using cache_holder_type = typename CachePolicy::template cache_holder_type<format>;
 					static_assert(min_k >= cache_holder_type::min_k && max_k <= cache_holder_type::max_k, "");
@@ -2515,13 +2462,12 @@ namespace jsonifier_jkj {
 						if (r < deltai) {
 							// Exclude the right endpoint if necessary.
 							if ((r | remainder_type_(!z_result.is_integer) | remainder_type_(interval_type.include_right_endpoint())) == 0) {
-								JSONIFIER_IF_CONSTEXPR(BinaryToDecimalRoundingPolicy::tag == policy::binary_to_decimal_rounding::tag_t::do_not_care) {
+								if constexpr (BinaryToDecimalRoundingPolicy::tag == policy::binary_to_decimal_rounding::tag_t::do_not_care) {
 									decimal_significand *= 10;
 									--decimal_significand;
 									return SignPolicy::handle_sign(s,
 										TrailingZeroPolicy::template no_trailing_zeros<format>(decimal_significand, decimal_exponent_type_(minus_k + kappa)));
-								}
-								else {
+								} else {
 									--decimal_significand;
 									r = big_divisor;
 									break;
@@ -2550,7 +2496,7 @@ namespace jsonifier_jkj {
 
 					decimal_significand *= 10;
 
-					JSONIFIER_IF_CONSTEXPR(BinaryToDecimalRoundingPolicy::tag == policy::binary_to_decimal_rounding::tag_t::do_not_care) {
+					if constexpr (BinaryToDecimalRoundingPolicy::tag == policy::binary_to_decimal_rounding::tag_t::do_not_care) {
 						// Normally, we want to compute
 						// significand += r / small_divisor
 						// and return, but we need to take care of the case that the resulting
@@ -2567,8 +2513,7 @@ namespace jsonifier_jkj {
 						} else {
 							decimal_significand += div::small_division_by_pow10<kappa>(r);
 						}
-					}
-					else {
+					} else {
 						// delta is equal to 10^(kappa + elog10(2) - floor(elog10(2))), so dist cannot
 						// be larger than r.
 						auto dist				   = remainder_type_(r - (deltai / 2) + (small_divisor / 2));
@@ -2604,8 +2549,8 @@ namespace jsonifier_jkj {
 				}
 
 				template<typename SignPolicy, typename TrailingZeroPolicy, typename CachePolicy, typename PreferredIntegerTypesPolicy>
-				JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS static JSONIFIER_CONSTEXPR20 return_type<SignPolicy, TrailingZeroPolicy, PreferredIntegerTypesPolicy>
-				compute_left_closed_directed(signed_significand_bits<FormatTraits> s, exponent_int exponent_bits) noexcept {
+				JSONIFIER_SAFEBUFFERS static constexpr return_type<SignPolicy, TrailingZeroPolicy, PreferredIntegerTypesPolicy> compute_left_closed_directed(
+					signed_significand_bits<FormatTraits> s, exponent_int exponent_bits) noexcept {
 					using cache_holder_type = typename CachePolicy::template cache_holder_type<format>;
 					static_assert(min_k >= cache_holder_type::min_k && max_k <= cache_holder_type::max_k, "");
 
@@ -2651,7 +2596,7 @@ namespace jsonifier_jkj {
 					// and 29711844 * 2^-81
 					// = 1.2288530660000000001731007559513386695471126586198806762695... * 10^-17
 					// for binary32.
-					JSONIFIER_IF_CONSTEXPR(std::is_same<format, ieee754_binary32>::value) {
+					if constexpr (std::is_same<format, ieee754_binary32>::value) {
 						if (binary_exponent <= -80) {
 							x_result.is_integer = false;
 						}
@@ -2695,7 +2640,7 @@ namespace jsonifier_jkj {
 								// case, the recovered cache is two large to make compute_mul_parity
 								// mistakenly conclude that z is not an integer, but actually z = 16384 is
 								// an integer.
-								JSONIFIER_IF_CONSTEXPR(std::is_same<cache_holder_type, compressed_cache_holder<ieee754_binary32>>::value) {
+								if constexpr (std::is_same<cache_holder_type, compressed_cache_holder<ieee754_binary32>>::value) {
 									if (two_fc == 33554430 && binary_exponent == -10) {
 										break;
 									}
@@ -2721,8 +2666,8 @@ namespace jsonifier_jkj {
 				}
 
 				template<typename SignPolicy, typename TrailingZeroPolicy, typename CachePolicy, typename PreferredIntegerTypesPolicy>
-				JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS static JSONIFIER_CONSTEXPR20 return_type<SignPolicy, TrailingZeroPolicy, PreferredIntegerTypesPolicy>
-				compute_right_closed_directed(signed_significand_bits<FormatTraits> s, exponent_int exponent_bits) noexcept {
+				JSONIFIER_SAFEBUFFERS static constexpr return_type<SignPolicy, TrailingZeroPolicy, PreferredIntegerTypesPolicy> compute_right_closed_directed(
+					signed_significand_bits<FormatTraits> s, exponent_int exponent_bits) noexcept {
 					using cache_holder_type = typename CachePolicy::template cache_holder_type<format>;
 					static_assert(min_k >= cache_holder_type::min_k && max_k <= cache_holder_type::max_k, "");
 
@@ -2803,11 +2748,11 @@ namespace jsonifier_jkj {
 					return SignPolicy::handle_sign(s, TrailingZeroPolicy::template no_trailing_zeros<format>(decimal_significand, decimal_exponent_type_(minus_k + kappa)));
 				}
 
-				static constexpr bool is_right_endpoint_integer_shorter_interval(exponent_int binary_exponent) noexcept {
+				JSONIFIER_INLINE static constexpr bool is_right_endpoint_integer_shorter_interval(exponent_int binary_exponent) noexcept {
 					return binary_exponent >= case_shorter_interval_right_endpoint_lower_threshold && binary_exponent <= case_shorter_interval_right_endpoint_upper_threshold;
 				}
 
-				static constexpr bool is_left_endpoint_integer_shorter_interval(exponent_int binary_exponent) noexcept {
+				JSONIFIER_INLINE static constexpr bool is_left_endpoint_integer_shorter_interval(exponent_int binary_exponent) noexcept {
 					return binary_exponent >= case_shorter_interval_left_endpoint_lower_threshold && binary_exponent <= case_shorter_interval_left_endpoint_upper_threshold;
 				}
 			};
@@ -2888,17 +2833,17 @@ namespace jsonifier_jkj {
 				return false;
 			}
 			template<typename Policy, typename FirstDetectorDefaultPair, typename... RemainingDetectorDefaultPairs>
-			constexpr bool check_policy_validity(dummy<Policy>, detector_default_pair_list<FirstDetectorDefaultPair, RemainingDetectorDefaultPairs...>) noexcept {
+			JSONIFIER_INLINE constexpr bool check_policy_validity(dummy<Policy>, detector_default_pair_list<FirstDetectorDefaultPair, RemainingDetectorDefaultPairs...>) noexcept {
 				return typename FirstDetectorDefaultPair::kind_detector{}(dummy<Policy>{}) ||
 					check_policy_validity(dummy<Policy>{}, detector_default_pair_list<RemainingDetectorDefaultPairs...>{});
 			}
 
 			// Check if all of policies belong to some of the kinds specified by the library.
-			template<typename DetectorDefaultPairList> constexpr bool check_policy_list_validity(DetectorDefaultPairList) noexcept {
+			template<typename DetectorDefaultPairList> JSONIFIER_INLINE constexpr bool check_policy_list_validity(DetectorDefaultPairList) noexcept {
 				return true;
 			}
 			template<typename DetectorDefaultPairList, typename FirstPolicy, typename... RemainingPolicies>
-			constexpr bool check_policy_list_validity(DetectorDefaultPairList, dummy<FirstPolicy> first_policy, dummy<RemainingPolicies>... remaining_policies) {
+			JSONIFIER_INLINE constexpr bool check_policy_list_validity(DetectorDefaultPairList, dummy<FirstPolicy> first_policy, dummy<RemainingPolicies>... remaining_policies) {
 				return check_policy_validity(first_policy, DetectorDefaultPairList{}) && check_policy_list_validity(DetectorDefaultPairList{}, remaining_policies...);
 			}
 
@@ -3045,22 +2990,18 @@ namespace jsonifier_jkj {
 				using preferred_integer_types_policy	= typename PolicyHolder::preferred_integer_types_policy;
 				using return_type						= typename impl<FormatTraits>::template return_type<sign_policy, trailing_zero_policy, preferred_integer_types_policy>;
 
-				template<typename IntervalTypeProvider> JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS JSONIFIER_CONSTEXPR20 return_type operator()(IntervalTypeProvider,
+				template<typename IntervalTypeProvider> JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS constexpr return_type operator()(IntervalTypeProvider,
 					signed_significand_bits<FormatTraits> s, typename FormatTraits::exponent_int exponent_bits) noexcept {
 					constexpr auto tag = IntervalTypeProvider::tag;
 
-					JSONIFIER_IF_CONSTEXPR(tag == policy::decimal_to_binary_rounding::tag_t::to_nearest) {
+					if constexpr (tag == policy::decimal_to_binary_rounding::tag_t::to_nearest) {
 						return impl<FormatTraits>::template compute_nearest<sign_policy, trailing_zero_policy, IntervalTypeProvider, binary_to_decimal_rounding_policy,
 							cache_policy, preferred_integer_types_policy>(s, exponent_bits);
-					}
-					else JSONIFIER_IF_CONSTEXPR(tag == policy::decimal_to_binary_rounding::tag_t::left_closed_directed) {
+					} else if constexpr (tag == policy::decimal_to_binary_rounding::tag_t::left_closed_directed) {
 						return impl<FormatTraits>::template compute_left_closed_directed<sign_policy, trailing_zero_policy, cache_policy, preferred_integer_types_policy>(s,
 							exponent_bits);
-					}
-					else {
-#if JSONIFIER_HAS_IF_CONSTEXPR
+					} else {
 						static_assert(tag == policy::decimal_to_binary_rounding::tag_t::right_closed_directed, "");
-#endif
 						return impl<FormatTraits>::template compute_right_closed_directed<sign_policy, trailing_zero_policy, cache_policy, preferred_integer_types_policy>(s,
 							exponent_bits);
 					}
@@ -3073,8 +3014,8 @@ namespace jsonifier_jkj {
 		////////////////////////////////////////////////////////////////////////////////////////
 
 		template<typename FormatTraits, typename ExponentBits, typename... Policies>
-		JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS JSONIFIER_CONSTEXPR20 detail::to_decimal_return_type<FormatTraits, Policies...> to_decimal_ex(
-			signed_significand_bits<FormatTraits> s, ExponentBits exponent_bits, Policies...) noexcept {
+		JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS constexpr detail::to_decimal_return_type<FormatTraits, Policies...> to_decimal_ex(signed_significand_bits<FormatTraits> s,
+			ExponentBits exponent_bits, Policies...) noexcept {
 			// Build policy holder type.
 			using policy_holder = detail::to_decimal_policy_holder<Policies...>;
 
@@ -3083,7 +3024,7 @@ namespace jsonifier_jkj {
 
 		template<typename Float, typename ConversionTraits = default_float_bit_carrier_conversion_traits<Float>,
 			class FormatTraits = ieee754_binary_traits<typename ConversionTraits::format, typename ConversionTraits::carrier_uint>, typename... Policies>
-		JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS JSONIFIER_CONSTEXPR20 detail::to_decimal_return_type<FormatTraits, Policies...> to_decimal(Float x, Policies... policies) noexcept {
+		JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS constexpr detail::to_decimal_return_type<FormatTraits, Policies...> to_decimal(Float x, Policies... policies) noexcept {
 			const auto br			 = make_float_bits<Float, ConversionTraits, FormatTraits>(x);
 			const auto exponent_bits = br.extract_exponent_bits();
 			const auto s			 = br.remove_exponent_bits();

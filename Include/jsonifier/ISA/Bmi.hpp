@@ -31,7 +31,7 @@ namespace jsonifier::simd {
 
 	#define blsr(value) _blsr_u64(value)
 
-	template<jsonifier::concepts::uns16_t value_type> JSONIFIER_INLINE value_type tzcnt(const value_type value) noexcept {
+	template<concepts::uns16_t value_type> JSONIFIER_INLINE value_type tzcnt(const value_type value) noexcept {
 	#if defined(JSONIFIER_LINUX)
 		return __tzcnt_u16(value);
 	#else
@@ -39,11 +39,11 @@ namespace jsonifier::simd {
 	#endif
 	}
 
-	template<jsonifier::concepts::uns32_t value_type> JSONIFIER_INLINE value_type tzcnt(const value_type value) noexcept {
+	template<concepts::uns32_t value_type> JSONIFIER_INLINE value_type tzcnt(const value_type value) noexcept {
 		return _tzcnt_u32(value);
 	}
 
-	template<jsonifier::concepts::uns64_t value_type> JSONIFIER_INLINE value_type tzcnt(const value_type value) noexcept {
+	template<concepts::uns64_t value_type> JSONIFIER_INLINE value_type tzcnt(const value_type value) noexcept {
 		return _tzcnt_u64(value);
 	}
 
@@ -51,7 +51,7 @@ namespace jsonifier::simd {
 
 	#define blsr(value) (value & (value - 1))
 
-	template<jsonifier::concepts::uns16_t value_type> JSONIFIER_INLINE value_type tzcnt(const value_type value) noexcept {
+	template<concepts::uns16_t value_type> JSONIFIER_INLINE value_type tzcnt(const value_type value) noexcept {
 		if (value != 0) {
 	#if JSONIFIER_REGULAR_VISUAL_STUDIO
 			return _tzcnt_u16(value);
@@ -63,7 +63,7 @@ namespace jsonifier::simd {
 		}
 	}
 
-	template<jsonifier::concepts::uns32_t value_type> JSONIFIER_INLINE value_type tzcnt(const value_type value) noexcept {
+	template<concepts::uns32_t value_type> JSONIFIER_INLINE value_type tzcnt(const value_type value) noexcept {
 		if (value != 0) {
 	#if JSONIFIER_REGULAR_VISUAL_STUDIO
 			return _tzcnt_u32(value);
@@ -75,7 +75,7 @@ namespace jsonifier::simd {
 		}
 	}
 
-	template<jsonifier::concepts::uns64_t value_type> JSONIFIER_INLINE value_type tzcnt(const value_type value) noexcept {
+	template<concepts::uns64_t value_type> JSONIFIER_INLINE value_type tzcnt(const value_type value) noexcept {
 		if (value != 0) {
 	#if JSONIFIER_REGULAR_VISUAL_STUDIO
 			return _tzcnt_u64(value);
@@ -91,7 +91,7 @@ namespace jsonifier::simd {
 
 	#define blsr(value) (value & (value - 1))
 
-	template<jsonifier::concepts::unsigned_t value_type> JSONIFIER_INLINE value_type tzcnt(const value_type value) noexcept {
+	template<concepts::unsigned_t value_type> JSONIFIER_INLINE value_type tzcnt(const value_type value) noexcept {
 		if (value == 0) {
 			return sizeof(value_type) * 8;
 		}

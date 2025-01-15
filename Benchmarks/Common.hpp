@@ -31,9 +31,9 @@
 #include <thread>
 
 #if defined(NDEBUG)
-static constexpr auto maxIterations{ 100 };
+static constexpr auto maxIterations{ 1200 };
 #else
-static constexpr auto maxIterations{ 10 };
+static constexpr auto maxIterations{ 80 };
 #endif
 
 constexpr auto getCurrentOperatingSystem() {
@@ -85,17 +85,6 @@ constexpr bnch_swt::string_literal glazeCommitUrlBase{ "https://github.com/steph
 constexpr bnch_swt::string_literal jsonifierCommitUrl{ jsonifierCommitUrlBase + JSONIFIER_COMMIT };
 constexpr bnch_swt::string_literal simdjsonCommitUrl{ simdjsonCommitUrlBase + SIMDJSON_COMMIT };
 constexpr bnch_swt::string_literal glazeCommitUrl{ glazeCommitUrlBase + GLAZE_COMMIT };
-
-class test_base {
-  public:
-	test_base() noexcept = default;
-
-	test_base(const std::string& stringNew, const std::string& fileContentsNew, bool areWeAFailingTestNew)
-		: fileContents{ fileContentsNew }, areWeAFailingTest{ areWeAFailingTestNew }, testName{ stringNew } {};
-	std::string fileContents{};
-	bool areWeAFailingTest{};
-	std::string testName{};
-};
 
 std::string getCPUInfo() {
 	char brand[49]{};
@@ -150,15 +139,6 @@ std::string getCPUInfo() {
 #endif
 }
 
-std::string getCurrentWorkingDirectory() {
-	try {
-		return std::filesystem::current_path().string();
-	} catch (const std::filesystem::filesystem_error& e) {
-		std::cout << "Error: " << e.what() << std::endl;
-		return "";
-	}
-}
-
 void executePythonScript(const std::string& scriptPath, const std::string& argument01, const std::string& argument02) {
 #if defined(JSONIFIER_WIN)
 	static std::string pythonName{ "python " };
@@ -170,34 +150,6 @@ void executePythonScript(const std::string& scriptPath, const std::string& argum
 	if (result != 0) {
 		std::cout << "Error: Failed to execute Python script. Command exited with code " << result << std::endl;
 	}
-}
-
-bool processFilesInFolder(std::unordered_map<std::string, test_base>& resultFileContents, const std::string& testType) noexcept {
-	try {
-		for (const auto& entry: std::filesystem::directory_iterator(std::string{ testPath.operator std::string() } + testType)) {
-			if (entry.is_regular_file()) {
-				const std::string fileName = entry.path().filename().string();
-
-				if (fileName.size() >= 5 && fileName.substr(fileName.size() - 5) == std::string{ ".json" }) {
-					std::ifstream file(entry.path());
-					if (file.is_open()) {
-						std::string fileContents((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-						bool returnValue					= (fileName.find(".json") != std::string::npos);
-						resultFileContents[fileName.data()] = { fileName, fileContents, returnValue };
-						file.close();
-					} else {
-						std::cerr << "Error opening file: " << fileName << std::endl;
-						return false;
-					}
-				}
-			}
-		}
-	} catch (const std::exception& e) {
-		std::cerr << "Error while processing files: " << e.what() << std::endl;
-		return false;
-	}
-
-	return true;
 }
 
 struct test_struct {
@@ -311,31 +263,28 @@ template<typename value_type> struct test_generator {
 
 	test_generator() {
 		auto fill = [&](auto& v) {
-			auto arraySize01 = randomizeNumberUniform(5ull, 15ull);
+			auto arraySize01 = randomizeNumberUniform(1ull, 3ull);
 			v.resize(arraySize01);
 			for (uint64_t x = 0; x < arraySize01; ++x) {
-				auto arraySize02 = randomizeNumberUniform(5ull, 15ull);
-				auto arraySize03 = randomizeNumberUniform(0ull, arraySize02);
+				auto arraySize03 = randomizeNumberUniform(0ull, 15ull);
 				for (uint64_t y = 0; y < arraySize03; ++y) {
-					auto newString = generateString();
-					v[x].testVals01.emplace_back(newString);
+					v[x].testVals01.emplace_back(generateString());
 				}
-				arraySize03 = randomizeNumberUniform(0ull, arraySize02);
+				arraySize03 = randomizeNumberUniform(0ull, 15ull);
 				for (uint64_t y = 0; y < arraySize03; ++y) {
 					v[x].testVals02.emplace_back(generateUint());
 				}
-				arraySize03 = randomizeNumberUniform(0ull, arraySize02);
+				arraySize03 = randomizeNumberUniform(0ull, 15ull);
 				for (uint64_t y = 0; y < arraySize03; ++y) {
 					v[x].testVals03.emplace_back(generateInt());
 				}
-				arraySize03 = randomizeNumberUniform(0ull, arraySize02);
-				for (uint64_t y = 0; y < arraySize03; ++y) {
-					auto newBool = generateBool();
-					v[x].testVals05.emplace_back(newBool);
-				}
-				arraySize03 = randomizeNumberUniform(0ull, arraySize02);
+				arraySize03 = randomizeNumberUniform(0ull, 15ull);
 				for (uint64_t y = 0; y < arraySize03; ++y) {
 					v[x].testVals04.emplace_back(generateDouble());
+				}
+				arraySize03 = randomizeNumberUniform(0ull, 15ull);
+				for (uint64_t y = 0; y < arraySize03; ++y) {
+					v[x].testVals05.emplace_back(generateBool());
 				}
 			}
 		};
@@ -454,7 +403,6 @@ struct results_data {
 	std::unordered_set<std::string> jsonifierExcludedKeys{};
 	result<result_type::write> writeResult{};
 	result<result_type::read> readResult{};
-	uint64_t iterations{};
 	std::string name{};
 	std::string test{};
 	std::string url{};
@@ -469,18 +417,12 @@ struct results_data {
 		}
 	}
 
-	results_data& operator=(results_data&&) noexcept	  = default;
-	results_data(results_data&&) noexcept				  = default;
-	results_data& operator=(const results_data&) noexcept = default;
-	results_data(const results_data&) noexcept			  = default;
-
 	results_data() noexcept = default;
 
-	results_data(const std::string& nameNew, const std::string& testNew, const std::string& urlNew, uint64_t iterationsNew) {
-		iterations = iterationsNew;
-		name	   = nameNew;
-		test	   = testNew;
-		url		   = urlNew;
+	results_data(const std::string& nameNew, const std::string& testNew, const std::string& urlNew) {
+		name = nameNew;
+		test = testNew;
+		url	 = urlNew;
 	}
 
 	void checkForMissingKeys() {
@@ -533,7 +475,7 @@ std::tm getTime() {
 #endif
 }
 
-JSONIFIER_INLINE static std::string urlEncode(std::string value) {
+static std::string urlEncode(std::string value) {
 	std::ostringstream escaped;
 	escaped.fill('0');
 	escaped << std::hex;

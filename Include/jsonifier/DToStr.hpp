@@ -19,7 +19,6 @@
 	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 	DEALINGS IN THE SOFTWARE.
 */
-/// Note: Most of the code in this header was sampled from Glaze library: https://github.com/stephenberry/glaze
 /// https://github.com/RealTimeChris/jsonifier
 /// Nov 13, 2023
 #pragma once
@@ -50,12 +49,13 @@ namespace jsonifier::internal {
 		uint32_t bb		   = abb - a * 100;
 		uint32_t cc		   = abbcc - abb * 100;
 
-		buf[0] = char(a + '0');
+		buf[0] = int_tables<>::charTable1[a];
 		buf += a > 0;
-		bool lz = bb < 10 && a == 0;
-		std::memcpy(buf, charTable2 + (bb * 2 + lz), 2);
+		auto lz = bb < 10 && a == 0;
 		buf -= lz;
-		std::memcpy(buf + 2, charTable2 + 2 * cc, 2);
+		std::memcpy(buf, int_tables<>::charTable02 + bb, 2);
+
+		std::memcpy(buf + 2, int_tables<>::charTable02 + cc, 2);
 
 		if (ffgghhii) {
 			uint32_t dd	  = (ddee * 5243) >> 19;
@@ -64,15 +64,15 @@ namespace jsonifier::internal {
 			uint32_t hhii = ffgghhii - ffgg * 10000;
 			uint32_t ff	  = (ffgg * 5243) >> 19;
 			uint32_t gg	  = ffgg - ff * 100;
-			std::memcpy(buf + 4, charTable2 + 2 * dd, 2);
-			std::memcpy(buf + 6, charTable2 + 2 * ee, 2);
-			std::memcpy(buf + 8, charTable2 + 2 * ff, 2);
-			std::memcpy(buf + 10, charTable2 + 2 * gg, 2);
+			std::memcpy(buf + 4, int_tables<>::charTable02 + dd, 2);
+			std::memcpy(buf + 6, int_tables<>::charTable02 + ee, 2);
+			std::memcpy(buf + 8, int_tables<>::charTable02 + ff, 2);
+			std::memcpy(buf + 10, int_tables<>::charTable02 + gg, 2);
 			if (hhii) {
 				uint32_t hh = (hhii * 5243) >> 19;
 				uint32_t ii = hhii - hh * 100;
-				std::memcpy(buf + 12, charTable2 + 2 * hh, 2);
-				std::memcpy(buf + 14, charTable2 + 2 * ii, 2);
+				std::memcpy(buf + 12, int_tables<>::charTable02 + hh, 2);
+				std::memcpy(buf + 14, int_tables<>::charTable02 + ii, 2);
 				tz1 = decTrailingZeroTable[hh];
 				tz2 = decTrailingZeroTable[ii];
 				tz	= ii ? tz2 : (tz1 + 2);
@@ -89,8 +89,8 @@ namespace jsonifier::internal {
 			if (ddee) {
 				uint32_t dd = (ddee * 5243) >> 19;
 				uint32_t ee = ddee - dd * 100;
-				std::memcpy(buf + 4, charTable2 + 2 * dd, 2);
-				std::memcpy(buf + 6, charTable2 + 2 * ee, 2);
+				std::memcpy(buf + 4, int_tables<>::charTable02 + dd, 2);
+				std::memcpy(buf + 6, int_tables<>::charTable02 + ee, 2);
 				tz1 = decTrailingZeroTable[dd];
 				tz2 = decTrailingZeroTable[ee];
 				tz	= ee ? tz2 : (tz1 + 2);
@@ -110,12 +110,11 @@ namespace jsonifier::internal {
 		return x < 2 ? x : 1 + numbits(x >> 1);
 	}
 
-	template<jsonifier::concepts::float_t value_type> JSONIFIER_INLINE static string_buffer_ptr toChars(string_buffer_ptr buf, value_type value) noexcept {
+	template<concepts::float_t value_type> JSONIFIER_INLINE static string_buffer_ptr toChars(string_buffer_ptr buf, value_type value) noexcept {
 		static_assert(std::numeric_limits<value_type>::is_iec559);
 		static_assert(std::numeric_limits<value_type>::radix == 2);
 		static_assert(std::same_as<float, value_type> || std::same_as<double, value_type>);
 		static_assert(sizeof(float) == 4 && sizeof(double) == 8);
-		static constexpr bool isFloat = std::same_as<float, value_type>;
 		using raw_type				  = std::conditional_t<std::same_as<float, value_type>, uint32_t, uint64_t>;
 		static constexpr auto zeroNew = value_type(0.0);
 		if (value != zeroNew) {
@@ -125,119 +124,60 @@ namespace jsonifier::internal {
 			const auto floatBits				   = jsonifier_jkj::dragonbox::make_float_bits<value_type, conversion_traits, format_traits>(value);
 			const auto expBits					   = floatBits.extract_exponent_bits();
 			const auto s						   = floatBits.remove_exponent_bits();
+			static constexpr auto expBitsAmount{ (uint32_t(1) << expBitsCount) - 1 };
 
-			if JSONIFIER_UNLIKELY (expBits == (uint32_t(1) << expBitsCount) - 1) {
+			if JSONIFIER_UNLIKELY (expBits == expBitsAmount) {
 				std::memcpy(buf, "null", 4);
 				return buf + 4;
 			}
 
-			*buf = '-';
-			buf += (value < zeroNew);
+			buf += ((value < zeroNew) ? (*buf = '-', 1) : 0);
 
-			if constexpr (isFloat) {
-				const auto v =
-					jsonifier_jkj::dragonbox::to_decimal_ex(s, expBits, jsonifier_jkj::dragonbox::policy::sign::ignore, jsonifier_jkj::dragonbox::policy::trailing_zero::remove);
+			const auto v =
+				jsonifier_jkj::dragonbox::to_decimal_ex(s, expBits, jsonifier_jkj::dragonbox::policy::sign::ignore, jsonifier_jkj::dragonbox::policy::trailing_zero::ignore);
 
-				uint64_t sigDec			= uint32_t(v.significand);
-				int32_t expDec			= v.exponent;
-				const int32_t numDigits = int32_t(fastDigitCount(sigDec));
-				int32_t dotPos			= numDigits + expDec;
+			uint64_t sigDec			= v.significand;
+			int32_t expDec			= v.exponent;
+			const int32_t numDigits = int32_t(fastDigitCount(sigDec));
+			int32_t dotPos			= numDigits + expDec;
 
-				if (-6 < dotPos && dotPos <= 9) {
-					if (dotPos <= 0) {
-						*buf++ = '0';
-						*buf++ = '.';
-						while (dotPos < 0) {
-							*buf++ = '0';
-							++dotPos;
-						}
-						return toChars(buf, sigDec);
-					} else {
-						auto numEnd			  = toChars(buf, sigDec);
-						int32_t digitsWritten = int32_t(numEnd - buf);
-						if (dotPos < digitsWritten) {
-							std::memmove(buf + dotPos + 1, buf + dotPos, digitsWritten - dotPos);
-							buf[dotPos] = '.';
-							return numEnd + 1;
-						} else if (dotPos > digitsWritten) {
-							std::memset(numEnd, '0', dotPos - digitsWritten);
-							return buf + dotPos;
-						} else {
-							return numEnd;
-						}
-					}
+			if (-6 < dotPos && dotPos <= 21) {
+				if (dotPos <= 0) {
+					auto numHdr = buf + (2 - dotPos);
+					auto numEnd = writeU64Len15To17Trim(numHdr, sigDec);
+					buf[0]		= '0';
+					buf[1]		= '.';
+					buf += 2;
+					std::memset(buf, '0', size_t(numHdr - buf));
+					return numEnd;
 				} else {
-					auto end = toChars(buf + 1, sigDec);
-					expDec += int32_t(end - (buf + 1)) - 1;
-					buf[0] = buf[1];
-					buf[1] = '.';
-					if (end == buf + 2) {
-						buf[2] = '0';
-						++end;
-					}
-					*end = 'E';
-					buf	 = end + 1;
-					if (expDec < 0) {
-						*buf = '-';
-						++buf;
-						expDec = -expDec;
-					}
-					expDec		= std::abs(expDec);
-					uint32_t lz = expDec < 10;
-					std::memcpy(buf, charTable2 + (expDec * 2 + lz), 2);
-					return buf + 2 - lz;
+					std::memset(buf, '0', 24);
+					auto numHdr = buf + 1;
+					auto numEnd = writeU64Len15To17Trim(numHdr, sigDec);
+					std::memmove(buf, buf + 1, size_t(dotPos));
+					buf[dotPos] = '.';
+					return ((numEnd - numHdr) <= dotPos) ? buf + dotPos : numEnd;
 				}
 			} else {
-				const auto v =
-					jsonifier_jkj::dragonbox::to_decimal_ex(s, expBits, jsonifier_jkj::dragonbox::policy::sign::ignore, jsonifier_jkj::dragonbox::policy::trailing_zero::ignore);
-
-				uint64_t sigDec = v.significand;
-				int32_t expDec	= v.exponent;
-
-				int32_t sigLen = 17;
-				sigLen -= (sigDec < 100000000ull * 100000000ull);
-				sigLen -= (sigDec < 100000000ull * 10000000ull);
-				int32_t dotPos = sigLen + expDec;
-
-				if (-6 < dotPos && dotPos <= 21) {
-					if (dotPos <= 0) {
-						auto numHdr = buf + (2 - dotPos);
-						auto numEnd = writeU64Len15To17Trim(numHdr, sigDec);
-						buf[0]		= '0';
-						buf[1]		= '.';
-						buf += 2;
-						std::memset(buf, '0', size_t(numHdr - buf));
-						return numEnd;
-					} else {
-						std::memset(buf, '0', 24);
-						auto numHdr = buf + 1;
-						auto numEnd = writeU64Len15To17Trim(numHdr, sigDec);
-						std::memmove(buf, buf + 1, size_t(dotPos));
-						buf[dotPos] = '.';
-						return ((numEnd - numHdr) <= dotPos) ? buf + dotPos : numEnd;
-					}
+				auto end = writeU64Len15To17Trim(buf + 1, sigDec);
+				expDec += int32_t(end - (buf + 1)) - 1;
+				buf[0] = buf[1];
+				buf[1] = '.';
+				end[0] = 'E';
+				buf	   = end + 1;
+				buf[0] = '-';
+				buf += expDec < 0;
+				expDec = std::abs(expDec);
+				if (expDec < 100) {
+					uint32_t lz = expDec < 10;
+					std::memcpy(buf, int_tables<>::charTable02 + (expDec + lz), 2);
+					return buf + 2 - lz;
 				} else {
-					auto end = writeU64Len15To17Trim(buf + 1, sigDec);
-					end -= (end == buf + 2);
-					expDec += sigLen - 1;
-					buf[0] = buf[1];
-					buf[1] = '.';
-					end[0] = 'E';
-					buf	   = end + 1;
-					buf[0] = '-';
-					buf += expDec < 0;
-					expDec = std::abs(expDec);
-					if (expDec < 100) {
-						uint32_t lz = expDec < 10;
-						std::memcpy(buf, charTable2 + (expDec * 2 + lz), 2);
-						return buf + 2 - lz;
-					} else {
-						const uint32_t hi = (uint32_t(expDec) * 656) >> 16;
-						const uint32_t lo = uint32_t(expDec) - hi * 100;
-						buf[0]			  = uint8_t(hi) + '0';
-						std::memcpy(&buf[1], charTable2 + (lo * 2), 2);
-						return buf + 3;
-					}
+					const uint32_t hi = (uint32_t(expDec) * 656) >> 16;
+					const uint32_t lo = uint32_t(expDec) - hi * 100;
+					buf[0]			  = uint8_t(hi) + '0';
+					std::memcpy(&buf[1], int_tables<>::charTable02 + (lo), 2);
+					return buf + 3;
 				}
 			}
 		} else {

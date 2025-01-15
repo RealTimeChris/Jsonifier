@@ -60,11 +60,11 @@ using jsonifier_simd_int_t = uint8x16_t;
 static constexpr size_t bitsPerStep{ 128 };
 using jsonifier_string_parsing_type = uint16_t;
 #else
-using jsonifier_simd_int_128 = jsonifier::simd::__m128x;
+using jsonifier_simd_int_128 = simd::__m128x;
 using jsonifier_simd_int_256 = uint32_t;
 using jsonifier_simd_int_512 = size_t;
 
-using jsonifier_simd_int_t = jsonifier::simd::__m128x;
+using jsonifier_simd_int_t = simd::__m128x;
 static constexpr size_t bitsPerStep{ 128 };
 using jsonifier_string_parsing_type = uint16_t;
 #endif

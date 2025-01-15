@@ -63,44 +63,43 @@ namespace jsonifier::internal {
 	};
 
 	std::ostream& operator<<(std::ostream& os, parse_errors error) {
-		os << jsonifier::simd::tzcnt(static_cast<uint64_t>(error));
+		os << simd::tzcnt(static_cast<uint64_t>(error));
 		return os;
 	}
 
-	inline std::unordered_map<error_classes, std::unordered_map<uint64_t, jsonifier::string_view>> errorMap{
+	inline std::unordered_map<error_classes, std::unordered_map<uint64_t, string_view>> errorMap{
 		{ error_classes::Parsing,
-			std::unordered_map<uint64_t, jsonifier::string_view>{ { 0ull, "Success" }, { 1ull, "Missing_Object_Start" }, { 2ull, "Imbalanced_Object_Braces" },
-				{ 3ull, "Missing_Array_Start" }, { 4ull, "Imbalanced_Array_Brackets" }, { 5ull, "Missing_String_Start" }, { 6ull, "Missing_Colon" }, { 7ull, "Missing_Object_End" },
-				{ 8ull, "Missing_Array_End" }, { 9ull, "Missing_Comma" }, { 10ull, "Invalid_Number_Value" }, { 11ull, "Invalid_Null_Value" }, { 12ull, "Invalid_Bool_Value" },
+			std::unordered_map<uint64_t, string_view>{ { 0ull, "Success" }, { 1ull, "Missing_Object_Start" }, { 2ull, "Imbalanced_Object_Braces" }, { 3ull, "Missing_Array_Start" },
+				{ 4ull, "Imbalanced_Array_Brackets" }, { 5ull, "Missing_String_Start" }, { 6ull, "Missing_Colon" }, { 7ull, "Missing_Object_End" }, { 8ull, "Missing_Array_End" },
+				{ 9ull, "Missing_Comma" }, { 10ull, "Invalid_Number_Value" }, { 11ull, "Invalid_Null_Value" }, { 12ull, "Invalid_Bool_Value" },
 				{ 13ull, "Invalid_String_Characters" }, { 14ull, "No_Input" }, { 15ull, "Unfinished_Input" }, { 16ull, "Unexpected_String_End" } } },
-		{ error_classes::Serializing, std::unordered_map<uint64_t, jsonifier::string_view>{ { { 0ull, "Success" } } } },
+		{ error_classes::Serializing, std::unordered_map<uint64_t, string_view>{ { { 0ull, "Success" } } } },
 		{ error_classes::Minifying,
-			std::unordered_map<uint64_t, jsonifier::string_view>{ { 0ull, "Success" }, { 1ull, "No_Input" }, { 2ull, "Invalid_String_Length" }, { 3ull, "Invalid_Number_Value" },
+			std::unordered_map<uint64_t, string_view>{ { 0ull, "Success" }, { 1ull, "No_Input" }, { 2ull, "Invalid_String_Length" }, { 3ull, "Invalid_Number_Value" },
 				{ 4ull, "Incorrect_Structural_Index" } } },
 		{ error_classes::Prettifying,
-			std::unordered_map<uint64_t, jsonifier::string_view>{ { 0ull, "Success" }, { 1ull, "No_Input" }, { 2ull, "Exceeded_Max_Depth" },
-				{ 3ull, "Incorrect_Structural_Index" } } },
+			std::unordered_map<uint64_t, string_view>{ { 0ull, "Success" }, { 1ull, "No_Input" }, { 2ull, "Exceeded_Max_Depth" }, { 3ull, "Incorrect_Structural_Index" } } },
 		{ error_classes::Validating,
-			std::unordered_map<uint64_t, jsonifier::string_view>{ { 0ull, "Success" }, { 1ull, "Missing_Object_Start" }, { 2ull, "Imbalanced_Object_Braces" },
-				{ 3ull, "Missing_Array_Start" }, { 4ull, "Imbalanced_Array_Brackets" }, { 5ull, "Missing_String_Start" }, { 6ull, "Missing_Colon" }, { 7ull, "Missing_Comma" },
-				{ 8ull, "Invalid_Number_Value" }, { 9ull, "Invalid_Null_Value" }, { 10ull, "Invalid_Bool_Value" }, { 11ull, "Invalid_String_Characters" },
-				{ 12ull, "Invalid_Escape_Characters" }, { 13ull, "Missing_Comma_Or_Closing_Brace" }, { 14ull, "No_Input" } } }
+			std::unordered_map<uint64_t, string_view>{ { 0ull, "Success" }, { 1ull, "Missing_Object_Start" }, { 2ull, "Imbalanced_Object_Braces" }, { 3ull, "Missing_Array_Start" },
+				{ 4ull, "Imbalanced_Array_Brackets" }, { 5ull, "Missing_String_Start" }, { 6ull, "Missing_Colon" }, { 7ull, "Missing_Comma" }, { 8ull, "Invalid_Number_Value" },
+				{ 9ull, "Invalid_Null_Value" }, { 10ull, "Invalid_Bool_Value" }, { 11ull, "Invalid_String_Characters" }, { 12ull, "Invalid_Escape_Characters" },
+				{ 13ull, "Missing_Comma_Or_Closing_Brace" }, { 14ull, "No_Input" } } }
 	};
 
 	enum class json_structural_type : int8_t {
-		Unset		 = 0,
-		String		 = '"',
-		Comma		 = ',',
-		Number		 = '-',
-		Colon		 = ':',
-		Array_Start	 = '[',
-		Array_End	 = ']',
-		Null		 = 'n',
-		Bool		 = 't',
-		Object_Start = '{',
-		Object_End	 = '}',
-		Error		 = -1,
-		Type_Count	 = 12
+		unset		 = 0,
+		string		 = '"',
+		comma		 = ',',
+		number		 = '-',
+		colon		 = ':',
+		array_start	 = '[',
+		array_end	 = ']',
+		null		 = 'n',
+		boolean		 = 't',
+		object_start = '{',
+		object_end	 = '}',
+		error		 = -1,
+		type_count	 = 12
 	};
 
 	constexpr array<bool, 256> numberTable{ [] {
@@ -123,7 +122,7 @@ namespace jsonifier::internal {
 		return numberTable[c];
 	}
 
-	std::string convertChar(char value) {
+	string convertChar(char value) {
 		switch (value) {
 			[[unlikely]] case '\b': { return R"(\b)"; }
 			[[unlikely]] case '\t': { return R"(\t)"; }
@@ -133,7 +132,7 @@ namespace jsonifier::internal {
 			[[unlikely]] case '"': { return R"(\")"; }
 			[[unlikely]] case '\\': { return R"(\\)"; }
 			[[unlikely]] case '\0': { return R"(\0)"; }
-			[[likely]] default: { return std::string{ value }; };
+			[[likely]] default: { return string{ value }; };
 		}
 	}
 
@@ -180,7 +179,7 @@ namespace jsonifier::internal {
 			return errorType == rhs.errorType && errorIndex == rhs.errorIndex;
 		}
 
-		void formatError(const jsonifier::string_view& errorString) noexcept {
+		void formatError(const string_view& errorString) noexcept {
 			if (static_cast<size_t>(errorIndex) >= errorString.size() || errorString.size() == 0ull) {
 				return;
 			}
@@ -193,7 +192,7 @@ namespace jsonifier::internal {
 			const auto prevNewLine = std::find((std::min)(rstart + 1, std::rend(errorString)), std::rend(errorString), static_cast<V>('\n'));
 			localIndex			   = std::distance(rstart, prevNewLine) - 1ll;
 			auto endIndex{ std::end(errorString) - start >= 64 ? 64 : std::end(errorString) - start };
-			context = jsonifier::string{ start, static_cast<size_t>(endIndex) };
+			context = string{ start, static_cast<size_t>(endIndex) };
 			for (auto& c: context) {
 				if (c == '\t') {
 					c = ' ';
@@ -201,22 +200,22 @@ namespace jsonifier::internal {
 			}
 		}
 
-		jsonifier::string collectValues(jsonifier::string outputValues, const jsonifier::string& inputValues, size_t currentIndex = 0) const {
+		string collectValues(string outputValues, const string& inputValues, size_t currentIndex = 0) const {
 			if (inputValues.size() > currentIndex && currentIndex <= 6) {
-				outputValues += jsonifier::string{ "'" } + convertChar(inputValues[currentIndex]) + jsonifier::string{ "' " };
+				outputValues += string{ "'" } + convertChar(inputValues[currentIndex]) + string{ "' " };
 				return collectValues(outputValues, inputValues, currentIndex + 1);
 			} else {
 				return outputValues;
 			}
 		}
 
-		jsonifier::string reportError() const noexcept {
-			jsonifier::string returnValue{ "Error of Type: " + errorMap[errorClass][errorType] + ", at global index: " + std::to_string(errorIndex) +
-				", on line: " + std::to_string(line) + ", at local index: " + std::to_string(localIndex) };
+		string reportError() const noexcept {
+			string returnValue{ "Error of Type: " + errorMap[errorClass][errorType] + ", at global index: " + std::to_string(errorIndex) + ", on line: " + std::to_string(line) +
+				", at local index: " + std::to_string(localIndex) };
 			if (stringView) {
-				returnValue += "\nHere's some of the string's values: " + collectValues(jsonifier::string{}, context) + std::string{ "\nThe Values: " + context };
+				returnValue += "\nHere's some of the string's values: " + collectValues(string{}, context) + string{ "\nThe Values: " + context };
 			}
-			returnValue += jsonifier::string{ "\nIn file: " } + location.file_name() + ", at: " + std::to_string(location.line()) + ":" + std::to_string(location.column()) +
+			returnValue += string{ "\nIn file: " } + location.file_name() + ", at: " + std::to_string(location.line()) + ":" + std::to_string(location.column()) +
 				", in function: " + location.function_name() + "().\n";
 			return returnValue;
 		}
@@ -224,7 +223,7 @@ namespace jsonifier::internal {
 	  protected:
 		std::source_location location{};
 		string_view_ptr stringView{};
-		jsonifier::string context{};
+		string context{};
 		error_classes errorClass{};
 		uint64_t stringLength{};
 		int64_t errorIndex{};

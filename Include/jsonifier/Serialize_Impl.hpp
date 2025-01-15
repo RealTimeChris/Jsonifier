@@ -37,8 +37,8 @@ namespace jsonifier::internal {
 	static constexpr uint64_t falseVInt{ 435728179558 };
 	static constexpr uint64_t trueVInt{ 434025983730 };
 
-	template<jsonifier::serialize_options options, typename value_type> constexpr size_t getPaddingSize() noexcept {
-		if constexpr (jsonifier::concepts::jsonifier_object_t<value_type>) {
+	template<serialize_options options, typename value_type> constexpr size_t getPaddingSize() noexcept {
+		if constexpr (concepts::jsonifier_object_t<value_type>) {
 			constexpr auto memberCount = tuple_size_v<core_tuple_type<value_type>>;
 			constexpr auto newSize	   = []() constexpr {
 				size_t pair{};
@@ -68,13 +68,13 @@ namespace jsonifier::internal {
 			}();
 
 			return newSize;
-		} else if constexpr (jsonifier::concepts::bool_t<value_type>) {
+		} else if constexpr (concepts::bool_t<value_type>) {
 			return 5;
-		} else if constexpr (jsonifier::concepts::num_t<value_type>) {
+		} else if constexpr (concepts::num_t<value_type>) {
 			return 24;
-		} else if constexpr (jsonifier::concepts::vector_t<value_type>) {
+		} else if constexpr (concepts::vector_t<value_type>) {
 			return 4 + getPaddingSize<options, typename std::remove_cvref_t<value_type>::value_type>();
-		} else if constexpr (jsonifier::concepts::tuple_t<value_type>) {
+		} else if constexpr (concepts::tuple_t<value_type>) {
 			constexpr auto accumulatePaddingSizesImpl = []<typename tuple, size_t... indices>(std::index_sequence<indices...>) noexcept {
 				return (getPaddingSize<options, std::tuple_element_t<indices, tuple>>() + ... + 0);
 			};
@@ -82,24 +82,24 @@ namespace jsonifier::internal {
 				return accumulatePaddingSizesImpl.template operator()<tuple>(std::make_index_sequence<tuple_size_v<tuple>>{});
 			};
 			return accumulatePaddingSizes.template operator()<std::remove_cvref_t<value_type>>(accumulatePaddingSizesImpl);
-		} else if constexpr (jsonifier::concepts::raw_array_t<value_type>) {
+		} else if constexpr (concepts::raw_array_t<value_type>) {
 			return 4 + getPaddingSize<options, typename std::remove_cvref_t<value_type>::value_type>();
-		} else if constexpr (jsonifier::concepts::pointer_t<value_type>) {
+		} else if constexpr (concepts::pointer_t<value_type>) {
 			return getPaddingSize<options, decltype(*std::remove_cvref_t<value_type>{})>();
-		} else if constexpr (jsonifier::concepts::unique_ptr_t<value_type>) {
+		} else if constexpr (concepts::unique_ptr_t<value_type>) {
 			return getPaddingSize<options, decltype(*std::remove_cvref_t<value_type>{})>();
-		} else if constexpr (jsonifier::concepts::shared_ptr_t<value_type>) {
+		} else if constexpr (concepts::shared_ptr_t<value_type>) {
 			return getPaddingSize<options, decltype(*std::remove_cvref_t<value_type>{})>();
-		} else if constexpr (jsonifier::concepts::map_t<value_type>) {
+		} else if constexpr (concepts::map_t<value_type>) {
 			return 12 + getPaddingSize<options, typename std::remove_cvref_t<value_type>::mapped_type>() +
 				getPaddingSize<options, typename std::remove_cvref_t<value_type>::key_type>();
-		} else if constexpr (jsonifier::concepts::string_t<value_type>) {
+		} else if constexpr (concepts::string_t<value_type>) {
 			return 2;
-		} else if constexpr (jsonifier::concepts::char_t<value_type>) {
+		} else if constexpr (concepts::char_t<value_type>) {
 			return 2;
-		} else if constexpr (jsonifier::concepts::optional_t<value_type>) {
+		} else if constexpr (concepts::optional_t<value_type>) {
 			return getPaddingSize<options, typename std::remove_cvref_t<value_type>::value_type>();
-		} else if constexpr (jsonifier::concepts::always_null_t<value_type>) {
+		} else if constexpr (concepts::always_null_t<value_type>) {
 			return 4;
 		} else {
 			return {};
@@ -111,22 +111,22 @@ namespace jsonifier::internal {
 		dst += length;
 	}
 
-	template<jsonifier::serialize_options options, string_literal key, typename context_type> JSONIFIER_INLINE static void writeObjectEntry(context_type& context) {
+	template<serialize_options options, string_literal key, typename context_type> JSONIFIER_INLINE static void writeObjectEntry(context_type& context) {
 		static constexpr auto unQuotedKey = string_literal{ "\"" } + key;
 		if constexpr (options.prettify) {
-			alignas(64) static constexpr auto quotedKey = unQuotedKey + string_literal{ "\": " };
-			static constexpr auto size					= quotedKey.size();
-			static constexpr auto quotedKeyPtr			= quotedKey.data();
+			static constexpr auto quotedKey	   = unQuotedKey + string_literal{ "\": " };
+			static constexpr auto size		   = quotedKey.size();
+			static constexpr auto quotedKeyPtr = quotedKey.data();
 			writeValues(quotedKeyPtr, context.bufferPtr, size);
 		} else {
-			alignas(64) static constexpr auto quotedKey = unQuotedKey + string_literal{ "\":" };
-			static constexpr auto size					= quotedKey.size();
-			static constexpr auto quotedKeyPtr			= quotedKey.data();
+			static constexpr auto quotedKey	   = unQuotedKey + string_literal{ "\":" };
+			static constexpr auto size		   = quotedKey.size();
+			static constexpr auto quotedKeyPtr = quotedKey.data();
 			writeValues(quotedKeyPtr, context.bufferPtr, size);
 		}
 	}
 
-	template<jsonifier::serialize_options options, bool isItLast, typename context_type> JSONIFIER_INLINE static void writeObjectExit(context_type& context) {
+	template<serialize_options options, bool isItLast, typename context_type> JSONIFIER_INLINE static void writeObjectExit(context_type& context) {
 		if constexpr (!isItLast) {
 			if constexpr (options.prettify) {
 				alignas(2) static constexpr char packedValues[]{ ",\n" };
@@ -143,34 +143,17 @@ namespace jsonifier::internal {
 	/// @brief A template struct for serializing entities.
 	/// @tparam options The serialization options.
 	/// @tparam bases Variadic template for base classes representing entities to serialize.
-	template<jsonifier::serialize_options options, typename... bases> struct serialize_entities : public bases... {
+	template<serialize_options options, typename... bases> struct serialize_entities : public bases... {
 		/// @brief Processes a single entity for serialization.
 		/// @tparam json_entity_type The type of the JSON entity being serialized.
 		/// @tparam value_type The type of the object whose member is being serialized.
 		/// @tparam context_type The type of the serialization context.
 		/// @param value The object containing the member to be serialized.
 		/// @param context The serialization context (e.g., JSON builder or buffer).
-		template<typename json_entity_type, typename value_type, typename context_type> static void processIndex(value_type& value, context_type& context) noexcept {
-
-			/// @brief Checks for excluded keys and skips serialization if the key is excluded.
-			if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
-				auto& keys = value.jsonifierExcludedKeys;
-				if JSONIFIER_LIKELY (keys.find(static_cast<typename std::remove_reference_t<decltype(keys)>::key_type>(json_entity_type::name)) != keys.end()) {
-					return;
-				}
-			}
-
-			/// @brief Writes the object entry and serializes the member.
-			writeObjectEntry<options, json_entity_type::name>(context);
-			serialize<options, json_entity_type>::impl(value.*json_entity_type::memberPtr, context);
-			writeObjectExit<options, json_entity_type::isItLast>(context);
-		}
-
 		template<typename json_entity_type, typename value_type, typename context_type>
-		JSONIFIER_NON_GCC_INLINE static void processIndexForceInline(value_type& value, context_type& context) noexcept {
-
+		JSONIFIER_INLINE static void processIndex(value_type& value, context_type& context) noexcept {
 			/// @brief Checks for excluded keys and skips serialization if the key is excluded.
-			if constexpr (jsonifier::concepts::has_excluded_keys<value_type>) {
+			if constexpr (concepts::has_excluded_keys<value_type>) {
 				auto& keys = value.jsonifierExcludedKeys;
 				if JSONIFIER_LIKELY (keys.find(static_cast<typename std::remove_reference_t<decltype(keys)>::key_type>(json_entity_type::name)) != keys.end()) {
 					return;
@@ -183,12 +166,22 @@ namespace jsonifier::internal {
 			writeObjectExit<options, json_entity_type::isItLast>(context);
 		}
 
-		template<typename json_entity_type, typename... arg_types> JSONIFIER_INLINE static void iterateValuesImpl(arg_types&&... args) {
-			processIndexForceInline<json_entity_type>(jsonifier::internal::forward<arg_types>(args)...);
+		/// Tail-recursive function to process the entities.
+		template<typename value_type, typename context_type, typename current_base, typename... remaining_bases>
+		JSONIFIER_INLINE static void iterateValuesTailRecursive(value_type& value, context_type& context) noexcept {
+			if constexpr (sizeof...(remaining_bases) > 0) {
+				processIndex<current_base>(value, context);
+				serialize_entities<options, remaining_bases...>::template iterateValuesTailRecursive<value_type, context_type, remaining_bases...>(value, context);
+			} else {
+				processIndex<current_base>(value, context);
+			}
 		}
 
+		/// Main entry point for iterating over all the base classes.
 		template<typename... arg_types> static void iterateValues(arg_types&&... args) {
-			((iterateValuesImpl<bases>(jsonifier::internal::forward<arg_types>(args)...)), ...);
+			if constexpr (sizeof...(bases) > 0) {
+				iterateValuesTailRecursive<arg_types..., bases...>(internal::forward<arg_types>(args)...);
+			}
 		}
 	};
 
@@ -196,7 +189,7 @@ namespace jsonifier::internal {
 	/// @tparam options The serialization options.
 	/// @tparam serialize_entity_pre The pre-processed serialize entity type.
 	/// @tparam index The index of the entity within its parent object.
-	template<jsonifier::serialize_options options, typename serialize_entity_pre, size_t index> struct construct_serialize_entity {
+	template<serialize_options options, typename serialize_entity_pre, size_t index> struct construct_serialize_entity {
 		using serialize_entity_pre_type = std::remove_cvref_t<serialize_entity_pre>;
 		using class_pointer_t			= typename serialize_entity_pre_type::class_type;
 
@@ -208,13 +201,13 @@ namespace jsonifier::internal {
 	/// @tparam options The serialization options.
 	/// @tparam value_type The type of the object being serialized.
 	/// @tparam index_sequence A compile-time sequence of indices for iteration.
-	template<jsonifier::serialize_options options, typename value_type, typename index_sequence> struct get_serialize_entities;
+	template<serialize_options options, typename value_type, typename index_sequence> struct get_serialize_entities;
 
 	/// @brief Specialization for retrieving serialized entities with an index sequence.
 	/// @tparam options The serialization options.
 	/// @tparam value_type The type of the object being serialized.
 	/// @tparam I Variadic indices for iteration.
-	template<jsonifier::serialize_options options, typename value_type, size_t... I> struct get_serialize_entities<options, value_type, std::index_sequence<I...>> {
+	template<serialize_options options, typename value_type, size_t... I> struct get_serialize_entities<options, value_type, std::index_sequence<I...>> {
 		/// @brief The type of serialized entities after processing all indices.
 		using type = serialize_entities<options, typename construct_serialize_entity<options, tuple_element_t<I, std::remove_cvref_t<core_tuple_type<value_type>>>, I>::type...>;
 	};
@@ -222,16 +215,16 @@ namespace jsonifier::internal {
 	/// @brief A type alias for serialized entities.
 	/// @tparam options The serialization options.
 	/// @tparam value_type The type of the object being serialized.
-	template<jsonifier::serialize_options options, typename value_type> using serialize_entities_t =
+	template<serialize_options options, typename value_type> using serialize_entities_t =
 		typename get_serialize_entities<options, value_type, std::make_index_sequence<tuple_size_v<core_tuple_type<value_type>>>>::type;
 
-	template<jsonifier::concepts::jsonifier_object_t value_type, typename context_type, jsonifier::serialize_options options, typename json_entity_type>
+	template<concepts::jsonifier_object_t value_type, typename context_type, serialize_options options, typename json_entity_type>
 	struct object_val_serializer<value_type, context_type, options, json_entity_type> {
 		alignas(2) static constexpr char packedValues01[]{ "{\n" };
 		alignas(2) static constexpr char packedValues02[]{ ": " };
 		alignas(2) static constexpr char packedValues03[]{ ",\n" };
 		alignas(2) static constexpr char packedValues04[]{ "{}" };
-		template<jsonifier::concepts::jsonifier_object_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
+		template<concepts::jsonifier_object_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
 			static constexpr auto memberCount{ tuple_size_v<core_tuple_type<value_type>> };
 			static constexpr auto paddingSize{ getPaddingSize<options, std::remove_cvref_t<value_type>>() * 4 };
 
@@ -276,13 +269,13 @@ namespace jsonifier::internal {
 		}
 	};
 
-	template<jsonifier::concepts::map_t value_type, typename context_type, jsonifier::serialize_options options, typename json_entity_type>
+	template<concepts::map_t value_type, typename context_type, serialize_options options, typename json_entity_type>
 	struct object_val_serializer<value_type, context_type, options, json_entity_type> {
 		alignas(2) static constexpr char packedValues01[]{ "{\n" };
 		alignas(2) static constexpr char packedValues02[]{ ": " };
 		alignas(2) static constexpr char packedValues03[]{ ",\n" };
 		alignas(2) static constexpr char packedValues04[]{ "{}" };
-		template<jsonifier::concepts::map_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
+		template<concepts::map_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
 			const auto newSize = value.size();
 			static constexpr auto paddingSize{ getPaddingSize<options, typename std::remove_cvref_t<value_type>::mapped_type>() };
 
@@ -357,12 +350,12 @@ namespace jsonifier::internal {
 		}
 	};
 
-	template<jsonifier::concepts::tuple_t value_type, typename context_type, jsonifier::serialize_options options, typename json_entity_type>
+	template<concepts::tuple_t value_type, typename context_type, serialize_options options, typename json_entity_type>
 	struct object_val_serializer<value_type, context_type, options, json_entity_type> {
 		alignas(2) static constexpr char packedValues01[]{ "{\n" };
 		alignas(2) static constexpr char packedValues02[]{ ",\n" };
 		alignas(2) static constexpr char packedValues03[]{ "{}" };
-		template<jsonifier::concepts::tuple_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
+		template<concepts::tuple_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
 			static constexpr auto additionalSize{ getPaddingSize<options, std::remove_cvref_t<value_type>>() };
 			context.index = static_cast<size_t>(context.bufferPtr - context.buffer.data());
 			if (context.buffer.size() <= context.index + additionalSize) {
@@ -398,8 +391,7 @@ namespace jsonifier::internal {
 			}
 		}
 
-		template<size_t currentIndex, size_t newSize, jsonifier::concepts::tuple_t value_type_new>
-		static void serializeObjects(value_type_new&& value, context_type& context) noexcept {
+		template<size_t currentIndex, size_t newSize, concepts::tuple_t value_type_new> static void serializeObjects(value_type_new&& value, context_type& context) noexcept {
 			if constexpr (currentIndex < newSize) {
 				auto subTuple = get<currentIndex>(value);
 				serialize<options, json_entity_type>::impl(subTuple, context);
@@ -421,12 +413,12 @@ namespace jsonifier::internal {
 		}
 	};
 
-	template<jsonifier::concepts::vector_t value_type, typename context_type, jsonifier::serialize_options options, typename json_entity_type>
+	template<concepts::vector_t value_type, typename context_type, serialize_options options, typename json_entity_type>
 	struct array_val_serializer<value_type, context_type, options, json_entity_type> {
 		alignas(2) static constexpr char packedValues01[]{ "[\n" };
 		alignas(2) static constexpr char packedValues02[]{ ",\n" };
 		alignas(2) static constexpr char packedValues03[]{ "[]" };
-		template<jsonifier::concepts::vector_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
+		template<concepts::vector_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
 			const auto newSize = value.size();
 			static constexpr auto paddingSize{ getPaddingSize<options, typename std::remove_cvref_t<value_type>::value_type>() };
 			if JSONIFIER_LIKELY (newSize > 0) {
@@ -483,7 +475,7 @@ namespace jsonifier::internal {
 		}
 	};
 
-	template<jsonifier::concepts::raw_array_t value_type, typename context_type, jsonifier::serialize_options options, typename json_entity_type>
+	template<concepts::raw_array_t value_type, typename context_type, serialize_options options, typename json_entity_type>
 	struct array_val_serializer<value_type, context_type, options, json_entity_type> {
 		alignas(2) static constexpr char packedValues01[]{ "[\n" };
 		alignas(2) static constexpr char packedValues02[]{ ",\n" };
@@ -546,10 +538,10 @@ namespace jsonifier::internal {
 		}
 	};
 
-	template<jsonifier::concepts::string_t value_type, typename context_type, jsonifier::serialize_options options, typename json_entity_type>
+	template<concepts::string_t value_type, typename context_type, serialize_options options, typename json_entity_type>
 	struct string_val_serializer<value_type, context_type, options, json_entity_type> {
 		alignas(2) static constexpr char packedValues01[]{ "\"\"" };
-		template<jsonifier::concepts::string_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
+		template<concepts::string_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
 			const auto newSize = value.size();
 			static constexpr auto paddingSize{ getPaddingSize<options, typename std::remove_cvref_t<value_type>::value_type>() };
 			if (newSize > 0) {
@@ -581,9 +573,9 @@ namespace jsonifier::internal {
 		}
 	};
 
-	template<jsonifier::concepts::char_t value_type, typename context_type, jsonifier::serialize_options options, typename json_entity_type>
+	template<concepts::char_t value_type, typename context_type, serialize_options options, typename json_entity_type>
 	struct string_val_serializer<value_type, context_type, options, json_entity_type> {
-		template<jsonifier::concepts::char_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
+		template<concepts::char_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
 			*context.bufferPtr = quote;
 			++context.bufferPtr;
 			switch (value) {
@@ -632,23 +624,23 @@ namespace jsonifier::internal {
 		}
 	};
 
-	template<jsonifier::concepts::enum_t value_type, typename context_type, jsonifier::serialize_options options, typename json_entity_type>
+	template<concepts::enum_t value_type, typename context_type, serialize_options options, typename json_entity_type>
 	struct number_val_serializer<value_type, context_type, options, json_entity_type> {
-		template<jsonifier::concepts::enum_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
+		template<concepts::enum_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
 			int64_t valueNew{ static_cast<int64_t>(value) };
 			serialize<options, json_entity_type>::impl(valueNew, context);
 		}
 	};
 
-	template<jsonifier::concepts::num_t value_type, typename context_type, jsonifier::serialize_options options, typename json_entity_type>
+	template<concepts::num_t value_type, typename context_type, serialize_options options, typename json_entity_type>
 	struct number_val_serializer<value_type, context_type, options, json_entity_type> {
-		template<jsonifier::concepts::num_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
+		template<concepts::num_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
 			if constexpr (sizeof(value_type) == 8) {
 				context.bufferPtr = toChars(context.bufferPtr, value);
 			} else {
-				if constexpr (jsonifier::concepts::unsigned_t<value_type>) {
+				if constexpr (concepts::unsigned_t<value_type>) {
 					context.bufferPtr = toChars<uint64_t>(context.bufferPtr, static_cast<uint64_t>(value));
-				} else if constexpr (jsonifier::concepts::signed_t<value_type>) {
+				} else if constexpr (concepts::signed_t<value_type>) {
 					context.bufferPtr = toChars<int64_t>(context.bufferPtr, static_cast<int64_t>(value));
 				} else {
 					context.bufferPtr = toChars<float>(context.bufferPtr, static_cast<double>(value));
@@ -657,26 +649,26 @@ namespace jsonifier::internal {
 		}
 	};
 
-	template<jsonifier::concepts::bool_t value_type, typename context_type, jsonifier::serialize_options options, typename json_entity_type>
+	template<concepts::bool_t value_type, typename context_type, serialize_options options, typename json_entity_type>
 	struct bool_val_serializer<value_type, context_type, options, json_entity_type> {
-		template<jsonifier::concepts::bool_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
+		template<concepts::bool_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
 			const uint64_t state = falseVInt - (value * trueVInt);
 			std::memcpy(context.bufferPtr, &state, 5);
 			context.bufferPtr += 5 - value;
 		}
 	};
 
-	template<jsonifier::concepts::always_null_t value_type, typename context_type, jsonifier::serialize_options options, typename json_entity_type>
+	template<concepts::always_null_t value_type, typename context_type, serialize_options options, typename json_entity_type>
 	struct null_val_serializer<value_type, context_type, options, json_entity_type> {
-		template<jsonifier::concepts::always_null_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&&, context_type& context) noexcept {
+		template<concepts::always_null_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&&, context_type& context) noexcept {
 			std::memcpy(context.bufferPtr, nullV, 4);
 			context.bufferPtr += 4;
 		}
 	};
 
-	template<jsonifier::concepts::pointer_t value_type, typename context_type, jsonifier::serialize_options options, typename json_entity_type>
+	template<concepts::pointer_t value_type, typename context_type, serialize_options options, typename json_entity_type>
 	struct accessor_val_serializer<value_type, context_type, options, json_entity_type> {
-		template<jsonifier::concepts::pointer_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
+		template<concepts::pointer_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
 			if (value) {
 				serialize<options, json_entity_type>::impl(*value, context);
 			} else {
@@ -686,24 +678,24 @@ namespace jsonifier::internal {
 		}
 	};
 
-	template<jsonifier::concepts::raw_json_t value_type, typename context_type, jsonifier::serialize_options options, typename json_entity_type>
+	template<concepts::raw_json_t value_type, typename context_type, serialize_options options, typename json_entity_type>
 	struct accessor_val_serializer<value_type, context_type, options, json_entity_type> {
-		template<jsonifier::concepts::raw_json_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
+		template<concepts::raw_json_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
 			serialize<options, json_entity_type>::impl(value.rawJson(), context);
 		}
 	};
 
-	template<jsonifier::concepts::skip_t value_type, typename context_type, jsonifier::serialize_options options, typename json_entity_type>
+	template<concepts::skip_t value_type, typename context_type, serialize_options options, typename json_entity_type>
 	struct accessor_val_serializer<value_type, context_type, options, json_entity_type> {
-		template<jsonifier::concepts::skip_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
+		template<concepts::skip_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
 			std::memcpy(context.bufferPtr, nullV, 4);
 			context.bufferPtr += 4;
 		}
 	};
 
-	template<jsonifier::concepts::unique_ptr_t value_type, typename context_type, jsonifier::serialize_options options, typename json_entity_type>
+	template<concepts::unique_ptr_t value_type, typename context_type, serialize_options options, typename json_entity_type>
 	struct accessor_val_serializer<value_type, context_type, options, json_entity_type> {
-		template<jsonifier::concepts::unique_ptr_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
+		template<concepts::unique_ptr_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
 			if JSONIFIER_LIKELY (value) {
 				serialize<options, json_entity_type>::impl(*value, context);
 			} else {
@@ -713,9 +705,9 @@ namespace jsonifier::internal {
 		}
 	};
 
-	template<jsonifier::concepts::shared_ptr_t value_type, typename context_type, jsonifier::serialize_options options, typename json_entity_type>
+	template<concepts::shared_ptr_t value_type, typename context_type, serialize_options options, typename json_entity_type>
 	struct accessor_val_serializer<value_type, context_type, options, json_entity_type> {
-		template<jsonifier::concepts::shared_ptr_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
+		template<concepts::shared_ptr_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
 			if JSONIFIER_LIKELY (value) {
 				serialize<options, json_entity_type>::impl(*value, context);
 			} else {
@@ -725,9 +717,9 @@ namespace jsonifier::internal {
 		}
 	};
 
-	template<jsonifier::concepts::variant_t value_type, typename context_type, jsonifier::serialize_options options, typename json_entity_type>
+	template<concepts::variant_t value_type, typename context_type, serialize_options options, typename json_entity_type>
 	struct accessor_val_serializer<value_type, context_type, options, json_entity_type> {
-		template<jsonifier::concepts::variant_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
+		template<concepts::variant_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
 			static constexpr auto lambda = [](auto&& valueNewer, auto&& contextNew) {
 				serialize<options, json_entity_type>::impl(valueNewer, contextNew);
 			};
@@ -736,9 +728,9 @@ namespace jsonifier::internal {
 	};
 
 
-	template<jsonifier::concepts::optional_t value_type, typename context_type, jsonifier::serialize_options options, typename json_entity_type>
+	template<concepts::optional_t value_type, typename context_type, serialize_options options, typename json_entity_type>
 	struct accessor_val_serializer<value_type, context_type, options, json_entity_type> {
-		template<jsonifier::concepts::optional_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
+		template<concepts::optional_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
 			if JSONIFIER_LIKELY (value) {
 				serialize<options, json_entity_type>::impl(value.value(), context);
 			} else {

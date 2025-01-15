@@ -34,6 +34,15 @@
 #include <numeric>
 #include <utility>
 
+namespace std {
+
+	template<jsonifier::concepts::string_t string_type> struct hash<string_type> : public std::hash<std::string_view> {
+		uint64_t operator()(const string_type& string) const noexcept {
+			return std::hash<std::string_view>::operator()(std::string_view{ string });
+		}
+	};
+}
+
 namespace jsonifier::internal {
 
 	template<typename value_type, size_t size> std::ostream& operator<<(std::ostream& os, const array<value_type, size>& values) {
@@ -89,7 +98,7 @@ namespace jsonifier::internal {
 
 	static constexpr size_t findUniqueColumnIndex(const tuple_references& tupleRefsRaw, size_t maxIndex, size_t startingIndex = 0) noexcept {
 		constexpr size_t alphabetSize = 256;
-		jsonifier::string_view key{};
+		string_view key{};
 		for (size_t index = startingIndex; index < maxIndex; ++index) {
 			array<bool, alphabetSize> seen{};
 			bool allDifferent = true;
@@ -303,7 +312,7 @@ namespace jsonifier::internal {
 	constexpr auto keyStatsImpl(const tuple_references& tupleRefsRaw) noexcept {
 		key_stats_t stats{};
 		for (size_t x = 0; x < tupleRefsRaw.count; ++x) {
-			const jsonifier::string_view& key{ tupleRefsRaw.rootPtr[x].key };
+			const string_view& key{ tupleRefsRaw.rootPtr[x].key };
 			auto num{ key.size() };
 			if (num > stats.maxLength) {
 				stats.maxLength = num;
@@ -608,7 +617,7 @@ namespace jsonifier::internal {
 	}
 
 #if !defined(NDEBUG)
-	inline std::unordered_map<std::string, uint32_t> types{};
+	inline std::unordered_map<string, uint32_t> types{};
 #endif
 
 	template<typename value_type> static constexpr auto hashData = collectMapConstructionData<std::remove_cvref_t<value_type>>();
@@ -634,7 +643,7 @@ namespace jsonifier::internal {
 			}
 #endif
 			if constexpr (hashData<value_type>.type == hash_map_type::single_element) {
-				return *(iter + keyStatsVal<value_type>.maxLength) == '"' ? 0ull : 1ull;
+				return 0ull;
 			} else if constexpr (hashData<value_type>.type == hash_map_type::double_element) {
 				if JSONIFIER_LIKELY (checkForEnd(iter, end, hashData<value_type>.uniqueIndex)) {
 					return iter[static_cast<uint8_t>(hashData<value_type>.uniqueIndex)] & 1u;
@@ -698,9 +707,8 @@ namespace jsonifier::internal {
 						const auto hash			 = hasher.hashKeyRt(iter, length);
 						const size_t group		 = (hash >> 8) & (sizeMask);
 						const size_t resultIndex = group * hashData<value_type>.bucketSize;
-						uint64_t matches{ jsonifier::simd::opCmpEq(jsonifier::simd::gatherValue<simd_type>(static_cast<uint8_t>(hash)),
-							jsonifier::simd::gatherValues<simd_type>(ctrlBytesPtr + resultIndex)) };
-						const size_t tz = jsonifier::simd::postCmpTzcnt(matches);
+						uint64_t matches{ simd::opCmpEq(simd::gatherValue<simd_type>(static_cast<uint8_t>(hash)), simd::gatherValues<simd_type>(ctrlBytesPtr + resultIndex)) };
+						const size_t tz = simd::postCmpTzcnt(matches);
 						return hashData<value_type>.indices[resultIndex + tz];
 					}
 				}

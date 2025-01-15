@@ -1334,7 +1334,7 @@ namespace jsonifier_fast_float {
 #ifdef JSONIFIER_FASTFLOAT_64BIT_LIMB
 				return static_cast<int32_t>(jsonifier::simd::lzcnt(vec.rindex(0)));
 #else
-				// no use defining a specialized jsonifier::simd::lzcnt for a 32-bit type.
+				// no use defining a specialized  jsonifier::simd::lzcnt for a 32-bit type.
 				uint64_t r0 = vec.rindex(0);
 				return static_cast<int32_t>(jsonifier::simd::lzcnt(r0 << 32));
 #endif

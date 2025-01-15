@@ -31,21 +31,21 @@ namespace jsonifier {
 
 	template<typename derived_type, uint64_t = 0> class vector;
 
-	template<typename value_type_new, uint64_t sizeValNewer> class vector : protected std::equal_to<value_type_new>, protected jsonifier::internal::alloc_wrapper<value_type_new> {
+	template<typename value_type_new, uint64_t sizeValNewer> class vector : protected std::equal_to<value_type_new>, protected internal::alloc_wrapper<value_type_new> {
 	  public:
 		using value_type			 = value_type_new;
 		using pointer				 = value_type*;
 		using const_pointer			 = const pointer;
 		using reference				 = value_type&;
 		using const_reference		 = const value_type&;
-		using iterator				 = jsonifier::internal::basic_iterator<value_type>;
-		using const_iterator		 = jsonifier::internal::basic_iterator<const value_type>;
+		using iterator				 = internal::basic_iterator<value_type>;
+		using const_iterator		 = internal::basic_iterator<const value_type>;
 		using difference_type		 = std::ptrdiff_t;
 		using reverse_iterator		 = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 		using object_compare		 = std::equal_to<value_type>;
 		using size_type				 = size_t;
-		using allocator				 = jsonifier::internal::alloc_wrapper<value_type>;
+		using allocator				 = internal::alloc_wrapper<value_type>;
 
 		vector() noexcept {
 			if constexpr (sizeValNewer > 0) {
@@ -332,7 +332,7 @@ namespace jsonifier {
 			if (sizeVal + 1 >= capacityVal) {
 				reserve(capacityVal * 2 + 2);
 			}
-			allocator::construct(&dataVal[sizeVal++], jsonifier::internal::move(c));
+			allocator::construct(&dataVal[sizeVal++], internal::move(c));
 
 			return dataVal[sizeVal - 1];
 		}
@@ -388,7 +388,7 @@ namespace jsonifier {
 		}
 
 		constexpr size_type maxSize() noexcept {
-			return (jsonifier::internal::min)(static_cast<size_type>((std::numeric_limits<size_type>::max)()), allocator::maxSize());
+			return (internal::min)(static_cast<size_type>((std::numeric_limits<size_type>::max)()), allocator::maxSize());
 		}
 
 		void resize(size_type newSize) {
@@ -462,7 +462,7 @@ namespace jsonifier {
 				}
 				return true;
 			} else {
-				return jsonifier::internal::comparison::compare(rhs.data(), data(), size());
+				return internal::comparison::compare(rhs.data(), data(), size());
 			}
 		}
 

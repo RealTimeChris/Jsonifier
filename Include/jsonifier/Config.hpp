@@ -142,13 +142,3 @@
 #if !defined JSONIFIER_ALIGN
 	#define JSONIFIER_ALIGN alignas(bytesPerStep)
 #endif
-
-#if defined(JSONIFIER_MSVC)
-static constexpr uint64_t forceInlineLimit{ 2 };
-#elif defined(JSONIFIER_GNUCXX)
-static constexpr uint64_t forceInlineLimit{ 4 };
-#elif defined(JSONIFIER_CLANG) && defined(JSONIFIER_MAC)
-static constexpr uint64_t forceInlineLimit{ 26 };
-#else
-static constexpr uint64_t forceInlineLimit{ 10 };
-#endif

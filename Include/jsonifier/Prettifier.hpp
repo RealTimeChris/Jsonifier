@@ -50,12 +50,11 @@ namespace jsonifier::internal {
 		JSONIFIER_INLINE prettifier& operator=(const prettifier& other) = delete;
 		JSONIFIER_INLINE prettifier(const prettifier& other)			= delete;
 
-		template<jsonifier::prettify_options options = jsonifier::prettify_options{}, jsonifier::concepts::string_t string_type>
-		JSONIFIER_INLINE auto prettifyJson(string_type&& in) noexcept {
+		template<prettify_options options = prettify_options{}, concepts::string_t string_type> JSONIFIER_INLINE auto prettifyJson(string_type&& in) noexcept {
 			if JSONIFIER_UNLIKELY (stringBuffer.size() < in.size() * 5) {
 				stringBuffer.resize(in.size() * 5);
 			}
-			static constexpr jsonifier::prettify_options optionsFinal{ options };
+			static constexpr prettify_options optionsFinal{ options };
 			const auto* dataPtr = in.data();
 			derivedRef.errors.clear();
 			rootIter = dataPtr;
@@ -78,12 +77,12 @@ namespace jsonifier::internal {
 			}
 		}
 
-		template<jsonifier::prettify_options options = jsonifier::prettify_options{}, jsonifier::concepts::string_t string_type01, jsonifier::concepts::string_t string_type02>
+		template<prettify_options options = prettify_options{}, concepts::string_t string_type01, concepts::string_t string_type02>
 		JSONIFIER_INLINE bool prettifyJson(string_type01&& in, string_type02&& buffer) noexcept {
 			if JSONIFIER_UNLIKELY (stringBuffer.size() < in.size() * 5) {
 				stringBuffer.resize(in.size() * 5);
 			}
-			static constexpr jsonifier::prettify_options optionsFinal{ options };
+			static constexpr prettify_options optionsFinal{ options };
 			derivedRef.errors.clear();
 			const auto* dataPtr = in.data();
 			rootIter			= dataPtr;
@@ -125,10 +124,157 @@ namespace jsonifier::internal {
 			return derivedRef.errors;
 		}
 
-		template<jsonifier::prettify_options options, jsonifier::concepts::string_t string_type, typename iterator>
-		JSONIFIER_INLINE uint64_t impl(iterator& iter, string_type&& out) noexcept;
+		template<prettify_options options, concepts::string_t string_type, typename iterator> JSONIFIER_INLINE uint64_t impl(iterator& iter, string_type&& out) noexcept {
+			string_view_ptr newPtr{};
+			uint64_t newSize{};
+			int64_t indent{};
+			uint64_t index{};
+			while (*iter) {
+				switch (jsonTypes[static_cast<uint8_t>(**iter)]) {
+					case json_structural_type::string: {
+						newPtr = *iter;
+						++iter;
+						newSize = static_cast<uint64_t>((*iter) - newPtr);
+						std::memcpy(&out[index], newPtr, newSize);
+						index += newSize;
+						break;
+					}
+					case json_structural_type::comma: {
+						alignas(2) static constexpr char commaNewLine[]{ ",\n" };
+						std::memcpy(&out[index], commaNewLine, 2);
+						index += 2;
+						++iter;
+						std::memset(&out[index], options.indentChar, static_cast<size_t>(indent));
+						index += static_cast<uint64_t>(indent);
+						break;
+					}
+					case json_structural_type::number: {
+						newPtr = (*iter);
+						++iter;
+						newSize = static_cast<uint64_t>((*iter) - newPtr);
+						std::memcpy(&out[index], newPtr, newSize);
+						index += newSize;
+						break;
+					}
+					case json_structural_type::colon: {
+						alignas(2) static constexpr char colonIndentChar[]{ ':', options.indentChar };
+						std::memcpy(&out[index], colonIndentChar, 2);
+						index += 2;
+						++iter;
+						break;
+					}
+					case json_structural_type::array_start: {
+						out[index] = '[';
+						++index;
+						++iter;
+						indent += options.indentSize;
+						if JSONIFIER_UNLIKELY (static_cast<size_t>(indent) >= state.size()) {
+							state.resize(state.size() * 2);
+						}
+						state[static_cast<uint64_t>(indent)] = json_structural_type::array_start;
+						if JSONIFIER_LIKELY (**iter != ']') {
+							out[index] = '\n';
+							++index;
+							std::memset(&out[index], options.indentChar, static_cast<size_t>(indent));
+							index += static_cast<uint64_t>(indent);
+						} else {
+							indent -= options.indentSize;
+							out[index] = ']';
+							++index;
+							if (indent < 0) {
+								getErrors().emplace_back(error::constructError<error_classes::Prettifying, prettify_errors::Incorrect_Structural_Index>(
+									getUnderlyingPtr(iter) - rootIter, endIter - rootIter, rootIter));
+								return std::numeric_limits<uint64_t>::max();
+							}
+							++iter;
+						}
+						break;
+					}
+					case json_structural_type::array_end: {
+						indent -= options.indentSize;
+						if (indent < 0) {
+							getErrors().emplace_back(error::constructError<error_classes::Prettifying, prettify_errors::Incorrect_Structural_Index>(
+								getUnderlyingPtr(iter) - rootIter, endIter - rootIter, rootIter));
+							return std::numeric_limits<uint64_t>::max();
+						}
+						out[index] = '\n';
+						++index;
+						std::memset(&out[index], options.indentChar, static_cast<size_t>(indent));
+						index += static_cast<uint64_t>(indent);
+						out[index] = ']';
+						++index;
+						++iter;
+						break;
+					}
+					case json_structural_type::null: {
+						std::memcpy(&out[index], nullV, 4);
+						index += 4;
+						++iter;
+						break;
+					}
+					case json_structural_type::boolean: {
+						if (**iter == 'f') {
+							std::memcpy(&out[index], falseV, 5);
+							index += 5;
+							++iter;
+						} else {
+							std::memcpy(&out[index], trueV, 4);
+							index += 4;
+							++iter;
+						}
+						break;
+					}
+					case json_structural_type::object_start: {
+						out[index] = '{';
+						++index;
+						++iter;
+						indent += options.indentSize;
+						if JSONIFIER_UNLIKELY (static_cast<size_t>(indent) >= state.size()) {
+							state.resize(state.size() * 2);
+						}
+						state[static_cast<uint64_t>(indent)] = json_structural_type::object_start;
+						if (**iter != '}') {
+							out[index] = '\n';
+							++index;
+							std::memset(&out[index], options.indentChar, static_cast<size_t>(indent));
+							index += static_cast<uint64_t>(indent);
+						} else {
+							out[index] = '}';
+							++index;
+							++iter;
+						}
+						break;
+					}
+					case json_structural_type::object_end: {
+						indent -= options.indentSize;
+						if (indent < 0) {
+							getErrors().emplace_back(error::constructError<error_classes::Prettifying, prettify_errors::Incorrect_Structural_Index>(
+								getUnderlyingPtr(iter) - rootIter, endIter - rootIter, rootIter));
+							return std::numeric_limits<uint64_t>::max();
+						}
+						out[index] = '\n';
+						++index;
+						std::memset(&out[index], options.indentChar, static_cast<size_t>(indent));
+						index += static_cast<uint64_t>(indent);
+						out[index] = '}';
+						++index;
+						++iter;
+						break;
+					}
+					case json_structural_type::unset: {
+						return index;
+					}
+					default: {
+						getErrors().emplace_back(error::constructError<error_classes::Prettifying, prettify_errors::Incorrect_Structural_Index>(getUnderlyingPtr(iter) - rootIter,
+							endIter - rootIter, rootIter));
+						return std::numeric_limits<uint64_t>::max();
+					}
+				}
+			}
+			return index;
+		}
 
 		JSONIFIER_INLINE ~prettifier() noexcept = default;
 	};
 
-}// namespace jsonifier::internal
+}// namespace internal

@@ -606,183 +606,108 @@ template<> void getValue(std::unique_ptr<int32_t>& out_value, simdjson::ondemand
 	out_value = std::make_unique<int32_t>(static_cast<int32_t>(temp));
 }
 
-template<> void getValue(icon_emoji_data& msg, simdjson::ondemand::value jsonData) {
+template<> void getValue(emoji_data& value, simdjson::ondemand::value jsonData) {
 	simdjson::ondemand::object obj{ getObject(jsonData) };
-	getValue(msg.name, obj, "name");
-	getValue(msg.id, obj, "id");
+	getValue(value.id, obj, "id");
+	getValue(value.name, obj, "name");
+	getValue(value.roles, obj, "roles");
+	getValue(value.require_colons, obj, "require_colons");
+	getValue(value.managed, obj, "managed");
+	getValue(value.animated, obj, "animated");
+	getValue(value.available, obj, "available");
 }
 
-template<> void getValue(permission_overwrite& msg, simdjson::ondemand::value jsonData) {
+template<> void getValue(incidents_data_data& value, simdjson::ondemand::value jsonData) {
 	simdjson::ondemand::object obj{ getObject(jsonData) };
-	getValue(msg.allow, obj, "allow");
-	getValue(msg.type, obj, "type");
-	getValue(msg.deny, obj, "deny");
-	getValue(msg.id, obj, "id");
+	getValue(value.invites_disabled_until, obj, "invites_disabled_until");
+	getValue(value.dms_disabled_until, obj, "dms_disabled_until");
 }
 
-template<> void getValue(channel_data& msg, simdjson::ondemand::value jsonData) {
+template<> void getValue(tags_data& value, simdjson::ondemand::value jsonData) {
 	simdjson::ondemand::object obj{ getObject(jsonData) };
-	getValue(msg.default_thread_rate_limit_per_user, obj, "default_thread_rate_limit_per_user");
-	getValue(msg.default_auto_archive_duration, obj, "default_auto_archive_duration");
-	getValue(msg.permission_overwrites, obj, "permission_overwrites");
-	getValue(msg.rate_limit_per_user, obj, "rate_limit_per_user");
-	getValue(msg.video_quality_mode, obj, "video_quality_mode");
-	getValue(msg.total_message_sent, obj, "total_message_sent");
-	getValue(msg.last_pin_timestamp, obj, "last_pin_timestamp");
-	getValue(msg.last_message_id, obj, "last_message_id");
-	getValue(msg.application_id, obj, "application_id");
-	getValue(msg.message_count, obj, "message_count");
-	getValue(msg.member_count, obj, "member_count");
-	getValue(msg.applied_tags, obj, "applied_tags");
-	getValue(msg.permissions, obj, "permissions");
-	getValue(msg.user_limit, obj, "user_limit");
-	getValue(msg.icon_emoji, obj, "icon_emoji");
-	getValue(msg.recipients, obj, "recipients");
-	getValue(msg.parent_id, obj, "parent_id");
-	getValue(msg.position, obj, "position");
-	getValue(msg.guild_id, obj, "guild_id");
-	getValue(msg.owner_id, obj, "owner_id");
-	getValue(msg.managed, obj, "managed");
-	getValue(msg.bitrate, obj, "bitrate");
-	getValue(msg.version, obj, "version");
-	getValue(msg.status, obj, "status");
-	getValue(msg.flags, obj, "flags");
-	getValue(msg.topic, obj, "topic");
-	getValue(msg.nsfw, obj, "nsfw");
-	getValue(msg.type, obj, "type");
-	getValue(msg.icon, obj, "icon");
-	getValue(msg.name, obj, "name");
-	getValue(msg.id, obj, "id");
+	getValue(value.bot_id, obj, "bot_id");
+	getValue(value.guild_connections, obj, "guild_connections");
 }
 
-template<> void getValue(user_data& msg, simdjson::ondemand::value jsonData) {
+template<> void getValue(role_data& value, simdjson::ondemand::value jsonData) {
 	simdjson::ondemand::object obj{ getObject(jsonData) };
-	getValue(msg.avatar_decoration_data, obj, "avatar_decoration_data");
-	getValue(msg.discriminator, obj, "discriminator");
-	getValue(msg.public_flags, obj, "public_flags");
-	getValue(msg.premium_type, obj, "premium_type");
-	getValue(msg.accent_color, obj, "accent_color");
-	getValue(msg.display_name, obj, "display_name");
-	getValue(msg.mfa_enabled, obj, "mfa_enabled");
-	getValue(msg.global_name, obj, "global_name");
-	getValue(msg.user_name, obj, "user_name");
-	getValue(msg.verified, obj, "verified");
-	getValue(msg.system, obj, "system");
-	getValue(msg.locale, obj, "locale");
-	getValue(msg.banner, obj, "banner");
-	getValue(msg.avatar, obj, "avatar");
-	getValue(msg.flags, obj, "flags");
-	getValue(msg.email, obj, "email");
-	getValue(msg.bot, obj, "bot");
-	getValue(msg.id, obj, "id");
+	getValue(value.id, obj, "id");
+	getValue(value.name, obj, "name");
+	getValue(value.description, obj, "description");
+	getValue(value.permissions, obj, "permissions");
+	getValue(value.position, obj, "position");
+	getValue(value.color, obj, "color");
+	getValue(value.hoist, obj, "hoist");
+	getValue(value.managed, obj, "managed");
+	getValue(value.mentionable, obj, "mentionable");
+	getValue(value.icon, obj, "icon");
+	getValue(value.unicode_emoji, obj, "unicode_emoji");
+	getValue(value.flags, obj, "flags");
+	getValue(value.tags, obj, "tags");
 }
 
-template<> void getValue(member_data& msg, simdjson::ondemand::value jsonData) {
+template<> void getValue(sticker_data& value, simdjson::ondemand::value jsonData) {
 	simdjson::ondemand::object obj{ getObject(jsonData) };
-	getValue(msg.communication_disabled_until, obj, "communication_disabled_until");
-	getValue(msg.premium_since, obj, "premium_since");
-	getValue(msg.permissions, obj, "permissions");
-	getValue(msg.joined_at, obj, "joined_at");
-	getValue(msg.guild_id, obj, "guild_id");
-	getValue(msg.pending, obj, "pending");
-	getValue(msg.avatar, obj, "avatar");
-	getValue(msg.flags, obj, "flags");
-	getValue(msg.roles, obj, "roles");
-	getValue(msg.mute, obj, "mute");
-	getValue(msg.deaf, obj, "deaf");
-	getValue(msg.user, obj, "user");
-	getValue(msg.nick, obj, "nick");
+	getValue(value.id, obj, "id");
+	getValue(value.name, obj, "name");
+	getValue(value.tags, obj, "tags");
+	getValue(value.type, obj, "type");
+	getValue(value.format_type, obj, "format_type");
+	getValue(value.description, obj, "description");
+	getValue(value.asset, obj, "asset");
+	getValue(value.available, obj, "available");
+	getValue(value.guild_id, obj, "guild_id");
 }
 
-template<> void getValue(tags_data& msg, simdjson::ondemand::value jsonData) {
+template<> void getValue(discord_message& value, simdjson::ondemand::value jsonData) {
 	simdjson::ondemand::object obj{ getObject(jsonData) };
-	getValue(msg.premium_subscriber, obj, "premium_subscriber");
-	getValue(msg.bot_id, obj, "bot_id");
-}
-
-template<> void getValue(role_data& msg, simdjson::ondemand::value jsonData) {
-	simdjson::ondemand::object obj{ getObject(jsonData) };
-	getValue(msg.unicode_emoji, obj, "unicode_emoji");
-	getValue(msg.mentionable, obj, "mentionable");
-	getValue(msg.permissions, obj, "permissions");
-	getValue(msg.position, obj, "position");
-	getValue(msg.managed, obj, "managed");
-	getValue(msg.version, obj, "version");
-	getValue(msg.hoist, obj, "hoist");
-	getValue(msg.flags, obj, "flags");
-	getValue(msg.color, obj, "color");
-	getValue(msg.tags, obj, "tags");
-	getValue(msg.name, obj, "name");
-	getValue(msg.icon, obj, "icon");
-	getValue(msg.id, obj, "id");
-}
-
-template<> void getValue(guild_data& msg, simdjson::ondemand::value jsonData) {
-	simdjson::ondemand::object obj{ getObject(jsonData) };
-	getValue(msg.latest_on_boarding_question_id, obj, "latest_on_boarding_question_id");
-	getValue(msg.max_stage_video_channel_users, obj, "max_stage_video_channel_users");
-	getValue(msg.default_message_notifications, obj, "default_message_notifications");
-	getValue(msg.premium_progress_bar_enabled, obj, "premium_progress_bar_enabled");
-	getValue(msg.approximate_presence_count, obj, "approximate_presence_count");
-	getValue(msg.premium_subscription_count, obj, "premium_subscription_count");
-	getValue(msg.public_updates_channel_id, obj, "public_updates_channel_id");
-	getValue(msg.approximate_member_count, obj, "approximate_member_count");
-	getValue(msg.safety_alerts_channel_id, obj, "safety_alerts_channel_id");
-	getValue(msg.max_video_channel_users, obj, "max_video_channel_users");
-	getValue(msg.explicit_content_filter, obj, "explicit_content_filter");
-	getValue(msg.guild_scheduled_events, obj, "guild_scheduled_events");
-	getValue(msg.system_channel_flags, obj, "system_channel_flags");
-	getValue(msg.verification_level, obj, "verification_level");
-	getValue(msg.inventory_settings, obj, "inventory_settings");
-	getValue(msg.widget_channel_id, obj, "widget_channel_id");
-	getValue(msg.system_channel_id, obj, "system_channel_id");
-	getValue(msg.rules_channel_id, obj, "rules_channel_id");
-	getValue(msg.preferred_locale, obj, "preferred_locale");
-	getValue(msg.discovery_splash, obj, "discovery_splash");
-	getValue(msg.vanity_url_code, obj, "vanity_url_code");
-	getValue(msg.widget_enabled, obj, "widget_enabled");
-	getValue(msg.afk_channel_id, obj, "afk_channel_id");
-	getValue(msg.application_id, obj, "application_id");
-	getValue(msg.max_presences, obj, "max_presences");
-	getValue(msg.premium_tier, obj, "premium_tier");
-	getValue(msg.member_count, obj, "member_count");
-	getValue(msg.voice_states, obj, "voice_states");
-	getValue(msg.unavailable, obj, "unavailable");
-	getValue(msg.afk_timeout, obj, "afk_timeout");
-	getValue(msg.max_members, obj, "max_members");
-	getValue(msg.permissions, obj, "permissions");
-	getValue(msg.description, obj, "description");
-	getValue(msg.nsfw_level, obj, "nsfw_level");
-	getValue(msg.mfa_level, obj, "mfa_level");
-	getValue(msg.joined_at, obj, "joined_at");
-	getValue(msg.discovery, obj, "discovery");
-	getValue(msg.owner_id, obj, "owner_id");
-	getValue(msg.hub_type, obj, "hub_type");
-	getValue(msg.stickers, obj, "stickers");
-	getValue(msg.features, obj, "features");
-	getValue(msg.channels, obj, "channels");
-	getValue(msg.members, obj, "members");
-	getValue(msg.threads, obj, "threads");
-	getValue(msg.region, obj, "region");
-	getValue(msg.banner, obj, "banner");
-	getValue(msg.splash, obj, "splash");
-	getValue(msg.owner, obj, "owner");
-	getValue(msg.large, obj, "large");
-	getValue(msg.flags, obj, "flags");
-	getValue(msg.roles, obj, "roles");
-	getValue(msg.lazy, obj, "lazy");
-	getValue(msg.nsfw, obj, "nsfw");
-	getValue(msg.icon, obj, "icon");
-	getValue(msg.name, obj, "name");
-	getValue(msg.id, obj, "id");
-}
-
-template<> void getValue(discord_message& returnValue, simdjson::ondemand::value jsonData) {
-	simdjson::ondemand::object obj{ getObject(jsonData) };
-	getValue(returnValue.t, obj, "t");
-	getValue(returnValue.d, obj, "d");
-	getValue(returnValue.op, obj, "op");
-	getValue(returnValue.s, obj, "s");
+	getValue(value.id, obj, "id");
+	getValue(value.name, obj, "name");
+	getValue(value.icon, obj, "icon");
+	getValue(value.description, obj, "description");
+	getValue(value.home_header, obj, "home_header");
+	getValue(value.splash, obj, "splash");
+	getValue(value.discovery_splash, obj, "discovery_splash");
+	getValue(value.features, obj, "features");
+	getValue(value.banner, obj, "banner");
+	getValue(value.owner_id, obj, "owner_id");
+	getValue(value.application_id, obj, "application_id");
+	getValue(value.region, obj, "region");
+	getValue(value.afk_channel_id, obj, "afk_channel_id");
+	getValue(value.afk_timeout, obj, "afk_timeout");
+	getValue(value.system_channel_id, obj, "system_channel_id");
+	getValue(value.system_channel_flags, obj, "system_channel_flags");
+	getValue(value.widget_enabled, obj, "widget_enabled");
+	getValue(value.widget_channel_id, obj, "widget_channel_id");
+	getValue(value.verification_level, obj, "verification_level");
+	getValue(value.roles, obj, "roles");
+	getValue(value.default_message_notifications, obj, "default_message_notifications");
+	getValue(value.mfa_level, obj, "mfa_level");
+	getValue(value.explicit_content_filter, obj, "explicit_content_filter");
+	getValue(value.max_presences, obj, "max_presences");
+	getValue(value.max_members, obj, "max_members");
+	getValue(value.max_stage_video_channel_users, obj, "max_stage_video_channel_users");
+	getValue(value.max_video_channel_users, obj, "max_video_channel_users");
+	getValue(value.vanity_url_code, obj, "vanity_url_code");
+	getValue(value.premium_tier, obj, "premium_tier");
+	getValue(value.premium_subscription_count, obj, "premium_subscription_count");
+	getValue(value.preferred_locale, obj, "preferred_locale");
+	getValue(value.rules_channel_id, obj, "rules_channel_id");
+	getValue(value.safety_alerts_channel_id, obj, "safety_alerts_channel_id");
+	getValue(value.public_updates_channel_id, obj, "public_updates_channel_id");
+	getValue(value.hub_type, obj, "hub_type");
+	getValue(value.premium_progress_bar_enabled, obj, "premium_progress_bar_enabled");
+	getValue(value.latest_onboarding_question_id, obj, "latest_onboarding_question_id");
+	getValue(value.nsfw, obj, "nsfw");
+	getValue(value.nsfw_level, obj, "nsfw_level");
+	getValue(value.emojis, obj, "emojis");
+	getValue(value.stickers, obj, "stickers");
+	getValue(value.incidents_data, obj, "incidents_data");
+	getValue(value.inventory_settings, obj, "inventory_settings");
+	getValue(value.embed_enabled, obj, "embed_enabled");
+	getValue(value.embed_channel_id, obj, "embed_channel_id");
+	getValue(value.approximate_member_count, obj, "approximate_member_count");
+	getValue(value.approximate_presence_count, obj, "approximate_presence_count");
 }
 
 template<> void getValue(abc_test_struct& returnValue, simdjson::ondemand::value jsonData) {

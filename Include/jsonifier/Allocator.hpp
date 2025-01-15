@@ -89,7 +89,7 @@ namespace jsonifier::internal {
 		}
 
 		template<typename... arg_types> JSONIFIER_INLINE void construct(pointer ptr, arg_types&&... args) noexcept {
-			new (ptr) value_type(jsonifier::internal::forward<arg_types>(args)...);
+			new (ptr) value_type(internal::forward<arg_types>(args)...);
 		}
 
 		JSONIFIER_INLINE static size_type maxSize() noexcept {
@@ -101,4 +101,4 @@ namespace jsonifier::internal {
 		}
 	};
 
-}// namespace jsonifier::internal
+}// namespace internal
