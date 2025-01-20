@@ -28,20 +28,20 @@
 namespace jsonifier::internal {
 
 	template<typename value_type> struct base_json_entity {
-		using member_type = std::remove_cvref_t<value_type>;
+		using member_type = value_type;
 		static constexpr size_t index{ 0 };
 	};
 
 	template<auto memberPtrNew, string_literal nameNew> struct json_entity_temp {
-		using member_type = remove_class_pointer_t<std::remove_cvref_t<decltype(memberPtrNew)>>;
-		using class_type  = remove_member_pointer_t<std::remove_cvref_t<decltype(memberPtrNew)>>;
+		using member_type = remove_class_pointer_t<decltype(memberPtrNew)>;
+		using class_type  = remove_member_pointer_t<decltype(memberPtrNew)>;
 		static constexpr member_type class_type::* memberPtr{ memberPtrNew };
 		static constexpr string_literal name{ nameNew };
 	};
 
 	template<auto memberPtrNew, string_literal nameNew, size_t indexNew, size_t maxIndex> struct json_entity {
-		using member_type = remove_class_pointer_t<std::remove_cvref_t<decltype(memberPtrNew)>>;
-		using class_type  = remove_member_pointer_t<std::remove_cvref_t<decltype(memberPtrNew)>>;
+		using member_type = remove_class_pointer_t<decltype(memberPtrNew)>;
+		using class_type  = remove_member_pointer_t<decltype(memberPtrNew)>;
 		static constexpr member_type class_type::* memberPtr{ memberPtrNew };
 		static constexpr bool isItLast{ indexNew == maxIndex - 1 };
 		static constexpr string_literal name{ nameNew };
@@ -49,12 +49,12 @@ namespace jsonifier::internal {
 	};
 
 	template<typename value_type>
-	concept is_base_json_entity = requires { typename std::remove_cvref_t<value_type>::member_type; } && !std::is_member_pointer_v<std::remove_cvref_t<value_type>>;
+	concept is_base_json_entity = requires { typename value_type::member_type; } && !std::is_member_pointer_v<value_type>;
 
 	template<typename value_type>
 	concept is_json_entity_temp = requires {
-		typename std::remove_cvref_t<value_type>::class_type;
-		std::remove_cvref_t<value_type>::memberPtr;
+		typename value_type::class_type;
+		value_type::memberPtr;
 	} && is_base_json_entity<value_type>;
 
 	template<size_t maxIndex, size_t index, auto value> constexpr auto makeJsonEntityAuto() noexcept {
@@ -71,7 +71,7 @@ namespace jsonifier::internal {
 	template<typename value_type>
 	concept convertible_to_json_entity = is_json_entity_temp<value_type> || std::is_member_pointer_v<value_type>;
 
-	template<auto... values, size_t... indices> constexpr auto createValueImpl(std::index_sequence<indices...>) {
+	template<auto... values, size_t... indices> constexpr auto createValueImpl(jsonifier::internal::index_sequence<indices...>) {
 		static_assert((convertible_to_json_entity<decltype(values)> && ...), "All arguments passed to createValue must be convertible to a json_entity.");
 		return makeTuple(makeJsonEntityAuto<sizeof...(values), indices, values>()...);
 	}
@@ -89,7 +89,7 @@ namespace jsonifier {
 	}
 
 	template<auto... values> constexpr auto createValue() noexcept {
-		return internal::createValueImpl<values...>(std::make_index_sequence<sizeof...(values)>{});
+		return internal::createValueImpl<values...>(jsonifier::internal::make_index_sequence<sizeof...(values)>{});
 	}
 
 }

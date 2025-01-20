@@ -40,7 +40,7 @@ namespace jsonifier::internal {
 	};
 
 	template<typename value_type>
-	concept has_name = requires(std::remove_cvref_t<value_type> value) { value.name; };
+	concept has_name = requires(jsonifier::internal::remove_cvref_t<value_type> value) { value.name; };
 
 	template<size_t maxIndex, size_t currentIndex = 0, typename tuple_type>
 	constexpr auto collectTupleRefsImpl(const tuple_type& tuple, array<tuple_reference, maxIndex>& tupleRefsRaw) {
@@ -86,7 +86,7 @@ namespace jsonifier::internal {
 		return returnValues;
 	}
 
-	template<typename value_type> JSONIFIER_INLINE_VARIABLE auto tupleRefs{ collectTupleRefs(core<std::remove_cvref_t<value_type>>::parseValue) };
+	template<typename value_type> JSONIFIER_INLINE_VARIABLE auto tupleRefs{ collectTupleRefs(core<value_type>::parseValue) };
 	template<typename value_type> JSONIFIER_INLINE_VARIABLE auto tupleReferences{ consolidateTupleRefs(tupleRefs<value_type>) };
 	template<typename value_type> JSONIFIER_INLINE_VARIABLE auto sortedTupleReferencesByLength{ sortTupleRefsByLength(tupleRefs<value_type>) };
 	template<typename value_type> JSONIFIER_INLINE_VARIABLE auto tupleReferencesByLength{ consolidateTupleRefs(sortedTupleReferencesByLength<value_type>) };
@@ -94,6 +94,7 @@ namespace jsonifier::internal {
 	template<typename value_type> JSONIFIER_INLINE_VARIABLE auto tupleReferencesByFirstByte{ consolidateTupleRefs(sortedTupleReferencesByFirstByte<value_type>) };
 
 	// Idea for this interface sampled from Stephen Berry and his library, Glaze library: https://github.com/stephenberry/glaze
-	template<typename value_type> using core_tuple_type = decltype(core<std::remove_cvref_t<value_type>>::parseValue);
+	template<typename value_type> using core_tuple_type			   = decltype(core<jsonifier::internal::remove_cvref_t<value_type>>::parseValue);
+	template<typename value_type> constexpr size_t core_tuple_size = tuple_size_v<core_tuple_type<value_type>>;
 
 }// namespace internal

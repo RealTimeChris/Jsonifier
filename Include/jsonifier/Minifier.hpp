@@ -79,16 +79,16 @@ namespace jsonifier::internal {
 			string_view_ptr* iter{ section.begin() };
 			if (!*iter) {
 				getErrors().emplace_back(error::constructError<error_classes::Minifying, minify_errors::No_Input>(*iter - dataPtr, in.end() - in.begin(), dataPtr));
-				return std::remove_cvref_t<string_type>{};
+				return jsonifier::internal::remove_cvref_t<string_type>{};
 			}
-			std::remove_cvref_t<string_type> newString{};
+			jsonifier::internal::remove_cvref_t<string_type> newString{};
 			auto index = impl(iter, stringBuffer);
 			if (index != std::numeric_limits<uint32_t>::max()) {
 				newString.resize(index);
 				std::memcpy(newString.data(), stringBuffer.data(), index);
 				return newString;
 			} else {
-				return std::remove_cvref_t<string_type>{};
+				return jsonifier::internal::remove_cvref_t<string_type>{};
 			}
 		}
 

@@ -151,22 +151,22 @@ namespace jsonifier::internal {
 	}
 
 	template<typename value_type>
-	concept equals_0 = std::remove_cvref_t<value_type>::length == 0;
+	concept equals_0 = value_type::length == 0;
 
 	template<typename value_type>
-	concept gt_0_lt_16 = std::remove_cvref_t<value_type>::length > 0 && std::remove_cvref_t<value_type>::length < 16;
+	concept gt_0_lt_16 = value_type::length > 0 && value_type::length < 16;
 
 	template<typename value_type>
-	concept eq_16 = std::remove_cvref_t<value_type>::length == 16 && bytesPerStep >= 16;
+	concept eq_16 = value_type::length == 16 && bytesPerStep >= 16;
 
 	template<typename value_type>
-	concept eq_32 = std::remove_cvref_t<value_type>::length == 32 && bytesPerStep >= 32;
+	concept eq_32 = value_type::length == 32 && bytesPerStep >= 32;
 
 	template<typename value_type>
-	concept eq_64 = std::remove_cvref_t<value_type>::length == 64 && bytesPerStep >= 64;
+	concept eq_64 = value_type::length == 64 && bytesPerStep >= 64;
 
 	template<typename value_type>
-	concept gt_16 = std::remove_cvref_t<value_type>::length > 16 && !eq_16<value_type> && !eq_32<value_type> && !eq_64<value_type>;
+	concept gt_16 = value_type::length > 16 && !eq_16<value_type> && !eq_32<value_type> && !eq_64<value_type>;
 
 	template<size_t N, typename string_type> constexpr auto stringLiteralFromView(string_type str) noexcept {
 		string_literal<N + 1> sl{};
@@ -197,15 +197,15 @@ namespace jsonifier::internal {
 		return sl;
 	}
 
-	template<typename sl_type, std::remove_cvref_t<sl_type> stringNew> struct string_literal_comparitor;
+	template<typename sl_type, jsonifier::internal::remove_cvref_t<sl_type> stringNew> struct string_literal_comparitor;
 
-	template<equals_0 sl_type, std::remove_cvref_t<sl_type> stringNew> struct string_literal_comparitor<sl_type, stringNew> {
+	template<equals_0 sl_type, jsonifier::internal::remove_cvref_t<sl_type> stringNew> struct string_literal_comparitor<sl_type, stringNew> {
 		JSONIFIER_INLINE static bool impl(string_view_ptr) noexcept {
 			return true;
 		}
 	};
 
-	template<gt_0_lt_16 sl_type, std::remove_cvref_t<sl_type> stringNew> struct string_literal_comparitor<sl_type, stringNew> {
+	template<gt_0_lt_16 sl_type, jsonifier::internal::remove_cvref_t<sl_type> stringNew> struct string_literal_comparitor<sl_type, stringNew> {
 		JSONIFIER_INLINE static bool impl(string_view_ptr str) noexcept {
 			static constexpr auto stringLiteral{ stringNew };
 			static constexpr auto newCount{ stringLiteral.size() };
@@ -258,7 +258,7 @@ namespace jsonifier::internal {
 		};
 	};
 
-	template<eq_16 sl_type, std::remove_cvref_t<sl_type> stringNew> struct string_literal_comparitor<sl_type, stringNew> {
+	template<eq_16 sl_type, jsonifier::internal::remove_cvref_t<sl_type> stringNew> struct string_literal_comparitor<sl_type, stringNew> {
 		JSONIFIER_INLINE static bool impl(string_view_ptr str) noexcept {
 			static constexpr auto newLiteral{ stringNew };
 			JSONIFIER_ALIGN static constexpr auto valuesNew{ packValues<newLiteral>() };
@@ -270,7 +270,7 @@ namespace jsonifier::internal {
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
 
-	template<eq_32 sl_type, std::remove_cvref_t<sl_type> stringNew> struct string_literal_comparitor<sl_type, stringNew> {
+	template<eq_32 sl_type, jsonifier::internal::remove_cvref_t<sl_type> stringNew> struct string_literal_comparitor<sl_type, stringNew> {
 		JSONIFIER_INLINE static bool impl(string_view_ptr str) noexcept {
 			static constexpr auto newLiteral{ stringNew };
 			JSONIFIER_ALIGN static constexpr auto valuesNew{ packValues<newLiteral>() };
@@ -283,7 +283,7 @@ namespace jsonifier::internal {
 #endif
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
-	template<eq_64 value_type, std::remove_cvref_t<value_type> stringNew> struct string_literal_comparitor<value_type, stringNew> {
+	template<eq_64 value_type, value_type stringNew> struct string_literal_comparitor<value_type, stringNew> {
 		JSONIFIER_INLINE static bool impl(string_view_ptr str) noexcept {
 			static constexpr auto newLiteral{ stringNew };
 			JSONIFIER_ALIGN static constexpr auto valuesNew{ packValues<newLiteral>() };
@@ -304,7 +304,7 @@ namespace jsonifier::internal {
 		}
 	}
 
-	template<gt_16 sl_type, std::remove_cvref_t<sl_type> stringNew> struct string_literal_comparitor<sl_type, stringNew> {
+	template<gt_16 sl_type, jsonifier::internal::remove_cvref_t<sl_type> stringNew> struct string_literal_comparitor<sl_type, stringNew> {
 		JSONIFIER_INLINE static bool impl(string_view_ptr str) noexcept {
 			static constexpr auto string{ offSetIntoLiteral<stringNew, getOffsetIntoLiteralSize(stringNew.size())>() };
 			if (!string_literal_comparitor<decltype(string), string>::impl(str)) {

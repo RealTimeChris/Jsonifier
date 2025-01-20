@@ -620,7 +620,7 @@ namespace jsonifier::internal {
 	inline std::unordered_map<string, uint32_t> types{};
 #endif
 
-	template<typename value_type> static constexpr auto hashData = collectMapConstructionData<std::remove_cvref_t<value_type>>();
+	template<typename value_type> static constexpr auto hashData = collectMapConstructionData<value_type>();
 
 	template<typename value_type, typename iterator_newer> struct hash_map {
 		static constexpr auto subAmount01{ []() constexpr {
@@ -673,7 +673,7 @@ namespace jsonifier::internal {
 				return hashData<value_type>.storageSize;
 			} else if constexpr (hashData<value_type>.type == hash_map_type::unique_byte_and_length) {
 				static constexpr size_t storageMask = hashData<value_type>.storageSize - 1;
-				const auto newPtr					= char_comparison<'"', std::remove_cvref_t<decltype(*iter)>>::memchar(iter + subAmount01, subAmount02);
+				const auto newPtr					= char_comparison<'"', jsonifier::internal::remove_cvref_t<decltype(*iter)>>::memchar(iter + subAmount01, subAmount02);
 				if JSONIFIER_LIKELY (newPtr) {
 					const size_t length = static_cast<size_t>(newPtr - iter);
 					if JSONIFIER_LIKELY (checkForEnd(iter, end, hashData<value_type>.uniqueIndex)) {
@@ -685,7 +685,7 @@ namespace jsonifier::internal {
 			} else if constexpr (hashData<value_type>.type == hash_map_type::unique_per_length) {
 				static constexpr auto mappings =
 					generateMappingsForLengths<keyStatsVal<value_type>.maxLength>(tupleReferencesByLength<value_type>, hashData<value_type>.uniqueIndices);
-				const auto newPtr = char_comparison<'"', std::remove_cvref_t<decltype(*iter)>>::memchar(iter + subAmount01, subAmount02);
+				const auto newPtr = char_comparison<'"', jsonifier::internal::remove_cvref_t<decltype(*iter)>>::memchar(iter + subAmount01, subAmount02);
 				if JSONIFIER_LIKELY (newPtr) {
 					const size_t length			= static_cast<size_t>(newPtr - iter);
 					const size_t localUniqueIdx = hashData<value_type>.uniqueIndices[length];
@@ -699,7 +699,7 @@ namespace jsonifier::internal {
 				static constexpr rt_key_hasher<hashData<value_type>.seed> hasher{};
 				static constexpr auto sizeMask{ hashData<value_type>.numGroups - 1u };
 				static constexpr auto ctrlBytesPtr{ hashData<value_type>.controlBytes.data() };
-				const auto newPtr = char_comparison<'"', std::remove_cvref_t<decltype(*iter)>>::memchar(iter + subAmount01, subAmount02);
+				const auto newPtr = char_comparison<'"', jsonifier::internal::remove_cvref_t<decltype(*iter)>>::memchar(iter + subAmount01, subAmount02);
 				if JSONIFIER_LIKELY (newPtr) {
 					size_t length = static_cast<size_t>(newPtr - iter);
 					length		  = (hashData<value_type>.uniqueIndex > length) ? length : hashData<value_type>.uniqueIndex;

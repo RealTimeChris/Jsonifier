@@ -33,9 +33,9 @@ namespace jsonifier::internal {
 
 	template<typename value_type, typename buffer_type, typename context_type, parse_options options, bool minifiedOrInsideRepeated> struct parse_types_impl {
 		using base						  = derailleur<options, context_type>;
-		static constexpr auto memberCount = tuple_size_v<core_tuple_type<value_type>>;
+		static constexpr auto memberCount = core_tuple_size<value_type>;
 		template<size_t index> JSONIFIER_CLANG_INLINE static bool processIndex(value_type& value, context_type& context) {
-			static constexpr auto tupleElem		= get<index>(core<std::remove_cvref_t<value_type>>::parseValue);
+			static constexpr auto tupleElem		= get<index>(core<value_type>::parseValue);
 			static constexpr auto key			= tupleElem.name.operator string_view();
 			static constexpr auto ptrNew		= tupleElem.memberPtr;
 			static constexpr auto stringLiteral = stringLiteralFromView<key.size()>(key);
@@ -53,12 +53,12 @@ namespace jsonifier::internal {
 					}
 					if constexpr (concepts::has_excluded_keys<value_type>) {
 						auto& keys = value.jsonifierExcludedKeys;
-						if JSONIFIER_LIKELY (keys.find(static_cast<typename std::remove_cvref_t<decltype(keys)>::key_type>(key)) != keys.end()) {
+						if JSONIFIER_LIKELY (keys.find(static_cast<typename jsonifier::internal::remove_cvref_t<decltype(keys)>::key_type>(key)) != keys.end()) {
 							base::skipToNextValue(context);
 							return true;
 						}
 					}
-					using member_type = typename std::remove_cvref_t<decltype(tupleElem)>::member_type;
+					using member_type = typename jsonifier::internal::remove_cvref_t<decltype(tupleElem)>::member_type;
 					parse<getJsonType<member_type>(), options, minifiedOrInsideRepeated>::template impl<buffer_type>(value.*ptrNew, context);
 					return true;
 				}
@@ -73,9 +73,9 @@ namespace jsonifier::internal {
 
 	template<typename value_type, typename buffer_type, typename context_type, parse_options options, bool minifiedOrInsideRepeated> struct parse_types_impl_partial {
 		using base						  = derailleur<options, context_type>;
-		static constexpr auto memberCount = tuple_size_v<core_tuple_type<value_type>>;
+		static constexpr auto memberCount = core_tuple_size<value_type>;
 		template<size_t index> JSONIFIER_CLANG_INLINE static bool processIndex(value_type& value, context_type& context) {
-			static constexpr auto tupleElem		= get<index>(core<std::remove_cvref_t<value_type>>::parseValue);
+			static constexpr auto tupleElem		= get<index>(core<value_type>::parseValue);
 			static constexpr auto key			= tupleElem.name.operator string_view();
 			static constexpr auto ptrNew		= tupleElem.memberPtr;
 			static constexpr auto stringLiteral = stringLiteralFromView<key.size()>(key);
@@ -88,12 +88,12 @@ namespace jsonifier::internal {
 					++context.iter;
 					if constexpr (concepts::has_excluded_keys<value_type>) {
 						auto& keys = value.jsonifierExcludedKeys;
-						if JSONIFIER_LIKELY (keys.find(static_cast<typename std::remove_cvref_t<decltype(keys)>::key_type>(key)) != keys.end()) {
+						if JSONIFIER_LIKELY (keys.find(static_cast<typename jsonifier::internal::remove_cvref_t<decltype(keys)>::key_type>(key)) != keys.end()) {
 							base::skipToNextValue(context);
 							return false;
 						}
 					}
-					using member_type = typename std::remove_cvref_t<decltype(tupleElem)>::member_type;
+					using member_type = typename jsonifier::internal::remove_cvref_t<decltype(tupleElem)>::member_type;
 					parse<getJsonType<member_type>(), options, minifiedOrInsideRepeated>::template impl<buffer_type>(value.*ptrNew, context);
 					return true;
 				}
@@ -108,7 +108,7 @@ namespace jsonifier::internal {
 
 	template<template<typename, typename, typename, parse_options, bool> typename parsing_type, typename value_type, typename buffer_type, typename context_type,
 		parse_options options, bool minifiedOrInsideRepeated, size_t... indices>
-	static constexpr auto generateFunctionPtrs(std::index_sequence<indices...>) noexcept {
+	static constexpr auto generateFunctionPtrs(jsonifier::internal::index_sequence<indices...>) noexcept {
 		using function_type = decltype(&parse_types_impl<value_type, buffer_type, context_type, options, minifiedOrInsideRepeated>::template processIndex<0>);
 		return array<function_type, sizeof...(indices)>{
 			{ &parsing_type<value_type, buffer_type, context_type, options, minifiedOrInsideRepeated>::template processIndex<indices>... }
@@ -156,12 +156,12 @@ namespace jsonifier::internal {
 	template<template<typename, typename, typename, parse_options, bool> typename parsing_type, typename value_type, typename buffer_type, typename context_type,
 		parse_options options, bool minifiedOrInsideRepeated>
 	static constexpr auto functionPtrs{ generateFunctionPtrs<parsing_type, value_type, buffer_type, context_type, options, minifiedOrInsideRepeated>(
-		std::make_index_sequence<tuple_size_v<core_tuple_type<value_type>>>{}) };
+		jsonifier::internal::make_index_sequence<core_tuple_size<value_type>>{}) };
 
 	template<parse_options options, typename json_entity_type, bool minified> struct json_entity_parse;
 
 	template<parse_options options, typename json_entity_type> struct json_entity_parse<options, json_entity_type, false> : public json_entity_type {
-		static constexpr auto memberCount{ tuple_size_v<core_tuple_type<typename json_entity_type::class_type>> };
+		static constexpr auto memberCount{ core_tuple_size<typename json_entity_type::class_type> };
 		inline static thread_local array<uint64_t, (memberCount > 0 ? memberCount : 1)> antiHashStates{ [] {
 			array<uint64_t, (memberCount > 0 ? memberCount : 1)> returnValues{};
 			for (uint64_t x = 0; x < memberCount; ++x) {
@@ -191,7 +191,7 @@ namespace jsonifier::internal {
 							JSONIFIER_SKIP_WS();
 							if constexpr (concepts::has_excluded_keys<value_type>) {
 								auto& keys = value.jsonifierExcludedKeys;
-								if JSONIFIER_LIKELY (keys.find(static_cast<typename std::remove_cvref_t<decltype(keys)>::key_type>(key)) != keys.end()) {
+								if JSONIFIER_LIKELY (keys.find(static_cast<typename jsonifier::internal::remove_cvref_t<decltype(keys)>::key_type>(key)) != keys.end()) {
 									base::skipToNextValue(context);
 									return;
 								}
@@ -212,7 +212,7 @@ namespace jsonifier::internal {
 					}
 				}
 			}
-			if JSONIFIER_LIKELY (auto indexNew = hash_map<value_type, std::remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
+			if JSONIFIER_LIKELY (auto indexNew = hash_map<value_type, jsonifier::internal::remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
 				indexNew < memberCount) {
 				if JSONIFIER_LIKELY (functionPtrs<parse_types_impl, value_type, buffer_type, context_type, options, false>[indexNew](value, context)) {
 					antiHashStates[json_entity_type::index] = indexNew;
@@ -278,7 +278,7 @@ namespace jsonifier::internal {
 	};
 
 	template<parse_options options, typename json_entity_type> struct json_entity_parse<options, json_entity_type, true> : public json_entity_type {
-		static constexpr auto memberCount{ tuple_size_v<core_tuple_type<typename json_entity_type::class_type>> };
+		static constexpr auto memberCount{ core_tuple_size<typename json_entity_type::class_type> };
 		inline static thread_local array<uint64_t, (memberCount > 0 ? memberCount : 1)> antiHashStates{ [] {
 			array<uint64_t, (memberCount > 0 ? memberCount : 1)> returnValues{};
 			for (uint64_t x = 0; x < memberCount; ++x) {
@@ -305,7 +305,7 @@ namespace jsonifier::internal {
 							++context.iter;
 							if constexpr (concepts::has_excluded_keys<value_type>) {
 								auto& keys = value.jsonifierExcludedKeys;
-								if JSONIFIER_LIKELY (keys.find(static_cast<typename std::remove_cvref_t<decltype(keys)>::key_type>(key)) != keys.end()) {
+								if JSONIFIER_LIKELY (keys.find(static_cast<typename jsonifier::internal::remove_cvref_t<decltype(keys)>::key_type>(key)) != keys.end()) {
 									base::skipToNextValue(context);
 									return;
 								}
@@ -326,7 +326,7 @@ namespace jsonifier::internal {
 					}
 				}
 			}
-			if JSONIFIER_LIKELY (auto indexNew = hash_map<value_type, std::remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
+			if JSONIFIER_LIKELY (auto indexNew = hash_map<value_type, jsonifier::internal::remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
 				indexNew < memberCount) {
 				if JSONIFIER_LIKELY (functionPtrs<parse_types_impl, value_type, buffer_type, context_type, options, true>[indexNew](value, context)) {
 					antiHashStates[json_entity_type::index] = indexNew;
@@ -404,19 +404,19 @@ namespace jsonifier::internal {
 	struct get_parse_base;
 
 	template<parse_options options, typename value_type, typename buffer_type, typename context_type, bool minifiedOrInsideRepeated, size_t... I>
-	struct get_parse_base<options, value_type, buffer_type, context_type, minifiedOrInsideRepeated, std::index_sequence<I...>> {
-		using type = parse_map<json_entity_parse<options, std::remove_cvref_t<decltype(get<I>(core<std::remove_cvref_t<value_type>>::parseValue))>, minifiedOrInsideRepeated>...>;
+	struct get_parse_base<options, value_type, buffer_type, context_type, minifiedOrInsideRepeated, jsonifier::internal::index_sequence<I...>> {
+		using type = parse_map<json_entity_parse<options, jsonifier::internal::remove_cvref_t<decltype(get<I>(core<value_type>::parseValue))>, minifiedOrInsideRepeated>...>;
 	};
 
 	template<parse_options options, typename value_type, typename buffer_type, typename context_type, bool minifiedOrInsideRepeated> using parse_base_t =
 		typename get_parse_base<options, value_type, buffer_type, context_type, minifiedOrInsideRepeated,
-			std::make_index_sequence<tuple_size_v<core_tuple_type<value_type>>>>::type;
+			jsonifier::internal::make_index_sequence<core_tuple_size<value_type>>>::type;
 
 	template<typename value_type, typename buffer_type, typename context_type, parse_options options, auto tupleElem, bool minifiedOrInsideRepeated> struct parse_types;
 
 	template<typename value_type, typename buffer_type, typename context_type, parse_options options, auto tupleElem, bool insideRepeated> struct parse_types_partial {
 		using base						  = derailleur<options, context_type>;
-		static constexpr auto memberCount = tuple_size_v<core_tuple_type<value_type>>;
+		static constexpr auto memberCount = core_tuple_size<value_type>;
 		inline static thread_local array<uint64_t, (memberCount > 0 ? memberCount : 1)> antiHashStates{ [] {
 			array<uint64_t, (memberCount > 0 ? memberCount : 1)> returnValues{};
 			for (uint64_t x = 0; x < memberCount; ++x) {
@@ -441,7 +441,7 @@ namespace jsonifier::internal {
 									return;
 								} else {
 									if JSONIFIER_LIKELY (auto indexNew =
-															 hash_map<value_type, std::remove_cvref_t<decltype(*context.iter)>>::findIndex((*context.iter) + 1, *context.endIter);
+															 hash_map<value_type, jsonifier::internal::remove_cvref_t<decltype(*context.iter)>>::findIndex((*context.iter) + 1, *context.endIter);
 										indexNew < memberCount) {
 										if JSONIFIER_LIKELY (functionPtrs<parse_types_impl_partial, value_type, buffer_type, context_type, options, insideRepeated>[indexNew](value,
 																 context)) {
@@ -453,7 +453,7 @@ namespace jsonifier::internal {
 								}
 							}
 							if JSONIFIER_LIKELY (auto indexNew =
-													 hash_map<value_type, std::remove_cvref_t<decltype(*context.iter)>>::findIndex((*context.iter) + 1, *context.endIter);
+													 hash_map<value_type, jsonifier::internal::remove_cvref_t<decltype(*context.iter)>>::findIndex((*context.iter) + 1, *context.endIter);
 								indexNew < memberCount) {
 								if JSONIFIER_LIKELY (functionPtrs<parse_types_impl_partial, value_type, buffer_type, context_type, options, insideRepeated>[indexNew](value,
 														 context)) {
@@ -511,14 +511,14 @@ namespace jsonifier::internal {
 
 	template<template<typename, typename, typename, parse_options, auto, bool> typename parse_type, typename value_type, typename buffer_type, typename context_type,
 		parse_options options, bool minifiedOrInsideRepeated, size_t... I, auto tuple>
-	struct get_parser_base<parse_type, value_type, buffer_type, context_type, options, minifiedOrInsideRepeated, std::index_sequence<I...>, tuple> {
+	struct get_parser_base<parse_type, value_type, buffer_type, context_type, options, minifiedOrInsideRepeated, jsonifier::internal::index_sequence<I...>, tuple> {
 		using type = parser_map<parse_type, value_type, buffer_type, context_type, options, minifiedOrInsideRepeated, get<I>(tuple)...>;
 	};
 
 	template<template<typename, typename, typename, parse_options, auto, bool> typename parse_type, typename value_type, typename buffer_type, typename context_type,
 		parse_options options, bool minifiedOrInsideRepeated, auto value>
 	using parser_base_t = typename get_parser_base<parse_type, value_type, buffer_type, context_type, options, minifiedOrInsideRepeated,
-		std::make_index_sequence<tuple_size_v<decltype(value)>>, value>::type;
+		jsonifier::internal::make_index_sequence<tuple_size_v<decltype(value)>>, value>::type;
 
 	template<typename buffer_type, typename context_type, parse_options optionsNew> struct object_val_parser<buffer_type, context_type, optionsNew, false> {
 		static constexpr parse_options options{ optionsNew };
@@ -568,7 +568,7 @@ namespace jsonifier::internal {
 		}
 
 		template<concepts::map_t value_type> JSONIFIER_INLINE static void impl(value_type& value, context_type& context) noexcept {
-			static thread_local typename std::remove_cvref_t<value_type>::key_type key{};
+			static thread_local typename value_type::key_type key{};
 			if JSONIFIER_LIKELY (context.iter + 1 < context.endIter) {
 				if JSONIFIER_LIKELY (*context.iter == lBrace) {
 					++context.iter;
@@ -615,7 +615,7 @@ namespace jsonifier::internal {
 
 		template<concepts::map_t value_type, bool newLines>
 		JSONIFIER_INLINE static void parseObjects(value_type& value, context_type& context, const auto wsStart = {}, size_t wsSize = {}) {
-			static thread_local typename std::remove_cvref_t<value_type>::key_type key{};
+			static thread_local typename value_type::key_type key{};
 			while
 				JSONIFIER_LIKELY((context.iter < context.endIter) && *context.iter != rBrace) {
 					if (*context.iter == comma) {
@@ -816,7 +816,7 @@ namespace jsonifier::internal {
 		}
 
 		template<concepts::tuple_t value_type> JSONIFIER_INLINE static void impl(value_type& value, context_type& context) noexcept {
-			static constexpr auto memberCount = tuple_size_v<std::remove_cvref_t<value_type>>;
+			static constexpr auto memberCount = tuple_size_v<value_type>;
 			if JSONIFIER_LIKELY (context.iter + 1 < context.endIter) {
 				if JSONIFIER_LIKELY (*context.iter == lBracket) {
 					++context.iter;
@@ -913,7 +913,7 @@ namespace jsonifier::internal {
 		}
 
 		template<concepts::map_t value_type> JSONIFIER_INLINE static void impl(value_type& value, context_type& context) noexcept {
-			static thread_local typename std::remove_cvref_t<value_type>::key_type key{};
+			static thread_local typename value_type::key_type key{};
 			if JSONIFIER_LIKELY (context.iter + 1 < context.endIter) {
 				if JSONIFIER_LIKELY (*context.iter == lBrace) {
 					++context.iter;
@@ -950,7 +950,7 @@ namespace jsonifier::internal {
 		}
 
 		template<concepts::map_t value_type> JSONIFIER_INLINE static void parseObjects(value_type& value, context_type& context) {
-			static thread_local typename std::remove_cvref_t<value_type>::key_type key{};
+			static thread_local typename value_type::key_type key{};
 			while
 				JSONIFIER_LIKELY((context.iter < context.endIter) && *context.iter != rBrace) {
 					if (*context.iter == comma) {
@@ -1090,7 +1090,7 @@ namespace jsonifier::internal {
 		}
 
 		template<concepts::tuple_t value_type> JSONIFIER_INLINE static void impl(value_type& value, context_type& context) noexcept {
-			static constexpr auto memberCount = tuple_size_v<std::remove_cvref_t<value_type>>;
+			static constexpr auto memberCount = tuple_size_v<value_type>;
 			if JSONIFIER_LIKELY (context.iter + 1 < context.endIter) {
 				if JSONIFIER_LIKELY (*context.iter == lBracket) {
 					++context.iter;
@@ -1239,8 +1239,8 @@ namespace jsonifier::internal {
 
 		template<json_type type, typename variant_type, size_t currentIndex = 0>
 		JSONIFIER_INLINE static constexpr void iterateVariantTypes(variant_type&& variant, context_type& context) noexcept {
-			if constexpr (currentIndex < std::variant_size_v<std::remove_cvref_t<variant_type>>) {
-				using element_type = std::remove_cvref_t<decltype(std::get<currentIndex>(std::declval<std::remove_cvref_t<variant_type>>()))>;
+			if constexpr (currentIndex < std::variant_size_v<jsonifier::internal::remove_cvref_t<variant_type>>) {
+				using element_type = jsonifier::internal::remove_cvref_t<decltype(std::get<currentIndex>(std::declval<jsonifier::internal::remove_cvref_t<variant_type>>()))>;
 				if constexpr (concepts::jsonifier_object_t<element_type> && type == json_type::object) {
 					parse<json_type::object, options, minified>::template impl<buffer_type>(variant.template emplace<element_type>(element_type{}), context);
 				} else if constexpr ((concepts::vector_t<element_type> || concepts::raw_array_t<element_type>) && type == json_type::array) {
@@ -1338,7 +1338,7 @@ namespace jsonifier::internal {
 			if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter != n) {
 				using member_type = decltype(*value);
 				if JSONIFIER_UNLIKELY (!value) {
-					value = std::make_shared<std::remove_pointer_t<std::remove_cvref_t<member_type>>>();
+					value = std::make_shared<std::remove_pointer_t<jsonifier::internal::remove_cvref_t<member_type>>>();
 				}
 				parse<getJsonType<member_type>(), options, minified>::template impl<buffer_type>(*value, context);
 			} else {
@@ -1360,7 +1360,7 @@ namespace jsonifier::internal {
 			if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter != n) {
 				using member_type = decltype(*value);
 				if JSONIFIER_UNLIKELY (!value) {
-					value = std::make_unique<std::remove_pointer_t<std::remove_cvref_t<member_type>>>();
+					value = std::make_unique<std::remove_pointer_t<jsonifier::internal::remove_cvref_t<member_type>>>();
 				}
 				parse<getJsonType<member_type>(), options, minified>::template impl<buffer_type>(*value, context);
 			} else {
@@ -1382,7 +1382,7 @@ namespace jsonifier::internal {
 			if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter != n) {
 				using member_type = decltype(*value);
 				if JSONIFIER_UNLIKELY (!value) {
-					value = new std::remove_pointer_t<std::remove_cvref_t<value_type>>{};
+					value = new std::remove_pointer_t<value_type>{};
 				}
 				parse<getJsonType<member_type>(), options, minified>::template impl<buffer_type>(*value, context);
 			} else {
@@ -1428,7 +1428,7 @@ namespace jsonifier::internal {
 					++context.iter;
 					++context.currentObjectDepth;
 					parser_base_t<parse_types_partial, value_type, buffer_type, context_type, options, insideRepeated,
-						core<std::remove_cvref_t<value_type>>::parseValue>::processIndices(value, context);
+						core<value_type>::parseValue>::processIndices(value, context);
 					if JSONIFIER_LIKELY (context.iter + 1 < context.endIter && **context.iter == rBrace) {
 						++context.iter;
 					}
@@ -1451,7 +1451,7 @@ namespace jsonifier::internal {
 					++context.iter;
 					++context.currentObjectDepth;
 					if JSONIFIER_LIKELY (**context.iter != rBrace) {
-						static thread_local typename std::remove_cvref_t<value_type>::key_type key{};
+						static thread_local typename value_type::key_type key{};
 						parse<getJsonType<typename value_type::key_type>(), options, insideRepeated>::template impl<buffer_type>(key, context);
 
 						if JSONIFIER_LIKELY ((context.iter < context.endIter) && **context.iter == colon) {
@@ -1502,7 +1502,7 @@ namespace jsonifier::internal {
 		}
 
 		template<concepts::tuple_t value_type> JSONIFIER_INLINE static void impl(value_type& value, context_type& context) noexcept {
-			static constexpr auto memberCount = tuple_size_v<std::remove_cvref_t<value_type>>;
+			static constexpr auto memberCount = tuple_size_v<value_type>;
 			if JSONIFIER_LIKELY (context.iter + 1 < context.endIter) {
 				if JSONIFIER_LIKELY (**context.iter == lBracket) {
 					++context.iter;
@@ -1641,7 +1641,7 @@ namespace jsonifier::internal {
 		}
 
 		template<concepts::tuple_t value_type> JSONIFIER_INLINE static void impl(value_type& value, context_type& context) noexcept {
-			static constexpr auto memberCount = tuple_size_v<std::remove_cvref_t<value_type>>;
+			static constexpr auto memberCount = tuple_size_v<value_type>;
 			if JSONIFIER_LIKELY (context.iter + 1 < context.endIter) {
 				if JSONIFIER_LIKELY (**context.iter == lBracket) {
 					++context.iter;
@@ -1801,7 +1801,7 @@ namespace jsonifier::internal {
 			if JSONIFIER_LIKELY ((context.iter < context.endIter) && **context.iter != n) {
 				using member_type = decltype(*value);
 				if JSONIFIER_UNLIKELY (!value) {
-					value = std::make_shared<std::remove_pointer_t<std::remove_cvref_t<member_type>>>();
+					value = std::make_shared<std::remove_pointer_t<jsonifier::internal::remove_cvref_t<member_type>>>();
 				}
 				parse<getJsonType<member_type>(), options, insideRepeated>::template impl<buffer_type>(*value, context);
 			} else {
@@ -1821,7 +1821,7 @@ namespace jsonifier::internal {
 			if JSONIFIER_LIKELY ((context.iter < context.endIter) && **context.iter != n) {
 				using member_type = decltype(*value);
 				if JSONIFIER_UNLIKELY (!value) {
-					value = std::make_unique<std::remove_pointer_t<std::remove_cvref_t<member_type>>>();
+					value = std::make_unique<std::remove_pointer_t<jsonifier::internal::remove_cvref_t<member_type>>>();
 				}
 				parse<getJsonType<member_type>(), options, insideRepeated>::template impl<buffer_type>(*value, context);
 			} else {
@@ -1841,7 +1841,7 @@ namespace jsonifier::internal {
 			using member_type = decltype(*value);
 			if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter != n) {
 				if JSONIFIER_UNLIKELY (!value) {
-					value = new std::remove_pointer_t<std::remove_cvref_t<value_type>>{};
+					value = new std::remove_pointer_t<value_type>{};
 				}
 				parse<getJsonType<member_type>(), options, insideRepeated>::template impl<buffer_type>(*value, context);
 			} else {

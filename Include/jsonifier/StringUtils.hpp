@@ -303,7 +303,7 @@ namespace jsonifier::internal {
 		if (static_cast<int64_t>(lengthNew) > 0) {
 			const auto endIter = string1 + lengthNew;
 			while (string1 < endIter) {
-				auto* newIter = char_comparison<'"', std::remove_cvref_t<decltype(*string1)>>::memchar(string1, lengthNew);
+				auto* newIter = char_comparison<'"', jsonifier::internal::remove_cvref_t<decltype(*string1)>>::memchar(string1, lengthNew);
 				if (newIter) {
 					string1	  = newIter;
 					lengthNew = static_cast<uint64_t>(endIter - string1);

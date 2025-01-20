@@ -23,6 +23,7 @@
 /// Feb 3, 2023
 #pragma once
 
+#include <jsonifier/TypeTraits.hpp>
 #include <jsonifier/Config.hpp>
 #include <type_traits>
 #include <algorithm>
@@ -84,14 +85,14 @@ namespace jsonifier::simd {
 #endif
 	};
 
-	template<typename simd_int_t01, size_t... indices> constexpr uint16_t mm128MovemaskEpi8Impl(const simd_int_t01& a, std::index_sequence<indices...>&&) noexcept {
+	template<typename simd_int_t01, size_t... indices> constexpr uint16_t mm128MovemaskEpi8Impl(const simd_int_t01& a, jsonifier::internal::index_sequence<indices...>&&) noexcept {
 		uint16_t mask{};
 		((mask |= (a.m128x_int8[indices] & 0x80) ? (1 << indices) : 0), ...);
 		return mask;
 	}
 
 	template<typename simd_int_t01> constexpr uint16_t mm128MovemaskEpi8(const simd_int_t01& a) noexcept {
-		return mm128MovemaskEpi8Impl(a, std::make_index_sequence<16>{});
+		return mm128MovemaskEpi8Impl(a, jsonifier::internal::make_index_sequence<16>{});
 	}
 
 	constexpr __m128x mm128AddEpi8(const __m128x& a, const __m128x& b) noexcept {
@@ -160,14 +161,14 @@ namespace jsonifier::simd {
 	}
 
 	template<typename simd_int_t01, typename simd_int_t02, size_t... indices>
-	constexpr __m128x mm128CmpEqEpi8Impl(const simd_int_t01& a, const simd_int_t02& b, std::index_sequence<indices...>&&) noexcept {
+	constexpr __m128x mm128CmpEqEpi8Impl(const simd_int_t01& a, const simd_int_t02& b, jsonifier::internal::index_sequence<indices...>&&) noexcept {
 		__m128x result{};
 		((result.m128x_int8[indices] = (a.m128x_int8[indices] == b.m128x_int8[indices]) ? 0xFF : 0), ...);
 		return result;
 	}
 
 	template<typename simd_int_t01, typename simd_int_t02> constexpr __m128x mm128CmpEqEpi8(const simd_int_t01& a, const simd_int_t02& b) noexcept {
-		return mm128CmpEqEpi8Impl(a, b, std::make_index_sequence<16>{});
+		return mm128CmpEqEpi8Impl(a, b, jsonifier::internal::make_index_sequence<16>{});
 	}
 
 	template<typename simd_int_t01, typename simd_int_t02> constexpr bool mm128TestzSi128(simd_int_t01& valOneNew, simd_int_t02& valTwo) noexcept {
@@ -248,7 +249,7 @@ namespace jsonifier::simd {
 	}
 
 	template<typename simd_int_t01, typename simd_int_t02, size_t... indices>
-	constexpr __m128x mm128ShuffleEpi8(const simd_int_t01& a, const simd_int_t02& b, std::index_sequence<indices...>) noexcept {
+	constexpr __m128x mm128ShuffleEpi8(const simd_int_t01& a, const simd_int_t02& b, jsonifier::internal::index_sequence<indices...>) noexcept {
 		__m128x result{};
 		size_t index{};
 		(((index = b.m128x_uint8[indices] & 0x0F), (result.m128x_uint8[indices] = a.m128x_uint8[index])), ...);

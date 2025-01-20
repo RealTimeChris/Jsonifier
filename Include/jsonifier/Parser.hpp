@@ -71,7 +71,7 @@ namespace jsonifier::internal {
 	};
 
 	template<typename value_type>
-	concept partial_reading_context_t = requires(std::remove_cvref_t<value_type> value) {
+	concept partial_reading_context_t = requires(jsonifier::internal::remove_cvref_t<value_type> value) {
 		{ value.getState() } -> std::same_as<bool>;
 	};
 
@@ -134,9 +134,9 @@ namespace jsonifier::internal {
 	}
 
 	template<typename value_type, size_t currentIndex = 0> constexpr size_t countTotalNonRepeatedMembers(size_t currentCount = 1) {
-		if constexpr (currentIndex < tuple_size_v<core_tuple_type<value_type>>) {
-			constexpr auto newSubTuple = internal::get<currentIndex>(core<std::remove_cvref_t<value_type>>::parseValue);
-			using member_type		   = typename std::remove_cvref_t<decltype(newSubTuple)>::member_type;
+		if constexpr (currentIndex < core_tuple_size<value_type>) {
+			constexpr auto newSubTuple = internal::get<currentIndex>(core<jsonifier::internal::remove_cvref_t<value_type>>::parseValue);
+			using member_type		   = typename jsonifier::internal::remove_cvref_t<decltype(newSubTuple)>::member_type;
 			if constexpr (concepts::jsonifier_object_t<member_type>) {
 				currentCount += countTotalNonRepeatedMembers<member_type>();
 			}
@@ -319,17 +319,17 @@ namespace jsonifier::internal {
 				}
 				if constexpr (options.validateJson) {
 					if (!derivedRef.validateJson(in)) {
-						return std::remove_cvref_t<value_type>{};
+						return jsonifier::internal::remove_cvref_t<value_type>{};
 					}
 				}
 				derivedRef.errors.clear();
 				if JSONIFIER_UNLIKELY (!context.iter) {
 					reportError<parse_errors::No_Input>(context);
-					return std::remove_cvref_t<value_type>{};
+					return jsonifier::internal::remove_cvref_t<value_type>{};
 				}
 				value_type object{};
 				parse<getJsonType<value_type>(), optionsNew, areWeInsideRepeated<value_type>()>::template impl<buffer_type>(object, context);
-				return derivedRef.errors.size() > 0 ? std::remove_cvref_t<value_type>{} : object;
+				return derivedRef.errors.size() > 0 ? jsonifier::internal::remove_cvref_t<value_type>{} : object;
 			} else {
 				static constexpr parse_options optionsNew{ options };
 				parse_context<derived_type, string_view_ptr> context{};
@@ -343,20 +343,20 @@ namespace jsonifier::internal {
 				}
 				if constexpr (options.validateJson) {
 					if (!derivedRef.validateJson(in)) {
-						return std::remove_cvref_t<value_type>{};
+						return jsonifier::internal::remove_cvref_t<value_type>{};
 					}
 				}
 				derivedRef.errors.clear();
 				if JSONIFIER_UNLIKELY (!context.iter) {
 					reportError<parse_errors::No_Input>(context);
-					return std::remove_cvref_t<value_type>{};
+					return jsonifier::internal::remove_cvref_t<value_type>{};
 				}
 				value_type object{};
 				parse<getJsonType<value_type>(), optionsNew, options.minified>::template impl<buffer_type>(object, context);
-				return (context.currentObjectDepth != 0) ? (reportError<parse_errors::Imbalanced_Object_Braces>(context), std::remove_cvref_t<value_type>{})
-					: (context.currentArrayDepth != 0)	 ? (reportError<parse_errors::Imbalanced_Array_Brackets>(context), std::remove_cvref_t<value_type>{})
-					: (context.iter < context.endIter && !optionsNew.partialRead) ? (reportError<parse_errors::Unfinished_Input>(context), std::remove_cvref_t<value_type>{})
-					: derivedRef.errors.size() > 0								  ? std::remove_cvref_t<value_type>{}
+				return (context.currentObjectDepth != 0) ? (reportError<parse_errors::Imbalanced_Object_Braces>(context), jsonifier::internal::remove_cvref_t<value_type>{})
+					: (context.currentArrayDepth != 0)	 ? (reportError<parse_errors::Imbalanced_Array_Brackets>(context), jsonifier::internal::remove_cvref_t<value_type>{})
+					: (context.iter < context.endIter && !optionsNew.partialRead) ? (reportError<parse_errors::Unfinished_Input>(context), jsonifier::internal::remove_cvref_t<value_type>{})
+					: derivedRef.errors.size() > 0								  ? jsonifier::internal::remove_cvref_t<value_type>{}
 																				  : object;
 			}
 		}

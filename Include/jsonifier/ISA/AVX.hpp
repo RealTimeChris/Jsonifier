@@ -43,13 +43,13 @@ namespace jsonifier::simd {
 	}
 
 	template<simd_int_128_type simd_int_type_new, typename char_t>
-		requires(sizeof(std::remove_cvref_t<char_t>) == 8)
+		requires(sizeof(char_t) == 8)
 	JSONIFIER_INLINE simd_int_type_new gatherValue(const char_t str) noexcept {
 		return _mm_set1_epi64x(static_cast<const int64_t>(str));
 	}
 
 	template<simd_int_128_type simd_int_type_new, typename char_t>
-		requires(sizeof(std::remove_cvref_t<char_t>) == 1)
+		requires(sizeof(char_t) == 1)
 	JSONIFIER_INLINE simd_int_type_new gatherValue(const char_t str) noexcept {
 		return _mm_set1_epi8(static_cast<const char>(str));
 	}
@@ -133,13 +133,13 @@ namespace jsonifier::simd {
 	}
 
 	template<simd_int_256_type simd_int_type_new, typename char_t>
-		requires(sizeof(std::remove_cvref_t<char_t>) == 8)
+		requires(sizeof(char_t) == 8)
 	JSONIFIER_INLINE simd_int_type_new gatherValue(const char_t value) noexcept {
 		return _mm256_set1_epi64x(static_cast<const int64_t>(value));
 	}
 
 	template<simd_int_256_type simd_int_type_new, typename char_t>
-		requires(sizeof(std::remove_cvref_t<char_t>) == 1)
+		requires(sizeof(char_t) == 1)
 	JSONIFIER_INLINE simd_int_type_new gatherValue(const char_t value) noexcept {
 		return _mm256_set1_epi8(static_cast<const char>(value));
 	}
@@ -223,13 +223,13 @@ namespace jsonifier::simd {
 	}
 
 	template<simd_int_512_type simd_int_type_new, typename char_t>
-		requires(sizeof(std::remove_cvref_t<char_t>) == 8)
+		requires(sizeof(char_t) == 8)
 	JSONIFIER_INLINE simd_int_type_new gatherValue(const char_t value) noexcept {
 		return _mm512_set1_epi64(static_cast<const int64_t>(value));
 	}
 
 	template<simd_int_512_type simd_int_type_new, typename char_t>
-		requires(sizeof(std::remove_cvref_t<char_t>) == 1)
+		requires(sizeof(char_t) == 1)
 	JSONIFIER_INLINE simd_int_type_new gatherValue(const char_t value) noexcept {
 		return _mm512_set1_epi8(static_cast<const char>(value));
 	}

@@ -51,28 +51,28 @@ namespace jsonifier::internal {
 	template<serialize_options options, typename json_entity_type> struct serialize {
 		template<typename value_type, typename context_type> JSONIFIER_INLINE static void impl(value_type&& value, context_type&& context) noexcept {
 			if constexpr (concepts::json_object_t<value_type>) {
-				object_val_serializer<std::remove_cvref_t<value_type>, context_type, options, json_entity_type>::impl(internal::forward<value_type>(value),
+				object_val_serializer<jsonifier::internal::remove_cvref_t<value_type>, context_type, options, json_entity_type>::impl(internal::forward<value_type>(value),
 					internal::forward<context_type>(context));
 			} else if constexpr (concepts::json_array_t<value_type>) {
-				array_val_serializer<std::remove_cvref_t<value_type>, context_type, options, json_entity_type>::impl(internal::forward<value_type>(value),
+				array_val_serializer<jsonifier::internal::remove_cvref_t<value_type>, context_type, options, json_entity_type>::impl(internal::forward<value_type>(value),
 					internal::forward<context_type>(context));
 			} else if constexpr (concepts::json_string_t<value_type>) {
-				string_val_serializer<std::remove_cvref_t<value_type>, context_type, options, json_entity_type>::impl(internal::forward<value_type>(value),
+				string_val_serializer<jsonifier::internal::remove_cvref_t<value_type>, context_type, options, json_entity_type>::impl(internal::forward<value_type>(value),
 					internal::forward<context_type>(context));
 			} else if constexpr (concepts::json_number_t<value_type>) {
-				number_val_serializer<std::remove_cvref_t<value_type>, context_type, options, json_entity_type>::impl(internal::forward<value_type>(value),
+				number_val_serializer<jsonifier::internal::remove_cvref_t<value_type>, context_type, options, json_entity_type>::impl(internal::forward<value_type>(value),
 					internal::forward<context_type>(context));
 			} else if constexpr (concepts::json_bool_t<value_type>) {
-				bool_val_serializer<std::remove_cvref_t<value_type>, context_type, options, json_entity_type>::impl(internal::forward<value_type>(value),
+				bool_val_serializer<jsonifier::internal::remove_cvref_t<value_type>, context_type, options, json_entity_type>::impl(internal::forward<value_type>(value),
 					internal::forward<context_type>(context));
 			} else if constexpr (concepts::json_null_t<value_type>) {
-				null_val_serializer<std::remove_cvref_t<value_type>, context_type, options, json_entity_type>::impl(internal::forward<value_type>(value),
+				null_val_serializer<jsonifier::internal::remove_cvref_t<value_type>, context_type, options, json_entity_type>::impl(internal::forward<value_type>(value),
 					internal::forward<context_type>(context));
 			} else if constexpr (concepts::json_accessor_t<value_type>) {
-				accessor_val_serializer<std::remove_cvref_t<value_type>, context_type, options, json_entity_type>::impl(internal::forward<value_type>(value),
+				accessor_val_serializer<jsonifier::internal::remove_cvref_t<value_type>, context_type, options, json_entity_type>::impl(internal::forward<value_type>(value),
 					internal::forward<context_type>(context));
 			} else {
-				custom_val_serializer<std::remove_cvref_t<value_type>, context_type, options, json_entity_type>::impl(internal::forward<value_type>(value),
+				custom_val_serializer<jsonifier::internal::remove_cvref_t<value_type>, context_type, options, json_entity_type>::impl(internal::forward<value_type>(value),
 					internal::forward<context_type>(context));
 			}
 		}

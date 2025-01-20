@@ -28,11 +28,11 @@
 namespace jsonifier::internal {
 
 	template<typename value_type>
-	concept not_uint8_t = !std::same_as<std::remove_cvref_t<value_type>, uint8_t>;
+	concept not_uint8_t = !std::same_as<value_type, uint8_t>;
 
 	template<typename value_type> class char_traits;
 
-	template<not_uint8_t value_type> class char_traits<value_type> : public std::char_traits<std::remove_cvref_t<value_type>> {};
+	template<not_uint8_t value_type> class char_traits<value_type> : public std::char_traits<jsonifier::internal::remove_cvref_t<value_type>> {};
 
 	template<concepts::uns8_t value_type_new> class char_traits<value_type_new> {
 	  public:
@@ -146,7 +146,7 @@ namespace jsonifier {
 		}
 
 		template<concepts::string_t value_type_newer> JSONIFIER_INLINE string_base(value_type_newer&& other) noexcept : capacityVal{}, sizeVal{}, dataVal{} {
-			size_type newSize = other.size() * (sizeof(typename std::remove_cvref_t<value_type_newer>::value_type) / sizeof(value_type));
+			size_type newSize = other.size() * (sizeof(typename jsonifier::internal::remove_cvref_t<value_type_newer>::value_type) / sizeof(value_type));
 			if JSONIFIER_LIKELY (newSize > 0 && newSize < maxSize()) {
 				reserve(newSize);
 				sizeVal = newSize;

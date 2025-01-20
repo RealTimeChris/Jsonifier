@@ -38,6 +38,6 @@ jobs:
     - name: Run the Test
       run: |
             sudo chmod +x /usr/local/bin/Json-Performance
-            /usr/local/bin/Json-Performance
+            sudo /usr/local/bin/Json-Performance
       continue-on-error: true
       

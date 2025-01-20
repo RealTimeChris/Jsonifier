@@ -45,13 +45,13 @@ namespace jsonifier::simd {
 	}
 
 	template<simd_int_128_type simd_int_type_new, typename char_t>
-		requires(sizeof(std::remove_cvref_t<char_t>) == 8)
+		requires(sizeof(char_t) == 8)
 	JSONIFIER_INLINE simd_int_type_new gatherValue(char_t str) noexcept {
 		return mm128Set1Epi64x(static_cast<int64_t>(str));
 	}
 
 	template<simd_int_128_type simd_int_type_new, typename char_t>
-		requires(sizeof(std::remove_cvref_t<char_t>) == 1)
+		requires(sizeof(char_t) == 1)
 	JSONIFIER_INLINE simd_int_type_new gatherValue(char_t str) noexcept {
 		return mm128Set1Epi8(static_cast<char>(str));
 	}
@@ -87,7 +87,7 @@ namespace jsonifier::simd {
 	}
 
 	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02> JSONIFIER_INLINE auto opShuffle(const simd_int_t01& value, const simd_int_t02& other) noexcept {
-		return mm128ShuffleEpi8(value, other, std::make_index_sequence<16>{});
+		return mm128ShuffleEpi8(value, other, jsonifier::internal::make_index_sequence<16>{});
 	}
 
 	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02> JSONIFIER_INLINE auto opXor(const simd_int_t01& value, const simd_int_t02& other) noexcept {

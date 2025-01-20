@@ -39,7 +39,7 @@ namespace jsonifier {
 	template<typename value_type_new = char, concepts::num_t value_type01> JSONIFIER_INLINE string_base<value_type_new> toString(const value_type01& value) noexcept {
 		string_base<value_type_new> returnstring{};
 		returnstring.resize(64);
-		if constexpr (sizeof(std::remove_cvref_t<value_type01>) == 8) {
+		if constexpr (sizeof(value_type01) == 8) {
 			auto newPtr = internal::toChars(returnstring.data(), value);
 			returnstring.resize(static_cast<uint64_t>(newPtr - returnstring.data()));
 		} else {
@@ -118,7 +118,7 @@ namespace jsonifier {
 namespace jsonifier::internal {
 
 	template<typename value_type_new, typename iterator> JSONIFIER_INLINE bool parseNumber(value_type_new& value, iterator&& iter, iterator&& end) noexcept {
-		using value_type = std::remove_cvref_t<value_type_new>;
+		using value_type = value_type_new;
 
 		if constexpr (concepts::integer_t<value_type>) {
 			if constexpr (concepts::unsigned_t<value_type>) {

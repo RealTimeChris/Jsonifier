@@ -39,7 +39,7 @@ namespace jsonifier::internal {
 
 	template<serialize_options options, typename value_type> constexpr size_t getPaddingSize() noexcept {
 		if constexpr (concepts::jsonifier_object_t<value_type>) {
-			constexpr auto memberCount = tuple_size_v<core_tuple_type<value_type>>;
+			constexpr auto memberCount = core_tuple_size<value_type>;
 			constexpr auto newSize	   = []() constexpr {
 				size_t pair{};
 				constexpr auto sizeCollectLambda = [](const auto currentIndex, const auto maxIndex, auto& pairNew) {
@@ -73,32 +73,32 @@ namespace jsonifier::internal {
 		} else if constexpr (concepts::num_t<value_type>) {
 			return 24;
 		} else if constexpr (concepts::vector_t<value_type>) {
-			return 4 + getPaddingSize<options, typename std::remove_cvref_t<value_type>::value_type>();
+			return 4 + getPaddingSize<options, typename value_type::value_type>();
 		} else if constexpr (concepts::tuple_t<value_type>) {
-			constexpr auto accumulatePaddingSizesImpl = []<typename tuple, size_t... indices>(std::index_sequence<indices...>) noexcept {
+			constexpr auto accumulatePaddingSizesImpl = []<typename tuple, size_t... indices>(jsonifier::internal::index_sequence<indices...>) noexcept {
 				return (getPaddingSize<options, std::tuple_element_t<indices, tuple>>() + ... + 0);
 			};
 			constexpr auto accumulatePaddingSizes = []<typename tuple>(auto&& accumulatePaddingSizesImpl) {
-				return accumulatePaddingSizesImpl.template operator()<tuple>(std::make_index_sequence<tuple_size_v<tuple>>{});
+				return accumulatePaddingSizesImpl.template operator()<tuple>(jsonifier::internal::make_index_sequence<tuple_size_v<tuple>>{});
 			};
-			return accumulatePaddingSizes.template operator()<std::remove_cvref_t<value_type>>(accumulatePaddingSizesImpl);
+			return accumulatePaddingSizes.template operator()<value_type>(accumulatePaddingSizesImpl);
 		} else if constexpr (concepts::raw_array_t<value_type>) {
-			return 4 + getPaddingSize<options, typename std::remove_cvref_t<value_type>::value_type>();
+			return 4 + getPaddingSize<options, typename value_type::value_type>();
 		} else if constexpr (concepts::pointer_t<value_type>) {
-			return getPaddingSize<options, decltype(*std::remove_cvref_t<value_type>{})>();
+			return getPaddingSize<options, decltype(*value_type{})>();
 		} else if constexpr (concepts::unique_ptr_t<value_type>) {
-			return getPaddingSize<options, decltype(*std::remove_cvref_t<value_type>{})>();
+			return getPaddingSize<options, decltype(*value_type{})>();
 		} else if constexpr (concepts::shared_ptr_t<value_type>) {
-			return getPaddingSize<options, decltype(*std::remove_cvref_t<value_type>{})>();
+			return getPaddingSize<options, decltype(*value_type{})>();
 		} else if constexpr (concepts::map_t<value_type>) {
-			return 12 + getPaddingSize<options, typename std::remove_cvref_t<value_type>::mapped_type>() +
-				getPaddingSize<options, typename std::remove_cvref_t<value_type>::key_type>();
+			return 12 + getPaddingSize<options, typename value_type::mapped_type>() +
+				getPaddingSize<options, typename value_type::key_type>();
 		} else if constexpr (concepts::string_t<value_type>) {
 			return 2;
 		} else if constexpr (concepts::char_t<value_type>) {
 			return 2;
 		} else if constexpr (concepts::optional_t<value_type>) {
-			return getPaddingSize<options, typename std::remove_cvref_t<value_type>::value_type>();
+			return getPaddingSize<options, typename value_type::value_type>();
 		} else if constexpr (concepts::always_null_t<value_type>) {
 			return 4;
 		} else {
@@ -190,11 +190,11 @@ namespace jsonifier::internal {
 	/// @tparam serialize_entity_pre The pre-processed serialize entity type.
 	/// @tparam index The index of the entity within its parent object.
 	template<serialize_options options, typename serialize_entity_pre, size_t index> struct construct_serialize_entity {
-		using serialize_entity_pre_type = std::remove_cvref_t<serialize_entity_pre>;
+		using serialize_entity_pre_type = serialize_entity_pre;
 		using class_pointer_t			= typename serialize_entity_pre_type::class_type;
 
 		/// @brief The finalized JSON entity type after construction.
-		using type = json_entity<serialize_entity_pre_type::memberPtr, serialize_entity_pre_type::name, index, tuple_size_v<core_tuple_type<class_pointer_t>>>;
+		using type = json_entity<serialize_entity_pre_type::memberPtr, serialize_entity_pre_type::name, index, core_tuple_size<class_pointer_t>>;
 	};
 
 	/// @brief A template struct for retrieving serialized entities.
@@ -207,16 +207,16 @@ namespace jsonifier::internal {
 	/// @tparam options The serialization options.
 	/// @tparam value_type The type of the object being serialized.
 	/// @tparam I Variadic indices for iteration.
-	template<serialize_options options, typename value_type, size_t... I> struct get_serialize_entities<options, value_type, std::index_sequence<I...>> {
+	template<serialize_options options, typename value_type, size_t... I> struct get_serialize_entities<options, value_type, jsonifier::internal::index_sequence<I...>> {
 		/// @brief The type of serialized entities after processing all indices.
-		using type = serialize_entities<options, typename construct_serialize_entity<options, tuple_element_t<I, std::remove_cvref_t<core_tuple_type<value_type>>>, I>::type...>;
+		using type = serialize_entities<options, typename construct_serialize_entity<options, tuple_element_t<I, jsonifier::internal::remove_cvref_t<core_tuple_type<value_type>>>, I>::type...>;
 	};
 
 	/// @brief A type alias for serialized entities.
 	/// @tparam options The serialization options.
 	/// @tparam value_type The type of the object being serialized.
 	template<serialize_options options, typename value_type> using serialize_entities_t =
-		typename get_serialize_entities<options, value_type, std::make_index_sequence<tuple_size_v<core_tuple_type<value_type>>>>::type;
+		typename get_serialize_entities<options, value_type, jsonifier::internal::make_index_sequence<core_tuple_size<value_type>>>::type;
 
 	template<concepts::jsonifier_object_t value_type, typename context_type, serialize_options options, typename json_entity_type>
 	struct object_val_serializer<value_type, context_type, options, json_entity_type> {
@@ -225,8 +225,8 @@ namespace jsonifier::internal {
 		alignas(2) static constexpr char packedValues03[]{ ",\n" };
 		alignas(2) static constexpr char packedValues04[]{ "{}" };
 		template<concepts::jsonifier_object_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
-			static constexpr auto memberCount{ tuple_size_v<core_tuple_type<value_type>> };
-			static constexpr auto paddingSize{ getPaddingSize<options, std::remove_cvref_t<value_type>>() * 4 };
+			static constexpr auto memberCount{ core_tuple_size<value_type> };
+			static constexpr auto paddingSize{ getPaddingSize<options, value_type>() * 4 };
 
 			if constexpr (memberCount > 0) {
 				if constexpr (options.prettify) {
@@ -277,7 +277,7 @@ namespace jsonifier::internal {
 		alignas(2) static constexpr char packedValues04[]{ "{}" };
 		template<concepts::map_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
 			const auto newSize = value.size();
-			static constexpr auto paddingSize{ getPaddingSize<options, typename std::remove_cvref_t<value_type>::mapped_type>() };
+			static constexpr auto paddingSize{ getPaddingSize<options, typename value_type::mapped_type>() };
 
 			if JSONIFIER_LIKELY (newSize > 0) {
 				if constexpr (options.prettify) {
@@ -356,7 +356,7 @@ namespace jsonifier::internal {
 		alignas(2) static constexpr char packedValues02[]{ ",\n" };
 		alignas(2) static constexpr char packedValues03[]{ "{}" };
 		template<concepts::tuple_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
-			static constexpr auto additionalSize{ getPaddingSize<options, std::remove_cvref_t<value_type>>() };
+			static constexpr auto additionalSize{ getPaddingSize<options, value_type>() };
 			context.index = static_cast<size_t>(context.bufferPtr - context.buffer.data());
 			if (context.buffer.size() <= context.index + additionalSize) {
 				context.buffer.resize((context.index + additionalSize) * 4);
@@ -420,7 +420,7 @@ namespace jsonifier::internal {
 		alignas(2) static constexpr char packedValues03[]{ "[]" };
 		template<concepts::vector_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
 			const auto newSize = value.size();
-			static constexpr auto paddingSize{ getPaddingSize<options, typename std::remove_cvref_t<value_type>::value_type>() };
+			static constexpr auto paddingSize{ getPaddingSize<options, typename value_type::value_type>() };
 			if JSONIFIER_LIKELY (newSize > 0) {
 				if constexpr (options.prettify) {
 					const auto additionalSize = newSize * (paddingSize + context.indent) * 4;
@@ -483,7 +483,7 @@ namespace jsonifier::internal {
 		template<template<typename, size_t> typename value_type_new, typename value_type_internal, size_t size>
 		JSONIFIER_INLINE static void impl(const value_type_new<value_type_internal, size>& value, context_type& context) noexcept {
 			constexpr auto newSize = size;
-			static constexpr auto paddingSize{ getPaddingSize<options, typename std::remove_cvref_t<value_type_new<value_type_internal, size>>::value_type>() };
+			static constexpr auto paddingSize{ getPaddingSize<options, typename value_type_new<value_type_internal, size>::value_type>() };
 			if constexpr (newSize > 0) {
 				if constexpr (options.prettify) {
 					const auto additionalSize = newSize * (paddingSize + context.indent);
@@ -543,7 +543,7 @@ namespace jsonifier::internal {
 		alignas(2) static constexpr char packedValues01[]{ "\"\"" };
 		template<concepts::string_t value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
 			const auto newSize = value.size();
-			static constexpr auto paddingSize{ getPaddingSize<options, typename std::remove_cvref_t<value_type>::value_type>() };
+			static constexpr auto paddingSize{ getPaddingSize<options, typename value_type::value_type>() };
 			if (newSize > 0) {
 				if constexpr (options.prettify) {
 					const auto additionalSize = newSize * (paddingSize + context.indent);
