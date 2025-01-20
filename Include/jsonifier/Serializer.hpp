@@ -32,49 +32,12 @@ namespace jsonifier::internal {
 
 	enum class serialize_errors { Success = 0 };
 
-	template<typename value_type, typename context_type, serialize_options optionsNew, typename json_entity_type> struct object_val_serializer;
-
-	template<typename value_type, typename context_type, serialize_options optionsNew, typename json_entity_type> struct array_val_serializer;
-
-	template<typename value_type, typename context_type, serialize_options optionsNew, typename json_entity_type> struct string_val_serializer;
-
-	template<typename value_type, typename context_type, serialize_options optionsNew, typename json_entity_type> struct number_val_serializer;
-
-	template<typename value_type, typename context_type, serialize_options optionsNew, typename json_entity_type> struct bool_val_serializer;
-
-	template<typename value_type, typename context_type, serialize_options optionsNew, typename json_entity_type> struct null_val_serializer;
-
-	template<typename value_type, typename context_type, serialize_options optionsNew, typename json_entity_type> struct accessor_val_serializer;
-
-	template<typename value_type, typename context_type, serialize_options optionsNew, typename json_entity_type> struct custom_val_serializer;
+	template<typename value_type, typename context_type, serialize_options optionsNew, typename json_entity_type> struct serialize_impl;
 
 	template<serialize_options options, typename json_entity_type> struct serialize {
-		template<typename value_type, typename context_type> JSONIFIER_INLINE static void impl(value_type&& value, context_type&& context) noexcept {
-			if constexpr (concepts::json_object_t<value_type>) {
-				object_val_serializer<jsonifier::internal::remove_cvref_t<value_type>, context_type, options, json_entity_type>::impl(internal::forward<value_type>(value),
-					internal::forward<context_type>(context));
-			} else if constexpr (concepts::json_array_t<value_type>) {
-				array_val_serializer<jsonifier::internal::remove_cvref_t<value_type>, context_type, options, json_entity_type>::impl(internal::forward<value_type>(value),
-					internal::forward<context_type>(context));
-			} else if constexpr (concepts::json_string_t<value_type>) {
-				string_val_serializer<jsonifier::internal::remove_cvref_t<value_type>, context_type, options, json_entity_type>::impl(internal::forward<value_type>(value),
-					internal::forward<context_type>(context));
-			} else if constexpr (concepts::json_number_t<value_type>) {
-				number_val_serializer<jsonifier::internal::remove_cvref_t<value_type>, context_type, options, json_entity_type>::impl(internal::forward<value_type>(value),
-					internal::forward<context_type>(context));
-			} else if constexpr (concepts::json_bool_t<value_type>) {
-				bool_val_serializer<jsonifier::internal::remove_cvref_t<value_type>, context_type, options, json_entity_type>::impl(internal::forward<value_type>(value),
-					internal::forward<context_type>(context));
-			} else if constexpr (concepts::json_null_t<value_type>) {
-				null_val_serializer<jsonifier::internal::remove_cvref_t<value_type>, context_type, options, json_entity_type>::impl(internal::forward<value_type>(value),
-					internal::forward<context_type>(context));
-			} else if constexpr (concepts::json_accessor_t<value_type>) {
-				accessor_val_serializer<jsonifier::internal::remove_cvref_t<value_type>, context_type, options, json_entity_type>::impl(internal::forward<value_type>(value),
-					internal::forward<context_type>(context));
-			} else {
-				custom_val_serializer<jsonifier::internal::remove_cvref_t<value_type>, context_type, options, json_entity_type>::impl(internal::forward<value_type>(value),
-					internal::forward<context_type>(context));
-			}
+		template<typename value_type_new, typename context_type> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type&& context) noexcept {
+			using value_type = remove_cvref_t<value_type_new>;
+			serialize_impl<value_type, context_type, options, json_entity_type>::impl(internal::forward<value_type_new>(value), internal::forward<context_type>(context));
 		}
 	};
 

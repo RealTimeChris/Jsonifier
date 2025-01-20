@@ -137,7 +137,7 @@ namespace jsonifier::internal {
 				}
 			}
 		} else {
-			if constexpr (std::is_volatile_v<std::remove_reference_t<decltype(value)>>) {
+			if constexpr (std::is_volatile_v<jsonifier::internal::remove_reference_t<decltype(value)>>) {
 				double temp;
 				return parseFloat(temp, iter, end) ? (value = static_cast<value_type>(temp), true) : false;
 			} else {

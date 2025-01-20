@@ -23,6 +23,7 @@
 /// Feb 3, 2023
 #pragma once
 
+#include <jsonifier/Config.hpp>
 #include <cstdint>
 
 namespace jsonifier::internal {
@@ -45,28 +46,31 @@ namespace jsonifier::internal {
 
 	template<typename value_type> using remove_cv_t = typename remove_cv<value_type>::type;
 
+	template<typename value_type> struct remove_pointer {
+		using type = value_type;
+	};
+
+	template<typename value_type> struct remove_pointer<value_type*> {
+		using type = value_type;
+	};
+
+	template<typename value_type> using remove_pointer_t = typename remove_pointer<value_type>::type;
 
 	template<typename value_type> struct remove_reference {
-		using type				   = value_type;
+		using type = value_type;
 	};
 
 	template<typename value_type> struct remove_reference<value_type&> {
-		using type				   = value_type;
+		using type = value_type;
 	};
 
 	template<typename value_type> struct remove_reference<value_type&&> {
-		using type				   = value_type;
+		using type = value_type;
 	};
 
 	template<typename value_type> using remove_reference_t = typename remove_reference<value_type>::type;
 
-	template<typename value_type> using _Remove_cvref_t = remove_cv_t<remove_reference_t<value_type>>;
-
-	template<typename value_type> using remove_cvref_t = _Remove_cvref_t<value_type>;
-
-	template<typename value_type> struct remove_cvref {
-		using type = remove_cvref_t<value_type>;
-	};
+	template<typename value_type> using remove_cvref_t = remove_cv_t<remove_reference_t<value_type>>;
 
 	template<size_t... indices> struct index_sequence {};
 
@@ -81,5 +85,32 @@ namespace jsonifier::internal {
 	};
 
 	template<size_t N> using make_index_sequence = typename make_index_sequence_impl<N, index_sequence<>>::type;
+
+	template<class value_type_new, value_type_new valueNew> struct integral_constant {
+		static constexpr value_type_new value = valueNew;
+
+		using value_type = value_type_new;
+		using type		 = integral_constant;
+
+		JSONIFIER_INLINE constexpr operator value_type() const noexcept {
+			return value;
+		}
+
+		JSONIFIER_INLINE constexpr value_type operator()() const noexcept {
+			return value;
+		}
+	};
+
+	template<bool condition, typename type01, typename type02> struct conditional;
+
+	template<typename type01, typename type02> struct conditional<true, type01, type02> {
+		using type = type01;
+	};
+
+	template<typename type01, typename type02> struct conditional<false, type01, type02> {
+		using type = type02;
+	};
+
+	template<bool condition, typename type01, typename type02> using conditional_t = conditional<condition, type01, type02>::type;
 
 }

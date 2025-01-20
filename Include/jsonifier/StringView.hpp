@@ -212,7 +212,7 @@ namespace jsonifier {
 
 		template<concepts::pointer_t value_type_newer>
 		JSONIFIER_INLINE constexpr friend std::enable_if_t<!std::is_array_v<value_type_newer>, bool> operator==(const string_view_base& lhs, const value_type_newer& rhs) noexcept {
-			auto rhsLength = internal::char_traits<std::remove_pointer_t<value_type_newer>>::length(rhs);
+			auto rhsLength = internal::char_traits<jsonifier::internal::remove_pointer_t<value_type_newer>>::length(rhs);
 			return rhsLength == lhs.size() && internal::comparison::compare(lhs.data(), rhs, rhsLength);
 		}
 
@@ -248,14 +248,14 @@ namespace jsonifier {
 
 		template<concepts::pointer_t string_type_newer>
 		JSONIFIER_INLINE constexpr friend string_base<string_type_newer> operator+(string_type_newer&& lhs, const string_view_base& rhs) noexcept {
-			string_base<std::remove_pointer_t<string_type_newer>> newLhs{ lhs };
+			string_base<jsonifier::internal::remove_pointer_t<string_type_newer>> newLhs{ lhs };
 			newLhs += rhs;
 			return newLhs;
 		}
 
 		template<concepts::pointer_t string_type_newer>
 		JSONIFIER_INLINE constexpr friend string_base<string_type_newer> operator+=(string_type_newer&& lhs, const string_view_base& rhs) noexcept {
-			string_base<std::remove_pointer_t<string_type_newer>> newLhs{ lhs };
+			string_base<jsonifier::internal::remove_pointer_t<string_type_newer>> newLhs{ lhs };
 			newLhs += rhs;
 			return newLhs;
 		}

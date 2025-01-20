@@ -107,7 +107,7 @@ namespace jsonifier::internal {
 	};
 
 	template<size_t size> struct get_int_type_for_length {
-		using type = std::conditional_t<(size >= 5), uint64_t, std::conditional_t<(size > 3 && size < 6), uint32_t, std::conditional_t<(size > 1 && size < 4), uint16_t, uint8_t>>>;
+		using type = jsonifier::internal::conditional_t<(size >= 5), uint64_t, jsonifier::internal::conditional_t<(size > 3 && size < 6), uint32_t, jsonifier::internal::conditional_t<(size > 1 && size < 4), uint16_t, uint8_t>>>;
 	};
 
 	template<size_t size> using get_int_type_for_length_t = get_int_type_for_length<size>::type;

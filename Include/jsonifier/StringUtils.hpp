@@ -779,8 +779,8 @@ namespace jsonifier::internal {
 
 	template<uint64_t length> struct convert_length_to_int {
 		static_assert(length <= 8, "Sorry, but that string is too int64_t!");
-		using type = std::conditional_t<length == 1, uint8_t,
-			std::conditional_t<length <= 2, uint16_t, std::conditional_t<length <= 4, uint32_t, std::conditional_t<length <= 8, uint64_t, void>>>>;
+		using type = jsonifier::internal::conditional_t<length == 1, uint8_t,
+			jsonifier::internal::conditional_t<length <= 2, uint16_t, jsonifier::internal::conditional_t<length <= 4, uint32_t, jsonifier::internal::conditional_t<length <= 8, uint64_t, void>>>>;
 	};
 
 	template<uint64_t length> using convert_length_to_int_t = typename convert_length_to_int<length>::type;
@@ -861,8 +861,8 @@ namespace jsonifier::internal {
 		return returnValues;
 	}();
 
-	template<const auto options, typename parse_context_type> struct derailleur {
-		template<typename value_type> JSONIFIER_INLINE static bool parseString(value_type& value, parse_context_type& context) noexcept {
+	template<const auto options, typename context_type> struct derailleur {
+		template<typename value_type> JSONIFIER_INLINE static bool parseString(value_type& value, context_type& context) noexcept {
 			if constexpr (options.partialRead) {
 				if JSONIFIER_LIKELY ((context.iter < context.endIter) && **context.iter == '"') {
 					auto newerPtr	  = (*context.iter) + 1;
@@ -916,7 +916,7 @@ namespace jsonifier::internal {
 			}
 		}
 
-		JSONIFIER_INLINE static void skipString(parse_context_type& context) noexcept {
+		JSONIFIER_INLINE static void skipString(context_type& context) noexcept {
 			if constexpr (options.partialRead) {
 				++context.iter;
 			} else {
@@ -926,7 +926,7 @@ namespace jsonifier::internal {
 			}
 		}
 
-		template<typename value_type> JSONIFIER_INLINE static void skipKey(parse_context_type& context) noexcept {
+		template<typename value_type> JSONIFIER_INLINE static void skipKey(context_type& context) noexcept {
 			if constexpr (options.partialRead) {
 				++context.iter;
 			} else {
@@ -936,7 +936,7 @@ namespace jsonifier::internal {
 			}
 		}
 
-		template<typename value_type> JSONIFIER_INLINE static void skipKeyStarted(parse_context_type& context) noexcept {
+		template<typename value_type> JSONIFIER_INLINE static void skipKeyStarted(context_type& context) noexcept {
 			if constexpr (options.partialRead) {
 				++context.iter;
 			} else {
@@ -945,19 +945,19 @@ namespace jsonifier::internal {
 			}
 		}
 
-		JSONIFIER_INLINE static void skipNumber(parse_context_type& context) noexcept {
+		JSONIFIER_INLINE static void skipNumber(context_type& context) noexcept {
 			while (numericTable[uint8_t(*context.iter)]) {
 				++context.iter;
 			}
 		}
 
-		template<char start, char end> JSONIFIER_INLINE static string_view_ptr getNextOpenOrClose(parse_context_type& context, uint64_t length) {
+		template<char start, char end> JSONIFIER_INLINE static string_view_ptr getNextOpenOrClose(context_type& context, uint64_t length) {
 			string_view_ptr nextOpen  = char_comparison<start, char>::memchar(context.iter, length);
 			string_view_ptr nextClose = char_comparison<end, char>::memchar(context.iter, length);
 			return (nextClose && (nextClose < nextOpen || !nextOpen)) ? nextClose : nextOpen;
 		}
 
-		template<char valueStart, char valueEnd> JSONIFIER_INLINE static void skipToEndOfValue(parse_context_type& context) {
+		template<char valueStart, char valueEnd> JSONIFIER_INLINE static void skipToEndOfValue(context_type& context) {
 			if constexpr (options.partialRead) {
 				uint64_t depth{ 1 };
 				while (depth > 0 && context.iter < context.endIter) {
@@ -1009,7 +1009,7 @@ namespace jsonifier::internal {
 			}
 		}
 
-		static void skipObject(parse_context_type& context) noexcept {
+		static void skipObject(context_type& context) noexcept {
 			if constexpr (options.partialRead) {
 				++context.iter;
 				uint64_t currentDepth{ 1 };
@@ -1090,7 +1090,7 @@ namespace jsonifier::internal {
 			}
 		}
 
-		static void skipArray(parse_context_type& context) noexcept {
+		static void skipArray(context_type& context) noexcept {
 			if constexpr (options.partialRead) {
 				++context.iter;
 				uint64_t currentDepth{ 1 };
@@ -1143,7 +1143,7 @@ namespace jsonifier::internal {
 			}
 		}
 
-		static void skipToNextValue(parse_context_type& context) noexcept {
+		static void skipToNextValue(context_type& context) noexcept {
 			if constexpr (options.partialRead) {
 				switch (**context.iter) {
 					case '{': {

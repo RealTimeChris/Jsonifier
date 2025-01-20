@@ -23,7 +23,7 @@ jobs:
       run:  |
             sudo apt update && sudo apt upgrade
             wget https://apt.llvm.org/llvm.sh
-            chmod u+x llvm.sh
+            sudo chmod u+x llvm.sh
             sudo ./llvm.sh 20
 
     - name: Install Seaborn
@@ -33,12 +33,12 @@ jobs:
     - name: Configure CMake
       working-directory: ./
       run: |
-           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/usr/bin/clang++-20 -DJSONIFIER_TEST=TRUE -DUBSAN=TRUE
+           sudo cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/usr/bin/clang++-20 -DJSONIFIER_TEST=TRUE -DUBSAN=TRUE
 
     - name: Build the Test
       working-directory: ./Build
       run: |
-           cmake --build . --config=${{matrix.build_type}}
+           sudo cmake --build . --config=${{matrix.build_type}}
 
     - name: Install the Test
       working-directory: ./Build
@@ -48,6 +48,6 @@ jobs:
     - name: Run the Test
       working-directory: ./Build/Benchmarks
       run: |
-           ./Json-Performance
+           sudo ./Json-Performance
       continue-on-error: true
       

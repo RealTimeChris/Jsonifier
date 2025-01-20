@@ -78,7 +78,7 @@ namespace jsonifier::internal {
 
 	template<typename value_type> using type_t = typename value_type::type;
 
-	template<size_t I> using tag = std::integral_constant<size_t, I>;
+	template<size_t I> using tag = jsonifier::internal::integral_constant<size_t, I>;
 
 	template<typename tup> using base_list_t = typename std::decay_t<tup>::base_list;
 
@@ -196,16 +196,16 @@ namespace jsonifier::internal {
 
 	template<size_t I, typename tuple_type> using tuple_element_t = typename tuple_element<I, tuple_type>::type;
 
-	template<typename... value_type> struct tuple_size<tuple<value_type...>> : std::integral_constant<size_t, sizeof...(value_type)> {};
+	template<typename... value_type> struct tuple_size<tuple<value_type...>> : jsonifier::internal::integral_constant<size_t, sizeof...(value_type)> {};
 
-	template<typename... value_type> struct tuple_size<std::tuple<value_type...>> : std::integral_constant<size_t, sizeof...(value_type)> {};
+	template<typename... value_type> struct tuple_size<std::tuple<value_type...>> : jsonifier::internal::integral_constant<size_t, sizeof...(value_type)> {};
 
 	template<typename... value_type> static constexpr auto tuple_size_v = tuple_size<jsonifier::internal::remove_cvref_t<value_type>...>::value;
 }
 
 namespace std {
 
-	template<typename... value_type> struct tuple_size<jsonifier::internal::tuple<value_type...>> : std::integral_constant<size_t, sizeof...(value_type)> {};
+	template<typename... value_type> struct tuple_size<jsonifier::internal::tuple<value_type...>> : jsonifier::internal::integral_constant<size_t, sizeof...(value_type)> {};
 
 	template<size_t I, typename... value_type> struct tuple_element<I, jsonifier::internal::tuple<value_type...>> {
 		using type = decltype(jsonifier::internal::tuple<value_type...>::decl_elem(jsonifier::internal::tag<I>()));

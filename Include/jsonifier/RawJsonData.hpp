@@ -206,24 +206,24 @@ namespace jsonifier {
 				switch (jsonDataNew[0]) {
 					case '{': {
 						std::unique_ptr<typename raw_json_data::object_type> results{ std::make_unique<typename raw_json_data::object_type>() };
-						internal::parse_context<typename parser_type::derived_type, string_view_ptr> testContext{};
-						testContext.parserPtr = &parser;
-						testContext.rootIter  = jsonDataNew.data();
-						testContext.endIter	  = jsonDataNew.data() + jsonDataNew.size();
-						testContext.iter	  = jsonDataNew.data();
-						internal::object_val_parser<string, internal::parse_context<typename parser_type::derived_type, string_view_ptr>, optionsNew, false>::impl(*results,
-							testContext);
+						internal::parse_context<typename parser_type::derived_type, string_view_ptr> context{};
+						context.parserPtr = &parser;
+						context.rootIter  = jsonDataNew.data();
+						context.endIter	  = jsonDataNew.data() + jsonDataNew.size();
+						context.iter	  = jsonDataNew.data();
+						internal::parse_impl<typename raw_json_data::object_type, string, internal::parse_context<typename parser_type::derived_type, string_view_ptr>, optionsNew,
+							false>::impl(*results, context);
 						return results;
 					}
 					case '[': {
 						std::unique_ptr<typename raw_json_data::array_type> results{ std::make_unique<typename raw_json_data::array_type>() };
-						internal::parse_context<typename parser_type::derived_type, string_view_ptr> testContext{};
-						testContext.parserPtr = &parser;
-						testContext.rootIter  = jsonDataNew.data();
-						testContext.endIter	  = jsonDataNew.data() + jsonDataNew.size();
-						testContext.iter	  = jsonDataNew.data();
-						internal::array_val_parser<string, internal::parse_context<typename parser_type::derived_type, string_view_ptr>, optionsNew, false>::impl(*results,
-							testContext);
+						internal::parse_context<typename parser_type::derived_type, string_view_ptr> context{};
+						context.parserPtr = &parser;
+						context.rootIter  = jsonDataNew.data();
+						context.endIter	  = jsonDataNew.data() + jsonDataNew.size();
+						context.iter	  = jsonDataNew.data();
+						internal::parse_impl<typename raw_json_data::array_type, string, internal::parse_context<typename parser_type::derived_type, string_view_ptr>, optionsNew,
+							false>::impl(*results, context);
 						return results;
 					}
 					case '"': {

@@ -115,7 +115,7 @@ namespace jsonifier::internal {
 		static_assert(std::numeric_limits<value_type>::radix == 2);
 		static_assert(std::same_as<float, value_type> || std::same_as<double, value_type>);
 		static_assert(sizeof(float) == 4 && sizeof(double) == 8);
-		using raw_type				  = std::conditional_t<std::same_as<float, value_type>, uint32_t, uint64_t>;
+		using raw_type				  = jsonifier::internal::conditional_t<std::same_as<float, value_type>, uint32_t, uint64_t>;
 		static constexpr auto zeroNew = value_type(0.0);
 		if (value != zeroNew) {
 			using conversion_traits				   = jsonifier_jkj::dragonbox::default_float_bit_carrier_conversion_traits<value_type>;

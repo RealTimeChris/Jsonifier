@@ -32,11 +32,11 @@ jobs:
 
     - name: Configure CMake
       run: |
-           cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/usr/bin/clang++-20 -DJSONIFIER_BENCHMARKS="TRUE"
+           sudo cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_CXX_COMPILER=/usr/bin/clang++-20 -DJSONIFIER_BENCHMARKS="TRUE"
 
     - name: Build the Test
       run: |
-           cmake --build ./Build --config=${{matrix.build_type}}
+           sudo cmake --build ./Build --config=${{matrix.build_type}}
 
     - name: Install the Test
       run: |
@@ -45,6 +45,7 @@ jobs:
     - name: Run the Test
       working-directory: ./Build/Benchmarks
       run: |
-           ./Json-Performance
+           sudo chmod +x ./Json-Performance
+           sudo ./Json-Performance
       continue-on-error: true
       

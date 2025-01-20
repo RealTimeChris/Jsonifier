@@ -67,8 +67,8 @@ namespace jsonifier::internal {
 	}
 
 	template<size_t length> struct map_simd {
-		using type = std::conditional_t<length >= 64 && bytesPerStep >= 64, jsonifier_simd_int_512,
-			std::conditional_t<length >= 32 && bytesPerStep >= 32, jsonifier_simd_int_256, jsonifier_simd_int_128>>;
+		using type = jsonifier::internal::conditional_t<length >= 64 && bytesPerStep >= 64, jsonifier_simd_int_512,
+			jsonifier::internal::conditional_t<length >= 32 && bytesPerStep >= 32, jsonifier_simd_int_256, jsonifier_simd_int_128>>;
 	};
 
 	template<size_t length> using map_simd_t = map_simd<length>::type;

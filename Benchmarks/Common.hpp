@@ -31,9 +31,11 @@
 #include <thread>
 
 #if defined(NDEBUG)
-static constexpr auto maxIterations{ 1200 };
+static constexpr auto maxIterations{ 1400 };
+static constexpr auto measuredIterations{ 20 };
 #else
-static constexpr auto maxIterations{ 80 };
+static constexpr auto maxIterations{ 200 };
+static constexpr auto measuredIterations{ 20 };
 #endif
 
 constexpr auto getCurrentOperatingSystem() {
@@ -192,7 +194,7 @@ template<typename value_type> struct test_generator {
 	inline static std::uniform_int_distribution<int64_t> disInt{ std::numeric_limits<int64_t>::min(), std::numeric_limits<int64_t>::max() };
 	inline static std::uniform_int_distribution<uint64_t> disUint{ std::numeric_limits<uint64_t>::min(), std::numeric_limits<uint64_t>::max() };
 	inline static std::uniform_int_distribution<uint64_t> disCharSet{ 0ull, charset.size() - 1 };
-	inline static std::uniform_int_distribution<uint64_t> disString{ 32ull, 64ull };
+	inline static std::uniform_int_distribution<uint64_t> disString{ 16ull, 32ull };
 	inline static std::uniform_int_distribution<uint64_t> disUnicodeEmoji{ 0ull, std::size(unicode_emoji::unicodeEmoji) - 1 };
 	inline static std::uniform_int_distribution<uint64_t> disBool{ 0, 100 };
 	inline static std::random_device randomEngine{};
@@ -211,7 +213,7 @@ template<typename value_type> struct test_generator {
 
 	static std::string generateString() {
 		auto length{ disString(gen) };
-		auto unicodeCount = length / 32ull;
+		auto unicodeCount = length / 10ull;
 		std::vector<uint64_t> unicodeIndices{};
 		static constexpr auto checkForPresenceOfIndex = [](auto& indices, auto index, auto length, auto&& checkForPresenceOfIndexNew) -> void {
 			if (std::find(indices.begin(), indices.end(), index) != indices.end()) {

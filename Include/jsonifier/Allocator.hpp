@@ -29,7 +29,7 @@
 
 namespace jsonifier::internal {
 
-	template<typename value_type> JSONIFIER_INLINE constexpr value_type&& forward(std::remove_reference_t<value_type>& value) noexcept {
+	template<typename value_type> JSONIFIER_INLINE constexpr value_type&& forward(jsonifier::internal::remove_reference_t<value_type>& value) noexcept {
 		return static_cast<value_type&&>(value);
 	}
 

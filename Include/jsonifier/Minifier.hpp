@@ -136,7 +136,7 @@ namespace jsonifier::internal {
 			currentDistance = *iter - previousPtr;
 			skipWs(currentDistance, previousPtr);
 			++currentDistance;
-		};
+		}
 
 		template<concepts::string_t string_type, typename iterator> JSONIFIER_INLINE uint64_t impl(iterator& iter, string_type&& out) noexcept {
 			auto previousPtr = *iter;

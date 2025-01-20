@@ -2016,9 +2016,7 @@ namespace jsonifier_jkj {
 
 					template<typename FloatFormat, typename ShiftAmountType, typename DecimalExponentType>
 					JSONIFIER_INLINE static constexpr typename cache_holder_type<FloatFormat>::cache_entry_type get_cache(DecimalExponentType k) noexcept {
-#if JSONIFIER_HAS_CONSTEXPR14
 						assert(k >= cache_holder_type<FloatFormat>::min_k && k <= cache_holder_type<FloatFormat>::max_k);
-#endif
 						return cache_holder_type<FloatFormat>::cache[static_cast<size_t>(k - cache_holder_type<FloatFormat>::min_k)];
 					}
 				} full{};

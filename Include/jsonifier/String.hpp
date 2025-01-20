@@ -164,7 +164,7 @@ namespace jsonifier {
 		template<concepts::pointer_t value_type_newer> JSONIFIER_INLINE string_base(value_type_newer other) noexcept : capacityVal{}, sizeVal{}, dataVal{} {
 			if (other) {
 				const auto newSize =
-					internal::char_traits<std::remove_pointer_t<value_type_newer>>::length(other) * (sizeof(std::remove_pointer_t<value_type_newer>) / sizeof(value_type));
+					internal::char_traits<jsonifier::internal::remove_pointer_t<value_type_newer>>::length(other) * (sizeof(jsonifier::internal::remove_pointer_t<value_type_newer>) / sizeof(value_type));
 				if JSONIFIER_LIKELY (newSize > 0 && newSize < maxSize()) {
 					reserve(newSize);
 					sizeVal = newSize;

@@ -44,8 +44,8 @@
 
 namespace jsonifier::internal {
 
-	template<typename value_type> JSONIFIER_INLINE constexpr std::remove_reference_t<value_type>&& move(value_type&& value) noexcept {
-		return static_cast<std::remove_reference_t<value_type>&&>(value);
+	template<typename value_type> JSONIFIER_INLINE constexpr jsonifier::internal::remove_reference_t<value_type>&& move(value_type&& value) noexcept {
+		return static_cast<jsonifier::internal::remove_reference_t<value_type>&&>(value);
 	}
 
 	std::ostream& operator<<(std::ostream& os, const std::source_location& location) {
@@ -99,12 +99,12 @@ namespace jsonifier::internal {
 	};
 
 	template<typename value_type> struct get_int_type {
-		using type = std::conditional_t<std::is_unsigned_v<value_type>, uint8_t, int8_t>;
+		using type = jsonifier::internal::conditional_t<std::is_unsigned_v<value_type>, uint8_t, int8_t>;
 	};
 
 	template<const auto& function, typename... arg_types, size_t... indices> constexpr void forEachImpl(jsonifier::internal::index_sequence<indices...>, arg_types&&... args) noexcept {
 		(( void )(args, ...));
-		(function.operator()(std::integral_constant<size_t, indices>{}, std::integral_constant<size_t, sizeof...(indices)>{}, internal::forward<arg_types>(args)...), ...);
+		(function.operator()(jsonifier::internal::integral_constant<size_t, indices>{}, jsonifier::internal::integral_constant<size_t, sizeof...(indices)>{}, internal::forward<arg_types>(args)...), ...);
 	}
 
 	template<size_t limit, const auto& function, typename... arg_types> constexpr void forEach(arg_types&&... args) noexcept {
@@ -114,7 +114,7 @@ namespace jsonifier::internal {
 	template<typename function_type, typename... arg_types, size_t... indices>
 	constexpr void forEachImpl(function_type&& function, jsonifier::internal::index_sequence<indices...>, arg_types&&... args) noexcept {
 		(( void )(args, ...));
-		(function.operator()(std::integral_constant<size_t, indices>{}, std::integral_constant<size_t, sizeof...(indices)>{}, internal::forward<arg_types>(args)...), ...);
+		(function.operator()(jsonifier::internal::integral_constant<size_t, indices>{}, jsonifier::internal::integral_constant<size_t, sizeof...(indices)>{}, internal::forward<arg_types>(args)...), ...);
 	}
 
 	template<size_t limit, typename function_type, typename... arg_types> constexpr void forEach(function_type&& function, arg_types&&... args) noexcept {
@@ -373,7 +373,7 @@ namespace jsonifier {
 		template<typename value_type>
 		concept tuple_t = requires { std::tuple_size<jsonifier::internal::remove_cvref_t<value_type>>::value; } && !has_data<value_type>;
 
-		template<typename value_type> using decay_keep_volatile_t = std::remove_const_t<std::remove_reference_t<value_type>>;
+		template<typename value_type> using decay_keep_volatile_t = std::remove_const_t<jsonifier::internal::remove_reference_t<value_type>>;
 
 		template<typename value_type>
 		concept optional_t = requires(jsonifier::internal::remove_cvref_t<value_type> opt) {
