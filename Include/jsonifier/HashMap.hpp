@@ -126,7 +126,7 @@ namespace jsonifier::internal {
 	template<typename value_type> struct hash_map_construction_data {
 		using simd_type = map_simd_t<2048>;
 		array<size_t, 2048 / setSimdWidth(2048)> bucketSizes{};
-		JSONIFIER_ALIGN array<uint8_t, 2049> controlBytes{};
+		JSONIFIER_ALIGN(bytesPerStep) array<uint8_t, 2049> controlBytes {};
 		array<uint8_t, 256> uniqueIndices{};
 		array<size_t, 2049> indices{};
 		size_t bucketSize{ setSimdWidth(2048) };
@@ -179,7 +179,7 @@ namespace jsonifier::internal {
 		static constexpr size_t storageSize{ 256 };
 		constexpr single_byte_data(const hash_map_construction_data<value_type>& newData) noexcept
 			: uniqueIndices{ newData.uniqueIndices }, uniqueIndex{ newData.uniqueIndex }, type{ newData.type } {};
-		JSONIFIER_ALIGN array<uint8_t, 256> uniqueIndices{};
+		array<uint8_t, 256> uniqueIndices{};
 		size_t uniqueIndex{};
 		hash_map_type type{};
 	};
@@ -188,7 +188,7 @@ namespace jsonifier::internal {
 		static constexpr size_t storageSize{ 256 };
 		constexpr first_byte_and_unique_index_data(const hash_map_construction_data<value_type>& newData) noexcept
 			: uniqueIndices{ newData.uniqueIndices }, type{ newData.type } {};
-		JSONIFIER_ALIGN array<uint8_t, 256> uniqueIndices{};
+		array<uint8_t, 256> uniqueIndices{};
 		hash_map_type type{};
 	};
 
@@ -196,7 +196,7 @@ namespace jsonifier::internal {
 		static constexpr size_t storageSize{ 2048 };
 		constexpr unique_byte_and_length_data(const hash_map_construction_data<value_type>& newData) noexcept
 			: indices{ newData.indices }, uniqueIndex{ newData.uniqueIndex }, type{ newData.type } {};
-		JSONIFIER_ALIGN array<size_t, 2049> indices{};
+		array<size_t, 2049> indices{};
 		size_t uniqueIndex{};
 		hash_map_type type{};
 	};
@@ -204,20 +204,20 @@ namespace jsonifier::internal {
 	template<typename value_type> struct unique_per_length_data {
 		static constexpr size_t storageSize{ 256 };
 		constexpr unique_per_length_data(const hash_map_construction_data<value_type>& newData) noexcept : uniqueIndices{ newData.uniqueIndices }, type{ newData.type } {};
-		JSONIFIER_ALIGN array<uint8_t, 256> uniqueIndices{};
+		array<uint8_t, 256> uniqueIndices{};
 		hash_map_type type{};
 	};
 
 	template<typename value_type> struct simd_full_length_data {
 		static constexpr size_t storageSize{ 2048 };
 		constexpr simd_full_length_data(const hash_map_construction_data<value_type>& newData) noexcept
-			: controlBytes{ newData.controlBytes }, indices{ newData.indices }, bucketSize{ newData.bucketSize }, numGroups{ newData.numGroups },
+			: controlBytes{ newData.controlBytes }, bucketSize{ newData.bucketSize }, numGroups{ newData.numGroups }, indices{ newData.indices },
 			  uniqueIndex{ newData.uniqueIndex }, type{ newData.type }, seed{ newData.hasher.seed } {};
-		JSONIFIER_ALIGN array<uint8_t, 2049> controlBytes{};
+		JSONIFIER_ALIGN(bytesPerStep) array<uint8_t, 2049> controlBytes {};
 		char padding01[bytesPerStep - (2049 % 8)]{};
-		JSONIFIER_ALIGN array<size_t, 2049> indices{};
 		size_t bucketSize{ setSimdWidth(2048) };
 		size_t numGroups{ 2048 / bucketSize };
+		array<size_t, 2049> indices{};
 		size_t uniqueIndex{};
 		hash_map_type type{};
 		size_t seed{};

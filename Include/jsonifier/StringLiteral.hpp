@@ -99,11 +99,11 @@ namespace jsonifier::internal {
 		}
 
 		template<typename string_type> constexpr operator string_type() const noexcept {
-			JSONIFIER_ALIGN string_type returnValues{ values, length };
+			JSONIFIER_ALIGN(bytesPerStep) string_type returnValues{ values, length };
 			return returnValues;
 		}
 
-		JSONIFIER_ALIGN value_type values[sizeVal]{};
+		JSONIFIER_ALIGN(bytesPerStep) value_type values[sizeVal] {};
 	};
 
 	template<size_t size> struct get_int_type_for_length {
@@ -121,7 +121,7 @@ namespace jsonifier::internal {
 	template<string_literal string>
 		requires(string.length > 0 && string.length <= 8)
 	constexpr auto packValues() {
-		JSONIFIER_ALIGN get_int_type_for_length_t<string.length> returnValues{};
+		get_int_type_for_length_t<string.length> returnValues{};
 		for (size_t x = 0; x < string.length; ++x) {
 			returnValues |= (static_cast<uint64_t>(string[x]) << ((x % 8) * 8));
 		}
@@ -141,7 +141,7 @@ namespace jsonifier::internal {
 	template<string_literal string>
 		requires(string.length != 0 && string.length > 8)
 	constexpr auto packValues() {
-		JSONIFIER_ALIGN array<uint64_t, roundUpToMultiple<16>(getPackingSize<string.length>())> returnValues{};
+		JSONIFIER_ALIGN(16) array<uint64_t, roundUpToMultiple<16>(getPackingSize<string.length>())> returnValues{};
 		for (size_t x = 0; x < string.length; ++x) {
 			if (x / 8 < (string.length / 8) + 1) {
 				returnValues[x / 8] |= (static_cast<uint64_t>(string[x]) << ((x % 8) * 8));
@@ -210,7 +210,7 @@ namespace jsonifier::internal {
 			static constexpr auto stringLiteral{ stringNew };
 			static constexpr auto newCount{ stringLiteral.size() };
 			if constexpr (newCount > 8) {
-				JSONIFIER_ALIGN static constexpr auto valuesNew{ packValues<stringLiteral>() };
+				JSONIFIER_ALIGN(16) static constexpr auto valuesNew{ packValues<stringLiteral>() };
 				jsonifier_simd_int_128 data1{};
 				std::memcpy(&data1, str, newCount);
 				jsonifier_simd_int_128 data2{ simd::gatherValues<jsonifier_simd_int_128>(valuesNew.data()) };
@@ -261,7 +261,7 @@ namespace jsonifier::internal {
 	template<eq_16 sl_type, jsonifier::internal::remove_cvref_t<sl_type> stringNew> struct string_literal_comparitor<sl_type, stringNew> {
 		JSONIFIER_INLINE static bool impl(string_view_ptr str) noexcept {
 			static constexpr auto newLiteral{ stringNew };
-			JSONIFIER_ALIGN static constexpr auto valuesNew{ packValues<newLiteral>() };
+			JSONIFIER_ALIGN(16) static constexpr auto valuesNew{ packValues<newLiteral>() };
 			jsonifier_simd_int_128 data1{ simd::gatherValuesU<jsonifier_simd_int_128>(str) };
 			jsonifier_simd_int_128 data2{ simd::gatherValues<jsonifier_simd_int_128>(valuesNew.data()) };
 			return !simd::opTest(simd::opXor(data1, data2));
@@ -273,7 +273,7 @@ namespace jsonifier::internal {
 	template<eq_32 sl_type, jsonifier::internal::remove_cvref_t<sl_type> stringNew> struct string_literal_comparitor<sl_type, stringNew> {
 		JSONIFIER_INLINE static bool impl(string_view_ptr str) noexcept {
 			static constexpr auto newLiteral{ stringNew };
-			JSONIFIER_ALIGN static constexpr auto valuesNew{ packValues<newLiteral>() };
+			JSONIFIER_ALIGN(32) static constexpr auto valuesNew{ packValues<newLiteral>() };
 			jsonifier_simd_int_256 data1{ simd::gatherValuesU<jsonifier_simd_int_256>(str) };
 			jsonifier_simd_int_256 data2{ simd::gatherValues<jsonifier_simd_int_256>(valuesNew.data()) };
 			return !simd::opTest(simd::opXor(data1, data2));
@@ -286,7 +286,7 @@ namespace jsonifier::internal {
 	template<eq_64 value_type, value_type stringNew> struct string_literal_comparitor<value_type, stringNew> {
 		JSONIFIER_INLINE static bool impl(string_view_ptr str) noexcept {
 			static constexpr auto newLiteral{ stringNew };
-			JSONIFIER_ALIGN static constexpr auto valuesNew{ packValues<newLiteral>() };
+			JSONIFIER_ALIGN(64) static constexpr auto valuesNew{ packValues<newLiteral>() };
 			jsonifier_simd_int_512 data1{ simd::gatherValuesU<jsonifier_simd_int_512>(str) };
 			jsonifier_simd_int_512 data2{ simd::gatherValues<jsonifier_simd_int_512>(valuesNew.data()) };
 			return !simd::opTest(simd::opXor(data1, data2));

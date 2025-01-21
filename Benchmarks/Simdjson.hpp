@@ -712,11 +712,11 @@ template<> void getValue(discord_message& value, simdjson::ondemand::value jsonD
 
 template<> void getValue(abc_test_struct& returnValue, simdjson::ondemand::value jsonData) {
 	simdjson::ondemand::object obj{ getObject(jsonData) };
+	getValue(returnValue.testVals05, obj, "testVals05");
 	getValue(returnValue.testVals04, obj, "testVals04");
 	getValue(returnValue.testVals03, obj, "testVals03");
-	getValue(returnValue.testVals01, obj, "testVals01");
-	getValue(returnValue.testVals05, obj, "testVals05");
 	getValue(returnValue.testVals02, obj, "testVals02");
+	getValue(returnValue.testVals01, obj, "testVals01");
 }
 
 template<> void getValue(abc_test<abc_test_struct>& returnValue, simdjson::ondemand::value jsonData) {
@@ -757,11 +757,11 @@ template<> void getValue(partial_test_struct& returnValue, simdjson::ondemand::v
 
 template<> void getValue(test_struct& returnValue, simdjson::ondemand::value jsonData) {
 	simdjson::ondemand::object obj{ getObject(jsonData) };
-	getValue(returnValue.testVals02, obj, "testVals02");
-	getValue(returnValue.testVals05, obj, "testVals05");
 	getValue(returnValue.testVals01, obj, "testVals01");
+	getValue(returnValue.testVals02, obj, "testVals02");
 	getValue(returnValue.testVals03, obj, "testVals03");
 	getValue(returnValue.testVals04, obj, "testVals04");
+	getValue(returnValue.testVals05, obj, "testVals05");
 }
 
 template<> void getValue(test<test_struct>& returnValue, simdjson::ondemand::value jsonData) {

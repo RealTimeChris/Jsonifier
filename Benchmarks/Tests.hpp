@@ -157,8 +157,7 @@ namespace tests {
 			static constexpr bnch_swt::string_literal testNameRead{ testName + "-Read" };
 			static constexpr bnch_swt::string_literal testNameWrite{ testName + "-Write" };
 			static constexpr bool partialRead{ std::is_same_v<test_data_type, partial_test<test_struct>> || std::is_same_v<test_data_type, twitter_partial_message> };
-			static constexpr bool knownOrder{ !std::is_same_v<test_data_type, twitter_partial_message> && !std::is_same_v<test_data_type, abc_test<abc_test_struct>> &&
-				!std::is_same_v<test_data_type, test<test_struct>> };
+			static constexpr bool knownOrder{ !std::is_same_v<test_data_type, twitter_partial_message> && !std::is_same_v<test_data_type, abc_test<abc_test_struct>> };
 			results_data r{ jsonifierLibraryName, testName, jsonifierCommitUrl };
 			jsonifier::jsonifier_core parser{};
 			std::vector<std::string> newStrings{ iterations + 1 };
@@ -490,7 +489,8 @@ namespace tests {
  > )" + jsonifier::toString(maxIterations) +
 		R"( iterations on a ()" + getCPUInfo() + R"(), where the most stable 20 subsequent iterations are sampled.
 
-)" };
+#### Note:
+These benchmarks were executed using the CPU benchmark library [BenchmarkSuite](https://github.com/RealTimeChris/BenchmarkSuite).)" };
 
 	constexpr bnch_swt::string_literal section002{ bnch_swt::string_literal{ R"(#### Using the following commits:
 ----

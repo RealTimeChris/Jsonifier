@@ -72,16 +72,15 @@ namespace jsonifier::internal {
 				stringBuffer.resize(in.size());
 			}
 			derivedRef.errors.clear();
-			const auto* dataPtr = in.data();
-			rootIter			= dataPtr;
-			endIter				= dataPtr + in.size();
-			section.reset<false>(dataPtr, in.size());
+			rootIter = in.data();
+			endIter	 = rootIter + in.size();
+			section.reset<false>(rootIter, in.size());
 			string_view_ptr* iter{ section.begin() };
-			if (!*iter) {
-				getErrors().emplace_back(error::constructError<error_classes::Minifying, minify_errors::No_Input>(*iter - dataPtr, in.end() - in.begin(), dataPtr));
-				return jsonifier::internal::remove_cvref_t<string_type>{};
-			}
 			jsonifier::internal::remove_cvref_t<string_type> newString{};
+			if (!*iter) {
+				getErrors().emplace_back(error::constructError<error_classes::Minifying, minify_errors::No_Input>(*iter - rootIter, in.end() - in.begin(), rootIter));
+				return newString;
+			}
 			auto index = impl(iter, stringBuffer);
 			if (index != std::numeric_limits<uint32_t>::max()) {
 				newString.resize(index);
@@ -97,13 +96,12 @@ namespace jsonifier::internal {
 				stringBuffer.resize(in.size());
 			}
 			derivedRef.errors.clear();
-			const auto* dataPtr = in.data();
-			rootIter			= dataPtr;
-			endIter				= dataPtr + in.size();
-			section.reset<false>(dataPtr, in.size());
+			rootIter = in.data();
+			endIter	 = rootIter + in.size();
+			section.reset<false>(rootIter, in.size());
 			string_view_ptr* iter{ section.begin() };
 			if (!*iter) {
-				getErrors().emplace_back(error::constructError<error_classes::Minifying, minify_errors::No_Input>(*iter - dataPtr, in.end() - in.begin(), dataPtr));
+				getErrors().emplace_back(error::constructError<error_classes::Minifying, minify_errors::No_Input>(*iter - rootIter, in.end() - in.begin(), rootIter));
 				return false;
 			}
 			auto index = impl(iter, stringBuffer);

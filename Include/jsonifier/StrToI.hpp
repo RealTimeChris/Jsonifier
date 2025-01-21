@@ -100,16 +100,16 @@ namespace jsonifier::internal {
 			value				 = static_cast<value_type>(res);
 			return res <= std::numeric_limits<value_type>::max();
 #elif defined(_M_ARM64) && !defined(__MINGW32__)
-			JSONIFIER_ALIGN value_type values;
+			value_type values;
 			values = __mulh(value, expValue);
 			value  = value * expValue;
 			return values == 0;
 #elif (defined(_WIN64) && !defined(__clang__))
-			JSONIFIER_ALIGN value_type values;
+			value_type values;
 			value = _mul128(value, expValue, &values);
 			return values == 0;
 #else
-			JSONIFIER_ALIGN value_type values;
+			value_type values;
 			value = mul128Generic(value, expValue, &values);
 			return values == 0;
 #endif
@@ -121,11 +121,11 @@ namespace jsonifier::internal {
 			value					  = static_cast<value_type>(dividend / static_cast<__int128_t>(expValue));
 			return (dividend % static_cast<__int128_t>(expValue)) == 0;
 #elif (defined(_WIN64) && !defined(__clang__))
-			JSONIFIER_ALIGN value_type values;
+			value_type values;
 			value = _div128(0, value, expValue, &values);
 			return values == 0;
 #else
-			JSONIFIER_ALIGN value_type values;
+			value_type values;
 			values = value % expValue;
 			value  = value / expValue;
 			return values == 0;
@@ -714,16 +714,16 @@ namespace jsonifier::internal {
 			value				  = static_cast<value_type>(res);
 			return res <= std::numeric_limits<value_type>::max();
 #elif defined(_M_ARM64) && !defined(__MINGW32__)
-			JSONIFIER_ALIGN value_type values;
+			value_type values;
 			values = __umulh(value, expValue);
 			value  = value * expValue;
 			return values == 0;
 #elif (defined(_WIN64) && !defined(__clang__))
-			JSONIFIER_ALIGN value_type values;
+			value_type values;
 			value = _umul128(value, expValue, &values);
 			return values == 0;
 #else
-			JSONIFIER_ALIGN value_type values;
+			value_type values;
 			value = umul128Generic(value, expValue, &values);
 			return values == 0;
 #endif
@@ -735,11 +735,11 @@ namespace jsonifier::internal {
 			value					   = static_cast<value_type>(dividend / static_cast<__uint128_t>(expValue));
 			return (dividend % static_cast<__uint128_t>(expValue)) == 0;
 #elif (defined(_WIN64) && !defined(__clang__))
-			JSONIFIER_ALIGN value_type values;
+			value_type values;
 			value = _udiv128(0, value, expValue, &values);
 			return values == 0;
 #else
-			JSONIFIER_ALIGN value_type values;
+			value_type values;
 			values = value % expValue;
 			value  = value / expValue;
 			return values == 0;

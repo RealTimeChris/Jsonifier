@@ -26,227 +26,20 @@
 #include <jsonifier/NumberUtils.hpp>
 #include <jsonifier/StringUtils.hpp>
 #include <jsonifier/Parser.hpp>
+#include <jsonifier/SwitchStatement.hpp>
 
 #include <memory>
 
 namespace jsonifier::internal {
-
-	template<typename base_type> struct switch_statement : public base_type {
-		template<typename value_type, typename context_type> static bool impl(value_type& value, context_type& context, size_t index) noexcept {
-			static constexpr auto memberCount = core_tuple_size<value_type>;
-			if constexpr (memberCount > 32) {
-				return impl64(value, context, index);
-			} else if constexpr (memberCount > 16) {
-				return impl32(value, context, index);
-			} else if constexpr (memberCount > 8) {
-				return impl16(value, context, index);
-			} else if constexpr (memberCount > 1) {
-				return impl8(value, context, index);
-			} else {
-				return impl1(value, context);
-			}
-		}
-
-		template<size_t multiplier = 0, typename value_type, typename context_type> static bool impl64(value_type& value, context_type& context, size_t index) noexcept {
-			if (index < 32) {
-				return impl32<multiplier, value_type, context_type>(value, context, index);
-			} else {
-				return impl32<multiplier + 32, value_type, context_type>(value, context, index - 32);
-			}
-		}
-
-		template<size_t multiplier = 0, typename value_type, typename context_type> static bool impl32(value_type& value, context_type& context, size_t index) noexcept {
-			if (index < 16) {
-				return impl16<multiplier, value_type, context_type>(value, context, index);
-			} else {
-				return impl16<multiplier + 16, value_type, context_type>(value, context, index - 16);
-			}
-		}
-
-		template<size_t multiplier = 0, typename value_type, typename context_type>
-		JSONIFIER_CLANG_INLINE static bool impl16(value_type& value, context_type& context, size_t index) noexcept {
-			static constexpr auto memberCount = core_tuple_size<value_type>;
-			switch (index) {
-				case 0: {
-					if constexpr (memberCount > 0 + multiplier) {
-						return base_type::template processIndex<0 + multiplier>(value, context);
-					}
-					break;
-				}
-				case 1: {
-					if constexpr (memberCount > 1 + multiplier) {
-						return base_type::template processIndex<1 + multiplier>(value, context);
-					}
-					break;
-				}
-				case 2: {
-					if constexpr (memberCount > 2 + multiplier) {
-						return base_type::template processIndex<2 + multiplier>(value, context);
-					}
-					break;
-				}
-				case 3: {
-					if constexpr (memberCount > 3 + multiplier) {
-						return base_type::template processIndex<3 + multiplier>(value, context);
-					}
-					break;
-				}
-				case 4: {
-					if constexpr (memberCount > 4 + multiplier) {
-						return base_type::template processIndex<4 + multiplier>(value, context);
-					}
-					break;
-				}
-				case 5: {
-					if constexpr (memberCount > 5 + multiplier) {
-						return base_type::template processIndex<5 + multiplier>(value, context);
-					}
-					break;
-				}
-				case 6: {
-					if constexpr (memberCount > 6 + multiplier) {
-						return base_type::template processIndex<6 + multiplier>(value, context);
-					}
-					break;
-				}
-				case 7: {
-					if constexpr (memberCount > 7 + multiplier) {
-						return base_type::template processIndex<7 + multiplier>(value, context);
-					}
-					break;
-				}
-				case 8: {
-					if constexpr (memberCount > 8 + multiplier) {
-						return base_type::template processIndex<0 + multiplier>(value, context);
-					}
-					break;
-				}
-				case 9: {
-					if constexpr (memberCount > 9 + multiplier) {
-						return base_type::template processIndex<1 + multiplier>(value, context);
-					}
-					break;
-				}
-				case 10: {
-					if constexpr (memberCount > 10 + multiplier) {
-						return base_type::template processIndex<2 + multiplier>(value, context);
-					}
-					break;
-				}
-				case 11: {
-					if constexpr (memberCount > 11 + multiplier) {
-						return base_type::template processIndex<3 + multiplier>(value, context);
-					}
-					break;
-				}
-				case 12: {
-					if constexpr (memberCount > 12 + multiplier) {
-						return base_type::template processIndex<4 + multiplier>(value, context);
-					}
-					break;
-				}
-				case 13: {
-					if constexpr (memberCount > 13 + multiplier) {
-						return base_type::template processIndex<5 + multiplier>(value, context);
-					}
-					break;
-				}
-				case 14: {
-					if constexpr (memberCount > 14 + multiplier) {
-						return base_type::template processIndex<6 + multiplier>(value, context);
-					}
-					break;
-				}
-				case 15: {
-					if constexpr (memberCount > 15 + multiplier) {
-						return base_type::template processIndex<7 + multiplier>(value, context);
-					}
-					break;
-				}
-				default: {
-					return true;
-				}
-			}
-			return true;
-		}
-
-		template<size_t multiplier = 0, typename value_type, typename context_type>
-		JSONIFIER_CLANG_INLINE static bool impl8(value_type& value, context_type& context, size_t index) noexcept {
-			static constexpr auto memberCount = core_tuple_size<value_type>;
-			switch (index) {
-				case 0: {
-					if constexpr (memberCount > 0 + multiplier) {
-						return base_type::template processIndex<0 + multiplier>(value, context);
-					}
-					break;
-				}
-				case 1: {
-					if constexpr (memberCount > 1 + multiplier) {
-						return base_type::template processIndex<1 + multiplier>(value, context);
-					}
-					break;
-				}
-				case 2: {
-					if constexpr (memberCount > 2 + multiplier) {
-						return base_type::template processIndex<2 + multiplier>(value, context);
-					}
-					break;
-				}
-				case 3: {
-					if constexpr (memberCount > 3 + multiplier) {
-						return base_type::template processIndex<3 + multiplier>(value, context);
-					}
-					break;
-				}
-				case 4: {
-					if constexpr (memberCount > 4 + multiplier) {
-						return base_type::template processIndex<4 + multiplier>(value, context);
-					}
-					break;
-				}
-				case 5: {
-					if constexpr (memberCount > 5 + multiplier) {
-						return base_type::template processIndex<5 + multiplier>(value, context);
-					}
-					break;
-				}
-				case 6: {
-					if constexpr (memberCount > 6 + multiplier) {
-						return base_type::template processIndex<6 + multiplier>(value, context);
-					}
-					break;
-				}
-				case 7: {
-					if constexpr (memberCount > 7 + multiplier) {
-						return base_type::template processIndex<7 + multiplier>(value, context);
-					}
-					break;
-				}
-				default: {
-					return true;
-				}
-			}
-			return true;
-		}
-
-		template<typename value_type, typename context_type> JSONIFIER_CLANG_INLINE static bool impl1(value_type& value, context_type& context) noexcept {
-			static constexpr auto memberCount = core_tuple_size<value_type>;
-			if constexpr (memberCount > 0) {
-				return base_type::template processIndex<0>(value, context);
-			} else {
-				return true;
-			}
-		}
-	};
 
 	template<typename value_type, typename buffer_type, typename context_type, parse_options options, bool minifiedOrInsideRepeated> struct parse_types_impl {
 		using base						  = derailleur<options, context_type>;
 		static constexpr auto memberCount = core_tuple_size<value_type>;
 		template<size_t index> JSONIFIER_CLANG_INLINE static bool processIndex(value_type& value, context_type& context) {
 			static constexpr auto tupleElem		= get<index>(core<value_type>::parseValue);
-			static constexpr auto key			= tupleElem.name.operator string_view();
+			static constexpr auto stringLiteral = tupleElem.name;
+			static constexpr auto key			= stringLiteral.operator jsonifier::string_view();
 			static constexpr auto ptrNew		= tupleElem.memberPtr;
-			static constexpr auto stringLiteral = stringLiteralFromView<key.size()>(key);
 			static constexpr auto keySize		= key.size();
 			static constexpr auto keySizeNew	= keySize + 1;
 			if JSONIFIER_LIKELY (((context.iter + keySize) < context.endIter) && string_literal_comparitor<decltype(stringLiteral), stringLiteral>::impl(context.iter)) {
@@ -283,9 +76,9 @@ namespace jsonifier::internal {
 		static constexpr auto memberCount = core_tuple_size<value_type>;
 		template<size_t index> JSONIFIER_CLANG_INLINE static bool processIndex(value_type& value, context_type& context) {
 			static constexpr auto tupleElem		= get<index>(core<value_type>::parseValue);
-			static constexpr auto key			= tupleElem.name.operator string_view();
+			static constexpr auto stringLiteral = tupleElem.name;
+			static constexpr auto key			= stringLiteral.operator jsonifier::string_view();
 			static constexpr auto ptrNew		= tupleElem.memberPtr;
-			static constexpr auto stringLiteral = stringLiteralFromView<key.size()>(key);
 			static constexpr auto keySize		= key.size();
 			static constexpr auto keySizeNew	= keySize + 1;
 			if JSONIFIER_LIKELY (((context.iter + 1) < context.endIter) && (*((*context.iter) + keySizeNew)) == quote &&
@@ -389,8 +182,7 @@ namespace jsonifier::internal {
 				static constexpr auto ptrNew		= json_entity_type::memberPtr;
 				static constexpr auto keySize		= key.size();
 				static constexpr auto keySizeNew	= keySize + 1;
-				if JSONIFIER_LIKELY (((context.iter + keySize) < context.endIter) && (*(context.iter + keySize)) == quote &&
-					string_literal_comparitor<decltype(stringLiteral), stringLiteral>::impl(context.iter)) {
+				if JSONIFIER_LIKELY (((context.iter + keySize) < context.endIter) && string_literal_comparitor<decltype(stringLiteral), stringLiteral>::impl(context.iter)) {
 					context.iter += keySizeNew;
 					JSONIFIER_SKIP_WS();
 					if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == colon) {
@@ -418,26 +210,42 @@ namespace jsonifier::internal {
 				}
 			}
 			if constexpr (memberCount == 1) {
-				if JSONIFIER_LIKELY (switch_statement<parse_types_impl<value_type, buffer_type, context_type, options, false>>::impl(value, context, 0)) {
+				if JSONIFIER_LIKELY (parse_types_impl<value_type, buffer_type, context_type, options, false>::template processIndex<0>(value, context)) {
+					return;
+				}
+			} else if constexpr (memberCount == 2) {
+				auto indexNew = hash_map<value_type, remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
+				if (indexNew == 0) {
+					if JSONIFIER_LIKELY (parse_types_impl<value_type, buffer_type, context_type, options, false>::template processIndex<0>(value, context)) {
+						if constexpr (options.knownOrder) {
+							antiHashStates[json_entity_type::index] = indexNew;
+						}
+						return;
+					}
+				} else {
+					if JSONIFIER_LIKELY (parse_types_impl<value_type, buffer_type, context_type, options, false>::template processIndex<1>(value, context)) {
+						if constexpr (options.knownOrder) {
+							antiHashStates[json_entity_type::index] = indexNew;
+						}
+						return;
+					}
+				}
+			} else if constexpr (memberCount <= 6) {
+				auto indexNew = hash_map<value_type, remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
+				if JSONIFIER_LIKELY (switch_statement<parse_types_impl<value_type, buffer_type, context_type, options, false>, memberCount>::impl(value, context, indexNew)) {
+					if constexpr (options.knownOrder) {
+						antiHashStates[json_entity_type::index] = indexNew;
+					}
 					return;
 				}
 			} else {
 				if JSONIFIER_LIKELY (auto indexNew = hash_map<value_type, remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
 									 indexNew < memberCount) {
-					if constexpr (memberCount < 64) {
-						if JSONIFIER_LIKELY (switch_statement<parse_types_impl<value_type, buffer_type, context_type, options, false>>::impl(value, context, indexNew)) {
-							if constexpr (options.knownOrder) {
-								antiHashStates[json_entity_type::index] = indexNew;
-							}
-							return;
+					if JSONIFIER_LIKELY (functionPtrs<parse_types_impl, value_type, buffer_type, context_type, options, false>[indexNew](value, context)) {
+						if constexpr (options.knownOrder) {
+							antiHashStates[json_entity_type::index] = indexNew;
 						}
-					} else {
-						if JSONIFIER_LIKELY (functionPtrs<parse_types_impl, value_type, buffer_type, context_type, options, false>[indexNew](value, context)) {
-							if constexpr (options.knownOrder) {
-								antiHashStates[json_entity_type::index] = indexNew;
-							}
-							return;
-						}
+						return;
 					}
 				}
 			}
@@ -519,8 +327,7 @@ namespace jsonifier::internal {
 				static constexpr auto ptrNew		= json_entity_type::memberPtr;
 				static constexpr auto keySize		= key.size();
 				static constexpr auto keySizeNew	= keySize + 1;
-				if JSONIFIER_LIKELY (((context.iter + keySize) < context.endIter) && (*(context.iter + keySize)) == quote &&
-					string_literal_comparitor<decltype(stringLiteral), stringLiteral>::impl(context.iter)) {
+				if JSONIFIER_LIKELY (((context.iter + keySize) < context.endIter) && string_literal_comparitor<decltype(stringLiteral), stringLiteral>::impl(context.iter)) {
 					context.iter += keySizeNew;
 					if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == colon) {
 						++context.iter;
@@ -546,26 +353,42 @@ namespace jsonifier::internal {
 				}
 			}
 			if constexpr (memberCount == 1) {
-				if JSONIFIER_LIKELY (switch_statement<parse_types_impl<value_type, buffer_type, context_type, options, true>>::impl(value, context, 0)) {
+				if JSONIFIER_LIKELY (parse_types_impl<value_type, buffer_type, context_type, options, true>::template processIndex<0>(value, context)) {
+					return;
+				}
+			} else if constexpr (memberCount == 2) {
+				auto indexNew = hash_map<value_type, remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
+				if (indexNew == 0) {
+					if JSONIFIER_LIKELY (parse_types_impl<value_type, buffer_type, context_type, options, true>::template processIndex<0>(value, context)) {
+						if constexpr (options.knownOrder) {
+							antiHashStates[json_entity_type::index] = indexNew;
+						}
+						return;
+					}
+				} else {
+					if JSONIFIER_LIKELY (parse_types_impl<value_type, buffer_type, context_type, options, true>::template processIndex<1>(value, context)) {
+						if constexpr (options.knownOrder) {
+							antiHashStates[json_entity_type::index] = indexNew;
+						}
+						return;
+					}
+				}
+			} else if constexpr (memberCount <= 6) {
+				auto indexNew = hash_map<value_type, remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
+				if JSONIFIER_LIKELY (switch_statement<parse_types_impl<value_type, buffer_type, context_type, options, true>, memberCount>::impl(value, context, indexNew)) {
+					if constexpr (options.knownOrder) {
+						antiHashStates[json_entity_type::index] = indexNew;
+					}
 					return;
 				}
 			} else {
 				if JSONIFIER_LIKELY (auto indexNew = hash_map<value_type, remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
 									 indexNew < memberCount) {
-					if constexpr (memberCount < 64) {
-						if JSONIFIER_LIKELY (switch_statement<parse_types_impl<value_type, buffer_type, context_type, options, true>>::impl(value, context, indexNew)) {
-							if constexpr (options.knownOrder) {
-								antiHashStates[json_entity_type::index] = indexNew;
-							}
-							return;
+					if JSONIFIER_LIKELY (functionPtrs<parse_types_impl, value_type, buffer_type, context_type, options, true>[indexNew](value, context)) {
+						if constexpr (options.knownOrder) {
+							antiHashStates[json_entity_type::index] = indexNew;
 						}
-					} else {
-						if JSONIFIER_LIKELY (functionPtrs<parse_types_impl, value_type, buffer_type, context_type, options, true>[indexNew](value, context)) {
-							if constexpr (options.knownOrder) {
-								antiHashStates[json_entity_type::index] = indexNew;
-							}
-							return;
-						}
+						return;
 					}
 				}
 			}
@@ -651,16 +474,8 @@ namespace jsonifier::internal {
 	template<typename value_type, typename buffer_type, typename context_type, parse_options options, auto tupleElem, bool insideRepeated> struct parse_types_partial {
 		using base						  = derailleur<options, context_type>;
 		static constexpr auto memberCount = core_tuple_size<value_type>;
-		inline static thread_local array<uint64_t, (memberCount > 0 ? memberCount : 1)> antiHashStates{ [] {
-			array<uint64_t, (memberCount > 0 ? memberCount : 1)> returnValues{};
-			for (uint64_t x = 0; x < memberCount; ++x) {
-				returnValues[x] = x;
-			}
-			return returnValues;
-		}() };
 
 		template<bool haveWeStarted = false> JSONIFIER_CLANG_INLINE static void processIndex(value_type& value, context_type& context) noexcept {
-			( void )value, ( void )context;
 			if constexpr (tupleElem.index < memberCount) {
 				if (**context.iter != rBrace) {
 					if JSONIFIER_LIKELY (context.iter < context.endIter) {
@@ -669,28 +484,38 @@ namespace jsonifier::internal {
 						}
 
 						if JSONIFIER_LIKELY ((context.iter < context.endIter) && **context.iter == quote) {
-							if (antiHashStates[tupleElem.index] != std::numeric_limits<uint64_t>::max()) {
-								if JSONIFIER_LIKELY (functionPtrs<parse_types_impl_partial, value_type, buffer_type, context_type, options,
-														 insideRepeated>[antiHashStates[tupleElem.index]](value, context)) {
-									return;
-								} else {
-									if JSONIFIER_LIKELY (auto indexNew =
-															 hash_map<value_type, remove_cvref_t<decltype(*context.iter)>>::findIndex((*context.iter) + 1, *context.endIter);
-														 indexNew < memberCount) {
-										if JSONIFIER_LIKELY (functionPtrs<parse_types_impl_partial, value_type, buffer_type, context_type, options, insideRepeated>[indexNew](value,
-																 context)) {
-											antiHashStates[tupleElem.index] = indexNew;
-											return;
-										}
-									}
-									antiHashStates[tupleElem.index] = std::numeric_limits<uint64_t>::max();
-								}
-							}
-							if JSONIFIER_LIKELY (auto indexNew = hash_map<value_type, remove_cvref_t<decltype(*context.iter)>>::findIndex((*context.iter) + 1, *context.endIter);
-												 indexNew < memberCount) {
-								if JSONIFIER_LIKELY (functionPtrs<parse_types_impl_partial, value_type, buffer_type, context_type, options, insideRepeated>[indexNew](value,
+							if constexpr (memberCount == 1) {
+								if JSONIFIER_LIKELY (parse_types_impl_partial<value_type, buffer_type, context_type, options, insideRepeated>::template processIndex<0>(value,
 														 context)) {
 									return;
+								}
+							} else if constexpr (memberCount == 2) {
+								auto indexNew = hash_map<value_type, remove_cvref_t<decltype(*context.iter)>>::findIndex((*context.iter) + 1, *context.endIter);
+								if (indexNew == 0) {
+									if JSONIFIER_LIKELY (parse_types_impl_partial<value_type, buffer_type, context_type, options, insideRepeated>::template processIndex<0>(value,
+															 context)) {
+										return;
+									}
+								} else {
+									if JSONIFIER_LIKELY (parse_types_impl_partial<value_type, buffer_type, context_type, options, insideRepeated>::template processIndex<1>(value,
+															 context)) {
+										return;
+									}
+								}
+							} else if constexpr (memberCount <= 6) {
+								auto indexNew = hash_map<value_type, remove_cvref_t<decltype(*context.iter)>>::findIndex((*context.iter) + 1, *context.endIter);
+								if JSONIFIER_LIKELY (switch_statement<parse_types_impl_partial<value_type, buffer_type, context_type, options, insideRepeated>, memberCount>::impl(
+														 value, context, indexNew)) {
+									return;
+								}
+							} else {
+								if JSONIFIER_LIKELY (auto indexNew =
+														 hash_map<value_type, remove_cvref_t<decltype(*context.iter)>>::findIndex((*context.iter) + 1, *context.endIter);
+													 indexNew < memberCount) {
+									if JSONIFIER_LIKELY (functionPtrs<parse_types_impl_partial, value_type, buffer_type, context_type, options, insideRepeated>[indexNew](value,
+															 context)) {
+										return;
+									}
 								}
 							}
 							base::template skipKey<value_type>(context);
@@ -1684,7 +1509,6 @@ namespace jsonifier::internal {
 		using base = derailleur<options, context_type>;
 		JSONIFIER_INLINE static void impl(value_type& value, context_type& context) noexcept {
 			if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter != n) {
-				using member_type = decltype(*value);
 				if JSONIFIER_UNLIKELY (!value) {
 					value = new jsonifier::internal::remove_pointer_t<value_type>{};
 				}
@@ -2236,7 +2060,6 @@ namespace jsonifier::internal {
 		using base = derailleur<options, context_type>;
 
 		JSONIFIER_INLINE static void impl(value_type& value, context_type& context) noexcept {
-			using member_type = decltype(*value);
 			if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter != n) {
 				if JSONIFIER_UNLIKELY (!value) {
 					value = new jsonifier::internal::remove_pointer_t<value_type>{};

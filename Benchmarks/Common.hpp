@@ -157,8 +157,8 @@ void executePythonScript(const std::string& scriptPath, const std::string& argum
 struct test_struct {
 	std::vector<std::string> testVals01{};
 	std::vector<uint64_t> testVals02{};
-	std::vector<double> testVals04{};
 	std::vector<int64_t> testVals03{};
+	std::vector<double> testVals04{};
 	std::vector<bool> testVals05{};
 };
 
@@ -169,8 +169,8 @@ struct partial_test_struct {
 
 struct abc_test_struct {
 	std::vector<bool> testVals05{};
-	std::vector<int64_t> testVals03{};
 	std::vector<double> testVals04{};
+	std::vector<int64_t> testVals03{};
 	std::vector<uint64_t> testVals02{};
 	std::vector<std::string> testVals01{};
 };
@@ -361,7 +361,7 @@ template<result_type type> constexpr auto enumToString() {
 
 template<result_type type> struct result {
 	std::optional<double> jsonSpeedPercentageDeviation{};
-	std::optional<double> byteLength{};
+	std::optional<uint64_t> byteLength{};
 	std::optional<double> jsonCycles{};
 	std::optional<double> jsonSpeed{};
 	std::optional<double> jsonTime{};

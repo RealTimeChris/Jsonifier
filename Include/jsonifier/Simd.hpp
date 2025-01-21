@@ -60,7 +60,7 @@ namespace jsonifier::internal {
 		}
 
 	  protected:
-		JSONIFIER_ALIGN char block[bitsPerStep]{};
+		JSONIFIER_ALIGN(bytesPerStep) char block[bitsPerStep]{};
 		string_view_ptr inString{};
 		uint64_t lengthMinusStep{};
 		uint64_t length{};
@@ -102,7 +102,7 @@ namespace jsonifier::internal {
 		}
 
 	  protected:
-		JSONIFIER_ALIGN size_type newBits[sixtyFourBitsPerStep]{};
+		JSONIFIER_ALIGN(bytesPerStep) size_type newBits[sixtyFourBitsPerStep] {};
 		string_view currentParseBuffer{};
 		string_block_reader stringBlockReader{};
 		structural_index* structuralIndices{};

@@ -101,9 +101,6 @@ namespace jsonifier::internal {
 				}
 			}
 		}
-		if (length > 0) {
-			++context;
-		}
 	}
 
 #define JSONIFIER_SKIP_MATCHING_WS() \
@@ -799,15 +796,15 @@ namespace jsonifier::internal {
 		static constexpr auto stringInt{ getStringAsInt<string>() };
 		uint32_t sourceVal;
 		std::memcpy(&sourceVal, src, string.size());
-		return sourceVal ^ stringInt;
+		return !static_cast<bool>(sourceVal ^ stringInt);
 	}
 
 	template<jsonifier::concepts::bool_t bool_type> JSONIFIER_INLINE bool parseBool(bool_type& value, string_view_ptr& context) noexcept {
-		if (!compareStringAsInt<"true">(context)) {
+		if (compareStringAsInt<"true">(context)) {
 			value = true;
 			context += 4;
 			return true;
-		} else if (!compareStringAsInt<"fals">(context) && context[4] == 'e') {
+		} else if (compareStringAsInt<"fals">(context) && context[4] == 'e') {
 			value = false;
 			context += 5;
 			return true;
@@ -816,7 +813,7 @@ namespace jsonifier::internal {
 	}
 
 	JSONIFIER_INLINE bool parseNull(string_view_ptr& context) noexcept {
-		if JSONIFIER_LIKELY (!compareStringAsInt<"null">(context)) {
+		if JSONIFIER_LIKELY (compareStringAsInt<"null">(context)) {
 			context += 4;
 			return true;
 		} else {
@@ -825,16 +822,16 @@ namespace jsonifier::internal {
 	}
 
 	JSONIFIER_INLINE bool validateBool(string_view_ptr context) noexcept {
-		if (!compareStringAsInt<"true">(context)) {
+		if (compareStringAsInt<"true">(context)) {
 			return true;
-		} else if (!compareStringAsInt<"fals">(context) && context[4] == 'e') {
+		} else if (compareStringAsInt<"fals">(context) && context[4] == 'e') {
 			return true;
 		}
 		return false;
 	}
 
 	JSONIFIER_INLINE bool validateNull(string_view_ptr context) noexcept {
-		if JSONIFIER_LIKELY (!compareStringAsInt<"null">(context)) {
+		if JSONIFIER_LIKELY (compareStringAsInt<"null">(context)) {
 			return true;
 		} else {
 			return false;

@@ -71,7 +71,7 @@ namespace jsonifier::simd {
 	}
 
 	template<typename simd_int_t01> JSONIFIER_INLINE jsonifier_simd_int_t opClMul(const simd_int_t01& value, int64_t& prevInString) noexcept {
-		JSONIFIER_ALIGN uint64_t values[sixtyFourBitsPerStep];
+		JSONIFIER_ALIGN(bytesPerStep) uint64_t values[sixtyFourBitsPerStep];
 		store(value, values);
 		values[0]	 = prefixXor(values[0]) ^ prevInString;
 		prevInString = static_cast<int64_t>(values[0]) >> 63;
@@ -97,7 +97,7 @@ namespace jsonifier::simd {
 	}
 
 	template<typename simd_int_t01, typename simd_int_t02> JSONIFIER_INLINE jsonifier_simd_int_t opSub(const simd_int_t01& value, const simd_int_t02& other) noexcept {
-		JSONIFIER_ALIGN uint64_t values[sixtyFourBitsPerStep * 2];
+		JSONIFIER_ALIGN(bytesPerStep) uint64_t values[sixtyFourBitsPerStep * 2];
 		store(value, values);
 		store(other, values + sixtyFourBitsPerStep);
 		bool carryInNew{};
@@ -125,7 +125,7 @@ namespace jsonifier::simd {
 	}
 
 	template<size_t amount, typename simd_int_t01> JSONIFIER_INLINE jsonifier_simd_int_t opShl(const simd_int_t01& value) noexcept {
-		JSONIFIER_ALIGN uint64_t values[sixtyFourBitsPerStep * 2];
+		JSONIFIER_ALIGN(bytesPerStep) uint64_t values[sixtyFourBitsPerStep * 2];
 		simd::store(value, values);
 		static constexpr uint64_t shiftAmount{ 64 - amount };
 		values[sixtyFourBitsPerStep]	 = values[0] << amount;
@@ -156,7 +156,7 @@ namespace jsonifier::simd {
 		jsonifier_simd_int_t op;
 	};
 
-	template<size_t size> JSONIFIER_ALIGN constexpr internal::array<char, size> escapeableArray00{ [] {
+	template<size_t size> JSONIFIER_ALIGN(bytesPerStep) constexpr internal::array<char, size> escapeableArray00{ [] {
 		constexpr const char values[]{ 0x00u, 0x00u, '"', 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, '\\', 0x00u, 0x00u, 0x00u };
 		internal::array<char, size> returnValues{};
 		for (uint64_t x = 0; x < size; ++x) {
@@ -165,7 +165,7 @@ namespace jsonifier::simd {
 		return returnValues;
 	}() };
 
-	template<size_t size> JSONIFIER_ALIGN constexpr internal::array<char, size> escapeableArray01{ [] {
+	template<size_t size> JSONIFIER_ALIGN(bytesPerStep) constexpr internal::array<char, size> escapeableArray01{ [] {
 		constexpr const char values[]{ 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, '\b', 0x00u, 0x00u, 0x00u, 0x0Cu, '\r', 0x00u, 0x00u };
 		internal::array<char, size> returnValues{};
 		for (uint64_t x = 0; x < size; ++x) {
@@ -174,7 +174,7 @@ namespace jsonifier::simd {
 		return returnValues;
 	}() };
 
-	template<size_t size> JSONIFIER_ALIGN constexpr internal::array<char, size> whitespaceArray{ [] {
+	template<size_t size> JSONIFIER_ALIGN(bytesPerStep) constexpr internal::array<char, size> whitespaceArray{ [] {
 		constexpr const char values[]{ 0x20u, 0x64u, 0x64u, 0x64u, 0x11u, 0x64u, 0x71u, 0x02u, 0x64u, '\t', '\n', 0x70u, 0x64u, '\r', 0x64u, 0x64u };
 		internal::array<char, size> returnValues{};
 		for (uint64_t x = 0; x < size; ++x) {
@@ -183,7 +183,7 @@ namespace jsonifier::simd {
 		return returnValues;
 	}() };
 
-	template<size_t size> JSONIFIER_ALIGN constexpr internal::array<char, size> opArray{ [] {
+	template<size_t size> JSONIFIER_ALIGN(bytesPerStep) constexpr internal::array<char, size> opArray{ [] {
 		constexpr const char values[]{ 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, ':', '{', ',', '}', 0x00u, 0x00u };
 		internal::array<char, size> returnValues{};
 		for (uint64_t x = 0; x < size; ++x) {
@@ -193,7 +193,7 @@ namespace jsonifier::simd {
 	}() };
 
 	JSONIFIER_INLINE jsonifier_simd_int_t collectStructuralIndices(const jsonifier_simd_int_t* values) noexcept {
-		JSONIFIER_ALIGN jsonifier_string_parsing_type valuesNew[stridesPerStep];
+		JSONIFIER_ALIGN(bytesPerStep) jsonifier_string_parsing_type valuesNew[stridesPerStep];
 		static constexpr auto opArrayPtr{ opArray<bytesPerStep>.data() };
 		const jsonifier_simd_int_t simdValues{ gatherValues<jsonifier_simd_int_t>(opArrayPtr) };
 		const jsonifier_simd_int_t simdValue{ gatherValue<jsonifier_simd_int_t>(static_cast<char>(0x20)) };
@@ -209,7 +209,7 @@ namespace jsonifier::simd {
 	}
 
 	JSONIFIER_INLINE jsonifier_simd_int_t collectWhitespaceIndices(const jsonifier_simd_int_t* values) noexcept {
-		JSONIFIER_ALIGN jsonifier_string_parsing_type valuesNew[stridesPerStep];
+		JSONIFIER_ALIGN(bytesPerStep) jsonifier_string_parsing_type valuesNew[stridesPerStep];
 		static constexpr auto whiteSpaceArrayPtr{ whitespaceArray<bytesPerStep>.data() };
 		const jsonifier_simd_int_t simdValues{ gatherValues<jsonifier_simd_int_t>(whiteSpaceArrayPtr) };
 		valuesNew[0] = opCmpEqBitMask(opShuffle(simdValues, values[0]), values[0]);
@@ -225,7 +225,7 @@ namespace jsonifier::simd {
 
 	template<auto cNew> JSONIFIER_INLINE jsonifier_simd_int_t collectValues(const jsonifier_simd_int_t* values) noexcept {
 		static constexpr auto c{ cNew };
-		JSONIFIER_ALIGN jsonifier_string_parsing_type valuesNew[stridesPerStep];
+		JSONIFIER_ALIGN(bytesPerStep) jsonifier_string_parsing_type valuesNew[stridesPerStep];
 		const jsonifier_simd_int_t simdValue{ gatherValue<jsonifier_simd_int_t>(c) };
 		valuesNew[0] = opCmpEqBitMask(simdValue, values[0]);
 		valuesNew[1] = opCmpEqBitMask(simdValue, values[1]);
