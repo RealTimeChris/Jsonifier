@@ -74,17 +74,17 @@ namespace jsonifier::internal {
 
 	template<size_t... indices> struct index_sequence {};
 
-	template<size_t N, typename index_sequence> struct make_index_sequence_impl;
+	template<size_t index, typename index_sequence> struct make_index_sequence_impl;
 
 	template<size_t... indices> struct make_index_sequence_impl<0, index_sequence<indices...>> {
 		using type = index_sequence<indices...>;
 	};
 
-	template<size_t N, size_t... indices> struct make_index_sequence_impl<N, index_sequence<indices...>> {
-		using type = typename make_index_sequence_impl<N - 1, index_sequence<N - 1, indices...>>::type;
+	template<size_t index, size_t... indices> struct make_index_sequence_impl<index, index_sequence<indices...>> {
+		using type = typename make_index_sequence_impl<index - 1, index_sequence<index - 1, indices...>>::type;
 	};
 
-	template<size_t N> using make_index_sequence = typename make_index_sequence_impl<N, index_sequence<>>::type;
+	template<size_t index> using make_index_sequence = typename make_index_sequence_impl<index, index_sequence<>>::type;
 
 	template<class value_type_new, value_type_new valueNew> struct integral_constant {
 		static constexpr value_type_new value = valueNew;

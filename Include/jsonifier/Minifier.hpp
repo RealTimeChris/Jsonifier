@@ -191,16 +191,16 @@ namespace jsonifier::internal {
 						break;
 					}
 					case json_structural_type::null: {
-						std::memcpy(&out[index], nullV, 4);
+						std::memcpy(&out[index], &nullV, 4);
 						index += 4;
 						break;
 					}
 					case json_structural_type::boolean: {
 						if (*previousPtr == 'f') {
-							std::memcpy(&out[index], falseV, 5);
+							std::memcpy(&out[index], &falseV, 5);
 							index += 5;
 						} else {
-							std::memcpy(&out[index], trueV, 4);
+							std::memcpy(&out[index], &trueV, 4);
 							index += 4;
 						}
 						break;

@@ -136,31 +136,31 @@ namespace jsonifier::internal {
 		}
 	};
 
-	JSONIFIER_INLINE bool consumeChar(char expected, string_view_ptr& newerPtr) {
-		if (*newerPtr == expected) {
-			++newerPtr;
-			return true;
-		}
-		return false;
-	};
-
-	JSONIFIER_INLINE bool consumeDigits(string_view_ptr& newerPtr, uint64_t min_count = 1) {
-		uint64_t count = 0;
-		while (JSONIFIER_IS_DIGIT(*newerPtr)) {
-			++newerPtr;
-			++count;
-		}
-		return count >= min_count;
-	};
-
-	JSONIFIER_INLINE void consumeSign(string_view_ptr& newerPtr) {
-		if (*newerPtr == '-' || *newerPtr == '+') {
-			++newerPtr;
-		}
-		return;
-	};
-
 	template<typename derived_type> struct validate_impl<json_structural_type::number, derived_type> {
+		JSONIFIER_INLINE static bool consumeChar(char expected, string_view_ptr& newerPtr) {
+			if (*newerPtr == expected) {
+				++newerPtr;
+				return true;
+			}
+			return false;
+		};
+
+		JSONIFIER_INLINE static bool consumeDigits(string_view_ptr& newerPtr, uint64_t min_count = 1) {
+			uint64_t count = 0;
+			while (JSONIFIER_IS_DIGIT(*newerPtr)) {
+				++newerPtr;
+				++count;
+			}
+			return count >= min_count;
+		};
+
+		JSONIFIER_INLINE static void consumeSign(string_view_ptr& newerPtr) {
+			if (*newerPtr == '-' || *newerPtr == '+') {
+				++newerPtr;
+			}
+			return;
+		};
+
 		template<typename validator_type, typename iterator> JSONIFIER_INLINE static bool impl(iterator&& iter, validator_type& validatorRef) noexcept {
 			auto newPtr = *iter;
 			++iter;

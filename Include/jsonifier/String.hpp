@@ -163,8 +163,8 @@ namespace jsonifier {
 
 		template<concepts::pointer_t value_type_newer> JSONIFIER_INLINE string_base(value_type_newer other) noexcept : capacityVal{}, sizeVal{}, dataVal{} {
 			if (other) {
-				const auto newSize =
-					internal::char_traits<jsonifier::internal::remove_pointer_t<value_type_newer>>::length(other) * (sizeof(jsonifier::internal::remove_pointer_t<value_type_newer>) / sizeof(value_type));
+				const auto newSize = internal::char_traits<jsonifier::internal::remove_pointer_t<value_type_newer>>::length(other) *
+					(sizeof(jsonifier::internal::remove_pointer_t<value_type_newer>) / sizeof(value_type));
 				if JSONIFIER_LIKELY (newSize > 0 && newSize < maxSize()) {
 					reserve(newSize);
 					sizeVal = newSize;
@@ -484,13 +484,12 @@ namespace jsonifier {
 
 		JSONIFIER_INLINE pointer data() noexcept {
 			return dataVal;
-		}
+		} 
 
-		template<concepts::pointer_t value_type_newer>
-		JSONIFIER_INLINE friend std::enable_if_t<!std::is_array_v<value_type_newer>, bool> operator==(const string_base& lhs, const value_type_newer& rhs) noexcept {
+		template<size_t size> JSONIFIER_INLINE friend bool operator==(const string_base& lhs, const char (&rhs)[size]) noexcept {
 			auto rhsLength = traits_type::length(rhs);
 			return rhsLength == lhs.size() && internal::comparison::compare(lhs.data(), rhs, rhsLength);
-		}
+		} 
 
 		template<concepts::string_t value_type_newer> JSONIFIER_INLINE friend bool operator==(const string_base& lhs, const value_type_newer& rhs) noexcept {
 			if (lhs.size() == rhs.size()) {

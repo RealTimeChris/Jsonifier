@@ -73,9 +73,27 @@ static constexpr size_t bytesPerStep{ bitsPerStep / 8 };
 static constexpr size_t sixtyFourBitsPerStep{ bitsPerStep / 64 };
 static constexpr size_t stridesPerStep{ bitsPerStep / bytesPerStep };
 
-alignas(8) static constexpr char falseV[]{ "false" };
-alignas(4) static constexpr char trueV[]{ "true" };
-alignas(4) static constexpr char nullV[]{ "null" };
+constexpr uint16_t packValues2(const char* values) {
+	return static_cast<uint16_t>(static_cast<uint16_t>(values[0]) | static_cast<uint16_t>(values[1]) << 8);
+}
+
+constexpr uint32_t packValues3(const char* values) {
+	return static_cast<uint32_t>(static_cast<uint32_t>(values[0]) | static_cast<uint32_t>(values[1]) << 8 | static_cast<uint32_t>(values[2]) << 16);
+}
+
+constexpr uint32_t packValues4(const char* values) {
+	return static_cast<uint32_t>(
+		static_cast<uint32_t>(values[0]) | static_cast<uint32_t>(values[1]) << 8 | static_cast<uint32_t>(values[2]) << 16 | static_cast<uint32_t>(values[3]) << 24);
+}
+
+constexpr uint64_t packValues5(const char* values) {
+	return static_cast<uint64_t>(static_cast<uint64_t>(values[0]) | static_cast<uint64_t>(values[1]) << 8 | static_cast<uint64_t>(values[2]) << 16 |
+		static_cast<uint64_t>(values[3]) << 24 | static_cast<uint64_t>(values[4]) << 32);
+}
+
+static constexpr auto falseV{ packValues5("false") };
+static constexpr auto trueV{ packValues4("true") };
+static constexpr auto nullV{ packValues4("null") };
 alignas(2) static constexpr char backslash{ '\\' };
 alignas(2) static constexpr char newline{ '\n' };
 alignas(2) static constexpr char lBracket{ '[' };

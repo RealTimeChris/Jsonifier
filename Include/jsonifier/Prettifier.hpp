@@ -130,13 +130,6 @@ namespace jsonifier::internal {
 			int64_t indent{};
 			int64_t depth{};
 			uint64_t index{};
-			static constexpr auto packValues = []<typename return_type>(const char* val01, size_t count) constexpr {
-				return_type returnValue{};
-				for (size_t x = 0; x < count; ++x) {
-					returnValue |= static_cast<return_type>(val01[x]) << (x * 8);
-				}
-				return returnValue;
-			};
 			while (*iter) {
 				switch (jsonTypes[static_cast<uint8_t>(**iter)]) {
 					case json_structural_type::string: {
@@ -148,7 +141,7 @@ namespace jsonifier::internal {
 						break;
 					}
 					case json_structural_type::comma: {
-						static constexpr uint16_t commaNewLine { packValues.template operator()<uint16_t>(",\n", 2) };
+						static constexpr uint16_t commaNewLine{ packValues2(",\n") };
 						std::memcpy(&out[index], &commaNewLine, 2);
 						index += 2;
 						++iter;
@@ -166,7 +159,7 @@ namespace jsonifier::internal {
 					}
 					case json_structural_type::colon: {
 						static constexpr char valuesNew[]{ ':', options.indentChar };
-						static constexpr uint16_t colonIndentChar { packValues.template operator()<uint16_t>(valuesNew, 2) };
+						static constexpr uint16_t colonIndentChar{ packValues2(valuesNew) };
 						std::memcpy(&out[index], &colonIndentChar, 2);
 						index += 2;
 						++iter;
@@ -219,21 +212,18 @@ namespace jsonifier::internal {
 						break;
 					}
 					case json_structural_type::null: {
-						static constexpr auto nullValue { packValues.template operator()<uint32_t>("null", 4) };
-						std::memcpy(&out[index], &nullValue, 4);
+						std::memcpy(&out[index], &nullV, 4);
 						index += 4;
 						++iter;
 						break;
 					}
 					case json_structural_type::boolean: {
 						if (**iter == 'f') {
-							static constexpr auto falseValue { packValues.template operator()<uint64_t>("false", 5) };
-							std::memcpy(&out[index], &falseValue, 5);
+							std::memcpy(&out[index], &falseV, 5);
 							index += 5;
 							++iter;
 						} else {
-							static constexpr auto trueValue { packValues.template operator()<uint32_t>("true", 4) };
-							std::memcpy(&out[index], &trueValue, 4);
+							std::memcpy(&out[index], &trueV, 4);
 							index += 4;
 							++iter;
 						}

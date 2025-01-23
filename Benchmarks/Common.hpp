@@ -28,14 +28,16 @@
 #include "Twitter.hpp"
 #include "Discord.hpp"
 #include "Canada.hpp"
+#include <unordered_set>
 #include <thread>
+#include <random>
 
 #if defined(NDEBUG)
 static constexpr auto maxIterations{ 1400 };
-static constexpr auto measuredIterations{ 20 };
+static constexpr auto measuredIterations{ 25 };
 #else
 static constexpr auto maxIterations{ 200 };
-static constexpr auto measuredIterations{ 20 };
+static constexpr auto measuredIterations{ 25 };
 #endif
 
 constexpr auto getCurrentOperatingSystem() {

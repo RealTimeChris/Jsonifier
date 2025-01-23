@@ -210,25 +210,19 @@ namespace jsonifier {
 			return { data(), size() };
 		}
 
-		template<concepts::pointer_t value_type_newer>
-		JSONIFIER_INLINE constexpr friend std::enable_if_t<!std::is_array_v<value_type_newer>, bool> operator==(const string_view_base& lhs, const value_type_newer& rhs) noexcept {
-			auto rhsLength = internal::char_traits<jsonifier::internal::remove_pointer_t<value_type_newer>>::length(rhs);
+		template<size_t size> JSONIFIER_INLINE friend bool operator==(const string_view_base& lhs, const char (&rhs)[size]) noexcept {
+			auto rhsLength = traits_type::length(rhs);
 			return rhsLength == lhs.size() && internal::comparison::compare(lhs.data(), rhs, rhsLength);
 		}
 
-		template<concepts::string_t value_type_newer> JSONIFIER_INLINE constexpr friend bool operator==(const string_view_base& lhs, const value_type_newer& rhs) noexcept {
-			if (std::is_constant_evaluated()) {
-				auto compareValues = [=]() -> bool {
-					for (uint64_t x = 0; x < rhs.size(); ++x) {
-						if (rhs[x] != lhs[x]) {
-							return false;
-						}
-					}
-					return true;
-				}();
-				return lhs.size() == rhs.size() && compareValues;
+		template<concepts::string_t value_type_newer> JSONIFIER_INLINE friend bool operator==(const string_view_base& lhs, const value_type_newer& rhs) noexcept {
+			if (lhs.size() == rhs.size()) {
+				if (lhs.size() > 0) {
+					return internal::comparison::compare(lhs.data(), rhs.data(), rhs.size());
+				}
+				return true;
 			} else {
-				return rhs.size() == lhs.size() && internal::comparison::compare(lhs.data(), rhs.data(), rhs.size());
+				return false;
 			}
 		}
 

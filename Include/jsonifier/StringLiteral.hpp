@@ -168,10 +168,10 @@ namespace jsonifier::internal {
 	template<typename value_type>
 	concept gt_16 = value_type::length > 16 && !eq_16<value_type> && !eq_32<value_type> && !eq_64<value_type>;
 
-	template<size_t N, typename string_type> constexpr auto stringLiteralFromView(string_type str) noexcept {
-		string_literal<N + 1> sl{};
+	template<size_t index, typename string_type> constexpr auto stringLiteralFromView(string_type str) noexcept {
+		string_literal<index + 1> sl{};
 		std::copy_n(str.data(), str.size(), sl.values);
-		sl[N] = '\0';
+		sl[index] = '\0';
 		return sl;
 	}
 

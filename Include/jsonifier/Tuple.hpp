@@ -123,14 +123,14 @@ namespace jsonifier::internal {
 	template<typename... value_type> using tuple_base_t = typename get_tuple_base<jsonifier::internal::make_index_sequence<sizeof...(value_type)>, value_type...>::type;
 
 	template<typename... value_type> struct tuple : tuple_base_t<value_type...> {
-		static constexpr size_t N = sizeof...(value_type);
+		static constexpr size_t index = sizeof...(value_type);
 		using super				  = tuple_base_t<value_type...>;
 		using super::operator[];
 		using super::decl_elem;
 	};
 
 	template<> struct tuple<> : tuple_base_t<> {
-		constexpr static size_t N = 0;
+		constexpr static size_t index = 0;
 		using super				  = tuple_base_t<>;
 		using base_list			  = type_list<>;
 		using element_list		  = type_list<>;

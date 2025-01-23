@@ -537,22 +537,48 @@ In contrast, hash-based solutions offer a viable alternative by circumventing th
 			static constexpr bnch_swt::string_literal testName{ testNameNew };
 			test_results jsonResults{};
 			jsonResults.testName = testName.operator std::string();
-			results_data jsonifierResults{};
-			results_data simdjsonResults{};
-			results_data glazeResults{};
 
 #if !defined(ASAN_ENABLED)
-			simdjsonResults = json_test_helper<json_library::simdjson, type, test_data_type, minified, iterations, testName>::run(jsonDataNew);
+			jsonResults.results.emplace_back(json_test_helper<json_library::simdjson, type, test_data_type, minified, iterations, testName>::run(jsonDataNew));
 			if constexpr (!std::is_same_v<test_data_type, partial_test<test_struct>> && !std::is_same_v<test_data_type, twitter_partial_message>) {
-				glazeResults = json_test_helper<json_library::glaze, type, test_data_type, minified, iterations, testName>::run(jsonDataNew);
-				jsonResults.results.emplace_back(glazeResults);
+				jsonResults.results.emplace_back(json_test_helper<json_library::glaze, type, test_data_type, minified, iterations, testName>::run(jsonDataNew));
 			}
 #endif
-			jsonifierResults = json_test_helper<json_library::jsonifier, type, test_data_type, minified, iterations, testName>::run(jsonDataNew);
+			jsonResults.results.emplace_back(json_test_helper<json_library::jsonifier, type, test_data_type, minified, iterations, testName>::run(jsonDataNew));
+			jsonResults.markdownResults += generateSection(testName, currentPath);
+			jsonResults.markdownResults += table_header.operator std::string() + "\n";
+			std::sort(jsonResults.results.begin(), jsonResults.results.end(), std::greater<results_data>());
+			for (auto iter = jsonResults.results.begin(); iter != jsonResults.results.end();) {
+				jsonResults.markdownResults += iter->jsonStats();
+				if (static_cast<size_t>(iter - jsonResults.results.begin()) != jsonResults.results.size() - 1) {
+					jsonResults.markdownResults += "\n";
+				}
+				++iter;
+			}
+			bnch_swt::benchmark_stage<testNameNew + "-Read", iterations, measuredIterations>::printResults();
+			bnch_swt::benchmark_stage<testNameNew + "-Write", iterations, measuredIterations>::printResults();
+			return jsonResults;
+		}
+	};
+
+	template<typename test_data_type, bool minified, uint64_t iterations, bnch_swt::string_literal testNameNew>
+	struct json_tests_helper<test_type::parse_and_serialize_raw_json_data, test_data_type, minified, iterations, testNameNew> {
+		JSONIFIER_CLANG_INLINE static test_results run(std::string& jsonDataNew) {
+			static constexpr bnch_swt::string_literal testName{ testNameNew };
+			test_results jsonResults{};
+			jsonResults.testName = testName.operator std::string();
+
 #if !defined(ASAN_ENABLED)
-			jsonResults.results.emplace_back(simdjsonResults);
+			jsonResults.results.emplace_back(
+				json_test_helper<json_library::simdjson, test_type::parse_and_serialize, test_data_type, minified, iterations, testName>::run(jsonDataNew));
+			if constexpr (!std::is_same_v<test_data_type, partial_test<test_struct>> && !std::is_same_v<test_data_type, twitter_partial_message>) {
+				jsonResults.results.emplace_back(
+					json_test_helper<json_library::glaze, test_type::parse_and_serialize, test_data_type, minified, iterations, testName>::run(jsonDataNew));
+			}
 #endif
-			jsonResults.results.emplace_back(jsonifierResults);
+			jsonResults.results.emplace_back(
+				json_test_helper<json_library::jsonifier, test_type::parse_and_serialize_raw_json_data, test_data_type, minified, iterations, testName>::run(jsonDataNew));
+
 			jsonResults.markdownResults += generateSection(testName, currentPath);
 			jsonResults.markdownResults += table_header.operator std::string() + "\n";
 			std::sort(jsonResults.results.begin(), jsonResults.results.end(), std::greater<results_data>());
@@ -574,16 +600,10 @@ In contrast, hash-based solutions offer a viable alternative by circumventing th
 			static constexpr bnch_swt::string_literal testName{ testNameNew };
 			test_results jsonResults{};
 			jsonResults.testName = testName.operator std::string();
-			results_data jsonifierResults{};
-			results_data glazeResults{};
 #if !defined(ASAN_ENABLED)
-			glazeResults = json_test_helper<json_library::glaze, test_type::prettify, std::string, false, iterations, testName>::run(jsonDataNew);
+			jsonResults.results.emplace_back(json_test_helper<json_library::glaze, test_type::prettify, std::string, false, iterations, testName>::run(jsonDataNew));
 #endif
-			jsonifierResults = json_test_helper<json_library::jsonifier, test_type::prettify, std::string, false, iterations, testName>::run(jsonDataNew);
-#if !defined(ASAN_ENABLED)
-			jsonResults.results.emplace_back(glazeResults);
-#endif
-			jsonResults.results.emplace_back(jsonifierResults);
+			jsonResults.results.emplace_back(json_test_helper<json_library::jsonifier, test_type::prettify, std::string, false, iterations, testName>::run(jsonDataNew));
 			jsonResults.markdownResults += generateSection(testName, currentPath);
 			jsonResults.markdownResults += write_table_header.operator std::string() + "\n";
 			std::sort(jsonResults.results.begin(), jsonResults.results.end(), std::greater<results_data>());
@@ -604,19 +624,11 @@ In contrast, hash-based solutions offer a viable alternative by circumventing th
 			static constexpr bnch_swt::string_literal testName{ testNameNew };
 			test_results jsonResults{};
 			jsonResults.testName = testName.operator std::string();
-			results_data jsonifierResults{};
-			results_data simdjsonResults{};
-			results_data glazeResults{};
 #if !defined(ASAN_ENABLED)
-			simdjsonResults = json_test_helper<json_library::simdjson, test_type::minify, std::string, false, iterations, testName>::run(jsonDataNew);
-			glazeResults	= json_test_helper<json_library::glaze, test_type::minify, std::string, false, iterations, testName>::run(jsonDataNew);
+			jsonResults.results.emplace_back(json_test_helper<json_library::simdjson, test_type::minify, std::string, false, iterations, testName>::run(jsonDataNew));
+			jsonResults.results.emplace_back(json_test_helper<json_library::glaze, test_type::minify, std::string, false, iterations, testName>::run(jsonDataNew));
 #endif
-			jsonifierResults = json_test_helper<json_library::jsonifier, test_type::minify, std::string, false, iterations, testName>::run(jsonDataNew);
-#if !defined(ASAN_ENABLED)
-			jsonResults.results.emplace_back(simdjsonResults);
-			jsonResults.results.emplace_back(glazeResults);
-#endif
-			jsonResults.results.emplace_back(jsonifierResults);
+			jsonResults.results.emplace_back(json_test_helper<json_library::jsonifier, test_type::minify, std::string, false, iterations, testName>::run(jsonDataNew));
 			jsonResults.markdownResults += generateSection(testName, currentPath);
 			jsonResults.markdownResults += write_table_header.operator std::string() + "\n";
 			std::sort(jsonResults.results.begin(), jsonResults.results.end(), std::greater<results_data>());
@@ -637,16 +649,10 @@ In contrast, hash-based solutions offer a viable alternative by circumventing th
 			static constexpr bnch_swt::string_literal testName{ testNameNew };
 			test_results jsonResults{};
 			jsonResults.testName = testName.operator std::string();
-			results_data jsonifierResults{};
-			results_data glazeResults{};
 #if !defined(ASAN_ENABLED)
-			glazeResults = json_test_helper<json_library::glaze, test_type::validate, std::string, false, iterations, testName>::run(jsonDataNew);
+			jsonResults.results.emplace_back(json_test_helper<json_library::glaze, test_type::validate, std::string, false, iterations, testName>::run(jsonDataNew));
 #endif
-			jsonifierResults = json_test_helper<json_library::jsonifier, test_type::validate, std::string, false, iterations, testName>::run(jsonDataNew);
-			jsonResults.results.emplace_back(jsonifierResults);
-#if !defined(ASAN_ENABLED)
-			jsonResults.results.emplace_back(glazeResults);
-#endif
+			jsonResults.results.emplace_back(json_test_helper<json_library::jsonifier, test_type::validate, std::string, false, iterations, testName>::run(jsonDataNew));
 			jsonResults.markdownResults += generateSection(testName.operator std::string(), currentPath.operator std::string());
 			jsonResults.markdownResults += read_table_header.operator std::string() + "\n";
 			std::sort(jsonResults.results.begin(), jsonResults.results.end(), std::greater<results_data>());
