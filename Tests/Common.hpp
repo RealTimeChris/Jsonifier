@@ -25,6 +25,7 @@
 #include <BnchSwt/BenchmarkSuite.hpp>
 #include "UnicodeEmoji.hpp"
 #include <thread>
+#include <random>
 
 constexpr bnch_swt::string_literal basePath{ BASE_PATH };
 constexpr bnch_swt::string_literal testPath{ basePath };

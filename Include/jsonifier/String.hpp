@@ -484,12 +484,12 @@ namespace jsonifier {
 
 		JSONIFIER_INLINE pointer data() noexcept {
 			return dataVal;
-		} 
+		}
 
 		template<size_t size> JSONIFIER_INLINE friend bool operator==(const string_base& lhs, const char (&rhs)[size]) noexcept {
 			auto rhsLength = traits_type::length(rhs);
 			return rhsLength == lhs.size() && internal::comparison::compare(lhs.data(), rhs, rhsLength);
-		} 
+		}
 
 		template<concepts::string_t value_type_newer> JSONIFIER_INLINE friend bool operator==(const string_base& lhs, const value_type_newer& rhs) noexcept {
 			if (lhs.size() == rhs.size()) {

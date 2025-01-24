@@ -275,13 +275,6 @@ template<typename value_type_new> struct jsonifier::core<partial_test<value_type
 	static constexpr auto parseValue = createValue<&value_type::m>();
 };
 
-template<typename value_type_new> struct jsonifier::core<test_generator<value_type_new>> {
-	using value_type				 = test_generator<value_type_new>;
-	static constexpr auto parseValue = createValue<&value_type::a, &value_type::b, &value_type::c, &value_type::d, &value_type::e, &value_type::f, &value_type::g, &value_type::h,
-		&value_type::i, &value_type::j, &value_type::k, &value_type::l, &value_type::m, &value_type::n, &value_type::o, &value_type::p, &value_type::q, &value_type::r,
-		&value_type::s, &value_type::t, &value_type::u, &value_type::v, &value_type::w, &value_type::x, &value_type::y, &value_type::z>();
-};
-
 template<typename value_type_new> struct jsonifier::core<abc_test<value_type_new>> {
 	using value_type				 = abc_test<value_type_new>;
 	static constexpr auto parseValue = createValue<&value_type::z, &value_type::y, &value_type::x, &value_type::w, &value_type::v, &value_type::u, &value_type::t, &value_type::s,

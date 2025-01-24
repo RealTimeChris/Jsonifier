@@ -138,7 +138,6 @@ namespace jsonifier::internal {
 	}
 
 	template<serialize_options options, typename json_entity_type> struct json_entity_serialize : public json_entity_type {
-		static constexpr auto memberCount{ core_tuple_size<typename json_entity_type::class_type> };
 
 		constexpr json_entity_serialize() noexcept = default;
 
@@ -641,7 +640,14 @@ namespace jsonifier::internal {
 	template<concepts::raw_json_t value_type, typename context_type, serialize_options options, typename json_entity_type>
 	struct serialize_impl<value_type, context_type, options, json_entity_type> {
 		template<typename value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
-			serialize<options, json_entity_type>::impl(value.rawJson(), context);
+			const auto rawJson = value.rawJson();
+			const auto size	   = rawJson.size();
+			if (context.buffer.size() <= context.index + size) {
+				context.buffer.resize((context.index + size) * 4);
+				context.bufferPtr = context.buffer.data() + context.index;
+			}
+			std::memcpy(context.bufferPtr, rawJson.data(), size);
+			context.bufferPtr += size;
 		}
 	};
 

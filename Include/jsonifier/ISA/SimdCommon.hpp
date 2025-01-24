@@ -156,7 +156,8 @@ namespace jsonifier::simd {
 		jsonifier_simd_int_t op;
 	};
 
-	template<size_t size> JSONIFIER_ALIGN(bytesPerStep) constexpr internal::array<char, size> escapeableArray00{ [] {
+	template<size_t size> JSONIFIER_ALIGN(bytesPerStep)
+	constexpr internal::array<char, size> escapeableArray00{ [] {
 		constexpr const char values[]{ 0x00u, 0x00u, '"', 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, '\\', 0x00u, 0x00u, 0x00u };
 		internal::array<char, size> returnValues{};
 		for (uint64_t x = 0; x < size; ++x) {
@@ -165,7 +166,8 @@ namespace jsonifier::simd {
 		return returnValues;
 	}() };
 
-	template<size_t size> JSONIFIER_ALIGN(bytesPerStep) constexpr internal::array<char, size> escapeableArray01{ [] {
+	template<size_t size> JSONIFIER_ALIGN(bytesPerStep)
+	constexpr internal::array<char, size> escapeableArray01{ [] {
 		constexpr const char values[]{ 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, '\b', 0x00u, 0x00u, 0x00u, 0x0Cu, '\r', 0x00u, 0x00u };
 		internal::array<char, size> returnValues{};
 		for (uint64_t x = 0; x < size; ++x) {
@@ -174,7 +176,8 @@ namespace jsonifier::simd {
 		return returnValues;
 	}() };
 
-	template<size_t size> JSONIFIER_ALIGN(bytesPerStep) constexpr internal::array<char, size> whitespaceArray{ [] {
+	template<size_t size> JSONIFIER_ALIGN(bytesPerStep)
+	constexpr internal::array<char, size> whitespaceArray{ [] {
 		constexpr const char values[]{ 0x20u, 0x64u, 0x64u, 0x64u, 0x11u, 0x64u, 0x71u, 0x02u, 0x64u, '\t', '\n', 0x70u, 0x64u, '\r', 0x64u, 0x64u };
 		internal::array<char, size> returnValues{};
 		for (uint64_t x = 0; x < size; ++x) {
@@ -183,7 +186,8 @@ namespace jsonifier::simd {
 		return returnValues;
 	}() };
 
-	template<size_t size> JSONIFIER_ALIGN(bytesPerStep) constexpr internal::array<char, size> opArray{ [] {
+	template<size_t size> JSONIFIER_ALIGN(bytesPerStep)
+	constexpr internal::array<char, size> opArray{ [] {
 		constexpr const char values[]{ 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, ':', '{', ',', '}', 0x00u, 0x00u };
 		internal::array<char, size> returnValues{};
 		for (uint64_t x = 0; x < size; ++x) {

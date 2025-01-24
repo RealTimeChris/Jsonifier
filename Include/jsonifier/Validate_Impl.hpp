@@ -164,7 +164,7 @@ namespace jsonifier::internal {
 		template<typename validator_type, typename iterator> JSONIFIER_INLINE static bool impl(iterator&& iter, validator_type& validatorRef) noexcept {
 			auto newPtr = *iter;
 			++iter;
-			if (*iter && (*newPtr != 0x30u || !numberTable[static_cast<uint64_t>(*(newPtr + 1))])) {
+			if JSONIFIER_LIKELY (*iter && (*newPtr != 0x30u || !numberTable[static_cast<uint64_t>(*(newPtr + 1))])) {
 				consumeSign(newPtr);
 
 				consumeDigits(newPtr);
@@ -195,7 +195,7 @@ namespace jsonifier::internal {
 
 	template<typename derived_type> struct validate_impl<json_structural_type::boolean, derived_type> {
 		template<typename validator_type, typename iterator> JSONIFIER_INLINE static bool impl(iterator&& iter, validator_type& validatorRef) noexcept {
-			if JSONIFIER_LIKELY (validateBool(*iter)) {
+			if JSONIFIER_LIKELY ((*iter + 4) < validatorRef.endIter && validateBool(*iter)) {
 				++iter;
 				return true;
 			} else {

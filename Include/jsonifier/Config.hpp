@@ -114,15 +114,15 @@
 	#if defined(JSONIFIER_MSVC)
 		#define JSONIFIER_INLINE [[msvc::forceinline]] inline
 		#define JSONIFIER_NON_GCC_INLINE [[msvc::forceinline]] inline
-		#define JSONIFIER_CLANG_INLINE
+		#define JSONIFIER_CLANG_INLINE inline
 	#elif defined(JSONIFIER_CLANG)
 		#define JSONIFIER_INLINE inline __attribute__((always_inline))
 		#define JSONIFIER_NON_GCC_INLINE inline __attribute__((always_inline))
 		#define JSONIFIER_CLANG_INLINE inline __attribute__((always_inline))
 	#elif defined(JSONIFIER_GNUCXX)
 		#define JSONIFIER_INLINE inline __attribute__((always_inline))
-		#define JSONIFIER_NON_GCC_INLINE
-		#define JSONIFIER_CLANG_INLINE
+		#define JSONIFIER_NON_GCC_INLINE inline
+		#define JSONIFIER_CLANG_INLINE inline
 	#endif
 #else
 	#define JSONIFIER_INLINE

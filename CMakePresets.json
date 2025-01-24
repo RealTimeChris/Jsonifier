@@ -88,7 +88,7 @@
       "cacheVariables": {
         "ASAN_ENABLED": "TRUE",
         "CMAKE_BUILD_TYPE": "Release",
-        "JSONIFIER_BENCHMARKS": "TRUE"
+        "JSONIFIER_TESTS": "TRUE"
       },
       "inherits": "Jsonifier-Windows-Base",
       "name": "Jsonifier-Windows-Release-Asan"
@@ -101,7 +101,7 @@
       "cacheVariables": {
         "ASAN_ENABLED": "TRUE",
         "CMAKE_BUILD_TYPE": "Debug",
-        "JSONIFIER_BENCHMARKS": "TRUE"
+        "JSONIFIER_TESTS": "TRUE"
       },
       "inherits": "Jsonifier-Windows-Base",
       "name": "Jsonifier-Windows-Debug-Asan"

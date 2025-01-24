@@ -60,7 +60,7 @@ namespace jsonifier::internal {
 		}
 
 	  protected:
-		JSONIFIER_ALIGN(bytesPerStep) char block[bitsPerStep]{};
+		JSONIFIER_ALIGN(bytesPerStep) char block[bitsPerStep] {};
 		string_view_ptr inString{};
 		uint64_t lengthMinusStep{};
 		uint64_t length{};

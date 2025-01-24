@@ -34,7 +34,7 @@
 
 #if defined(NDEBUG)
 static constexpr auto maxIterations{ 1400 };
-static constexpr auto measuredIterations{ 25 };
+static constexpr auto measuredIterations{ 20 };
 #else
 static constexpr auto maxIterations{ 200 };
 static constexpr auto measuredIterations{ 25 };
@@ -189,14 +189,13 @@ inline static std::random_device randomEngine{};
 inline static std::mt19937_64 gen{ randomEngine() };
 static constexpr std::string_view charset{ "!#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~\"\\\r\b\f\t\n" };
 
-template<typename value_type> struct test_generator {
-	std::vector<value_type> a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z;
+struct test_generator {
 
 	inline static std::uniform_real_distribution<double> disDouble{ log(std::numeric_limits<double>::min()), log(std::numeric_limits<double>::max()) };
 	inline static std::uniform_int_distribution<int64_t> disInt{ std::numeric_limits<int64_t>::min(), std::numeric_limits<int64_t>::max() };
 	inline static std::uniform_int_distribution<uint64_t> disUint{ std::numeric_limits<uint64_t>::min(), std::numeric_limits<uint64_t>::max() };
 	inline static std::uniform_int_distribution<uint64_t> disCharSet{ 0ull, charset.size() - 1 };
-	inline static std::uniform_int_distribution<uint64_t> disString{ 16ull, 32ull };
+	inline static std::uniform_int_distribution<uint64_t> disString{ 1ull, 32ull };
 	inline static std::uniform_int_distribution<uint64_t> disUnicodeEmoji{ 0ull, std::size(unicode_emoji::unicodeEmoji) - 1 };
 	inline static std::uniform_int_distribution<uint64_t> disBool{ 0, 100 };
 	inline static std::random_device randomEngine{};
@@ -215,7 +214,7 @@ template<typename value_type> struct test_generator {
 
 	static std::string generateString() {
 		auto length{ disString(gen) };
-		auto unicodeCount = length / 10ull;
+		auto unicodeCount = length / 6ull;
 		std::vector<uint64_t> unicodeIndices{};
 		static constexpr auto checkForPresenceOfIndex = [](auto& indices, auto index, auto length, auto&& checkForPresenceOfIndexNew) -> void {
 			if (std::find(indices.begin(), indices.end(), index) != indices.end()) {
@@ -265,7 +264,8 @@ template<typename value_type> struct test_generator {
 		return disInt(gen);
 	}
 
-	test_generator() {
+	static test<test_struct> generateTest() {
+		test<test_struct> returnValues{};
 		auto fill = [&](auto& v) {
 			auto arraySize01 = randomizeNumberUniform(1ull, 3ull);
 			v.resize(arraySize01);
@@ -293,32 +293,33 @@ template<typename value_type> struct test_generator {
 			}
 		};
 
-		fill(a);
-		fill(b);
-		fill(c);
-		fill(d);
-		fill(e);
-		fill(f);
-		fill(g);
-		fill(h);
-		fill(i);
-		fill(j);
-		fill(k);
-		fill(l);
-		fill(m);
-		fill(n);
-		fill(o);
-		fill(p);
-		fill(q);
-		fill(r);
-		fill(s);
-		fill(t);
-		fill(u);
-		fill(v);
-		fill(w);
-		fill(x);
-		fill(y);
-		fill(z);
+		fill(returnValues.a);
+		fill(returnValues.b);
+		fill(returnValues.c);
+		fill(returnValues.d);
+		fill(returnValues.e);
+		fill(returnValues.f);
+		fill(returnValues.g);
+		fill(returnValues.h);
+		fill(returnValues.i);
+		fill(returnValues.j);
+		fill(returnValues.k);
+		fill(returnValues.l);
+		fill(returnValues.m);
+		fill(returnValues.n);
+		fill(returnValues.o);
+		fill(returnValues.p);
+		fill(returnValues.q);
+		fill(returnValues.r);
+		fill(returnValues.s);
+		fill(returnValues.t);
+		fill(returnValues.u);
+		fill(returnValues.v);
+		fill(returnValues.w);
+		fill(returnValues.x);
+		fill(returnValues.y);
+		fill(returnValues.z);
+		return returnValues;
 	}
 };
 

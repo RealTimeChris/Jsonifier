@@ -91,8 +91,8 @@ namespace jsonifier::internal {
 		return reinterpret_cast<string_view_ptr>(value.data());
 	}
 
-	template<typename value_type, typename buffer_type, typename context_type, parse_options optionsNew, bool minified> struct parse_impl_partial;
-	template<typename value_type, typename buffer_type, typename context_type, parse_options optionsNew, bool minified> struct parse_impl;
+	template<typename value_type, typename context_type, parse_options optionsNew, bool minified> struct parse_impl_partial;
+	template<typename value_type, typename context_type, parse_options optionsNew, bool minified> struct parse_impl;
 
 	template<typename value_type, size_t currentIndex = 0> constexpr size_t countTotalNonRepeatedMembers(size_t currentCount = 1) {
 		if constexpr (currentIndex < core_tuple_size<value_type>) {
@@ -109,19 +109,20 @@ namespace jsonifier::internal {
 	}
 
 	template<parse_options options, bool minifiedOrInsideRepeated> struct parse {
-		template<typename buffer_type, typename value_type_new, typename context_type> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type&& context) noexcept {
+		template<typename value_type_new, typename context_type>
+		JSONIFIER_NON_GCC_INLINE static void impl(value_type_new&& value, context_type&& context) noexcept {
 			using value_type = remove_cvref_t<value_type_new>;
 			if constexpr (options.partialRead) {
 				if constexpr (concepts::map_t<value_type> || concepts::jsonifier_object_t<value_type>) {
 					if constexpr (concepts::map_t<value_type> || minifiedOrInsideRepeated) {
-						parse_impl_partial<value_type, buffer_type, context_type, options, true>::impl(value, context);
+						parse_impl_partial<value_type, context_type, options, true>::impl(value, context);
 					} else {
-						parse_impl_partial<value_type, buffer_type, context_type, options, false>::impl(value, context);
+						parse_impl_partial<value_type, context_type, options, false>::impl(value, context);
 					}
 				} else if constexpr (jsonifier::concepts::raw_array_t<value_type> || concepts::vector_t<value_type>) {
-					parse_impl_partial<value_type, buffer_type, context_type, options, true>::impl(value, context);
+					parse_impl_partial<value_type, context_type, options, true>::impl(value, context);
 				} else {
-					parse_impl_partial<value_type, buffer_type, context_type, options, minifiedOrInsideRepeated>::impl(value, context);
+					parse_impl_partial<value_type, context_type, options, minifiedOrInsideRepeated>::impl(value, context);
 				}
 				if constexpr (!minifiedOrInsideRepeated) {
 					--context.remainingMemberCount;
@@ -131,13 +132,15 @@ namespace jsonifier::internal {
 					return;
 				}
 			} else {
-				parse_impl<value_type, buffer_type, context_type, options, options.minified>::impl(value, context);
+				parse_impl<value_type, context_type, options, options.minified>::impl(value, context);
 			}
 		}
 	};
 
 	template<typename derived_type_new> class parser {
 	  public:
+		friend class jsonifier::raw_json_data;
+
 		using derived_type = derived_type_new;
 
 		parser& operator=(const parser& other) = delete;
@@ -170,7 +173,7 @@ namespace jsonifier::internal {
 					reportError<parse_errors::No_Input>(context);
 					return false;
 				}
-				parse<optionsNew, areWeInsideRepeated<value_type>()>::template impl<buffer_type>(object, context);
+				parse<optionsNew, areWeInsideRepeated<value_type>()>::impl(object, context);
 				return derivedRef.errors.size() > 0 ? false : true;
 			} else {
 				static constexpr parse_options optionsNew{ options };
@@ -193,7 +196,7 @@ namespace jsonifier::internal {
 					reportError<parse_errors::No_Input>(context);
 					return false;
 				}
-				parse<optionsNew, options.minified>::template impl<buffer_type>(object, context);
+				parse<optionsNew, options.minified>::impl(object, context);
 				return (context.currentObjectDepth != 0) ? (reportError<parse_errors::Imbalanced_Object_Braces>(context), false)
 					: (context.currentArrayDepth != 0)	 ? (reportError<parse_errors::Imbalanced_Array_Brackets>(context), false)
 					: (context.iter < context.endIter)	 ? (reportError<parse_errors::Unfinished_Input>(context), false)
@@ -225,7 +228,7 @@ namespace jsonifier::internal {
 				return false;
 			}
 			while (context.iter < context.endIter) {
-				parse<optionsNew, options.minified>::template impl<buffer_type>(object.emplace_back(), context);
+				parse<optionsNew, options.minified>::impl(object.emplace_back(), context);
 			}
 			return (context.currentObjectDepth != 0)						  ? (reportError<parse_errors::Imbalanced_Object_Braces>(context), false)
 				: (context.currentArrayDepth != 0)							  ? (reportError<parse_errors::Imbalanced_Array_Brackets>(context), false)
@@ -261,7 +264,7 @@ namespace jsonifier::internal {
 					return jsonifier::internal::remove_cvref_t<value_type>{};
 				}
 				value_type object{};
-				parse<optionsNew, areWeInsideRepeated<value_type>()>::template impl<buffer_type>(object, context);
+				parse<optionsNew, areWeInsideRepeated<value_type>()>::impl(object, context);
 				return derivedRef.errors.size() > 0 ? jsonifier::internal::remove_cvref_t<value_type>{} : object;
 			} else {
 				static constexpr parse_options optionsNew{ options };
@@ -285,12 +288,13 @@ namespace jsonifier::internal {
 					return jsonifier::internal::remove_cvref_t<value_type>{};
 				}
 				value_type object{};
-				parse<optionsNew, options.minified>::template impl<buffer_type>(object, context);
+				parse<optionsNew, options.minified>::impl(object, context);
 				return (context.currentObjectDepth != 0) ? (reportError<parse_errors::Imbalanced_Object_Braces>(context), jsonifier::internal::remove_cvref_t<value_type>{})
 					: (context.currentArrayDepth != 0)	 ? (reportError<parse_errors::Imbalanced_Array_Brackets>(context), jsonifier::internal::remove_cvref_t<value_type>{})
-					: (context.iter < context.endIter && !optionsNew.partialRead) ? (reportError<parse_errors::Unfinished_Input>(context), jsonifier::internal::remove_cvref_t<value_type>{})
-					: derivedRef.errors.size() > 0								  ? jsonifier::internal::remove_cvref_t<value_type>{}
-																				  : object;
+					: (context.iter < context.endIter && !optionsNew.partialRead)
+					? (reportError<parse_errors::Unfinished_Input>(context), jsonifier::internal::remove_cvref_t<value_type>{})
+					: derivedRef.errors.size() > 0 ? jsonifier::internal::remove_cvref_t<value_type>{}
+												   : object;
 			}
 		}
 

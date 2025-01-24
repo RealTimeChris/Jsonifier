@@ -48,7 +48,7 @@ namespace jsonifier::internal {
 	template<typename derived_type> class prettifier {
 	  public:
 		inline prettifier& operator=(const prettifier& other) = delete;
-		inline prettifier(const prettifier& other)			= delete;
+		inline prettifier(const prettifier& other)			  = delete;
 
 		template<prettify_options options = prettify_options{}, concepts::string_t string_type> inline auto prettifyJson(string_type&& in) noexcept {
 			if JSONIFIER_UNLIKELY (stringBuffer.size() < in.size() * 5) {
