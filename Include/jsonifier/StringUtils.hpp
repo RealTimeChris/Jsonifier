@@ -267,8 +267,11 @@ namespace jsonifier::internal {
 
 	template<typename simd_type, typename integer_type>
 	JSONIFIER_INLINE integer_type findSerialize(const simd_type& simdValue, const simd_type& simdValues01, const simd_type& simdValues02, const simd_type& simdValues03) noexcept {
-		return simd::postCmpTzcnt(static_cast<integer_type>(simd::opBitMaskRaw(
-			simd::opOr(simd::opOr(simd::opCmpEqRaw(simdValues01, simdValue), simd::opCmpEqRaw(simdValues02, simdValue)), simd::opCmpLtRaw(simdValue, simdValues03)))));
+		auto result01 = simd::opOr(simd::opOr(simd::opCmpLtRaw(simdValue, simdValues03), simd::opCmpEqRaw(simdValue, simdValues02)), simd::opCmpEqRaw(simdValue, simdValues01));
+		if (!simd::opTest(result01)) {
+			return sizeof(integer_type) * 8;
+		}
+		return simd::tzcnt(static_cast<integer_type>(simd::opBitMaskRaw(result01)));
 	}
 
 	template<concepts::unsigned_t simd_type, concepts::unsigned_t integer_type> JSONIFIER_INLINE integer_type findSerialize(simd_type& simdValue) noexcept {
@@ -324,7 +327,6 @@ namespace jsonifier::internal {
 			using integer_type						 = typename get_type_at_index<simd::avx_integer_list, index>::type::integer_type;
 			using simd_type							 = typename get_type_at_index<simd::avx_integer_list, index>::type::type;
 			static constexpr uint64_t bytesProcessed = get_type_at_index<simd::avx_integer_list, index>::type::bytesProcessed;
-			static constexpr integer_type mask		 = get_type_at_index<simd::avx_integer_list, index>::type::mask;
 			const simd_type simdValues00			 = simd::gatherValue<simd_type>('\\');
 			const simd_type simdValues01			 = simd::gatherValue<simd_type>(static_cast<char>(32));
 			simd_type simdValue;
@@ -383,8 +385,6 @@ namespace jsonifier::internal {
 		JSONIFIER_INLINE static void impl(basic_iterator01& string1, basic_iterator01 iter, basic_iterator02 string2, uint64_t& lengthNew) noexcept {
 			using integer_type						 = typename get_type_at_index<simd::avx_integer_list, 0>::type::integer_type;
 			using simd_type							 = typename get_type_at_index<simd::avx_integer_list, 0>::type::type;
-			static constexpr uint64_t bytesProcessed = get_type_at_index<simd::avx_integer_list, 0>::type::bytesProcessed;
-			static constexpr integer_type mask		 = get_type_at_index<simd::avx_integer_list, 0>::type::mask;
 			simd_type simdValue;
 			integer_type nextBackslashOrQuote;
 			while (string1 + 8 < iter) {

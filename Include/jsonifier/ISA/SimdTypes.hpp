@@ -110,13 +110,13 @@ using structural_index	= string_view_ptr;
 using string_buffer_ptr = char*;
 
 template<typename value_type>
-concept simd_int_512_type = std::same_as<jsonifier_simd_int_512, jsonifier::internal::remove_cvref_t<value_type>>;
+concept simd_int_512_type = std::is_same_v<jsonifier_simd_int_512, jsonifier::internal::remove_cvref_t<value_type>>;
 template<typename value_type>
-concept simd_int_256_type = std::same_as<jsonifier_simd_int_256, jsonifier::internal::remove_cvref_t<value_type>>;
+concept simd_int_256_type = std::is_same_v<jsonifier_simd_int_256, jsonifier::internal::remove_cvref_t<value_type>>;
 template<typename value_type>
-concept simd_int_128_type = std::same_as<jsonifier_simd_int_128, jsonifier::internal::remove_cvref_t<value_type>>;
+concept simd_int_128_type = std::is_same_v<jsonifier_simd_int_128, jsonifier::internal::remove_cvref_t<value_type>>;
 template<typename value_type>
-concept simd_int_type = std::same_as<jsonifier_simd_int_t, jsonifier::internal::remove_cvref_t<value_type>>;
+concept simd_int_type = std::is_same_v<jsonifier_simd_int_t, jsonifier::internal::remove_cvref_t<value_type>>;
 
 void jsonifierPrefetchImpl(const void* ptr) noexcept {
 #if defined(JSONIFIER_MAC) && defined(__arm64__)

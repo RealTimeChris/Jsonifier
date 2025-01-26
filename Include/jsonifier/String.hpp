@@ -28,7 +28,7 @@
 namespace jsonifier::internal {
 
 	template<typename value_type>
-	concept not_uint8_t = !std::same_as<value_type, uint8_t>;
+	concept not_uint8_t = !std::is_same_v<value_type, uint8_t>;
 
 	template<typename value_type> class char_traits;
 
