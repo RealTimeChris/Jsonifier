@@ -39,21 +39,25 @@
 namespace jsonifier::simd {
 
 #if defined(JSONIFIER_MAC)
-	using avx_list = internal::type_list<internal::type_holder<16, jsonifier_simd_int_128, uint64_t, std::numeric_limits<uint64_t>::max()>,
-		internal::type_holder<32, jsonifier_simd_int_256, uint32_t, std::numeric_limits<uint32_t>::max()>,
-		internal::type_holder<64, jsonifier_simd_int_512, uint64_t, std::numeric_limits<uint64_t>::max()>>;
+	using avx_list = internal::type_list<internal::type_holder<16, internal::avx_type_wrapper<internal::avx_type::m128>, uint64_t, std::numeric_limits<uint64_t>::max()>,
+		internal::type_holder<32, internal::avx_type_wrapper<internal::avx_type::m256>, uint32_t, std::numeric_limits<uint32_t>::max()>,
+		internal::type_holder<64, internal::avx_type_wrapper<internal::avx_type::m512>, uint64_t, std::numeric_limits<uint64_t>::max()>>;
 #else
-	using avx_list = internal::type_list<internal::type_holder<16, jsonifier_simd_int_128, uint16_t, std::numeric_limits<uint16_t>::max()>,
-		internal::type_holder<32, jsonifier_simd_int_256, uint32_t, std::numeric_limits<uint32_t>::max()>,
-		internal::type_holder<64, jsonifier_simd_int_512, uint64_t, std::numeric_limits<uint64_t>::max()>>;
+	using avx_list = internal::type_list<internal::type_holder<16, internal::avx_type_wrapper<internal::avx_type::m128>, uint16_t, std::numeric_limits<uint16_t>::max()>,
+		internal::type_holder<32, internal::avx_type_wrapper<internal::avx_type::m256>, uint32_t, std::numeric_limits<uint32_t>::max()>,
+		internal::type_holder<64, internal::avx_type_wrapper<internal::avx_type::m512>, uint64_t, std::numeric_limits<uint64_t>::max()>>;
 #endif
 
 #if defined(JSONIFIER_MAC)
-	using avx_integer_list = internal::type_list<internal::type_holder<8, uint64_t, uint64_t, 8>, internal::type_holder<16, jsonifier_simd_int_128, uint64_t, 16>,
-		internal::type_holder<32, jsonifier_simd_int_256, uint32_t, 32>, internal::type_holder<64, jsonifier_simd_int_512, uint64_t, 64>>;
+	using avx_integer_list =
+		internal::type_list<internal::type_holder<8, uint64_t, uint64_t, 8>, internal::type_holder<16, internal::avx_type_wrapper<internal::avx_type::m128>, uint64_t, 16>,
+			internal::type_holder<32, internal::avx_type_wrapper<internal::avx_type::m256>, uint32_t, 32>,
+			internal::type_holder<64, internal::avx_type_wrapper<internal::avx_type::m512>, uint64_t, 64>>;
 #else
-	using avx_integer_list = internal::type_list<internal::type_holder<8, uint64_t, uint64_t, 8>, internal::type_holder<16, jsonifier_simd_int_128, uint16_t, 16>,
-		internal::type_holder<32, jsonifier_simd_int_256, uint32_t, 32>, internal::type_holder<64, jsonifier_simd_int_512, uint64_t, 64>>;
+	using avx_integer_list =
+		internal::type_list<internal::type_holder<8, uint64_t, uint64_t, 8>, internal::type_holder<16, internal::avx_type_wrapper<internal::avx_type::m128>, uint16_t, 16>,
+			internal::type_holder<32, internal::avx_type_wrapper<internal::avx_type::m256>, uint32_t, 32>,
+			internal::type_holder<64, internal::avx_type_wrapper<internal::avx_type::m512>, uint64_t, 64>>;
 #endif
 
 	template<concepts::unsigned_t value_type> void printBits(value_type values, const string& valuesTitle);
@@ -249,7 +253,7 @@ namespace jsonifier::simd {
 				.quotes							   = collectValues<'"'>(values),
 				.op								   = collectStructuralIndices(values) };
 		} else {
-			return simd_int_t_holder{ .backslashes = collectValues<'\\'>(values), .quotes = collectValues<'"'>(values), .op = collectStructuralIndices(values) };
+			return simd_int_t_holder{ .backslashes = collectValues<'\\'>(values), .whitespace = {}, .quotes = collectValues<'"'>(values), .op = collectStructuralIndices(values) };
 		}
 	}
 

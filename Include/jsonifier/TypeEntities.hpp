@@ -62,6 +62,22 @@ namespace jsonifier::internal {
 
 	template<typename derived_type, size_t = 0> class vector;
 
+	enum class avx_type { m128 = 0, m256 = 1, m512 = 2 };
+
+	template<avx_type type> struct avx_type_wrapper;
+
+	template<> struct avx_type_wrapper<avx_type::m128> {
+		using type = jsonifier_simd_int_128;
+	};
+
+	template<> struct avx_type_wrapper<avx_type::m256> {
+		using type = jsonifier_simd_int_256;
+	};
+
+	template<> struct avx_type_wrapper<avx_type::m512> {
+		using type = jsonifier_simd_int_512;
+	};
+
 	// from
 	// https://stackoverflow.com/questions/16337610/how-to-know-if-a-type-is-a-specialization-of-stdvector
 	template<typename, template<typename...> typename> constexpr bool is_specialization_v = false;
@@ -76,6 +92,10 @@ namespace jsonifier::internal {
 	};
 
 	template<typename... value_type> struct type_list {};
+
+	template<typename... Ls, typename... Rs> constexpr auto operator+(type_list<Ls...>, type_list<Rs...>) {
+		return type_list<Ls..., Rs...>{};
+	}
 
 	template<typename value_type, typename... rest> struct type_list<value_type, rest...> {
 		using current_type			   = value_type;

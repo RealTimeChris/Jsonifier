@@ -66,11 +66,11 @@ namespace jsonifier::internal {
 	}
 
 	template<size_t length> struct map_simd {
-		using type = jsonifier::internal::conditional_t<length >= 64 && bytesPerStep >= 64, jsonifier_simd_int_512,
-			jsonifier::internal::conditional_t<length >= 32 && bytesPerStep >= 32, jsonifier_simd_int_256, jsonifier_simd_int_128>>;
+		using type = jsonifier::internal::conditional_t<length >= 64 && bytesPerStep >= 64, avx_type_wrapper<avx_type::m512>,
+			jsonifier::internal::conditional_t<length >= 32 && bytesPerStep >= 32, avx_type_wrapper<avx_type::m256>, avx_type_wrapper<avx_type::m128>>>;
 	};
 
-	template<size_t length> using map_simd_t = map_simd<length>::type;
+	template<size_t length> using map_simd_t = typename map_simd<length>::type::type;
 
 	enum class hash_map_type {
 		unset						= 0,

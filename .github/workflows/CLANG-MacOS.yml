@@ -39,7 +39,7 @@ jobs:
     - name: Build the Test
       working-directory: ./Build
       run: |
-           sudo cmake --build . --config=${{matrix.build_type}} -v
+           sudo cmake --build . --config=${{matrix.build_type}}
 
     - name: Install the Test
       working-directory: ./Build
@@ -59,7 +59,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        build_type: [Debug]
+        build_type: [Release]
 
     steps:
     - uses: actions/checkout@v4
@@ -82,7 +82,7 @@ jobs:
 
     - name: Build the Test
       run: |
-           cmake --build ./Build --config=${{matrix.build_type}} -v
+           cmake --build ./Build --config=${{matrix.build_type}}
 
     - name: Install the Test
       run: |

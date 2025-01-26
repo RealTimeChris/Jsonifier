@@ -52,41 +52,40 @@ namespace tests {
 			if (rawJsonData.getType() == jsonifier::json_type::object) {
 				auto& json_object = rawJsonData.getObject();
 				for (auto& [key, value]: json_object) {
-					/*
 					if (key == "testString" && value.getType() == jsonifier::json_type::array) {
 						for (auto& element: value.getArray()) {
 							if (element.getType() == jsonifier::json_type::string) {
-								output.testString.emplace_back(static_cast<std::string>(element.getString()));
+								output.testString = static_cast<std::string>(element.getString());
 							}
 						}
 					} else if (key == "testUint" && value.getType() == jsonifier::json_type::array) {
 						for (auto& element: value.getArray()) {
 							if (element.getType() == jsonifier::json_type::number) {
-								output.testUint.emplace_back(element.getUint());
+								output.testUint = element.getUint();
 							}
 						}
 					} else if (key == "testInt" && value.getType() == jsonifier::json_type::array) {
 						for (auto& element: value.getArray()) {
 							if (element.getType() == jsonifier::json_type::number) {
-								output.testInt.emplace_back(element.getInt());
+								output.testInt = element.getInt();
 							}
 						}
 					} else if (key == "testDouble" && value.getType() == jsonifier::json_type::array) {
 						for (auto& element: value.getArray()) {
 							if (element.getType() == jsonifier::json_type::number) {
-								output.testDouble.emplace_back(element.getDouble());
+								output.testDouble = element.getDouble();
 							}
 						}
 					} else if (key == "testBool" && value.getType() == jsonifier::json_type::array) {
 						for (auto& element: value.getArray()) {
 							if (element.getType() == jsonifier::json_type::boolean) {
-								output.testBool.emplace_back(element.getBool());
+								output.testBool = element.getBool();
 							}
 						}
-					}*/
+					}
 				}
 			}
-			return output;
+			return {};
 		}
 	};
 

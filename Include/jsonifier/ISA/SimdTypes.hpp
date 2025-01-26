@@ -31,9 +31,15 @@
 
 	#include <immintrin.h>
 
-using jsonifier_simd_int_128 = __m128i;
-using jsonifier_simd_int_256 = __m256i;
-using jsonifier_simd_int_512 = __m512i;
+	#if defined(JSONIFIER_MSVC)
+		#define JSONIFIER_DECL_ALIGN(x) __declspec(align(x))
+	#else
+		#define JSONIFIER_DECL_ALIGN(x) __attribute__((aligned(x)))
+	#endif
+
+using jsonifier_simd_int_128 = JSONIFIER_DECL_ALIGN(16) __m128i;
+using jsonifier_simd_int_256 = JSONIFIER_DECL_ALIGN(32) __m256i;
+using jsonifier_simd_int_512 = JSONIFIER_DECL_ALIGN(64) __m512i;
 
 	#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 using jsonifier_simd_int_t = __m512i;

@@ -54,10 +54,6 @@
 
 namespace jsonifier::internal {
 
-	template<typename... Ls, typename... Rs> constexpr auto operator+(type_list<Ls...>, type_list<Rs...>) {
-		return type_list<Ls..., Rs...>{};
-	}
-
 	template<typename tup, typename B> struct forward_as {
 		using type = B&&;
 	};

@@ -42,12 +42,12 @@ namespace jsonifier::internal {
 	template<typename derived_type, typename iterator_t> struct parse_context {
 		constexpr parse_context() noexcept = default;
 
-		parser<derived_type>* parserPtr{};
-		int64_t currentObjectDepth{};
-		int64_t currentArrayDepth{};
-		iterator_t rootIter{};
-		iterator_t endIter{};
-		iterator_t iter{};
+		mutable parser<derived_type>* parserPtr{};
+		mutable int64_t currentObjectDepth{};
+		mutable int64_t currentArrayDepth{};
+		mutable iterator_t rootIter{};
+		mutable iterator_t endIter{};
+		mutable iterator_t iter{};
 	};
 
 	template<typename value_type> constexpr bool areWeInsideRepeated() {
@@ -57,17 +57,17 @@ namespace jsonifier::internal {
 	template<typename derived_type, typename iterator_type> struct parse_context_partial {
 		constexpr parse_context_partial() noexcept = default;
 
-		JSONIFIER_INLINE bool getState() {
+		JSONIFIER_INLINE bool getState() const {
 			return remainingMemberCount > 0 && (currentArrayDepth > 0 || currentObjectDepth > 0);
 		}
 
-		parser<derived_type>* parserPtr{};
-		int64_t remainingMemberCount{};
-		int64_t currentObjectDepth{};
-		int64_t currentArrayDepth{};
-		iterator_type rootIter{};
-		iterator_type endIter{};
-		iterator_type iter{};
+		mutable parser<derived_type>* parserPtr{};
+		mutable int64_t remainingMemberCount{};
+		mutable int64_t currentObjectDepth{};
+		mutable int64_t currentArrayDepth{};
+		mutable iterator_type rootIter{};
+		mutable iterator_type endIter{};
+		mutable iterator_type iter{};
 	};
 
 	template<typename value_type>
@@ -150,7 +150,7 @@ namespace jsonifier::internal {
 		JSONIFIER_INLINE bool parseJson(value_type&& object, buffer_type&& in) noexcept {
 			if constexpr (options.partialRead) {
 				static constexpr parse_options optionsNew{ options };
-				parse_context_partial<derived_type, string_view_ptr*> context{};
+				constexpr parse_context_partial<derived_type, string_view_ptr*> context{ constEval(parse_context_partial<derived_type, string_view_ptr*>{}) };
 				auto rootIter = getBeginIter(in);
 				auto endIter  = getEndIter(in);
 				section.reset<options.minified>(rootIter, static_cast<size_t>(endIter - rootIter));
@@ -177,7 +177,7 @@ namespace jsonifier::internal {
 				return derivedRef.errors.size() > 0 ? false : true;
 			} else {
 				static constexpr parse_options optionsNew{ options };
-				parse_context<derived_type, string_view_ptr> context{};
+				constexpr parse_context<derived_type, string_view_ptr> context{ constEval(parse_context<derived_type, string_view_ptr>{}) };
 				context.rootIter  = getBeginIter(in);
 				context.iter	  = context.rootIter;
 				context.endIter	  = getEndIter(in);
@@ -208,7 +208,7 @@ namespace jsonifier::internal {
 		template<typename value_type, parse_options options = parse_options{}, typename buffer_type>
 		JSONIFIER_INLINE bool parseManyJson(value_type&& object, buffer_type&& in) noexcept {
 			static constexpr parse_options optionsNew{ .validateJson = options.validateJson, .partialRead = false, .knownOrder = options.knownOrder, .minified = options.minified };
-			parse_context<derived_type, string_view_ptr> context{};
+			constexpr parse_context<derived_type, string_view_ptr> context{ constEval(parse_context<derived_type, string_view_ptr>{}) };
 			context.rootIter  = getBeginIter(in);
 			context.iter	  = context.rootIter;
 			context.endIter	  = getEndIter(in);
@@ -240,7 +240,7 @@ namespace jsonifier::internal {
 		template<typename value_type, parse_options options = parse_options{}, concepts::string_t buffer_type> JSONIFIER_INLINE value_type parseJson(buffer_type&& in) noexcept {
 			if constexpr (options.partialRead) {
 				static constexpr parse_options optionsNew{ options };
-				parse_context_partial<derived_type, string_view_ptr*> context{};
+				constexpr parse_context_partial<derived_type, string_view_ptr*> context{ constEval(parse_context_partial<derived_type, string_view_ptr*>{}) };
 				auto rootIter = getBeginIter(in);
 				auto endIter  = getEndIter(in);
 				section.reset<options.minified>(rootIter, static_cast<size_t>(endIter - rootIter));
@@ -268,7 +268,7 @@ namespace jsonifier::internal {
 				return derivedRef.errors.size() > 0 ? jsonifier::internal::remove_cvref_t<value_type>{} : object;
 			} else {
 				static constexpr parse_options optionsNew{ options };
-				parse_context<derived_type, string_view_ptr> context{};
+				constexpr parse_context<derived_type, string_view_ptr> context{ constEval(parse_context<derived_type, string_view_ptr>{}) };
 				context.rootIter  = getBeginIter(in);
 				context.iter	  = context.rootIter;
 				context.endIter	  = getEndIter(in);

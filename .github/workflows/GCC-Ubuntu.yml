@@ -34,7 +34,7 @@ jobs:
 
     - name: Build the Test
       run: |
-           sudo cmake --build ./Build --config=${{matrix.build_type}} -v
+           sudo cmake --build ./Build --config=${{matrix.build_type}}
 
     - name: Install the Test
       run: |
