@@ -801,10 +801,13 @@ In contrast, hash-based solutions offer a viable alternative by circumventing th
 	};
 
 	JSONIFIER_CLANG_INLINE void testFunction() {
-		test<test_struct> testJsonData{ test_generator::generateTest() };
 		std::string jsonDataNew{};
 		jsonifier::jsonifier_core parser{};
-		parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(testJsonData, jsonDataNew);
+		std::vector<test<test_struct>> jsonDataNewer{ maxIterations + 1 };
+		for (size_t x = 0; x < maxIterations + 1; ++x) {
+			jsonDataNewer[x] = test_generator::generateTest();
+		}
+		parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(jsonDataNewer[0], jsonDataNew);
 		bnch_swt::file_loader::saveFile(jsonDataNew, jsonOutPath.operator std::string() + "/Json Test (Prettified).json");
 		bnch_swt::file_loader::saveFile(jsonDataNew, jsonOutPath.operator std::string() + "/Abc (Out of Order) Test (Prettified).json");
 		bnch_swt::file_loader::saveFile(jsonDataNew, jsonOutPath.operator std::string() + "/Partial Test (Prettified).json");
@@ -838,10 +841,6 @@ In contrast, hash-based solutions offer a viable alternative by circumventing th
 		newTimeString.resize(strftime(newTimeString.data(), 1024, "%b %d, %Y", &resultTwo));
 		std::string newerString{ section00.operator std::string() + newTimeString + ")\n" + static_cast<std::string>(section002.operator std::string()) +
 			static_cast<std::string>(section001) };
-		std::vector<test<test_struct>> jsonDataNewer{ maxIterations + 1 };
-		for (size_t x = 0; x < maxIterations + 1; ++x) {
-			jsonDataNewer[x] = test_generator::generateTest();
-		}
 		test_results testResults{ json_tests_helper<test_type::parse_and_serialize, test<test_struct>, false, maxIterations, "Json Test (Prettified)">::run(jsonDataNewer) };
 		newerString += testResults.markdownResults;
 		benchmark_data.emplace_back(testResults);
@@ -859,7 +858,7 @@ In contrast, hash-based solutions offer a viable alternative by circumventing th
 		benchmark_data.emplace_back(testResults);
 		testResults = json_tests_helper<test_type::parse_and_serialize, partial_test<partial_test_struct>, true, maxIterations, "Partial Test (Minified)">::run(jsonPartialDataNewer);
 		newerString += testResults.markdownResults;
-		benchmark_data.emplace_back(testResults);
+		benchmark_data.emplace_back(testResults);		
 		std::vector<abc_test<abc_test_struct>> abcDataNew{ maxIterations + 1 };
 		for (size_t x = 0; x < maxIterations + 1; ++x) {
 			parser.serializeJson(jsonDataNewer[x], newStrings[x]);

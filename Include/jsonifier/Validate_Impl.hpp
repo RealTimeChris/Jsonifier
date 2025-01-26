@@ -115,11 +115,15 @@ namespace jsonifier::internal {
 	template<typename derived_type> struct validate_impl<json_structural_type::string, derived_type> {
 		template<typename validator_type, typename iterator> JSONIFIER_INLINE static bool impl(iterator&& iter, validator_type& validatorRef) noexcept {
 			if JSONIFIER_LIKELY (*iter && **iter == '"') {
-				auto newPtr = *iter;
+				auto string1 = *iter;
 				++iter;
-				auto endPtr = *iter;
-				newPtr		= string_parser<optionsVal, decltype(newPtr), decltype(stringBuffer.data())>::impl(newPtr, stringBuffer.data(), static_cast<size_t>(endPtr - newPtr));
-				if JSONIFIER_LIKELY (newPtr) {
+
+				auto lengthNew = uint64_t(*iter - string1);
+
+				auto* string2 = stringBuffer.data();
+
+				string_parser<optionsVal, decltype(string1), decltype(stringBuffer.data())>::impl(string1, *iter, string2, lengthNew);
+				if JSONIFIER_LIKELY (string1) {
 					return true;
 				}
 				JSONIFIER_ELSE_UNLIKELY(else) {

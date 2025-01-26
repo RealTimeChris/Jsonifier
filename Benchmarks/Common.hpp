@@ -185,26 +185,21 @@ template<typename value_type> struct partial_test {
 	std::vector<value_type> m, s;
 };
 
-inline static std::random_device randomEngine{};
-inline static std::mt19937_64 gen{ randomEngine() };
-
-static constexpr std::string_view charSetRaw01{ "!#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~" };
-static constexpr std::string_view charSetRaw02{ "\"\\\b\f\n\r\t" };
-
-static constexpr std::array<char, 256> charset{ [] {
-	std::array<char, 256> returnValues{};
-	size_t x = 0;
-	for (; x < 256 - charSetRaw02.size(); ++x) {
-		returnValues[x] = charSetRaw01[x % charSetRaw01.size()];
-	}
-	for (size_t y = 0; y < charSetRaw02.size(); ++y, ++x) {
-		returnValues[x] = charSetRaw02[y];
-	}
-
-	return returnValues;
-}() };
-
 struct test_generator {
+	static constexpr std::string_view charSetRaw01{ "!#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~" };
+	static constexpr std::string_view charSetRaw02{ "\"\\\b\f\n\r\t" };
+	static constexpr std::array<char, 256> charset{ [] {
+		std::array<char, 256> returnValues{};
+		size_t x = 0;
+		for (; x < 256 - charSetRaw02.size(); ++x) {
+			returnValues[x] = charSetRaw01[x % charSetRaw01.size()];
+		}
+		for (size_t y = 0; y < charSetRaw02.size(); ++y, ++x) {
+			returnValues[x] = charSetRaw02[y];
+		}
+
+		return returnValues;
+	}() };
 	inline static std::uniform_real_distribution<double> disDouble{ log(std::numeric_limits<double>::min()), log(std::numeric_limits<double>::max()) };
 	inline static std::uniform_int_distribution<int64_t> disInt{ std::numeric_limits<int64_t>::min(), std::numeric_limits<int64_t>::max() };
 	inline static std::uniform_int_distribution<uint64_t> disUint{ std::numeric_limits<uint64_t>::min(), std::numeric_limits<uint64_t>::max() };
