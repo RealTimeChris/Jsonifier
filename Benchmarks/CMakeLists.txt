@@ -53,13 +53,23 @@ target_link_libraries(
 target_compile_options(
 	"Json-Performance" PUBLIC
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/fsanitize=address>>"
+	"$<$<CXX_COMPILER_ID:CLANG>:-Wnull-dereference>"
+	"$<$<CXX_COMPILER_ID:CLANG>:-Wuninitialized>"
+	"$<$<CXX_COMPILER_ID:CLANG>:-Wconversion>"
 	"$<$<CXX_COMPILER_ID:CLANG>:-Wpedantic>"
-	"$<$<CXX_COMPILER_ID:GNU>:-Wpedantic>"
+	"$<$<CXX_COMPILER_ID:CLANG>:-Wshadow>"
 	"$<$<CXX_COMPILER_ID:CLANG>:-Wextra>"
 	"$<$<CXX_COMPILER_ID:CLANG>:-Wall>"
+	
+	"$<$<CXX_COMPILER_ID:GNU>:-Wnull-dereference>"
+	"$<$<CXX_COMPILER_ID:GNU>:-Wuninitialized>"
+	"$<$<CXX_COMPILER_ID:GNU>:-Wconversion>"
+	"$<$<CXX_COMPILER_ID:GNU>:-Wpedantic>"
+	"$<$<CXX_COMPILER_ID:GNU>:-Wshadow>"
 	"$<$<CXX_COMPILER_ID:GNU>:-Wextra>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/Wall>"
 	"$<$<CXX_COMPILER_ID:GNU>:-Wall>"
+
+	"$<$<CXX_COMPILER_ID:MSVC>:/Wall>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/W4>"
 )
 

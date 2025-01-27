@@ -186,7 +186,10 @@ template<typename value_type> struct partial_test {
 };
 
 struct test_generator {
-	static constexpr std::string_view charSet{ "!#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~\"\\\b\f\n\r\t" };
+	static constexpr std::string_view charSet{ "!#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~!#$%&'()*+,-./"
+											   "0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~!#$%&'()*+,-./"
+											   "0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~!#$%&'()*+,-./"
+											   "0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~\"\\\b\f\n\r\t" };
 	inline static std::uniform_real_distribution<double> disDouble{ log(std::numeric_limits<double>::min()), log(std::numeric_limits<double>::max()) };
 	inline static std::uniform_int_distribution<int64_t> disInt{ std::numeric_limits<int64_t>::min(), std::numeric_limits<int64_t>::max() };
 	inline static std::uniform_int_distribution<uint64_t> disUint{ std::numeric_limits<uint64_t>::min(), std::numeric_limits<uint64_t>::max() };
@@ -203,61 +206,71 @@ struct test_generator {
 		return dis(gen);
 	}
 
-	static void insertUnicodeInJSON(std::string& jsonString) {
-		auto newStringView = unicode_emoji::unicodeEmoji[disUnicodeEmoji(gen)];
-		jsonString += static_cast<std::string>(newStringView);
-	}
-
-	static std::string generateString() {
+	template<jsonifier::concepts::string_t value_type> static value_type generateValue() {
 		auto length{ disString(gen) };
-		auto unicodeCount = length / 16ull;
-		std::vector<uint64_t> unicodeIndices{};
-		static constexpr auto checkForPresenceOfIndex = [](auto& indices, auto index, auto length, auto&& checkForPresenceOfIndexNew) -> void {
-			if (std::find(indices.begin(), indices.end(), index) != indices.end()) {
-				index = randomizeNumberUniform(0ull, length);
-				checkForPresenceOfIndexNew(indices, index, length, checkForPresenceOfIndexNew);
-			} else {
-				indices.emplace_back(index);
-			}
-		};
-		for (uint64_t x = 0; x < unicodeCount; ++x) {
-			auto newValue = randomizeNumberUniform(0ull, length);
-			checkForPresenceOfIndex(unicodeIndices, newValue, length, checkForPresenceOfIndex);
-		}
-		std::sort(unicodeIndices.begin(), unicodeIndices.end(), std::less<uint64_t>{});
 
 		std::string result{};
-		uint64_t insertedUnicode = 0;
-		auto iter				 = unicodeIndices.begin();
 		for (uint64_t x = 0; x < length; ++x) {
-			if (iter < unicodeIndices.end() && x == *iter) [[unlikely]] {
-				insertUnicodeInJSON(result);
-				insertedUnicode++;
-				++iter;
-			} else {
-				result += charSet[disCharSet(gen)];
-			}
+			result += charSet[disCharSet(gen)];
 		}
 
 		return result;
 	}
 
-	static double generateDouble() {
+	template<jsonifier::concepts::float_t value_type> static value_type generateValue() {
 		double logValue = disDouble(gen);
-		bool negative{ generateBool() };
+		bool negative{ generateValue<bool>() };
 		return negative ? -std::exp(logValue) : std::exp(logValue);
 	}
 
-	static bool generateBool() {
+	template<jsonifier::concepts::bool_t value_type> static value_type generateValue() {
 		return static_cast<bool>(disBool(gen) >= 50);
 	}
 
-	static uint64_t generateUint() {
-		return disUint(gen);
+	template<jsonifier::concepts::uns64_t value_type> static value_type generateValue() {
+		size_t length{ randomizeNumberUniform(1ull, 20ull) };
+
+		uint64_t min_val = (length == 1) ? 0 : static_cast<uint64_t>(std::pow(10, length - 1));
+		uint64_t max_val = static_cast<uint64_t>(std::pow(10, length)) - 1;
+		if (min_val > max_val) {
+			std::swap(min_val, max_val);
+		}
+		std::uniform_int_distribution<uint64_t> dis(min_val, max_val);
+		return dis(gen);
 	}
 
-	static int64_t generateInt() {
-		return disInt(gen);
+	template<jsonifier::concepts::sig64_t value_type> static value_type generateValue() {
+		size_t length{ randomizeNumberUniform(1ull, 19ull) };
+
+		int64_t min_val = (length == 1) ? 0 : static_cast<int64_t>(std::pow(10, length - 1));
+		int64_t max_val = static_cast<int64_t>(std::pow(10, length)) - 1;
+		if (min_val > max_val) {
+			std::swap(min_val, max_val);
+		}
+		std::uniform_int_distribution<int64_t> dis(min_val, max_val);
+		auto returnValue{ dis(gen) };
+		return generateValue<bool>() ? returnValue : -returnValue;
+	}
+
+	static test_struct generateTestStruct() {
+		test_struct returnValues{};
+		returnValues.testBool = generateValue<bool>();
+		returnValues.testDouble = generateValue<double>();
+		returnValues.testInt	= generateValue<int64_t>();
+		returnValues.testUint	= generateValue<uint64_t>();
+		returnValues.testString = generateValue<std::string>();
+		return returnValues;
+	}
+
+	template<typename value_type> static std::vector<std::vector<value_type>> generateValues(size_t vecCount, size_t valueCount) {
+		std::vector<std::vector<value_type>> returnValues{};
+		returnValues.resize(vecCount);
+		for (size_t x = 0; x < vecCount; ++x) {
+			for (size_t y = 0; y < valueCount; ++y) {
+				returnValues[x].emplace_back(generateValue<value_type>());
+			}
+		}
+		return returnValues;
 	}
 
 	static test<test_struct> generateTest() {
@@ -266,26 +279,7 @@ struct test_generator {
 			const auto arraySize01 = randomizeNumberUniform(1ull, 15ull);
 			v.resize(arraySize01);
 			for (uint64_t x = 0; x < arraySize01; ++x) {
-				auto arraySize02 = randomizeNumberUniform(8ull, 24ull);
-				for (uint64_t y = 0; y < arraySize02; ++y) {
-					v[x].testString = generateString();
-				}
-				arraySize02 = randomizeNumberUniform(8ull, 24ull);
-				for (uint64_t y = 0; y < arraySize02; ++y) {
-					v[x].testUint = generateUint();
-				}
-				arraySize02 = randomizeNumberUniform(8ull, 24ull);
-				for (uint64_t y = 0; y < arraySize02; ++y) {
-					v[x].testInt = generateInt();
-				}
-				arraySize02 = randomizeNumberUniform(8ull, 24ull);
-				for (uint64_t y = 0; y < arraySize02; ++y) {
-					v[x].testDouble = generateDouble();
-				}
-				arraySize02 = randomizeNumberUniform(8ull, 24ull);
-				for (uint64_t y = 0; y < arraySize02; ++y) {
-					v[x].testBool = generateBool();
-				}
+				v[x] = generateTestStruct();
 			}
 		};
 

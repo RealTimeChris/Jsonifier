@@ -129,6 +129,7 @@ void throwError(auto error, std::source_location location = std::source_location
 }
 
 template<typename value_type> void getValue(value_type& data, simdjson::ondemand::value jsonData);
+template<typename value_type> void getValue(value_type& data, simdjson::ondemand::document jsonData);
 
 template<floating_type value_type> void getValue(value_type& data, simdjson::ondemand::value jsonData) {
 	if constexpr (sizeof(value_type) == 8) {
@@ -193,12 +194,100 @@ template<string_t value_type> void getValue(value_type& data, simdjson::ondemand
 	data = static_cast<value_type>(newValue);
 }
 
-template<bool_t value_type> void getValue(value_type& data, simdjson::ondemand::value jsonData) {
-	auto result = jsonData.get(static_cast<bool&>(data));
+template<bool_t value_type> void getValue(value_type&& data, simdjson::ondemand::value jsonData) {
+	bool value{};
+	auto result = jsonData.get(value);
+	data		= value;
 	if (result) {
 		throwError(result);
 	}
 	return;
+}
+
+template<bool_t value_type> void getValue(value_type& data, simdjson::ondemand::value jsonData) {
+	bool value{};
+	auto result = jsonData.get(value);
+	data		= value;
+	if (result) {
+		throwError(result);
+	}
+	return;
+}
+
+template<bool_t value_type> void getValue(value_type&& data, simdjson::ondemand::document jsonData) {
+	bool value{};
+	auto result = jsonData.get(value);
+	data		= value;
+	if (result) {
+		throwError(result);
+	}
+	return;
+}
+
+template<bool_t value_type> void getValue(value_type& data, simdjson::ondemand::document jsonData) {
+	bool value{};
+	auto result = jsonData.get(value);
+	data		= value;
+	if (result) {
+		throwError(result);
+	}
+	return;
+}
+
+template<floating_type value_type> void getValue(value_type& data, simdjson::ondemand::document jsonData) {
+	if constexpr (sizeof(value_type) == 8) {
+		if (auto result = jsonData.get_double().get(data); result) {
+			throwError(result);
+		}
+		return;
+	} else {
+		double newValue{};
+		if (auto result = jsonData.get_double().get(newValue); result) {
+			throwError(result);
+		}
+		data = static_cast<value_type>(newValue);
+		return;
+	}
+}
+
+template<unsigned_type value_type> void getValue(value_type& data, simdjson::ondemand::document jsonData) {
+	if constexpr (sizeof(value_type) == 8) {
+		if (auto result = jsonData.get_uint64().get(data); result) {
+			throwError(result);
+		}
+		return;
+	} else {
+		uint64_t newValue{};
+		if (auto result = jsonData.get_uint64().get(newValue); result) {
+			throwError(result);
+		}
+		data = static_cast<value_type>(newValue);
+		return;
+	}
+}
+
+template<signed_type value_type> void getValue(value_type& data, simdjson::ondemand::document jsonData) {
+	if constexpr (sizeof(value_type) == 8) {
+		if (auto result = jsonData.get_int64().get(data); result) {
+			throwError(result);
+		}
+		return;
+	} else {
+		int64_t newValue{};
+		if (auto result = jsonData.get_int64().get(newValue); result) {
+			throwError(result);
+		}
+		data = static_cast<value_type>(newValue);
+		return;
+	}
+}
+
+template<string_t value_type> void getValue(value_type& data, simdjson::ondemand::document jsonData) {
+	std::string_view newValue;
+	if (auto result = jsonData.get(newValue); result) {
+		throwError(result);
+	}
+	data = static_cast<value_type>(newValue);
 }
 
 simdjson::ondemand::array getArray(simdjson::ondemand::value jsonData) {
