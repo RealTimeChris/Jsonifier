@@ -42,7 +42,7 @@ namespace jsonifier::internal {
 	}
 
 	template<char valueNewer, typename char_type> struct char_comparison {
-		static constexpr char value{ valueNewer };
+		inline static constexpr char value{ valueNewer };
 		JSONIFIER_INLINE static const char_type* memchar(const char_type* data, uint64_t lengthNew) noexcept {
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 			if (lengthNew >= 64) {
@@ -50,10 +50,12 @@ namespace jsonifier::internal {
 				using integer_type					 = typename get_type_at_index<simd::avx_list, 2>::type::integer_type;
 				static constexpr uint64_t vectorSize = get_type_at_index<simd::avx_list, 2>::type::bytesProcessed;
 				const simd_type search_value		 = simd::gatherValue<simd_type>(static_cast<uint8_t>(value));
+				JSONIFIER_ALIGN(64) char valuesToLoad[64];
 				integer_type mask;
 				simd_type chunk;
 				while (lengthNew >= vectorSize) {
-					chunk = simd::gatherValuesU<simd_type>(data);
+					std::memcpy(valuesToLoad, data, 64);
+					chunk = simd::gatherValues<simd_type>(valuesToLoad);
 					mask  = simd::opCmpEq(chunk, search_value);
 					if JSONIFIER_UNLIKELY (mask != 0) {
 						data += simd::postCmpTzcnt(mask);
@@ -71,10 +73,12 @@ namespace jsonifier::internal {
 				using integer_type					 = typename get_type_at_index<simd::avx_list, 1>::type::integer_type;
 				static constexpr uint64_t vectorSize = get_type_at_index<simd::avx_list, 1>::type::bytesProcessed;
 				const simd_type search_value		 = simd::gatherValue<simd_type>(static_cast<uint8_t>(value));
+				JSONIFIER_ALIGN(32) char valuesToLoad[32];
 				integer_type mask;
 				simd_type chunk;
 				while (lengthNew >= vectorSize) {
-					chunk = simd::gatherValuesU<simd_type>(data);
+					std::memcpy(valuesToLoad, data, 32);
+					chunk = simd::gatherValues<simd_type>(valuesToLoad);
 					mask  = simd::opCmpEq(chunk, search_value);
 					if JSONIFIER_UNLIKELY (mask != 0) {
 						data += simd::postCmpTzcnt(mask);
@@ -90,10 +94,12 @@ namespace jsonifier::internal {
 				using integer_type					 = typename get_type_at_index<simd::avx_list, 0>::type::integer_type;
 				static constexpr uint64_t vectorSize = get_type_at_index<simd::avx_list, 0>::type::bytesProcessed;
 				const simd_type search_value		 = simd::gatherValue<simd_type>(static_cast<uint8_t>(value));
+				JSONIFIER_ALIGN(16) char valuesToLoad[16];
 				integer_type mask;
 				simd_type chunk;
 				while (lengthNew >= vectorSize) {
-					chunk = simd::gatherValuesU<simd_type>(data);
+					std::memcpy(valuesToLoad, data, 16);
+					chunk = simd::gatherValues<simd_type>(valuesToLoad);
 					mask  = static_cast<integer_type>(simd::opCmpEq(chunk, search_value));
 					if JSONIFIER_UNLIKELY (mask != 0) {
 						data += simd::postCmpTzcnt(mask);
@@ -179,10 +185,13 @@ namespace jsonifier::internal {
 				using simd_type						 = typename get_type_at_index<simd::avx_list, 2>::type::type::type;
 				static constexpr uint64_t vectorSize = get_type_at_index<simd::avx_list, 2>::type::bytesProcessed;
 				static constexpr uint64_t mask		 = get_type_at_index<simd::avx_list, 2>::type::mask;
+				JSONIFIER_ALIGN(64) char valuesToLoad[64];
 				simd_type value01, value02;
 				while (lengthNew >= vectorSize) {
-					value01 = simd::gatherValuesU<simd_type>(lhs);
-					value02 = simd::gatherValuesU<simd_type>(rhs);
+					std::memcpy(valuesToLoad, lhs, 64);
+					value01 = simd::gatherValues<simd_type>(valuesToLoad);
+					std::memcpy(valuesToLoad, rhs, 64);
+					value02 = simd::gatherValues<simd_type>(valuesToLoad);
 					if (simd::opCmpEq(value01, value02) != mask) {
 						return false;
 					};
@@ -197,10 +206,13 @@ namespace jsonifier::internal {
 				using simd_type						 = typename get_type_at_index<simd::avx_list, 1>::type::type::type;
 				static constexpr uint64_t vectorSize = get_type_at_index<simd::avx_list, 1>::type::bytesProcessed;
 				static constexpr uint64_t mask		 = get_type_at_index<simd::avx_list, 1>::type::mask;
+				JSONIFIER_ALIGN(32) char valuesToLoad[32];
 				simd_type value01, value02;
 				while (lengthNew >= vectorSize) {
-					value01 = simd::gatherValuesU<simd_type>(lhs);
-					value02 = simd::gatherValuesU<simd_type>(rhs);
+					std::memcpy(valuesToLoad, lhs, 32);
+					value01 = simd::gatherValues<simd_type>(valuesToLoad);
+					std::memcpy(valuesToLoad, rhs, 32);
+					value02 = simd::gatherValues<simd_type>(valuesToLoad);
 					if (simd::opCmpEq(value01, value02) != mask) {
 						return false;
 					};
@@ -214,10 +226,13 @@ namespace jsonifier::internal {
 				using simd_type						 = typename get_type_at_index<simd::avx_list, 0>::type::type::type;
 				static constexpr uint64_t vectorSize = get_type_at_index<simd::avx_list, 0>::type::bytesProcessed;
 				static constexpr uint64_t mask		 = get_type_at_index<simd::avx_list, 0>::type::mask;
+				JSONIFIER_ALIGN(16) char valuesToLoad[16];
 				simd_type value01, value02;
 				while (lengthNew >= vectorSize) {
-					value01 = simd::gatherValuesU<simd_type>(lhs);
-					value02 = simd::gatherValuesU<simd_type>(rhs);
+					std::memcpy(valuesToLoad, lhs, 16);
+					value01 = simd::gatherValues<simd_type>(valuesToLoad);
+					std::memcpy(valuesToLoad, rhs, 16);
+					value02 = simd::gatherValues<simd_type>(valuesToLoad);
 					if (simd::opCmpEq(value01, value02) != mask) {
 						return false;
 					};
@@ -286,13 +301,13 @@ namespace jsonifier::internal {
 
 	template<string_literal string>
 		requires(string.length == 0)
-	constexpr auto packValues() {
+	static constexpr auto packValues() {
 		return uint8_t{};
 	}
 
 	template<string_literal string>
 		requires(string.length > 0 && string.length <= 8)
-	constexpr auto packValues() {
+	static constexpr auto packValues() {
 		convert_length_to_int_t<string.length> returnValues{};
 		for (size_t x = 0; x < string.length; ++x) {
 			returnValues |= static_cast<convert_length_to_int_t<string.length>>(static_cast<uint64_t>(string[x]) << ((x % 8) * 8));
@@ -300,7 +315,7 @@ namespace jsonifier::internal {
 		return returnValues;
 	}
 
-	template<size_t size> constexpr size_t getPackingSize() {
+	template<size_t size> static constexpr size_t getPackingSize() {
 		if constexpr (size >= 64) {
 			return 64;
 		} else if constexpr (size >= 32) {
@@ -312,7 +327,7 @@ namespace jsonifier::internal {
 
 	template<string_literal string>
 		requires(string.length != 0 && string.length > 8)
-	constexpr auto packValues() {
+	static constexpr auto packValues() {
 		JSONIFIER_ALIGN(16) array<uint64_t, roundUpToMultiple<16>(getPackingSize<string.length>())> returnValues{};
 		for (size_t x = 0; x < string.length; ++x) {
 			if (x / 8 < (string.length / 8) + 1) {
@@ -340,14 +355,14 @@ namespace jsonifier::internal {
 	template<typename value_type>
 	concept gt_16 = value_type::length > 16 && !eq_16<value_type> && !eq_32<value_type> && !eq_64<value_type>;
 
-	template<size_t index, typename string_type> constexpr auto stringLiteralFromView(string_type str) noexcept {
+	template<size_t index, typename string_type> static constexpr auto stringLiteralFromView(string_type str) noexcept {
 		string_literal<index + 1> sl{};
 		std::copy_n(str.data(), str.size(), sl.values);
 		sl[index] = '\0';
 		return sl;
 	}
 
-	template<string_literal string, size_t offset> constexpr auto offSetNewLiteral() noexcept {
+	template<string_literal string, size_t offset> static constexpr auto offSetNewLiteral() noexcept {
 		constexpr size_t originalSize = string.length;
 		constexpr size_t newSize	  = (offset >= originalSize) ? 0 : originalSize - offset;
 		string_literal<newSize + 1> sl{};
@@ -358,7 +373,7 @@ namespace jsonifier::internal {
 		return sl;
 	}
 
-	template<string_literal string, size_t offset> constexpr auto offSetIntoLiteral() noexcept {
+	template<string_literal string, size_t offset> static constexpr auto offSetIntoLiteral() noexcept {
 		constexpr size_t originalSize = string.length;
 		constexpr size_t newSize	  = (offset >= originalSize) ? originalSize : offset;
 		string_literal<newSize + 1> sl{};
@@ -378,9 +393,9 @@ namespace jsonifier::internal {
 	};
 
 	template<gt_0_lt_16 sl_type, jsonifier::internal::remove_cvref_t<sl_type> stringNew> struct string_literal_comparitor<sl_type, stringNew> {
+		inline static constexpr auto stringLiteral{ stringNew };
+		inline static constexpr auto newCount{ stringLiteral.size() };
 		JSONIFIER_INLINE static bool impl(string_view_ptr str) noexcept {
-			static constexpr auto stringLiteral{ stringNew };
-			static constexpr auto newCount{ stringLiteral.size() };
 			if constexpr (newCount > 8) {
 				JSONIFIER_ALIGN(16) static constexpr auto valuesNew{ packValues<stringLiteral>() };
 				jsonifier_simd_int_128 data1{};
@@ -431,10 +446,12 @@ namespace jsonifier::internal {
 	};
 
 	template<eq_16 sl_type, jsonifier::internal::remove_cvref_t<sl_type> stringNew> struct string_literal_comparitor<sl_type, stringNew> {
+		inline static constexpr auto newLiteral{ stringNew };
+		JSONIFIER_ALIGN(16) inline static constexpr auto valuesNew{ packValues<newLiteral>() };
 		JSONIFIER_INLINE static bool impl(string_view_ptr str) noexcept {
-			static constexpr auto newLiteral{ stringNew };
-			JSONIFIER_ALIGN(16) static constexpr auto valuesNew{ packValues<newLiteral>() };
-			const jsonifier_simd_int_128 data1{ simd::gatherValuesU<jsonifier_simd_int_128>(str) };
+			JSONIFIER_ALIGN(16) char valuesToLoad[16];
+			std::memcpy(valuesToLoad, str, 16);
+			const jsonifier_simd_int_128 data1{ simd::gatherValues<jsonifier_simd_int_128>(valuesToLoad) };
 			const jsonifier_simd_int_128 data2{ simd::gatherValues<jsonifier_simd_int_128>(valuesNew.data()) };
 			return !simd::opTest(simd::opXor(data1, data2));
 		}
@@ -443,10 +460,12 @@ namespace jsonifier::internal {
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
 
 	template<eq_32 sl_type, jsonifier::internal::remove_cvref_t<sl_type> stringNew> struct string_literal_comparitor<sl_type, stringNew> {
+		inline static constexpr auto newLiteral{ stringNew };
+		JSONIFIER_ALIGN(32) inline static constexpr auto valuesNew{ packValues<newLiteral>() };
 		JSONIFIER_INLINE static bool impl(string_view_ptr str) noexcept {
-			static constexpr auto newLiteral{ stringNew };
-			JSONIFIER_ALIGN(32) static constexpr auto valuesNew{ packValues<newLiteral>() };
-			const jsonifier_simd_int_256 data1{ simd::gatherValuesU<jsonifier_simd_int_256>(str) };
+			JSONIFIER_ALIGN(32) char valuesToLoad[32];
+			std::memcpy(valuesToLoad, str, 32);
+			const jsonifier_simd_int_256 data1{ simd::gatherValues<jsonifier_simd_int_256>(valuesToLoad) };
 			const jsonifier_simd_int_256 data2{ simd::gatherValues<jsonifier_simd_int_256>(valuesNew.data()) };
 			return !simd::opTest(simd::opXor(data1, data2));
 		}
@@ -455,18 +474,20 @@ namespace jsonifier::internal {
 #endif
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
-	template<eq_64 value_type, value_type stringNew> struct string_literal_comparitor<value_type, stringNew> {
+	template<eq_64 sl_type, sl_type stringNew> struct string_literal_comparitor<sl_type, stringNew> {
+		inline static constexpr auto newLiteral{ stringNew };
+		JSONIFIER_ALIGN(64) inline static constexpr auto valuesNew{ packValues<newLiteral>() };
 		JSONIFIER_INLINE static bool impl(string_view_ptr str) noexcept {
-			static constexpr auto newLiteral{ stringNew };
-			JSONIFIER_ALIGN(64) static constexpr auto valuesNew{ packValues<newLiteral>() };
-			const jsonifier_simd_int_512 data1{ simd::gatherValuesU<jsonifier_simd_int_512>(str) };
+			JSONIFIER_ALIGN(64) char valuesToLoad[64];
+			std::memcpy(valuesToLoad, str, 64);
+			const jsonifier_simd_int_512 data1{ simd::gatherValues<jsonifier_simd_int_512>(valuesToLoad) };
 			const jsonifier_simd_int_512 data2{ simd::gatherValues<jsonifier_simd_int_512>(valuesNew.data()) };
 			return !simd::opTest(simd::opXor(data1, data2));
 		}
 	};
 #endif
 
-	constexpr auto getOffsetIntoLiteralSize(size_t inputSize) noexcept {
+	static constexpr auto getOffsetIntoLiteralSize(size_t inputSize) noexcept {
 		if (inputSize >= 64 && bytesPerStep >= 64) {
 			return 64;
 		} else if (inputSize >= 32 && bytesPerStep >= 32) {
@@ -477,14 +498,14 @@ namespace jsonifier::internal {
 	}
 
 	template<gt_16 sl_type, jsonifier::internal::remove_cvref_t<sl_type> stringNew> struct string_literal_comparitor<sl_type, stringNew> {
+		inline static constexpr auto string{ offSetIntoLiteral<stringNew, getOffsetIntoLiteralSize(stringNew.size())>() };
+		inline static constexpr auto stringSize = string.size();
+		inline static constexpr auto stringNewer{ offSetNewLiteral<stringNew, stringSize>() };
 		JSONIFIER_INLINE static bool impl(string_view_ptr str) noexcept {
-			static constexpr auto string{ offSetIntoLiteral<stringNew, getOffsetIntoLiteralSize(stringNew.size())>() };
 			if (!string_literal_comparitor<decltype(string), string>::impl(str)) {
 				return false;
 			} else {
-				static constexpr auto stringSize = string.size();
 				str += stringSize;
-				static constexpr auto stringNewer{ offSetNewLiteral<stringNew, stringSize>() };
 				return string_literal_comparitor<decltype(stringNewer), stringNewer>::impl(str);
 			}
 		}

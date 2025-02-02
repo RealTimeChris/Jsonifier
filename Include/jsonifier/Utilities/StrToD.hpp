@@ -28,7 +28,7 @@
 namespace jsonifier::internal {
 
 	template<typename = void> struct exp_tables {
-		static constexpr bool expTable[]{ false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		inline static constexpr bool expTable[]{ false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
 			false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
 			false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
 			false, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
@@ -40,7 +40,7 @@ namespace jsonifier::internal {
 			false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
 			false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false };
 
-		static constexpr bool expFracTable[]{ false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		inline static constexpr bool expFracTable[]{ false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
 			false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
 			false, false, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
 			false, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
@@ -53,13 +53,13 @@ namespace jsonifier::internal {
 			false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false };
 	};
 
-	JSONIFIER_INLINE_VARIABLE char decimal{ '.' };
-	JSONIFIER_INLINE_VARIABLE char minus{ '-' };
-	JSONIFIER_INLINE_VARIABLE char plus{ '+' };
-	JSONIFIER_INLINE_VARIABLE char zero{ '0' };
-	JSONIFIER_INLINE_VARIABLE char nine{ '9' };
+	inline constexpr char decimal{ '.' };
+	inline constexpr char minus{ '-' };
+	inline constexpr char plus{ '+' };
+	inline constexpr char zero{ '0' };
+	inline constexpr char nine{ '9' };
 
-	template<typename value_type, typename char_t> inline static bool parseFloat(value_type& value, char_t const*& iter, char_t const* end = nullptr) noexcept {
+	template<typename value_type, typename char_t> JSONIFIER_INLINE static bool parseFloat(value_type& value, char_t const*& iter, char_t const* end = nullptr) noexcept {
 		using namespace jsonifier_fast_float;
 		span<const char_t> fraction;
 
@@ -185,7 +185,7 @@ namespace jsonifier::internal {
 		if (binary_format<value_type>::min_exponent_fast_path <= exponent && exponent <= binary_format<value_type>::max_exponent_fast_path && !tooManyDigits) {
 			if (rounds_to_nearest::roundsToNearest) {
 				if (mantissa <= binary_format<value_type>::max_mantissa_fast_path_value) {
-					value = value_type(mantissa);
+					value = static_cast<value_type>(mantissa);
 					if (exponent < 0) {
 						value = value / binary_format<value_type>::exact_power_of_ten(-exponent);
 					} else {
@@ -200,11 +200,11 @@ namespace jsonifier::internal {
 				if (exponent >= 0 && mantissa <= binary_format<value_type>::max_mantissa_fast_path(exponent)) {
 #if defined(__clang__) || defined(JSONIFIER_FASTFLOAT_32BIT)
 					if (mantissa == 0) {
-						value = negative ? value_type(-0.) : value_type(0.);
+						value = negative ? static_cast<value_type>(-0.) : static_cast<value_type>(0.);
 						return true;
 					}
 #endif
-					value = value_type(mantissa) * binary_format<value_type>::exact_power_of_ten(exponent);
+					value = static_cast<value_type>(mantissa) * binary_format<value_type>::exact_power_of_ten(exponent);
 					if (negative) {
 						value = -value;
 					}

@@ -28,266 +28,166 @@
 
 namespace jsonifier::internal {
 
-	template<typename value_type_new, size_t size> class array_iterator {
+	template<typename value_type_new, size_t sizeNew> class array {
 	  public:
-		using iterator_concept	= std::contiguous_iterator_tag;
-		using iterator_category = std::random_access_iterator_tag;
-		using element_type		= value_type_new;
-		using value_type		= value_type_new;
-		using difference_type	= std::ptrdiff_t;
-		using pointer			= value_type*;
-		using reference			= value_type&;
+		static_assert(std::is_object_v<value_type_new>, "The C++ Standard forbids containers of non-object types because of [container.requirements].");
 
-		JSONIFIER_INLINE constexpr array_iterator() noexcept : ptr() {
-		}
-
-		JSONIFIER_INLINE constexpr array_iterator(pointer ptrNew) noexcept : ptr(ptrNew) {
-		}
-
-		JSONIFIER_INLINE constexpr reference operator*() const noexcept {
-			return *ptr;
-		}
-
-		JSONIFIER_INLINE constexpr pointer operator->() const noexcept {
-			return std::pointer_traits<pointer>::pointer_to(**this);
-		}
-
-		JSONIFIER_INLINE constexpr array_iterator& operator++() noexcept {
-			++ptr;
-			return *this;
-		}
-
-		JSONIFIER_INLINE constexpr array_iterator operator++(int32_t) noexcept {
-			array_iterator temp = *this;
-			++*this;
-			return temp;
-		}
-
-		JSONIFIER_INLINE constexpr array_iterator& operator--() noexcept {
-			--ptr;
-			return *this;
-		}
-
-		JSONIFIER_INLINE constexpr array_iterator operator--(int32_t) noexcept {
-			array_iterator temp = *this;
-			--*this;
-			return temp;
-		}
-
-		JSONIFIER_INLINE constexpr array_iterator& operator+=(const difference_type offSet) noexcept {
-			ptr += offSet;
-			return *this;
-		}
-
-		JSONIFIER_INLINE constexpr array_iterator operator+(const difference_type offSet) const noexcept {
-			array_iterator temp = *this;
-			temp += offSet;
-			return temp;
-		}
-
-		JSONIFIER_INLINE friend constexpr array_iterator operator+(const difference_type offSet, array_iterator _Next) noexcept {
-			_Next += offSet;
-			return _Next;
-		}
-
-		JSONIFIER_INLINE constexpr array_iterator& operator-=(const difference_type offSet) noexcept {
-			return *this += -offSet;
-		}
-
-		JSONIFIER_INLINE constexpr array_iterator operator-(const difference_type offSet) const noexcept {
-			array_iterator temp = *this;
-			temp -= offSet;
-			return temp;
-		}
-
-		JSONIFIER_INLINE constexpr difference_type operator-(const array_iterator& other) const noexcept {
-			return static_cast<difference_type>(ptr - other.ptr);
-		}
-
-		JSONIFIER_INLINE constexpr reference operator[](const difference_type offSet) const noexcept {
-			return *(*this + offSet);
-		}
-
-		JSONIFIER_INLINE constexpr bool operator==(const array_iterator& other) const noexcept {
-			return ptr == other.ptr;
-		}
-
-		JSONIFIER_INLINE constexpr std::strong_ordering operator<=>(const array_iterator& other) const noexcept {
-			return ptr <=> other.ptr;
-		}
-
-		JSONIFIER_INLINE constexpr bool operator!=(const array_iterator& other) const noexcept {
-			return !(*this == other);
-		}
-
-		JSONIFIER_INLINE constexpr bool operator<(const array_iterator& other) const noexcept {
-			return ptr < other.ptr;
-		}
-
-		JSONIFIER_INLINE constexpr bool operator>(const array_iterator& other) const noexcept {
-			return other < *this;
-		}
-
-		JSONIFIER_INLINE constexpr bool operator<=(const array_iterator& other) const noexcept {
-			return !(other < *this);
-		}
-
-		JSONIFIER_INLINE constexpr bool operator>=(const array_iterator& other) const noexcept {
-			return !(*this < other);
-		}
-
-		pointer ptr;
-	};
-
-	template<typename value_type_new> class array_iterator<value_type_new, 0> {
-	  public:
-		using iterator_concept	= std::contiguous_iterator_tag;
-		using iterator_category = std::random_access_iterator_tag;
-		using element_type		= value_type_new;
-		using value_type		= value_type_new;
-		using difference_type	= std::ptrdiff_t;
-		using pointer			= value_type*;
-		using reference			= value_type&;
-
-		JSONIFIER_INLINE constexpr array_iterator() noexcept {
-		}
-
-		JSONIFIER_INLINE constexpr array_iterator(std::nullptr_t ptrNew) noexcept {
-		}
-
-		JSONIFIER_INLINE constexpr bool operator==(const array_iterator& other) const noexcept {
-			return true;
-		}
-
-		JSONIFIER_INLINE constexpr bool operator!=(const array_iterator& other) const noexcept {
-			return !(*this == other);
-		}
-
-		JSONIFIER_INLINE constexpr bool operator>=(const array_iterator& other) const noexcept {
-			return !(*this < other);
-		}
-	};
-
-	template<typename value_type_new, size_t sizeNew> struct array {
 		using value_type			 = value_type_new;
+		using size_type				 = size_t;
+		using difference_type		 = ptrdiff_t;
+		using pointer				 = value_type*;
+		using const_pointer			 = const value_type*;
 		using reference				 = value_type&;
 		using const_reference		 = const value_type&;
-		using size_type				 = size_t;
 		using iterator				 = array_iterator<value_type, sizeNew>;
-		using const_iterator		 = array_iterator<const value_type, sizeNew>;
+		using const_iterator		 = const array_iterator<value_type, sizeNew>;
 		using reverse_iterator		 = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
-		constexpr array() noexcept = default;
+		JSONIFIER_INLINE constexpr void fill(const value_type& _Value) {
+			std::fill_n(dataVal, sizeNew, _Value);
+		}
 
-		constexpr array(std::initializer_list<value_type> initList) {
-			for (size_t i = 0; i < initList.size() && i < sizeNew; ++i) {
-				values[i] = initList.begin()[i];
-			}
+		JSONIFIER_INLINE constexpr void swap(array& _Other) noexcept(std::is_nothrow_swappable<value_type>::value) {
+			std::swap_ranges(dataVal, dataVal + sizeNew, _Other.dataVal);
 		}
 
 		JSONIFIER_INLINE constexpr iterator begin() noexcept {
-			return iterator{ values };
+			return iterator(dataVal);
 		}
 
 		JSONIFIER_INLINE constexpr const_iterator begin() const noexcept {
-			return const_iterator{ values };
+			return const_iterator(dataVal);
 		}
 
 		JSONIFIER_INLINE constexpr iterator end() noexcept {
-			return iterator{ values + sizeNew };
+			return iterator(dataVal);
 		}
 
 		JSONIFIER_INLINE constexpr const_iterator end() const noexcept {
-			return const_iterator{ values + sizeNew };
+			return const_iterator(dataVal);
 		}
 
 		JSONIFIER_INLINE constexpr reverse_iterator rbegin() noexcept {
-			return reverse_iterator{ end() };
+			return reverse_iterator(end());
 		}
 
 		JSONIFIER_INLINE constexpr const_reverse_iterator rbegin() const noexcept {
-			return const_reverse_iterator{ end() };
+			return const_reverse_iterator(end());
 		}
 
 		JSONIFIER_INLINE constexpr reverse_iterator rend() noexcept {
-			return reverse_iterator{ begin() };
+			return reverse_iterator(begin());
 		}
 
 		JSONIFIER_INLINE constexpr const_reverse_iterator rend() const noexcept {
-			return const_reverse_iterator{ begin() };
+			return const_reverse_iterator(begin());
 		}
 
-		JSONIFIER_INLINE constexpr const_reference operator[](size_type index) const noexcept {
-			return values[index];
+		JSONIFIER_INLINE constexpr const_iterator cbegin() const noexcept {
+			return begin();
 		}
 
-		JSONIFIER_INLINE constexpr reference operator[](size_type index) noexcept {
-			return values[index];
+		JSONIFIER_INLINE constexpr const_iterator cend() const noexcept {
+			return end();
 		}
 
-		JSONIFIER_INLINE constexpr const value_type* data() const noexcept {
-			return values;
+		JSONIFIER_INLINE constexpr const_reverse_iterator crbegin() const noexcept {
+			return rbegin();
 		}
 
-		JSONIFIER_INLINE constexpr value_type* data() noexcept {
-			return values;
-		}
-
-		constexpr void fill(const value_type& value) noexcept {
-			for (size_t i = 0; i < sizeNew; ++i) {
-				values[i] = value;
-			}
+		JSONIFIER_INLINE constexpr const_reverse_iterator crend() const noexcept {
+			return rend();
 		}
 
 		JSONIFIER_INLINE constexpr size_type size() const noexcept {
 			return sizeNew;
 		}
 
-		value_type values[sizeNew]{};
+		JSONIFIER_INLINE constexpr size_type max_size() const noexcept {
+			return sizeNew;
+		}
+
+		JSONIFIER_INLINE constexpr bool empty() const noexcept {
+			return false;
+		}
+
+		JSONIFIER_INLINE constexpr reference at(size_type position) {
+			if (sizeNew <= position) {
+				std::runtime_error{ "invalid array<T, N> subscript" };
+			}
+
+			return dataVal[position];
+		}
+
+		JSONIFIER_INLINE constexpr const_reference at(size_type position) const {
+			if (sizeNew <= position) {
+				std::runtime_error{ "invalid array<T, N> subscript" };
+			}
+
+			return dataVal[position];
+		}
+
+		JSONIFIER_INLINE constexpr reference operator[](size_type position) noexcept {
+			return dataVal[position];
+		}
+
+		JSONIFIER_INLINE constexpr const_reference operator[](size_type position) const noexcept {
+			return dataVal[position];
+		}
+
+		JSONIFIER_INLINE constexpr reference front() noexcept {
+			return dataVal[0];
+		}
+
+		JSONIFIER_INLINE constexpr const_reference front() const noexcept {
+			return dataVal[0];
+		}
+
+		JSONIFIER_INLINE constexpr reference back() noexcept {
+			return dataVal[sizeNew - 1];
+		}
+
+		JSONIFIER_INLINE constexpr const_reference back() const noexcept {
+			return dataVal[sizeNew - 1];
+		}
+
+		JSONIFIER_INLINE constexpr value_type* data() noexcept {
+			return dataVal;
+		}
+
+		JSONIFIER_INLINE constexpr const value_type* data() const noexcept {
+			return dataVal;
+		}
+
+		value_type dataVal[sizeNew];
 	};
 
-	template<typename value_type_new> struct array<value_type_new, 0> {
+	struct empty_array_element {};
+
+	template<class value_type_new> class array<value_type_new, 0> {
+	  public:
+		static_assert(std::is_object_v<value_type_new>, "The C++ Standard forbids containers of non-object types because of [container.requirements].");
+
 		using value_type			 = value_type_new;
-		using reference				 = value_type&;
-		using const_reference		 = const value_type&;
+		using size_type				 = size_t;
+		using difference_type		 = ptrdiff_t;
 		using pointer				 = value_type*;
 		using const_pointer			 = const value_type*;
-		using const_iterator		 = const array_iterator<value_type, 0>;
+		using reference				 = value_type&;
+		using const_reference		 = const value_type&;
 		using iterator				 = array_iterator<value_type, 0>;
-		using size_type				 = size_t;
+		using const_iterator		 = const array_iterator<value_type, 0>;
 		using reverse_iterator		 = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
-		using difference_type		 = std::ptrdiff_t;
 
-		constexpr array(std::initializer_list<value_type>) {
+		JSONIFIER_INLINE constexpr void fill(const value_type&) {
 		}
 
-		JSONIFIER_INLINE constexpr const_pointer data() const noexcept {
-			return nullptr;
-		}
-
-		JSONIFIER_INLINE constexpr pointer data() noexcept {
-			return nullptr;
-		}
-
-		JSONIFIER_INLINE constexpr size_type size() const noexcept {
-			return 0;
-		}
-
-		JSONIFIER_INLINE constexpr const_reference operator[](size_type index) const noexcept {
-			return dataVal[index];
-		}
-
-		JSONIFIER_INLINE constexpr reference operator[](size_type index) noexcept {
-			return dataVal[index];
+		JSONIFIER_INLINE constexpr void swap(array&) noexcept {
 		}
 
 		JSONIFIER_INLINE constexpr iterator begin() noexcept {
-			return iterator{};
-		}
-
-		JSONIFIER_INLINE constexpr iterator end() noexcept {
 			return iterator{};
 		}
 
@@ -295,14 +195,99 @@ namespace jsonifier::internal {
 			return const_iterator{};
 		}
 
+		JSONIFIER_INLINE constexpr iterator end() noexcept {
+			return iterator{};
+		}
+
 		JSONIFIER_INLINE constexpr const_iterator end() const noexcept {
 			return const_iterator{};
 		}
 
-		constexpr void fill(const value_type&) noexcept {
+		JSONIFIER_INLINE constexpr reverse_iterator rbegin() noexcept {
+			return reverse_iterator(end());
 		}
 
-		value_type* dataVal{};
+		JSONIFIER_INLINE constexpr const_reverse_iterator rbegin() const noexcept {
+			return const_reverse_iterator(end());
+		}
+
+		JSONIFIER_INLINE constexpr reverse_iterator rend() noexcept {
+			return reverse_iterator(begin());
+		}
+
+		JSONIFIER_INLINE constexpr const_reverse_iterator rend() const noexcept {
+			return const_reverse_iterator(begin());
+		}
+
+		JSONIFIER_INLINE constexpr const_iterator cbegin() const noexcept {
+			return begin();
+		}
+
+		JSONIFIER_INLINE constexpr const_iterator cend() const noexcept {
+			return end();
+		}
+
+		JSONIFIER_INLINE constexpr const_reverse_iterator crbegin() const noexcept {
+			return rbegin();
+		}
+
+		JSONIFIER_INLINE constexpr const_reverse_iterator crend() const noexcept {
+			return rend();
+		}
+
+		JSONIFIER_INLINE constexpr size_type size() const noexcept {
+			return 0;
+		}
+
+		JSONIFIER_INLINE constexpr size_type max_size() const noexcept {
+			return 0;
+		}
+
+		JSONIFIER_INLINE constexpr bool empty() const noexcept {
+			return true;
+		}
+
+		JSONIFIER_INLINE constexpr reference at(size_type) {
+			std::runtime_error{ "invalid array<T, N> subscript" };
+		}
+
+		JSONIFIER_INLINE constexpr const_reference at(size_type) const {
+			std::runtime_error{ "invalid array<T, N> subscript" };
+		}
+
+		JSONIFIER_INLINE constexpr reference operator[](size_type) noexcept {
+			return *data();
+		}
+
+		JSONIFIER_INLINE constexpr const_reference operator[](size_type) const noexcept {
+			return *data();
+		}
+
+		JSONIFIER_INLINE constexpr reference front() noexcept {
+			return *data();
+		}
+
+		JSONIFIER_INLINE constexpr const_reference front() const noexcept {
+			return *data();
+		}
+
+		JSONIFIER_INLINE constexpr reference back() noexcept {
+			return *data();
+		}
+
+		JSONIFIER_INLINE constexpr const_reference back() const noexcept {
+			return *data();
+		}
+
+		JSONIFIER_INLINE constexpr value_type* data() noexcept {
+			return nullptr;
+		}
+
+		JSONIFIER_INLINE constexpr const value_type* data() const noexcept {
+			return nullptr;
+		}
+
+		conditional_t<std::disjunction_v<std::is_default_constructible<value_type>, std::is_default_constructible<value_type>>, value_type, empty_array_element> dataVal[1]{};
 	};
 
 }

@@ -126,7 +126,7 @@ namespace jsonifier::internal {
 	};
 
 	template<> struct tuple<> : tuple_base_t<> {
-		constexpr static size_t index = 0;
+		static constexpr size_t index = 0;
 		using super					  = tuple_base_t<>;
 		using base_list				  = type_list<>;
 		using element_list			  = type_list<>;
@@ -154,8 +154,7 @@ namespace jsonifier::internal {
 		return (base_list_t<type_t<inner>>{} + ...);
 	}
 
-	template<typename value_type, typename... outer, typename... inner>
-	static constexpr auto tupleCatImpl(value_type tupleVal, type_list<outer...>, type_list<inner...>)
+	template<typename value_type, typename... outer, typename... inner> static constexpr auto tupleCatImpl(value_type tupleVal, type_list<outer...>, type_list<inner...>)
 		-> tuple<type_t<inner>...> {
 		return { { { static_cast<forward_as_t<type_t<outer>&&, inner>>(tupleVal.identity_t<outer>::value).value }... } };
 	}

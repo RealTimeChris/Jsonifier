@@ -27,56 +27,29 @@
 
 namespace jsonifier::internal {
 
-	constexpr array<json_structural_type, 256> jsonTypes = [] {
-		array<json_structural_type, 256> returnValues{};
-		using enum json_structural_type;
-		returnValues['"'] = string;
-		returnValues[','] = comma;
-		returnValues['0'] = number;
-		returnValues['1'] = number;
-		returnValues['2'] = number;
-		returnValues['3'] = number;
-		returnValues['4'] = number;
-		returnValues['5'] = number;
-		returnValues['6'] = number;
-		returnValues['7'] = number;
-		returnValues['8'] = number;
-		returnValues['9'] = number;
-		returnValues['-'] = number;
-		returnValues[':'] = colon;
-		returnValues['['] = array_start;
-		returnValues[']'] = array_end;
-		returnValues['n'] = null;
-		returnValues['t'] = boolean;
-		returnValues['f'] = boolean;
-		returnValues['{'] = object_start;
-		returnValues['}'] = object_end;
-		return returnValues;
-	}();	
-
 	template<typename derived_type> class minifier {
 	  public:
 		JSONIFIER_INLINE minifier& operator=(const minifier& other) = delete;
 		JSONIFIER_INLINE minifier(const minifier& other)			= delete;
 
 		template<concepts::string_t string_type> JSONIFIER_INLINE auto minifyJson(string_type&& in) noexcept {
-			if JSONIFIER_UNLIKELY (stringBuffer.size() < in.size()) {
-				stringBuffer.resize(in.size());
+			if JSONIFIER_UNLIKELY (derivedRef.stringBuffer.size() < in.size()) {
+				derivedRef.stringBuffer.resize(in.size());
 			}
 			derivedRef.errors.clear();
 			rootIter = in.data();
 			endIter	 = rootIter + in.size();
-			section.reset<false>(rootIter, in.size());
-			string_view_ptr* iter{ section.begin() };
+			derivedRef.section.template reset<false>(rootIter, in.size());
+			string_view_ptr* iter{ derivedRef.section.begin() };
 			jsonifier::internal::remove_cvref_t<string_type> newString{};
 			if (!*iter) {
 				getErrors().emplace_back(error::constructError<error_classes::Minifying, minify_errors::No_Input>(*iter - rootIter, in.end() - in.begin(), rootIter));
 				return newString;
 			}
-			auto index = impl(iter, stringBuffer);
+			auto index = impl(iter, derivedRef.stringBuffer);
 			if (index != std::numeric_limits<uint32_t>::max()) {
 				newString.resize(index);
-				std::memcpy(newString.data(), stringBuffer.data(), index);
+				std::memcpy(newString.data(), derivedRef.stringBuffer.data(), index);
 				return newString;
 			} else {
 				return jsonifier::internal::remove_cvref_t<string_type>{};
@@ -84,24 +57,24 @@ namespace jsonifier::internal {
 		}
 
 		template<concepts::string_t string_type01, concepts::string_t string_type02> JSONIFIER_INLINE bool minifyJson(string_type01&& in, string_type02&& buffer) noexcept {
-			if JSONIFIER_UNLIKELY (stringBuffer.size() < in.size()) {
-				stringBuffer.resize(in.size());
+			if JSONIFIER_UNLIKELY (derivedRef.stringBuffer.size() < in.size()) {
+				derivedRef.stringBuffer.resize(in.size());
 			}
 			derivedRef.errors.clear();
 			rootIter = in.data();
 			endIter	 = rootIter + in.size();
-			section.reset<false>(rootIter, in.size());
-			string_view_ptr* iter{ section.begin() };
+			derivedRef.section.template reset<false>(rootIter, in.size());
+			string_view_ptr* iter{ derivedRef.section.begin() };
 			if (!*iter) {
 				getErrors().emplace_back(error::constructError<error_classes::Minifying, minify_errors::No_Input>(*iter - rootIter, in.end() - in.begin(), rootIter));
 				return false;
 			}
-			auto index = impl(iter, stringBuffer);
+			auto index = impl(iter, derivedRef.stringBuffer);
 			if JSONIFIER_LIKELY (index != std::numeric_limits<uint32_t>::max()) {
 				if JSONIFIER_LIKELY (buffer.size() != index) {
 					buffer.resize(index);
 				}
-				std::memcpy(buffer.data(), stringBuffer.data(), index);
+				std::memcpy(buffer.data(), derivedRef.stringBuffer.data(), index);
 				return true;
 			} else {
 				return false;
@@ -129,6 +102,32 @@ namespace jsonifier::internal {
 		}
 
 		template<concepts::string_t string_type, typename iterator> JSONIFIER_INLINE uint64_t impl(iterator& iter, string_type&& out) noexcept {
+			static constexpr array<json_structural_type, 256> jsonTypes = []() constexpr {
+				array<json_structural_type, 256> returnValues{};
+				using enum json_structural_type;
+				returnValues['"'] = string;
+				returnValues[','] = comma;
+				returnValues['0'] = number;
+				returnValues['1'] = number;
+				returnValues['2'] = number;
+				returnValues['3'] = number;
+				returnValues['4'] = number;
+				returnValues['5'] = number;
+				returnValues['6'] = number;
+				returnValues['7'] = number;
+				returnValues['8'] = number;
+				returnValues['9'] = number;
+				returnValues['-'] = number;
+				returnValues[':'] = colon;
+				returnValues['['] = array_start;
+				returnValues[']'] = array_end;
+				returnValues['n'] = null;
+				returnValues['t'] = boolean;
+				returnValues['f'] = boolean;
+				returnValues['{'] = object_start;
+				returnValues['}'] = object_end;
+				return returnValues;
+			}();
 			auto previousPtr = *iter;
 			int64_t currentDistance{};
 			uint64_t index{};
@@ -183,19 +182,19 @@ namespace jsonifier::internal {
 						break;
 					}
 					case json_structural_type::null: {
-						JSONIFIER_ALIGN(4) static constexpr char nullV[]{ "null" };
-						std::memcpy(&out[index], nullV, 4);
+						static constexpr uint32_t nullV[]{ packValues4("null") };
+						std::memcpy(&out[index], &nullV, 4);
 						index += 4;
 						break;
 					}
 					case json_structural_type::boolean: {
 						if (*previousPtr == 'f') {
-							JSONIFIER_ALIGN(8) static constexpr char falseV[]{ "false" };
-							std::memcpy(&out[index], falseV, 5);
+							static constexpr uint64_t falseV[]{ packValues5("false") };
+							std::memcpy(&out[index], &falseV, 5);
 							index += 5;
 						} else {
-							JSONIFIER_ALIGN(4) static constexpr char trueV[]{ "true" };
-							std::memcpy(&out[index], trueV, 4);
+							static constexpr uint32_t trueV[]{ packValues4("true") };
+							std::memcpy(&out[index], &trueV, 4);
 							index += 4;
 						}
 						break;
@@ -239,7 +238,7 @@ namespace jsonifier::internal {
 			return *static_cast<derived_type*>(this);
 		}
 
-		JSONIFIER_INLINE jsonifier::vector<error>& getErrors() noexcept {
+		JSONIFIER_INLINE std::vector<error>& getErrors() noexcept {
 			return derivedRef.errors;
 		}
 

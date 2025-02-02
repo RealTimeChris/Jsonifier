@@ -102,7 +102,7 @@ namespace jsonifier::internal {
 		return os;
 	}
 
-	inline std::unordered_map<error_classes, std::unordered_map<uint64_t, string_view>> errorMap{
+	inline const std::unordered_map<error_classes, std::unordered_map<uint64_t, string_view>> errorMap{
 		{ error_classes::Parsing,
 			std::unordered_map<uint64_t, string_view>{
 				{ static_cast<uint64_t>(parse_errors::Success), "Success" },
@@ -178,7 +178,7 @@ namespace jsonifier::internal {
 		type_count	 = 12
 	};
 
-	constexpr array<bool, 256> numberTable{ [] {
+	inline constexpr array<bool, 256> numberTable{ []() constexpr {
 		array<bool, 256> returnValues{};
 		returnValues['-'] = true;
 		returnValues['0'] = true;
@@ -194,10 +194,6 @@ namespace jsonifier::internal {
 		return returnValues;
 	}() };
 
-	static bool isNumberType(uint8_t c) noexcept {
-		return numberTable[c];
-	}
-
 	static string convertChar(char value) {
 		switch (value) {
 			[[unlikely]] case '\b': { return R"(\b)"; }
@@ -212,7 +208,7 @@ namespace jsonifier::internal {
 		}
 	}
 
-	constexpr array<bool, 256> boolTable{ [] {
+	inline constexpr array<bool, 256> boolTable{ []() constexpr {
 		array<bool, 256> returnValues{};
 		returnValues['t'] = true;
 		returnValues['f'] = true;
@@ -286,7 +282,7 @@ namespace jsonifier::internal {
 		}
 
 		string reportError() const noexcept {
-			string returnValue{ "Error of Type: " + errorMap[errorClass][errorType] + ", at global index: " + std::to_string(errorIndex) + ", on line: " + std::to_string(line) +
+			string returnValue{ "Error of Type: " + errorMap.at(errorClass).at(errorType) + ", at global index: " + std::to_string(errorIndex) + ", on line: " + std::to_string(line) +
 				", at local index: " + std::to_string(localIndex) };
 			if (stringView) {
 				returnValue += "\nHere's some of the string's values: " + collectValues(string{}, context) + string{ "\nThe Values: " + context };

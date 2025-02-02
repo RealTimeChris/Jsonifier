@@ -279,8 +279,8 @@ namespace jsonifier_fast_float {
 		answer.low = _umul128(a, b, &answer.high);// _umul128 not available on ARM64
 #elif defined(JSONIFIER_FASTFLOAT_64BIT) && defined(__SIZEOF_INT128__)
 		__uint128_t r = (( __uint128_t )a) * b;
-		answer.low	  = uint64_t(r);
-		answer.high	  = uint64_t(r >> 64);
+		answer.low	  = static_cast<uint64_t>(r);
+		answer.high	  = static_cast<uint64_t>(r >> 64);
 #else
 		answer.low = umul128_generic(a, b, &answer.high);
 #endif
@@ -319,7 +319,7 @@ namespace jsonifier_fast_float {
 		inline static constexpr int32_t max_exponent_fast_path		  = (sizeof(value_type) == 4) ? 10 : 22;
 		inline static constexpr int32_t max_exponent_round_to_even	  = (sizeof(value_type) == 4) ? 10 : 23;
 		inline static constexpr int32_t min_exponent_round_to_even	  = (sizeof(value_type) == 4) ? -17 : -4;
-		inline static constexpr uint64_t max_mantissa_fast_path_value = uint64_t(2) << mantissa_explicit_bits;
+		inline static constexpr uint64_t max_mantissa_fast_path_value = 2ull << mantissa_explicit_bits;
 		inline static constexpr int32_t largest_power_of_ten		  = (sizeof(value_type) == 4) ? 38 : 308;
 		inline static constexpr int32_t smallest_power_of_ten		  = (sizeof(value_type) == 4) ? -64 : -342;
 		inline static constexpr uint64_t max_digits					  = (sizeof(value_type) == 4) ? 114 : 769;
@@ -368,7 +368,7 @@ namespace jsonifier_fast_float {
 			0x1000000 / (constant_55555 * 5 * 5 * 5 * 5), 0x1000000 / (constant_55555 * constant_55555), 0x1000000 / (constant_55555 * constant_55555 * 5) };
 	};
 
-	template<typename value_type> JSONIFIER_INLINE static constexpr void to_float(bool negative, adjusted_mantissa am, value_type& value) noexcept {
+	template<typename value_type> inline static constexpr void to_float(bool negative, adjusted_mantissa am, value_type& value) noexcept {
 		using fastfloat_uint = typename binary_format<value_type>::equiv_uint;
 		fastfloat_uint word	 = ( fastfloat_uint )am.mantissa;
 		word |= fastfloat_uint(am.power2) << binary_format<value_type>::mantissa_explicit_bits;
@@ -377,8 +377,8 @@ namespace jsonifier_fast_float {
 	}
 
 	template<typename char_t> inline static constexpr uint64_t int_cmp_zeros{ (sizeof(char_t) == 1) ? 0x3030303030303030
-			: (sizeof(char_t) == 2) ? (uint64_t(char_t('0')) << 48 | uint64_t(char_t('0')) << 32 | uint64_t(char_t('0')) << 16 | char_t('0'))
-									: (uint64_t(char_t('0')) << 32 | char_t('0')) };
+			: (sizeof(char_t) == 2) ? (static_cast<uint64_t>(char_t('0')) << 48 | static_cast<uint64_t>(char_t('0')) << 32 | static_cast<uint64_t>(char_t('0')) << 16 | char_t('0'))
+									: (static_cast<uint64_t>(char_t('0')) << 32 | char_t('0')) };
 	template<typename char_t> inline static constexpr int32_t int_cmp_len{ sizeof(uint64_t) / sizeof(char_t) };
 
 	template<typename = void> struct int_luts {
@@ -429,7 +429,7 @@ namespace jsonifier_fast_float {
 		val -= 0x3030303030303030;
 		val = (val * 10) + (val >> 8);// val = (val * 2561) >> 8;
 		val = (((val & mask) * mul1) + (((val >> 16) & mask) * mul2)) >> 32;
-		return uint32_t(val);
+		return static_cast<uint32_t>(val);
 	}
 
 	// Call this if chars are definitely 8 digits.
@@ -456,7 +456,7 @@ namespace jsonifier_fast_float {
 		constexpr uint64_t mul2 = 0x0000271000000001;// 1 + (10000ULL << 32)
 		val						= (val * 10) + (val >> 8);// val = (val * 2561) >> 8;
 		val						= (((val & mask) * mul1) + (((val >> 16) & mask) * mul2)) >> 32;
-		return uint32_t(val);
+		return static_cast<uint32_t>(val);
 	}
 
 	JSONIFIER_INLINE static uint32_t parse_two_digits_unrolled_no_sub(uint64_t val) {
@@ -682,7 +682,7 @@ namespace jsonifier_fast_float {
 		// power_of_five_128[index]); gives the exact answer.
 		value128 firstproduct = full_multiplication(w, powers::power_of_five_128[index]);
 		static_assert((bit_precision >= 0) && (bit_precision <= 64), " precision should  be in (0,64]");
-		constexpr uint64_t precision_mask = (bit_precision < 64) ? (uint64_t(0xFFFFFFFFFFFFFFFF) >> bit_precision) : uint64_t(0xFFFFFFFFFFFFFFFF);
+		constexpr uint64_t precision_mask = (bit_precision < 64) ? (static_cast<uint64_t>(0xFFFFFFFFFFFFFFFF) >> bit_precision) : static_cast<uint64_t>(0xFFFFFFFFFFFFFFFF);
 		if ((firstproduct.high & precision_mask) == precision_mask) {// could further guard with  (lower + w < lower)
 			// regarding the second product, we only need secondproduct.high, but our
 			// expectation is that the compiler will optimize this extra work away if
@@ -725,7 +725,7 @@ namespace jsonifier_fast_float {
 	// packed. However, in some very rare cases, the computation will fail. In such
 	// cases, we return an adjusted_mantissa with a negative power of 2: the caller
 	// should recompute in such cases.
-	template<typename binary> JSONIFIER_INLINE static constexpr adjusted_mantissa compute_float(int64_t q, uint64_t w) noexcept {
+	template<typename binary> inline static constexpr adjusted_mantissa compute_float(int64_t q, uint64_t w) noexcept {
 		adjusted_mantissa answer;
 		if ((w == 0) || (q < binary::smallest_power_of_ten)) {
 			answer.power2	= 0;
@@ -769,8 +769,8 @@ namespace jsonifier_fast_float {
 		answer.mantissa = product.high >> shift;
 
 		answer.power2 = int32_t(power(int32_t(q)) + upperbit - lz - binary::minimum_exponent);
-		constexpr auto shifted1{ uint64_t(1) << binary::mantissa_explicit_bits };
-		constexpr auto shifted2{ uint64_t(2) << binary::mantissa_explicit_bits };
+		constexpr auto shifted1{ 1ull << binary::mantissa_explicit_bits };
+		constexpr auto shifted2{ 2ull << binary::mantissa_explicit_bits };
 		if (answer.power2 <= 0) {// we have a subnormal?
 			// Here have that answer.power2 <= 0 so -answer.power2 >= 0
 			if (-answer.power2 + 1 >= 64) {// if we have more than 64 bits below the minimum exponent, you
@@ -808,7 +808,7 @@ namespace jsonifier_fast_float {
 			// ... we dropped out only zeroes. But if this happened, then we can go
 			// back!!!
 			if ((answer.mantissa << shift) == product.high) {
-				answer.mantissa &= ~uint64_t(1);// flip it so that we do not round up
+				answer.mantissa &= ~1ull;// flip it so that we do not round up
 			}
 		}
 
@@ -1034,12 +1034,12 @@ namespace jsonifier_fast_float {
 		value128 z = full_multiplication(x, y);
 		bool overflow;
 		z.low = scalar_add(z.low, carry, overflow);
-		z.high += uint64_t(overflow);// cannot overflow
+		z.high += static_cast<uint64_t>(overflow);// cannot overflow
 		carry = z.high;
 		return z.low;
 	#endif
 #else
-		uint64_t z = uint64_t(x) * uint64_t(y) + uint64_t(carry);
+		uint64_t z = static_cast<uint64_t>(x) * static_cast<uint64_t>(y) + static_cast<uint64_t>(carry);
 		carry	   = limb(z >> limb_bits);
 		return limb(z);
 #endif
@@ -1210,8 +1210,8 @@ namespace jsonifier_fast_float {
 #ifdef JSONIFIER_FASTFLOAT_64BIT_LIMB
 			vec.push_unchecked(value);
 #else
-			vec.push_unchecked(uint32_t(value));
-			vec.push_unchecked(uint32_t(value >> 32));
+			vec.push_unchecked(static_cast<uint32_t>(value));
+			vec.push_unchecked(static_cast<uint32_t>(value >> 32));
 #endif
 			vec.normalize();
 		}
@@ -1459,8 +1459,8 @@ namespace jsonifier_fast_float {
 	// round an extended-precision float to the nearest machine float.
 	template<typename value_type, typename callback> JSONIFIER_INLINE static constexpr void round(adjusted_mantissa& am, callback cb) noexcept {
 		constexpr int32_t mantissa_shift = 64 - binary_format<value_type>::mantissa_explicit_bits - 1;
-		constexpr auto shifted2{ uint64_t(2) << binary_format<value_type>::mantissa_explicit_bits };
-		constexpr auto shifted1{ uint64_t(1) << binary_format<value_type>::mantissa_explicit_bits };
+		constexpr auto shifted2{ 2ull << binary_format<value_type>::mantissa_explicit_bits };
+		constexpr auto shifted1{ 1ull << binary_format<value_type>::mantissa_explicit_bits };
 		if (-am.power2 >= mantissa_shift) {
 			int32_t shift = -am.power2 + 1;
 			cb(am, std::min<int32_t>(shift, 64));
@@ -1485,8 +1485,8 @@ namespace jsonifier_fast_float {
 	}
 
 	template<typename callback> JSONIFIER_INLINE static constexpr void round_nearest_tie_even(adjusted_mantissa& am, int32_t shift, callback cb) noexcept {
-		const uint64_t mask		= (shift == 64) ? UINT64_MAX : (uint64_t(1) << shift) - 1;
-		const uint64_t halfway	= (shift == 0) ? 0 : uint64_t(1) << (shift - 1);
+		const uint64_t mask		= (shift == 64) ? UINT64_MAX : (1ull << shift) - 1;
+		const uint64_t halfway	= (shift == 0) ? 0 : 1ull << (shift - 1);
 		uint64_t truncated_bits = am.mantissa & mask;
 		bool is_above			= truncated_bits > halfway;
 		bool is_halfway			= truncated_bits == halfway;
@@ -1500,7 +1500,7 @@ namespace jsonifier_fast_float {
 		am.power2 += shift;
 
 		bool is_odd = (am.mantissa & 1) == 1;
-		am.mantissa += uint64_t(cb(is_odd, is_halfway, is_above));
+		am.mantissa += static_cast<uint64_t>(cb(is_odd, is_halfway, is_above));
 	}
 
 	JSONIFIER_INLINE static constexpr void round_down(adjusted_mantissa& am, int32_t shift) noexcept {
@@ -1663,7 +1663,7 @@ namespace jsonifier_fast_float {
 	}
 
 	template<typename value_type> JSONIFIER_INLINE static constexpr adjusted_mantissa positive_digit_comp(bigint& bigmant, int32_t exponent) noexcept {
-		bigmant.pow10(uint32_t(exponent));
+		bigmant.pow10(static_cast<uint32_t>(exponent));
 		adjusted_mantissa answer;
 		bool truncated;
 		answer.mantissa		   = bigmant.hi64(truncated);
@@ -1703,14 +1703,14 @@ namespace jsonifier_fast_float {
 
 		// scale real digits and theor digits to be same power.
 		int32_t pow2_exp  = theor_exp - real_exp;
-		uint32_t pow5_exp = uint32_t(-real_exp);
+		uint32_t pow5_exp = static_cast<uint32_t>(-real_exp);
 		if (pow5_exp != 0) {
 			theor_digits.pow5(pow5_exp);
 		}
 		if (pow2_exp > 0) {
-			theor_digits.pow2(uint32_t(pow2_exp));
+			theor_digits.pow2(static_cast<uint32_t>(pow2_exp));
 		} else if (pow2_exp < 0) {
-			real_digits.pow2(uint32_t(-pow2_exp));
+			real_digits.pow2(static_cast<uint32_t>(-pow2_exp));
 		}
 
 		// compare digits, and use it to director rounding
@@ -1745,7 +1745,7 @@ namespace jsonifier_fast_float {
 	// `b` as a big-integer type, scaled to the same binary exponent as
 	// the actual digits. we then compare the big integer representations
 	// of both, and use that to direct rounding.
-	template<typename value_type, typename char_t> JSONIFIER_INLINE static constexpr adjusted_mantissa digit_comp(span<const char_t>& integer, span<const char_t>& fraction,
+	template<typename value_type, typename char_t> inline static constexpr adjusted_mantissa digit_comp(span<const char_t>& integer, span<const char_t>& fraction,
 		uint64_t mantissa, int64_t exponent, adjusted_mantissa am) noexcept {
 		// remove the invalid exponent bias
 		am.power2 -= invalid_am_bias;
