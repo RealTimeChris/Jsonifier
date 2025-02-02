@@ -33,11 +33,11 @@
 #include <random>
 
 #if defined(NDEBUG)
-static constexpr auto maxIterations{ 1400 };
-static constexpr auto measuredIterations{ 20 };
+inline static constexpr auto maxIterations{ 1400 };
+inline static constexpr auto measuredIterations{ 20 };
 #else
-static constexpr auto maxIterations{ 200 };
-static constexpr auto measuredIterations{ 25 };
+inline static constexpr auto maxIterations{ 200 };
+inline static constexpr auto measuredIterations{ 25 };
 #endif
 
 constexpr auto getCurrentOperatingSystem() {
@@ -95,7 +95,7 @@ std::string getCPUInfo() {
 	int32_t regs[12]{};
 	uint64_t length{};
 #if defined(__x86_64__) || defined(_M_AMD64)
-	static constexpr auto cpuid = [](int32_t* eax, int32_t* ebx, int32_t* ecx, int32_t* edx) {
+	static auto cpuid = [](int32_t* eax, int32_t* ebx, int32_t* ecx, int32_t* edx) {
 	#if defined(_MSC_VER)
 		int32_t cpuInfo[4];
 		__cpuidex(cpuInfo, *eax, *ecx);
@@ -186,7 +186,7 @@ template<typename value_type> struct partial_test {
 };
 
 struct test_generator {
-	static constexpr std::string_view charSet{ "!#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~!#$%&'()*+,-./"
+	inline static constexpr std::string_view charSet{ "!#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~!#$%&'()*+,-./"
 											   "0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~!#$%&'()*+,-./"
 											   "0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~!#$%&'()*+,-./"
 											   "0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~\"\\\b\f\n\r\t" };

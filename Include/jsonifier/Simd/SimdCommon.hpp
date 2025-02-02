@@ -149,7 +149,7 @@ namespace jsonifier::simd {
 
 	template<typename simd_int_t01> JSONIFIER_INLINE static jsonifier_simd_int_t opFollows(const simd_int_t01& value, bool& overflow) noexcept {
 		const bool oldOverflow = overflow;
-		overflow		 = opGetMSB(value);
+		overflow			   = opGetMSB(value);
 		return opSetLSB(opShl<1>(value), oldOverflow);
 	}
 
@@ -161,7 +161,7 @@ namespace jsonifier::simd {
 	};
 
 	template<size_t size> JSONIFIER_ALIGN(bytesPerStep)
-	constexpr internal::array<uint8_t, size> escapeableArray00{ [] {
+	inline constexpr internal::array<uint8_t, size> escapeableArray00{ []() constexpr {
 		constexpr const uint8_t values[]{ 0x00u, 0x00u, '"', 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, '\\', 0x00u, 0x00u, 0x00u };
 		internal::array<uint8_t, size> returnValues{};
 		for (uint64_t x = 0; x < size; ++x) {
@@ -171,7 +171,7 @@ namespace jsonifier::simd {
 	}() };
 
 	template<size_t size> JSONIFIER_ALIGN(bytesPerStep)
-	constexpr internal::array<uint8_t, size> escapeableArray01{ [] {
+	inline constexpr internal::array<uint8_t, size> escapeableArray01{ []() constexpr {
 		constexpr const uint8_t values[]{ 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, '\b', 0x00u, 0x00u, 0x00u, 0x0Cu, '\r', 0x00u, 0x00u };
 		internal::array<uint8_t, size> returnValues{};
 		for (uint64_t x = 0; x < size; ++x) {
@@ -181,7 +181,7 @@ namespace jsonifier::simd {
 	}() };
 
 	template<size_t size> JSONIFIER_ALIGN(bytesPerStep)
-	constexpr internal::array<uint8_t, size> whitespaceArray{ [] {
+	inline constexpr internal::array<uint8_t, size> whitespaceArray{ []() constexpr {
 		constexpr const uint8_t values[]{ 0x20u, 0x64u, 0x64u, 0x64u, 0x11u, 0x64u, 0x71u, 0x02u, 0x64u, '\t', '\n', 0x70u, 0x64u, '\r', 0x64u, 0x64u };
 		internal::array<uint8_t, size> returnValues{};
 		for (uint64_t x = 0; x < size; ++x) {
@@ -191,7 +191,7 @@ namespace jsonifier::simd {
 	}() };
 
 	template<size_t size> JSONIFIER_ALIGN(bytesPerStep)
-	constexpr internal::array<uint8_t, size> opArray{ [] {
+	inline constexpr internal::array<uint8_t, size> opArray{ []() constexpr {
 		constexpr const uint8_t values[]{ 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, ':', '{', ',', '}', 0x00u, 0x00u };
 		internal::array<uint8_t, size> returnValues{};
 		for (uint64_t x = 0; x < size; ++x) {
@@ -261,7 +261,7 @@ namespace jsonifier::simd {
 
 namespace jsonifier::internal {
 
-	constexpr array<bool, 256> whitespaceTable{ [] {
+	inline constexpr array<bool, 256> whitespaceTable{ []() constexpr {
 		array<bool, 256> returnValues{};
 		returnValues['\t'] = true;
 		returnValues[' ']  = true;

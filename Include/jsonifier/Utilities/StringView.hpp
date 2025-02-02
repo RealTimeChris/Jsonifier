@@ -39,7 +39,7 @@ namespace jsonifier {
 		using size_type				 = uint64_t;
 		using traits_type			 = internal::char_traits<value_type>;
 
-		static constexpr size_type npos{ std::numeric_limits<size_type>::max() };
+		inline static constexpr size_type npos{ std::numeric_limits<size_type>::max() };
 
 		JSONIFIER_INLINE constexpr string_view_base() noexcept : dataVal(), sizeVal(0) {
 		}
@@ -297,7 +297,7 @@ namespace jsonifier {
 	using string_view = string_view_base<char>;
 
 	std::ostream& operator<<(std::ostream& oStream, const string_view& stringNew) noexcept {
-		oStream << stringNew.operator string_base<char>();
+		oStream << stringNew.data();
 		return oStream;
 	}
 

@@ -29,7 +29,7 @@
 
 namespace jsonifier::simd {
 
-#if !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) && \
+#if !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX128) && \
 	!JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 
 	template<typename value_type> JSONIFIER_INLINE static value_type postCmpTzcnt(value_type value) noexcept {
@@ -40,7 +40,7 @@ namespace jsonifier::simd {
 		return mm128LoadUSi128(static_cast<const __m128x*>(str));
 	}
 
-	template<simd_int_128_type simd_int_type_new> JSONIFIER_INLINE static simd_int_type_new gatherValuesU(const void* str) noexcept {
+	template<simd_int_128_type simd_int_type_new> JSONIFIER_INLINE static simd_int_type_new gatherValuesU(const void* str, void*) noexcept {
 		return mm128LoadUSi128(static_cast<const __m128x*>(str));
 	}
 
@@ -60,7 +60,7 @@ namespace jsonifier::simd {
 		mm128StoreUSi128(static_cast<uint64_t*>(storageLocation), value);
 	}
 
-	template<simd_int_128_type simd_int_type_new> JSONIFIER_INLINE static void storeu(const simd_int_type_new& value, void* storageLocation) noexcept {
+	template<simd_int_128_type simd_int_type_new> JSONIFIER_INLINE static void storeU(const simd_int_type_new& value, void* storageLocation, void*) noexcept {
 		mm128StoreUSi128(static_cast<uint64_t*>(storageLocation), value);
 	}
 
@@ -73,16 +73,19 @@ namespace jsonifier::simd {
 		return static_cast<uint32_t>(mm128MovemaskEpi8(mm128CmpGtEpi8(mm128AddEpi8(other, offset), mm128AddEpi8(value, offset))));
 	}
 
-	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02> JSONIFIER_INLINE static auto opCmpEqRaw(const simd_int_t01& value, const simd_int_t02& other) noexcept {
+	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02>
+	JSONIFIER_INLINE static auto opCmpEqRaw(const simd_int_t01& value, const simd_int_t02& other) noexcept {
 		return mm128CmpEqEpi8(value, other);
 	}
 
-	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02> JSONIFIER_INLINE static auto opCmpLtRaw(const simd_int_t01& value, const simd_int_t02& other) noexcept {
+	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02>
+	JSONIFIER_INLINE static auto opCmpLtRaw(const simd_int_t01& value, const simd_int_t02& other) noexcept {
 		jsonifier_simd_int_128 offset = mm128Set1Epi8(static_cast<char>(0x80));
 		return mm128CmpEqEpi8(mm128AddEpi8(other, offset), mm128AddEpi8(value, offset));
 	}
 
-	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02> JSONIFIER_INLINE static auto opCmpEqBitMask(const simd_int_t01& value, const simd_int_t02& other) noexcept {
+	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02>
+	JSONIFIER_INLINE static auto opCmpEqBitMask(const simd_int_t01& value, const simd_int_t02& other) noexcept {
 		return static_cast<uint16_t>(mm128MovemaskEpi8(mm128CmpEqEpi8(value, other)));
 	}
 

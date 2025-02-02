@@ -35,7 +35,7 @@ namespace jsonifier::internal {
 		using pointer		  = value_type*;
 		using size_type		  = size_t;
 
-		static constexpr size_type length{ sizeVal > 0 ? sizeVal - 1 : 0 };
+		inline static constexpr size_type length{ sizeVal > 0 ? sizeVal - 1 : 0 };
 
 		constexpr string_literal() noexcept = default;
 
@@ -94,7 +94,7 @@ namespace jsonifier::internal {
 			return values[index];
 		}
 
-		static constexpr size_type size() noexcept {
+		inline static constexpr size_type size() noexcept {
 			return length;
 		}
 
@@ -111,7 +111,7 @@ namespace jsonifier::internal {
 		return os;
 	}
 
-	static constexpr size_t countDigits(int64_t number) noexcept {
+	inline static constexpr size_t countDigits(int64_t number) noexcept {
 		size_t count = 0;
 		if (number < 0) {
 			number *= -1;
@@ -124,7 +124,7 @@ namespace jsonifier::internal {
 		return count;
 	}
 
-	template<int64_t number, size_t numDigits = countDigits(number)> static constexpr string_literal<numDigits + 1> toStringLiteral() noexcept {
+	template<int64_t number, size_t numDigits = countDigits(number)> inline static constexpr string_literal<numDigits + 1> toStringLiteral() noexcept {
 		char buffer[numDigits + 1]{};
 		string_buffer_ptr ptr = buffer + numDigits;
 		*ptr				  = '\0';
@@ -146,7 +146,7 @@ namespace jsonifier::internal {
 		return (input >= 'A' && input <= 'Z') ? (input + 32) : input;
 	}
 
-	template<size_t size, typename value_type> static constexpr auto toLower(string_literal<size> input) noexcept {
+	template<size_t size, typename value_type> inline static constexpr auto toLower(string_literal<size> input) noexcept {
 		string_literal<size> output{};
 		for (size_t x = 0; x < size; ++x) {
 			output[x] = toLower(input[x]);
