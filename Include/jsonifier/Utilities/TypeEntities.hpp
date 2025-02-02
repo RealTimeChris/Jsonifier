@@ -54,10 +54,6 @@ namespace jsonifier::internal {
 		return os;
 	}
 
-	static void printLocation(const std::source_location& location = std::source_location::current()) {
-		std::cout << location;
-	}
-
 	template<typename derived_type> class parser;
 
 	template<typename derived_type, size_t = 0> class vector;
@@ -85,8 +81,8 @@ namespace jsonifier::internal {
 	template<template<typename...> typename value_type, typename... arg_types> constexpr bool is_specialization_v<value_type<arg_types...>, value_type> = true;
 
 	template<uint64_t bytesProcessedNew, typename simd_type, typename integer_type_new, integer_type_new maskNew> struct type_holder {
-		static constexpr uint64_t bytesProcessed{ bytesProcessedNew };
-		static constexpr integer_type_new mask{ maskNew };
+		inline static constexpr uint64_t bytesProcessed{ bytesProcessedNew };
+		inline static constexpr integer_type_new mask{ maskNew };
 		using type		   = simd_type;
 		using integer_type = integer_type_new;
 	};
@@ -100,12 +96,12 @@ namespace jsonifier::internal {
 	template<typename value_type, typename... rest> struct type_list<value_type, rest...> {
 		using current_type			   = value_type;
 		using remaining_types		   = type_list<rest...>;
-		static constexpr uint64_t size = 1 + sizeof...(rest);
+		inline static constexpr uint64_t size = 1 + sizeof...(rest);
 	};
 
 	template<typename value_type> struct type_list<value_type> {
 		using current_type			   = value_type;
-		static constexpr uint64_t size = 1;
+		inline static constexpr uint64_t size = 1;
 	};
 
 	template<typename type_list, uint64_t index> struct get_type_at_index;
@@ -123,31 +119,31 @@ namespace jsonifier::internal {
 	};
 
 	template<const auto& function, typename... arg_types, size_t... indices>
-	static constexpr void forEachImpl(jsonifier::internal::index_sequence<indices...>, arg_types&&... args) noexcept {
+	inline static constexpr void forEachImpl(jsonifier::internal::index_sequence<indices...>, arg_types&&... args) noexcept {
 		(( void )(args, ...));
 		(function.operator()(jsonifier::internal::integral_constant<size_t, indices>{}, jsonifier::internal::integral_constant<size_t, sizeof...(indices)>{},
 			 internal::forward<arg_types>(args)...),
 			...);
 	}
 
-	template<size_t limit, const auto& function, typename... arg_types> static constexpr void forEach(arg_types&&... args) noexcept {
+	template<size_t limit, const auto& function, typename... arg_types> inline static constexpr void forEach(arg_types&&... args) noexcept {
 		forEachImpl<function>(jsonifier::internal::make_index_sequence<limit>{}, internal::forward<arg_types>(args)...);
 	}
 
 	template<typename function_type, typename... arg_types, size_t... indices>
-	static constexpr void forEachImpl(function_type&& function, jsonifier::internal::index_sequence<indices...>, arg_types&&... args) noexcept {
+	inline static constexpr void forEachImpl(function_type&& function, jsonifier::internal::index_sequence<indices...>, arg_types&&... args) noexcept {
 		(( void )(args, ...));
 		(function.operator()(jsonifier::internal::integral_constant<size_t, indices>{}, jsonifier::internal::integral_constant<size_t, sizeof...(indices)>{},
 			 internal::forward<arg_types>(args)...),
 			...);
 	}
 
-	template<size_t limit, typename function_type, typename... arg_types> static constexpr void forEach(function_type&& function, arg_types&&... args) noexcept {
+	template<size_t limit, typename function_type, typename... arg_types> inline static constexpr void forEach(function_type&& function, arg_types&&... args) noexcept {
 		forEachImpl(internal::forward<function_type>(function), jsonifier::internal::make_index_sequence<limit>{}, internal::forward<arg_types>(args)...);
 	}
 
 	template<auto function, uint64_t currentIndex = 0, typename variant_type, typename... arg_types>
-	static constexpr void visit(variant_type&& variant, arg_types&&... args) noexcept {
+	inline static constexpr void visit(variant_type&& variant, arg_types&&... args) noexcept {
 		if constexpr (currentIndex < std::variant_size_v<jsonifier::internal::remove_cvref_t<variant_type>>) {
 			variant_type&& variantNew = internal::forward<variant_type>(variant);
 			if JSONIFIER_UNLIKELY (variantNew.index() == currentIndex) {

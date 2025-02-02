@@ -42,12 +42,12 @@ namespace round_trip_tests {
 
 template<> struct jsonifier::core<round_trip_tests::Obj2> {
 	using value_type				 = round_trip_tests::Obj2;
-	static constexpr auto parseValue = createValue<&value_type::foo>();
+	inline static constexpr auto parseValue = createValue<&value_type::foo>();
 };
 
 template<> struct jsonifier::core<round_trip_tests::Obj3> {
 	using value_type				 = round_trip_tests::Obj3;
-	static constexpr auto parseValue = createValue<&value_type::a, &value_type::foo>();
+	inline static constexpr auto parseValue = createValue<&value_type::a, &value_type::foo>();
 };
 
 namespace round_trip_tests {

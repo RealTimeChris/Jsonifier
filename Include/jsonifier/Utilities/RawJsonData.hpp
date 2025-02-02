@@ -62,7 +62,7 @@ namespace jsonifier {
 	  public:
 		using object_type = std::unordered_map<string, raw_json_data>;
 		using string_type = string;
-		using array_type  = vector<raw_json_data>;
+		using array_type  = std::vector<raw_json_data>;
 		using number_type = json_number;
 		using bool_type	  = bool;
 		using null_type	  = std::nullptr_t;
@@ -193,7 +193,7 @@ namespace jsonifier {
 			return jsonData;
 		}
 
-		JSONIFIER_INLINE const vector<internal::error>& getErrors() const noexcept {
+		JSONIFIER_INLINE const std::vector<internal::error>& getErrors() const noexcept {
 			return errors;
 		}
 
@@ -202,7 +202,7 @@ namespace jsonifier {
 		}
 
 	  protected:
-		vector<internal::error> errors{};
+		std::vector<internal::error> errors{};
 		value_type value{};
 		string jsonData{};
 

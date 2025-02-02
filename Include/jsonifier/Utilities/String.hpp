@@ -23,7 +23,9 @@
 /// Feb 20, 2023
 #pragma once
 
-#include <jsonifier/Containers/Vector.hpp>
+#include <jsonifier/Containers/Allocator.hpp>
+#include <jsonifier/Containers/Iterator.hpp>
+#include <jsonifier/Utilities/Compare.hpp>
 
 namespace jsonifier::internal {
 
@@ -106,8 +108,8 @@ namespace jsonifier {
 			}
 		};
 
-		static constexpr size_type bufSize = 16 / sizeof(value_type) < 1 ? 1 : 16 / sizeof(value_type);
-		static constexpr size_type npos{ std::numeric_limits<size_type>::max() };
+		inline static constexpr size_type bufSize = 16 / sizeof(value_type) < 1 ? 1 : 16 / sizeof(value_type);
+		inline static constexpr size_type npos{ std::numeric_limits<size_type>::max() };
 
 		JSONIFIER_INLINE string_base& operator=(string_base&& other) noexcept {
 			if JSONIFIER_LIKELY (this != &other) {
@@ -168,8 +170,10 @@ namespace jsonifier {
 				if JSONIFIER_LIKELY (newSize > 0 && newSize < maxSize()) {
 					reserve(newSize);
 					sizeVal = newSize;
-					std::uninitialized_copy(other, other + newSize, dataVal);
-					allocator::construct(&(*this)[newSize], value_type{});
+					if (dataVal) {
+						std::uninitialized_copy(other, other + newSize, dataVal);
+						allocator::construct(&(*this)[newSize], value_type{});
+					}
 				}
 			}
 		}
@@ -611,9 +615,3 @@ namespace jsonifier {
 		return os;
 	}
 }// namespace jsonifier
-
-namespace jsonifier::internal {
-
-	static thread_local string_base<char, 1024 * 1024> stringBuffer{};
-
-}

@@ -36,7 +36,7 @@ namespace jsonifier {
 
 }
 
-namespace jsonifier::internal {	
+namespace jsonifier::internal {
 
 	template<typename derived_type> class prettifier {
 	  public:
@@ -44,26 +44,26 @@ namespace jsonifier::internal {
 		inline prettifier(const prettifier& other)			  = delete;
 
 		template<prettify_options options = prettify_options{}, concepts::string_t string_type> inline auto prettifyJson(string_type&& in) noexcept {
-			if JSONIFIER_UNLIKELY (stringBuffer.size() < in.size() * 5) {
-				stringBuffer.resize(in.size() * 5);
+			if JSONIFIER_UNLIKELY (derivedRef.stringBuffer.size() < in.size() * 5) {
+				derivedRef.stringBuffer.resize(in.size() * 5);
 			}
 			static constexpr prettify_options optionsFinal{ options };
 			const auto* dataPtr = in.data();
 			derivedRef.errors.clear();
 			rootIter = dataPtr;
 			endIter	 = dataPtr + in.size();
-			section.reset<true>(dataPtr, in.size());
-			string_view_ptr* iter{ section.begin() };
+			derivedRef.section.template reset<true>(dataPtr, in.size());
+			string_view_ptr* iter{ derivedRef.section.begin() };
 			if JSONIFIER_UNLIKELY (!*iter) {
 				getErrors().emplace_back(
 					error::constructError<error_classes::Prettifying, prettify_errors::No_Input>(getUnderlyingPtr(iter) - dataPtr, in.end() - in.begin(), dataPtr));
 				return jsonifier::internal::remove_cvref_t<string_type>{};
 			}
 			jsonifier::internal::remove_cvref_t<string_type> newString{};
-			auto index = impl<optionsFinal>(iter, stringBuffer);
+			auto index = impl<optionsFinal>(iter, derivedRef.stringBuffer);
 			if JSONIFIER_LIKELY (index != std::numeric_limits<uint64_t>::max()) {
 				newString.resize(index);
-				std::memcpy(newString.data(), stringBuffer.data(), index);
+				std::memcpy(newString.data(), derivedRef.stringBuffer.data(), index);
 				return newString;
 			} else {
 				return jsonifier::internal::remove_cvref_t<string_type>{};
@@ -72,27 +72,27 @@ namespace jsonifier::internal {
 
 		template<prettify_options options = prettify_options{}, concepts::string_t string_type01, concepts::string_t string_type02>
 		inline bool prettifyJson(string_type01&& in, string_type02&& buffer) noexcept {
-			if JSONIFIER_UNLIKELY (stringBuffer.size() < in.size() * 5) {
-				stringBuffer.resize(in.size() * 5);
+			if JSONIFIER_UNLIKELY (derivedRef.stringBuffer.size() < in.size() * 5) {
+				derivedRef.stringBuffer.resize(in.size() * 5);
 			}
 			static constexpr prettify_options optionsFinal{ options };
 			derivedRef.errors.clear();
 			const auto* dataPtr = in.data();
 			rootIter			= dataPtr;
 			endIter				= dataPtr + in.size();
-			section.reset<true>(dataPtr, in.size());
-			string_view_ptr* iter{ section.begin() };
+			derivedRef.section.template reset<true>(dataPtr, in.size());
+			string_view_ptr* iter{ derivedRef.section.begin() };
 			if JSONIFIER_UNLIKELY (!*iter) {
 				getErrors().emplace_back(
 					error::constructError<error_classes::Prettifying, prettify_errors::No_Input>(getUnderlyingPtr(iter) - dataPtr, in.end() - in.begin(), dataPtr));
 				return false;
 			}
-			auto index = impl<optionsFinal>(iter, stringBuffer);
+			auto index = impl<optionsFinal>(iter, derivedRef.stringBuffer);
 			if JSONIFIER_LIKELY (index != std::numeric_limits<uint64_t>::max()) {
 				if JSONIFIER_LIKELY (buffer.size() != index) {
 					buffer.resize(index);
 				}
-				std::memcpy(buffer.data(), stringBuffer.data(), index);
+				std::memcpy(buffer.data(), derivedRef.stringBuffer.data(), index);
 				return true;
 			} else {
 				return false;
@@ -101,7 +101,7 @@ namespace jsonifier::internal {
 
 	  protected:
 		derived_type& derivedRef{ initializeSelfRef() };
-		jsonifier::vector<json_structural_type> state{};
+		std::vector<json_structural_type> state{};
 		string_view_ptr rootIter{};
 		string_view_ptr endIter{};
 
@@ -113,11 +113,37 @@ namespace jsonifier::internal {
 			return *static_cast<derived_type*>(this);
 		}
 
-		inline jsonifier::vector<error>& getErrors() noexcept {
+		inline std::vector<error>& getErrors() noexcept {
 			return derivedRef.errors;
 		}
 
 		template<prettify_options options, concepts::string_t string_type, typename iterator> inline uint64_t impl(iterator& iter, string_type&& out) noexcept {
+			static constexpr array<json_structural_type, 256> jsonTypes = []() constexpr {
+				array<json_structural_type, 256> returnValues{};
+				using enum json_structural_type;
+				returnValues['"'] = string;
+				returnValues[','] = comma;
+				returnValues['0'] = number;
+				returnValues['1'] = number;
+				returnValues['2'] = number;
+				returnValues['3'] = number;
+				returnValues['4'] = number;
+				returnValues['5'] = number;
+				returnValues['6'] = number;
+				returnValues['7'] = number;
+				returnValues['8'] = number;
+				returnValues['9'] = number;
+				returnValues['-'] = number;
+				returnValues[':'] = colon;
+				returnValues['['] = array_start;
+				returnValues[']'] = array_end;
+				returnValues['n'] = null;
+				returnValues['t'] = boolean;
+				returnValues['f'] = boolean;
+				returnValues['{'] = object_start;
+				returnValues['}'] = object_end;
+				return returnValues;
+			}();
 			string_view_ptr newPtr{};
 			uint64_t newSize{};
 			int64_t indent{};
@@ -205,21 +231,21 @@ namespace jsonifier::internal {
 						break;
 					}
 					case json_structural_type::null: {
-						JSONIFIER_ALIGN(4) static constexpr char nullV[]{ "null" };
-						std::memcpy(&out[index], nullV, 4);
+						static constexpr uint32_t nullV[]{ packValues4("null") };
+						std::memcpy(&out[index], &nullV, 4);
 						index += 4;
 						++iter;
 						break;
 					}
 					case json_structural_type::boolean: {
 						if (**iter == 'f') {
-							JSONIFIER_ALIGN(8) static constexpr char falseV[]{ "false" };
-							std::memcpy(&out[index], falseV, 5);
+							static constexpr uint64_t falseV[]{ packValues5("false") };
+							std::memcpy(&out[index], &falseV, 5);
 							index += 5;
 							++iter;
 						} else {
-							JSONIFIER_ALIGN(4) static constexpr char trueV[]{ "true" };
-							std::memcpy(&out[index], trueV, 4);
+							static constexpr uint32_t trueV[]{ packValues4("true") };
+							std::memcpy(&out[index], &trueV, 4);
 							index += 4;
 							++iter;
 						}

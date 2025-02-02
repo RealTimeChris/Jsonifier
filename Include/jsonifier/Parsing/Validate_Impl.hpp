@@ -27,7 +27,7 @@
 
 namespace jsonifier::internal {
 
-	static constexpr parse_options optionsVal{};
+	inline static constexpr parse_options optionsVal{};
 
 	template<typename derived_type> struct validate_impl<json_structural_type::object_start, derived_type> {
 		template<typename validator_type, typename iterator> JSONIFIER_NON_GCC_INLINE static bool impl(iterator&& iter, iterator&& end, validator_type& validatorRef) noexcept {
@@ -118,7 +118,8 @@ namespace jsonifier::internal {
 				auto newPtr = *iter;
 				++iter;
 				auto endPtr = *iter;
-				newPtr		= string_parser<optionsVal, decltype(newPtr), decltype(stringBuffer.data())>::impl(newPtr, stringBuffer.data(), static_cast<size_t>(endPtr - newPtr));
+				newPtr		= string_parser<optionsVal, decltype(newPtr), decltype(validatorRef.getStringBuffer().data())>::impl(newPtr, validatorRef.getStringBuffer().data(),
+						 static_cast<size_t>(endPtr - newPtr));
 				if JSONIFIER_LIKELY (newPtr) {
 					return true;
 				}

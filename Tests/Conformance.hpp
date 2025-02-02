@@ -69,7 +69,7 @@ namespace conformance_tests {
 		std::cout << "Conformance Tests: " << std::endl;
 		runTest<pass02>("pass2.json", jsonTests["pass2.json"].fileContents, parser, false);
 		runTest<pass03>("pass3.json", jsonTests["pass3.json"].fileContents, parser, false);
-		runTest<std::unordered_map<std::string, std::string>>("fail02.json", jsonTests["fail02.json"].fileContents, parser);
+		runTest<std::vector<std::string>>("fail02.json", jsonTests["fail02.json"].fileContents, parser);
 		runTest<std::unordered_map<std::string, std::string>>("fail03.json", jsonTests["fail03.json"].fileContents, parser);
 		runTest<std::vector<std::string>>("fail04.json", jsonTests["fail04.json"].fileContents, parser);
 		runTest<std::vector<std::string>>("fail05.json", jsonTests["fail05.json"].fileContents, parser);

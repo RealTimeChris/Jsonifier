@@ -99,7 +99,7 @@ namespace jsonifier::internal {
 
 	template<auto p>
 		requires(std::is_member_pointer_v<decltype(p)>)
-	static constexpr auto getName() noexcept {
+	inline static constexpr auto getName() noexcept {
 #if defined(JSONIFIER_MSVC) && !defined(JSONIFIER_CLANG)
 		using value_type		 = remove_member_pointer_t<decltype(p)>;
 		constexpr auto pNew		 = p;

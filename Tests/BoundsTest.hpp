@@ -40,7 +40,7 @@ template<> struct jsonifier::core<partial_test_struct> {
 
 template<typename value_type_new> struct jsonifier::core<partial_test<value_type_new>> {
 	using value_type				 = partial_test<value_type_new>;
-	static constexpr auto parseValue = createValue<&value_type::m>();
+	static constexpr auto parseValue = createValue<&value_type::m, &value_type::s>();
 };
 
 template<typename value_type_new> struct jsonifier::core<test_generator<value_type_new>> {
@@ -69,6 +69,7 @@ namespace bounds_tests {
 		newTests.m.resize(5);
 		newTests.s.resize(3);
 		parser.serializeJson(newTests, testString);
+		std::cout << "TEST STRING LENGTH: " << testString.size() << std::endl;
 		if (!parser.validateJson(testString)) {
 			throw std::runtime_error{ "Failed to pass validation!" };
 		}
@@ -94,6 +95,7 @@ namespace bounds_tests {
 			}
 			testString.resize(testString.size() - 1);
 		}
+		std::cout << "Succesfully passed the bounds test." << std::endl;
 		return true;
 	}
 

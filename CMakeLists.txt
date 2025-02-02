@@ -67,7 +67,7 @@ set(JSONIFIER-AVX512_EXITCODE 0 CACHE INTERNAL "For cross-compiling.")
     "$<INSTALL_INTERFACE:include/>"
  )
 
-if (NOT JSONIFIER_CPU_INSTRUCTIONS)
+if (NOT DEFINED JSONIFIER_CPU_INSTRUCTIONS)
 	include("JsonifierDetectArchitecture")
 endif()
 
