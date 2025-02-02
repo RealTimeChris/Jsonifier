@@ -67,7 +67,7 @@ namespace jsonifier {
 			*this = other;
 		}
 
-		vector<internal::error>& getErrors() noexcept {
+		std::vector<internal::error>& getErrors() noexcept {
 			return errors;
 		}
 
@@ -80,7 +80,9 @@ namespace jsonifier {
 		using minifier	 = internal::minifier<jsonifier_core<doWeUseInitialBuffer>>;
 		using parser	 = internal::parser<jsonifier_core<doWeUseInitialBuffer>>;
 
-		vector<internal::error> errors{};
+		string_base<char, 1024 * 1024> stringBuffer{};
+		internal::simd_string_reader<true> section{};
+		std::vector<internal::error> errors{};
 	};
 
 }

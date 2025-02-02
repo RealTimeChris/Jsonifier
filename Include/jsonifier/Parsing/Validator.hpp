@@ -25,10 +25,9 @@
 
 #include <jsonifier/Utilities/TypeEntities.hpp>
 #include <jsonifier/Utilities/StringUtils.hpp>
-#include <jsonifier/Containers/Vector.hpp>
 #include <jsonifier/Utilities/Error.hpp>
 
-namespace jsonifier::internal {	
+namespace jsonifier::internal {
 
 	template<json_structural_type typeNew, typename derived_type> struct validate_impl;
 
@@ -41,11 +40,11 @@ namespace jsonifier::internal {
 
 		template<concepts::string_t string_type> JSONIFIER_INLINE bool validateJson(string_type&& in) noexcept {
 			derivedRef.errors.clear();
-			section.reset<false>(in.data(), in.size());
+			derivedRef.section.template reset<false>(in.data(), in.size());
 			rootIter = in.data();
 			endIter	 = in.data() + in.size();
-			string_view_ptr* iter{ section.begin() };
-			string_view_ptr* end{ section.end() };
+			string_view_ptr* iter{ derivedRef.section.begin() };
+			string_view_ptr* end{ derivedRef.section.end() };
 			if (!iter) {
 				getErrors().emplace_back(error::constructError<error_classes::Validating, validate_errors::No_Input>(0, 0, nullptr));
 				return false;
@@ -93,11 +92,15 @@ namespace jsonifier::internal {
 			}
 		}
 
+		JSONIFIER_INLINE auto& getStringBuffer() noexcept {
+			return derivedRef.stringBuffer;
+		}
+
 		derived_type& initializeSelfRef() noexcept {
 			return *static_cast<derived_type*>(this);
 		}
 
-		jsonifier::vector<error>& getErrors() noexcept {
+		std::vector<error>& getErrors() noexcept {
 			return derivedRef.errors;
 		}
 

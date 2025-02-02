@@ -109,8 +109,7 @@ namespace jsonifier::internal {
 	}
 
 	template<parse_options options, bool minifiedOrInsideRepeated> struct parse {
-		template<typename value_type_new, typename context_type>
-		JSONIFIER_INLINE static void impl(value_type_new&& value, context_type&& context) noexcept {
+		template<typename value_type_new, typename context_type> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type&& context) noexcept {
 			using value_type = remove_cvref_t<value_type_new>;
 			if constexpr (options.partialRead) {
 				if constexpr (concepts::map_t<value_type> || concepts::jsonifier_object_t<value_type>) {
@@ -140,6 +139,7 @@ namespace jsonifier::internal {
 	template<typename derived_type_new> class parser {
 	  public:
 		friend class jsonifier::raw_json_data;
+		template<const auto options, typename context_type> friend struct derailleur;
 
 		using derived_type = derived_type_new;
 
@@ -153,15 +153,15 @@ namespace jsonifier::internal {
 				constexpr parse_context_partial<derived_type, string_view_ptr*> context{ constEval(parse_context_partial<derived_type, string_view_ptr*>{}) };
 				auto rootIter = getBeginIter(in);
 				auto endIter  = getEndIter(in);
-				section.reset<options.minified>(rootIter, static_cast<size_t>(endIter - rootIter));
-				context.rootIter			 = section.begin();
-				context.iter				 = section.begin();
-				context.endIter				 = section.end();
+				derivedRef.section.template reset<options.minified>(rootIter, static_cast<size_t>(endIter - rootIter));
+				context.rootIter			 = derivedRef.section.begin();
+				context.iter				 = derivedRef.section.begin();
+				context.endIter				 = derivedRef.section.end();
 				context.remainingMemberCount = static_cast<int64_t>(countTotalNonRepeatedMembers<value_type>());
 				context.parserPtr			 = this;
 				auto newSize				 = static_cast<uint64_t>((context.endIter - context.iter) / 2);
-				if (stringBuffer.size() < newSize) {
-					stringBuffer.resize(newSize);
+				if (derivedRef.stringBuffer.size() < newSize) {
+					derivedRef.stringBuffer.resize(newSize);
 				}
 				if constexpr (options.validateJson) {
 					if (!derivedRef.validateJson(in)) {
@@ -183,8 +183,8 @@ namespace jsonifier::internal {
 				context.endIter	  = getEndIter(in);
 				context.parserPtr = this;
 				auto newSize	  = static_cast<uint64_t>((context.endIter - context.iter) / 2);
-				if (stringBuffer.size() < newSize) {
-					stringBuffer.resize(newSize);
+				if (derivedRef.stringBuffer.size() < newSize) {
+					derivedRef.stringBuffer.resize(newSize);
 				}
 				if constexpr (options.validateJson) {
 					if (!derivedRef.validateJson(in)) {
@@ -214,8 +214,8 @@ namespace jsonifier::internal {
 			context.endIter	  = getEndIter(in);
 			context.parserPtr = this;
 			auto newSize	  = static_cast<uint64_t>((context.endIter - context.iter) / 2);
-			if (stringBuffer.size() < newSize) {
-				stringBuffer.resize(newSize);
+			if (derivedRef.stringBuffer.size() < newSize) {
+				derivedRef.stringBuffer.resize(newSize);
 			}
 			if constexpr (options.validateJson) {
 				if (!derivedRef.validateJson(in)) {
@@ -243,15 +243,15 @@ namespace jsonifier::internal {
 				constexpr parse_context_partial<derived_type, string_view_ptr*> context{ constEval(parse_context_partial<derived_type, string_view_ptr*>{}) };
 				auto rootIter = getBeginIter(in);
 				auto endIter  = getEndIter(in);
-				section.reset<options.minified>(rootIter, static_cast<size_t>(endIter - rootIter));
-				context.rootIter			 = section.begin();
-				context.iter				 = section.begin();
-				context.endIter				 = section.end();
+				derivedRef.section.template reset<options.minified>(rootIter, static_cast<size_t>(endIter - rootIter));
+				context.rootIter			 = derivedRef.section.begin();
+				context.iter				 = derivedRef.section.begin();
+				context.endIter				 = derivedRef.section.end();
 				context.remainingMemberCount = countTotalNonRepeatedMembers<value_type>();
 				context.parserPtr			 = this;
 				auto newSize				 = static_cast<uint64_t>((context.endIter - context.iter) / 2);
-				if (stringBuffer.size() < newSize) {
-					stringBuffer.resize(newSize);
+				if (derivedRef.stringBuffer.size() < newSize) {
+					derivedRef.stringBuffer.resize(newSize);
 				}
 				if constexpr (options.validateJson) {
 					if (!derivedRef.validateJson(in)) {
@@ -274,8 +274,8 @@ namespace jsonifier::internal {
 				context.endIter	  = getEndIter(in);
 				context.parserPtr = this;
 				auto newSize	  = static_cast<uint64_t>((context.endIter - context.iter) / 2);
-				if (stringBuffer.size() < newSize) {
-					stringBuffer.resize(newSize);
+				if (derivedRef.stringBuffer.size() < newSize) {
+					derivedRef.stringBuffer.resize(newSize);
 				}
 				if constexpr (options.validateJson) {
 					if (!derivedRef.validateJson(in)) {
@@ -308,6 +308,10 @@ namespace jsonifier::internal {
 		derived_type& derivedRef{ initializeSelfRef() };
 
 		parser() noexcept : derivedRef{ initializeSelfRef() } {};
+
+		JSONIFIER_INLINE auto& getStringBuffer() noexcept {
+			return derivedRef.stringBuffer;
+		}
 
 		derived_type& initializeSelfRef() noexcept {
 			return *static_cast<derived_type*>(this);

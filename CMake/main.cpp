@@ -33,7 +33,7 @@ namespace {
 }
 
 #if defined(__x86_64__) || defined(_M_AMD64)
-static inline void cpuid(uint32_t* eax, uint32_t* ebx, uint32_t* ecx, uint32_t* edx);
+inline static void cpuid(uint32_t* eax, uint32_t* ebx, uint32_t* ecx, uint32_t* edx);
 inline static uint64_t xgetbv();
 #endif
 
@@ -66,7 +66,7 @@ inline static uint32_t detectSupportedArchitectures() {
 
 #elif defined(__x86_64__) || defined(_M_AMD64)
 
-static inline void cpuid(uint32_t* eax, uint32_t* ebx, uint32_t* ecx, uint32_t* edx) {
+inline static void cpuid(uint32_t* eax, uint32_t* ebx, uint32_t* ecx, uint32_t* edx) {
 	#if defined(_MSC_VER)
 	int32_t cpuInfo[4];
 	__cpuidex(cpuInfo, *eax, *ecx);

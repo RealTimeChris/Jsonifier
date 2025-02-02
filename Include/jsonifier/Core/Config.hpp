@@ -105,7 +105,7 @@
 #endif
 
 #if JSONIFIER_HAS_INLINE_VARIABLE
-	#define JSONIFIER_INLINE_VARIABLE inline constexpr
+	#define JSONIFIER_INLINE_VARIABLE inline static constexpr
 #else
 	#define JSONIFIER_INLINE_VARIABLE static constexpr
 #endif

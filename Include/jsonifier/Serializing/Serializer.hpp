@@ -28,7 +28,7 @@
 #include <jsonifier/Serializing/Prettifier.hpp>
 #include <jsonifier/Utilities/Error.hpp>
 
-namespace jsonifier::internal {	
+namespace jsonifier::internal {
 
 	template<typename value_type, typename context_type, serialize_options optionsNew> struct serialize_impl;
 
@@ -40,7 +40,6 @@ namespace jsonifier::internal {
 	};
 
 	template<typename buffer_type> struct serialize_context {
-
 		JSONIFIER_INLINE serialize_context& operator=(const serialize_context& other) noexcept {
 			bufferPtr = other.bufferPtr;
 			buffer	  = other.buffer;
@@ -52,10 +51,11 @@ namespace jsonifier::internal {
 		JSONIFIER_INLINE serialize_context(const serialize_context& other) noexcept {
 			*this = other;
 		}
-		
+
 		JSONIFIER_INLINE serialize_context() noexcept = default;
 
-		JSONIFIER_INLINE serialize_context(string_buffer_ptr ptrNew, buffer_type& bufferNew) noexcept : bufferPtr{ ptrNew }, buffer{ bufferNew } {}
+		JSONIFIER_INLINE serialize_context(string_buffer_ptr ptrNew, buffer_type& bufferNew) noexcept : bufferPtr{ ptrNew }, buffer{ bufferNew } {
+		}
 
 		string_buffer_ptr bufferPtr{};
 		buffer_type& buffer{};
@@ -71,20 +71,20 @@ namespace jsonifier::internal {
 		template<serialize_options optionsNew = serialize_options{}, typename value_type, concepts::buffer_like buffer_type>
 		JSONIFIER_INLINE bool serializeJson(value_type&& object, buffer_type&& buffer) noexcept {
 			static constexpr serialize_options options{ optionsNew };
-			serialize_context<decltype(stringBuffer)> context{ stringBuffer.data(), stringBuffer };
+			serialize_context<decltype(derivedRef.stringBuffer)> context{ derivedRef.stringBuffer.data(), derivedRef.stringBuffer };
 			serialize<options>::impl(object, context);
 			context.index = static_cast<size_t>(context.bufferPtr - context.buffer.data());
 			buffer.resize(context.index);
-			std::copy(stringBuffer.data(), stringBuffer.data() + context.index, buffer.data());
+			std::copy(derivedRef.stringBuffer.data(), derivedRef.stringBuffer.data() + context.index, buffer.data());
 			return true;
 		}
 
 		template<serialize_options optionsNew = serialize_options{}, typename value_type> JSONIFIER_INLINE string_view serializeJson(value_type&& object) noexcept {
 			static constexpr serialize_options options{ optionsNew };
-			serialize_context<decltype(stringBuffer)> context{ stringBuffer.data(), stringBuffer };
+			serialize_context<decltype(derivedRef.stringBuffer)> context{ derivedRef.stringBuffer.data(), derivedRef.stringBuffer };
 			serialize<options>::impl(object, context);
 			context.index = static_cast<size_t>(context.bufferPtr - context.buffer.data());
-			return string_view{ stringBuffer.data(), context.index };
+			return string_view{ derivedRef.stringBuffer.data(), context.index };
 		}
 
 	  protected:

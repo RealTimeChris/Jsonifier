@@ -982,8 +982,8 @@ namespace jsonifier_jkj {
 			return { r.significand, r.exponent, is_negative };
 		}
 
-		template<typename SignificandType, typename ExponentType> JSONIFIER_INLINE static constexpr signed_decimal_fp<SignificandType, ExponentType, true> add_sign_to_unsigned_decimal_fp(
-			bool is_negative, unsigned_decimal_fp<SignificandType, ExponentType, true> r) noexcept {
+		template<typename SignificandType, typename ExponentType> JSONIFIER_INLINE static constexpr signed_decimal_fp<SignificandType, ExponentType, true>
+		add_sign_to_unsigned_decimal_fp(bool is_negative, unsigned_decimal_fp<SignificandType, ExponentType, true> r) noexcept {
 			return { r.significand, r.exponent, r.may_have_trailing_zeros, is_negative };
 		}
 
@@ -1381,14 +1381,14 @@ namespace jsonifier_jkj {
 
 			using cache_holder_t												= jsonifier::internal::array<cache_entry_type, compressed_table_size>;
 			using pow5_holder_t													= jsonifier::internal::array<std::uint_least16_t, pow5_table_size>;
-			static constexpr cache_holder_t cache JSONIFIER_STATIC_DATA_SECTION = [] {
+			static constexpr cache_holder_t cache JSONIFIER_STATIC_DATA_SECTION = []() constexpr {
 				cache_holder_t res{};
 				for (size_t i = 0; i < compressed_table_size; ++i) {
 					res[i] = cache_holder<ieee754_binary32>::cache[i * compression_ratio];
 				}
 				return res;
 			}();
-			static constexpr pow5_holder_t pow5_table JSONIFIER_STATIC_DATA_SECTION = [] {
+			static constexpr pow5_holder_t pow5_table JSONIFIER_STATIC_DATA_SECTION = []() constexpr {
 				pow5_holder_t res{};
 				std::uint_least16_t p = 1;
 				for (size_t i = 0; i < pow5_table_size; ++i) {
@@ -1445,14 +1445,14 @@ namespace jsonifier_jkj {
 			using cache_holder_t = jsonifier::internal::array<cache_entry_type, compressed_table_size>;
 			using pow5_holder_t	 = jsonifier::internal::array<std::uint_least64_t, pow5_table_size>;
 
-			static constexpr cache_holder_t cache JSONIFIER_STATIC_DATA_SECTION = [] {
+			static constexpr cache_holder_t cache JSONIFIER_STATIC_DATA_SECTION = []() constexpr {
 				cache_holder_t res{};
 				for (size_t i = 0; i < compressed_table_size; ++i) {
 					res[i] = cache_holder<ieee754_binary64>::cache[i * compression_ratio];
 				}
 				return res;
 			}();
-			static constexpr pow5_holder_t pow5_table JSONIFIER_STATIC_DATA_SECTION = [] {
+			static constexpr pow5_holder_t pow5_table JSONIFIER_STATIC_DATA_SECTION = []() constexpr {
 				pow5_holder_t res{};
 				std::uint_least64_t p = 1;
 				for (size_t i = 0; i < pow5_table_size; ++i) {
@@ -1547,7 +1547,7 @@ namespace jsonifier_jkj {
 
 		namespace policy {
 			namespace sign {
-				JSONIFIER_INLINE_VARIABLE struct ignore_t {
+				inline constexpr struct ignore_t {
 					using sign_policy					  = ignore_t;
 					static constexpr bool return_has_sign = false;
 
@@ -1572,7 +1572,7 @@ namespace jsonifier_jkj {
 #endif
 				} ignore{};
 
-				JSONIFIER_INLINE_VARIABLE struct return_sign_t {
+				inline constexpr struct return_sign_t {
 					using sign_policy					  = return_sign_t;
 					static constexpr bool return_has_sign = true;
 
@@ -1585,7 +1585,7 @@ namespace jsonifier_jkj {
 			}
 
 			namespace trailing_zero {
-				JSONIFIER_INLINE_VARIABLE struct ignore_t {
+				inline constexpr struct ignore_t {
 					using trailing_zero_policy					= ignore_t;
 					static constexpr bool report_trailing_zeros = false;
 
@@ -1602,7 +1602,7 @@ namespace jsonifier_jkj {
 					}
 				} ignore{};
 
-				JSONIFIER_INLINE_VARIABLE struct remove_t {
+				inline constexpr struct remove_t {
 					using trailing_zero_policy					= remove_t;
 					static constexpr bool report_trailing_zeros = false;
 
@@ -1620,7 +1620,7 @@ namespace jsonifier_jkj {
 					}
 				} remove{};
 
-				JSONIFIER_INLINE_VARIABLE struct remove_compact_t {
+				inline constexpr struct remove_compact_t {
 					using trailing_zero_policy					= remove_compact_t;
 					static constexpr bool report_trailing_zeros = false;
 
@@ -1638,7 +1638,7 @@ namespace jsonifier_jkj {
 					}
 				} remove_compact{};
 
-				JSONIFIER_INLINE_VARIABLE struct report_t {
+				inline constexpr struct report_t {
 					using trailing_zero_policy					= report_t;
 					static constexpr bool report_trailing_zeros = true;
 
@@ -1718,7 +1718,7 @@ namespace jsonifier_jkj {
 					};
 				}
 
-				JSONIFIER_INLINE_VARIABLE struct nearest_to_even_t {
+				inline constexpr struct nearest_to_even_t {
 					using decimal_to_binary_rounding_policy = nearest_to_even_t;
 					using interval_type_provider			= nearest_to_even_t;
 					static constexpr auto tag				= tag_t::to_nearest;
@@ -1738,7 +1738,7 @@ namespace jsonifier_jkj {
 					}
 				} nearest_to_even{};
 
-				JSONIFIER_INLINE_VARIABLE struct nearest_to_odd_t {
+				inline constexpr struct nearest_to_odd_t {
 					using decimal_to_binary_rounding_policy = nearest_to_odd_t;
 					using interval_type_provider			= nearest_to_odd_t;
 					static constexpr auto tag				= tag_t::to_nearest;
@@ -1757,7 +1757,7 @@ namespace jsonifier_jkj {
 					}
 				} nearest_to_odd{};
 
-				JSONIFIER_INLINE_VARIABLE struct nearest_toward_plus_infinity_t {
+				inline constexpr struct nearest_toward_plus_infinity_t {
 					using decimal_to_binary_rounding_policy = nearest_toward_plus_infinity_t;
 					using interval_type_provider			= nearest_toward_plus_infinity_t;
 					static constexpr auto tag				= tag_t::to_nearest;
@@ -1778,7 +1778,7 @@ namespace jsonifier_jkj {
 					}
 				} nearest_toward_plus_infinity{};
 
-				JSONIFIER_INLINE_VARIABLE struct nearest_toward_minus_infinity_t {
+				inline constexpr struct nearest_toward_minus_infinity_t {
 					using decimal_to_binary_rounding_policy = nearest_toward_minus_infinity_t;
 					using interval_type_provider			= nearest_toward_minus_infinity_t;
 					static constexpr auto tag				= tag_t::to_nearest;
@@ -1799,7 +1799,7 @@ namespace jsonifier_jkj {
 					}
 				} nearest_toward_minus_infinity{};
 
-				JSONIFIER_INLINE_VARIABLE struct nearest_toward_zero_t {
+				inline constexpr struct nearest_toward_zero_t {
 					using decimal_to_binary_rounding_policy = nearest_toward_zero_t;
 					using interval_type_provider			= nearest_toward_zero_t;
 					static constexpr auto tag				= tag_t::to_nearest;
@@ -1820,7 +1820,7 @@ namespace jsonifier_jkj {
 					}
 				} nearest_toward_zero{};
 
-				JSONIFIER_INLINE_VARIABLE struct nearest_away_from_zero_t {
+				inline constexpr struct nearest_away_from_zero_t {
 					using decimal_to_binary_rounding_policy = nearest_away_from_zero_t;
 					using interval_type_provider			= nearest_away_from_zero_t;
 					static constexpr auto tag				= tag_t::to_nearest;
@@ -1866,7 +1866,7 @@ namespace jsonifier_jkj {
 					};
 				}
 
-				JSONIFIER_INLINE_VARIABLE struct nearest_to_even_static_boundary_t {
+				inline constexpr struct nearest_to_even_static_boundary_t {
 					using decimal_to_binary_rounding_policy = nearest_to_even_static_boundary_t;
 
 					template<typename SignedSignificandBits, typename Func, typename... arg_types>
@@ -1876,7 +1876,7 @@ namespace jsonifier_jkj {
 					}
 				} nearest_to_even_static_boundary{};
 
-				JSONIFIER_INLINE_VARIABLE struct nearest_to_odd_static_boundary_t {
+				inline constexpr struct nearest_to_odd_static_boundary_t {
 					using decimal_to_binary_rounding_policy = nearest_to_odd_static_boundary_t;
 
 					template<typename SignedSignificandBits, typename Func, typename... arg_types>
@@ -1886,7 +1886,7 @@ namespace jsonifier_jkj {
 					}
 				} nearest_to_odd_static_boundary{};
 
-				JSONIFIER_INLINE_VARIABLE struct nearest_toward_plus_infinity_static_boundary_t {
+				inline constexpr struct nearest_toward_plus_infinity_static_boundary_t {
 					using decimal_to_binary_rounding_policy = nearest_toward_plus_infinity_static_boundary_t;
 
 					template<typename SignedSignificandBits, typename Func, typename... arg_types>
@@ -1896,7 +1896,7 @@ namespace jsonifier_jkj {
 					}
 				} nearest_toward_plus_infinity_static_boundary{};
 
-				JSONIFIER_INLINE_VARIABLE struct nearest_toward_minus_infinity_static_boundary_t {
+				inline constexpr struct nearest_toward_minus_infinity_static_boundary_t {
 					using decimal_to_binary_rounding_policy = nearest_toward_minus_infinity_static_boundary_t;
 
 					template<typename SignedSignificandBits, typename Func, typename... arg_types>
@@ -1915,7 +1915,7 @@ namespace jsonifier_jkj {
 					};
 				}
 
-				JSONIFIER_INLINE_VARIABLE struct toward_plus_infinity_t {
+				inline constexpr struct toward_plus_infinity_t {
 					using decimal_to_binary_rounding_policy = toward_plus_infinity_t;
 
 					template<typename SignedSignificandBits, typename Func, typename... arg_types>
@@ -1925,7 +1925,7 @@ namespace jsonifier_jkj {
 					}
 				} toward_plus_infinity{};
 
-				JSONIFIER_INLINE_VARIABLE struct toward_minus_infinity_t {
+				inline constexpr struct toward_minus_infinity_t {
 					using decimal_to_binary_rounding_policy = toward_minus_infinity_t;
 
 					template<typename SignedSignificandBits, typename Func, typename... arg_types>
@@ -1935,7 +1935,7 @@ namespace jsonifier_jkj {
 					}
 				} toward_minus_infinity{};
 
-				JSONIFIER_INLINE_VARIABLE struct toward_zero_t {
+				inline constexpr struct toward_zero_t {
 					using decimal_to_binary_rounding_policy = toward_zero_t;
 
 					template<typename SignedSignificandBits, typename Func, typename... arg_types>
@@ -1945,7 +1945,7 @@ namespace jsonifier_jkj {
 					}
 				} toward_zero{};
 
-				JSONIFIER_INLINE_VARIABLE struct away_from_zero_t {
+				inline constexpr struct away_from_zero_t {
 					using decimal_to_binary_rounding_policy = away_from_zero_t;
 
 					template<typename SignedSignificandBits, typename Func, typename... arg_types>
@@ -1963,7 +1963,7 @@ namespace jsonifier_jkj {
 
 				// The parameter significand corresponds to 10\tilde{s}+t in the paper.
 
-				JSONIFIER_INLINE_VARIABLE struct do_not_care_t {
+				inline constexpr struct do_not_care_t {
 					using binary_to_decimal_rounding_policy = do_not_care_t;
 					static constexpr auto tag				= tag_t::do_not_care;
 
@@ -1972,7 +1972,7 @@ namespace jsonifier_jkj {
 					}
 				} do_not_care{};
 
-				JSONIFIER_INLINE_VARIABLE struct to_even_t {
+				inline constexpr struct to_even_t {
 					using binary_to_decimal_rounding_policy = to_even_t;
 					static constexpr auto tag				= tag_t::to_even;
 
@@ -1981,7 +1981,7 @@ namespace jsonifier_jkj {
 					}
 				} to_even{};
 
-				JSONIFIER_INLINE_VARIABLE struct to_odd_t {
+				inline constexpr struct to_odd_t {
 					using binary_to_decimal_rounding_policy = to_odd_t;
 					static constexpr auto tag				= tag_t::to_odd;
 
@@ -1990,7 +1990,7 @@ namespace jsonifier_jkj {
 					}
 				} to_odd{};
 
-				JSONIFIER_INLINE_VARIABLE struct away_from_zero_t {
+				inline constexpr struct away_from_zero_t {
 					using binary_to_decimal_rounding_policy = away_from_zero_t;
 					static constexpr auto tag				= tag_t::away_from_zero;
 
@@ -1999,7 +1999,7 @@ namespace jsonifier_jkj {
 					}
 				} away_from_zero{};
 
-				JSONIFIER_INLINE_VARIABLE struct toward_zero_t {
+				inline constexpr struct toward_zero_t {
 					using binary_to_decimal_rounding_policy = toward_zero_t;
 					static constexpr auto tag				= tag_t::toward_zero;
 
@@ -2010,7 +2010,7 @@ namespace jsonifier_jkj {
 			}
 
 			namespace cache {
-				JSONIFIER_INLINE_VARIABLE struct full_t {
+				inline constexpr struct full_t {
 					using cache_policy									   = full_t;
 					template<typename FloatFormat> using cache_holder_type = cache_holder<FloatFormat>;
 
@@ -2021,7 +2021,7 @@ namespace jsonifier_jkj {
 					}
 				} full{};
 
-				JSONIFIER_INLINE_VARIABLE struct compact_t {
+				inline constexpr struct compact_t {
 					using cache_policy									   = compact_t;
 					template<typename FloatFormat> using cache_holder_type = compressed_cache_holder<FloatFormat>;
 
@@ -2035,7 +2035,7 @@ namespace jsonifier_jkj {
 			}
 
 			namespace preferred_integer_types {
-				JSONIFIER_INLINE_VARIABLE struct match_t {
+				inline constexpr struct match_t {
 					using preferred_integer_types_policy = match_t;
 
 					template<typename FormatTraits, std::uint_least64_t upper_bound> using remainder_type = typename FormatTraits::carrier_uint;
@@ -2046,7 +2046,7 @@ namespace jsonifier_jkj {
 					template<typename FormatTraits> using shift_amount_type = typename FormatTraits::exponent_int;
 				} match;
 
-				JSONIFIER_INLINE_VARIABLE struct prefer_32_t {
+				inline constexpr struct prefer_32_t {
 					using preferred_integer_types_policy = prefer_32_t;
 
 					template<typename FormatTraits, std::uint_least64_t upper_bound> using remainder_type =
@@ -2059,7 +2059,7 @@ namespace jsonifier_jkj {
 					template<typename FormatTraits> using shift_amount_type = std::int_least32_t;
 				} prefer_32;
 
-				JSONIFIER_INLINE_VARIABLE struct minimal_t {
+				inline constexpr struct minimal_t {
 					using preferred_integer_types_policy = minimal_t;
 
 					template<typename FormatTraits, std::uint_least64_t upper_bound> using remainder_type =
@@ -2211,7 +2211,7 @@ namespace jsonifier_jkj {
 
 		template<typename ExponentInt> struct multiplication_traits<ieee754_binary_traits<ieee754_binary64, std::uint_least64_t, ExponentInt>, detail::wuint::uint128, 128>
 			: public multiplication_traits_base<ieee754_binary_traits<ieee754_binary64, std::uint_least64_t>, detail::wuint::uint128, 128> {
-			static constexpr compute_mul_result compute_mul(carrier_uint u, const cache_entry_type& cache) noexcept {
+			JSONIFIER_INLINE static constexpr compute_mul_result compute_mul(carrier_uint u, const cache_entry_type& cache) noexcept {
 				const auto r = detail::wuint::umul192_upper128(u, cache);
 				return { r.high(), r.low() == 0 };
 			}
@@ -2306,7 +2306,7 @@ namespace jsonifier_jkj {
 
 				template<typename SignPolicy, typename TrailingZeroPolicy, typename IntervalTypeProvider, typename BinaryToDecimalRoundingPolicy, typename CachePolicy,
 					class PreferredIntegerTypesPolicy>
-				JSONIFIER_SAFEBUFFERS static constexpr return_type<SignPolicy, TrailingZeroPolicy, PreferredIntegerTypesPolicy> compute_nearest(
+				JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS static constexpr return_type<SignPolicy, TrailingZeroPolicy, PreferredIntegerTypesPolicy> compute_nearest(
 					signed_significand_bits<FormatTraits> s, exponent_int exponent_bits) noexcept {
 					using cache_holder_type = typename CachePolicy::template cache_holder_type<format>;
 					static_assert(min_k >= cache_holder_type::min_k && max_k <= cache_holder_type::max_k, "");
@@ -2547,7 +2547,8 @@ namespace jsonifier_jkj {
 				}
 
 				template<typename SignPolicy, typename TrailingZeroPolicy, typename CachePolicy, typename PreferredIntegerTypesPolicy>
-				JSONIFIER_SAFEBUFFERS static constexpr return_type<SignPolicy, TrailingZeroPolicy, PreferredIntegerTypesPolicy> compute_left_closed_directed(
+				JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS static constexpr return_type<SignPolicy, TrailingZeroPolicy, PreferredIntegerTypesPolicy>
+				compute_left_closed_directed(
 					signed_significand_bits<FormatTraits> s, exponent_int exponent_bits) noexcept {
 					using cache_holder_type = typename CachePolicy::template cache_holder_type<format>;
 					static_assert(min_k >= cache_holder_type::min_k && max_k <= cache_holder_type::max_k, "");
@@ -2664,7 +2665,7 @@ namespace jsonifier_jkj {
 				}
 
 				template<typename SignPolicy, typename TrailingZeroPolicy, typename CachePolicy, typename PreferredIntegerTypesPolicy>
-				JSONIFIER_SAFEBUFFERS static constexpr return_type<SignPolicy, TrailingZeroPolicy, PreferredIntegerTypesPolicy> compute_right_closed_directed(
+				JSONIFIER_INLINE JSONIFIER_SAFEBUFFERS static constexpr return_type<SignPolicy, TrailingZeroPolicy, PreferredIntegerTypesPolicy> compute_right_closed_directed(
 					signed_significand_bits<FormatTraits> s, exponent_int exponent_bits) noexcept {
 					using cache_holder_type = typename CachePolicy::template cache_holder_type<format>;
 					static_assert(min_k >= cache_holder_type::min_k && max_k <= cache_holder_type::max_k, "");
@@ -2827,11 +2828,11 @@ namespace jsonifier_jkj {
 			template<typename... DetectorDefaultPairs> struct detector_default_pair_list {};
 
 			// Check if a given policy belongs to one of the kinds specified by the library.
-			template<typename Policy> constexpr bool check_policy_validity(dummy<Policy>, detector_default_pair_list<>) noexcept {
+			template<typename Policy> JSONIFIER_INLINE constexpr bool check_policy_validity(dummy<Policy>, detector_default_pair_list<>) noexcept {
 				return false;
 			}
-			template<typename Policy, typename FirstDetectorDefaultPair, typename... RemainingDetectorDefaultPairs>
-			JSONIFIER_INLINE static constexpr bool check_policy_validity(dummy<Policy>, detector_default_pair_list<FirstDetectorDefaultPair, RemainingDetectorDefaultPairs...>) noexcept {
+			template<typename Policy, typename FirstDetectorDefaultPair, typename... RemainingDetectorDefaultPairs> JSONIFIER_INLINE static constexpr bool check_policy_validity(
+				dummy<Policy>, detector_default_pair_list<FirstDetectorDefaultPair, RemainingDetectorDefaultPairs...>) noexcept {
 				return typename FirstDetectorDefaultPair::kind_detector{}(dummy<Policy>{}) ||
 					check_policy_validity(dummy<Policy>{}, detector_default_pair_list<RemainingDetectorDefaultPairs...>{});
 			}
@@ -2840,8 +2841,8 @@ namespace jsonifier_jkj {
 			template<typename DetectorDefaultPairList> JSONIFIER_INLINE static constexpr bool check_policy_list_validity(DetectorDefaultPairList) noexcept {
 				return true;
 			}
-			template<typename DetectorDefaultPairList, typename FirstPolicy, typename... RemainingPolicies>
-			JSONIFIER_INLINE static constexpr bool check_policy_list_validity(DetectorDefaultPairList, dummy<FirstPolicy> first_policy, dummy<RemainingPolicies>... remaining_policies) {
+			template<typename DetectorDefaultPairList, typename FirstPolicy, typename... RemainingPolicies> JSONIFIER_INLINE static constexpr bool check_policy_list_validity(
+				DetectorDefaultPairList, dummy<FirstPolicy> first_policy, dummy<RemainingPolicies>... remaining_policies) {
 				return check_policy_validity(first_policy, DetectorDefaultPairList{}) && check_policy_list_validity(DetectorDefaultPairList{}, remaining_policies...);
 			}
 
