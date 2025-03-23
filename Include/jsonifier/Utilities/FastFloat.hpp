@@ -131,11 +131,11 @@
 	#endif
 #endif
 
-#if ((defined(_WIN32) || defined(_WIN64)) && !defined(JSONIFIER_CLANG)) || (defined(_M_ARM64) && !defined(__MINGW32__))
+#if ((defined(_WIN32) || defined(_WIN64)) && !JSONIFIER_COMPILER_CLANG) || (defined(_M_ARM64) && !defined(__MINGW32__))
 	#include <intrin.h>
 #endif
 
-#if defined(_MSC_VER) && !defined(JSONIFIER_CLANG)
+#if defined(_MSC_VER) && !JSONIFIER_COMPILER_CLANG
 	#define JSONIFIER_FASTFLOAT_VISUAL_STUDIO 1
 #endif
 
@@ -189,7 +189,7 @@
 	#define JSONIFIER_FASTFLOAT_HAS_SIMD 1
 #endif
 
-#if defined(JSONIFIER_GNUCXX)
+#if JSONIFIER_COMPILER_GCC
 	// disable -Wcast-align=strict (GCC only)
 	#define JSONIFIER_FASTFLOAT_SIMD_DISABLE_WARNINGS _Pragma("GCC diagnostic push") _Pragma("GCC diagnostic ignored \"-Wcast-align\"")
 	#define JSONIFIER_FASTFLOAT_SIMD_RESTORE_WARNINGS _Pragma("GCC diagnostic pop")
@@ -275,7 +275,7 @@ namespace jsonifier_fast_float {
 		// But MinGW on ARM64 doesn't have native support for 64-bit multiplications
 		answer.high = __umulh(a, b);
 		answer.low	= a * b;
-#elif defined(JSONIFIER_FASTFLOAT_32BIT) || (defined(_WIN64) && !defined(JSONIFIER_CLANG) && !defined(_M_ARM64))
+#elif defined(JSONIFIER_FASTFLOAT_32BIT) || (defined(_WIN64) && !JSONIFIER_COMPILER_CLANG && !defined(_M_ARM64))
 		answer.low = _umul128(a, b, &answer.high);// _umul128 not available on ARM64
 #elif defined(JSONIFIER_FASTFLOAT_64BIT) && defined(__SIZEOF_INT128__)
 		__uint128_t r = (( __uint128_t )a) * b;
@@ -1811,7 +1811,7 @@ namespace jsonifier_fast_float {
 //  todo: is there a VS warning?
 //  see
 //  https://stackoverflow.com/questions/46079446/is-there-a-warning-for-floating-point-equality-checking-in-visual-studio-2013
-#elif defined(JSONIFIER_CLANG)
+#elif JSONIFIER_COMPILER_CLANG
 	#pragma clang diagnostic push
 	#pragma clang diagnostic ignored "-Wfloat-equal"
 #elif defined(JSONIFIER_GNCUCXX)
@@ -1821,9 +1821,9 @@ namespace jsonifier_fast_float {
 		return (fmini + 1.0f == 1.0f - fmini);
 #ifdef JSONIFIER_FASTFLOAT_VISUAL_STUDIO
 	#pragma warning(pop)
-#elif defined(JSONIFIER_CLANG)
+#elif JSONIFIER_COMPILER_CLANG
 	#pragma clang diagnostic pop
-#elif defined(JSONIFIER_GNUCXX)
+#elif JSONIFIER_COMPILER_GCC
 	#pragma GCC diagnostic pop
 #endif
 	}

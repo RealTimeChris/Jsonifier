@@ -12,47 +12,27 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 include(FetchContent)
-include(GetCommitHash.cmake)
 
 FetchContent_Declare(
-  glaze
-  GIT_REPOSITORY https://github.com/stephenberry/glaze.git
+  benchmarksuite
+  GIT_REPOSITORY https://github.com/RealTimeChris/benchmarksuite.git
   GIT_TAG main
   GIT_SHALLOW TRUE
 )
-FetchContent_MakeAvailable(glaze)
-getCommitHash("${glaze_SOURCE_DIR}" GLAZE_COMMIT_HASH)
-
-FetchContent_Declare(
-  BenchmarkSuite
-  GIT_REPOSITORY https://github.com/RealTimeChris/BenchmarkSuite.git
-  GIT_TAG main
-  GIT_SHALLOW TRUE
-)
-FetchContent_MakeAvailable(BenchmarkSuite)
-
-FetchContent_Declare(
-  simdjson
-  GIT_REPOSITORY https://github.com/simdjson/simdjson.git
-  GIT_TAG master
-  GIT_SHALLOW TRUE
-)
-FetchContent_MakeAvailable(simdjson)
-getCommitHash("${simdjson_SOURCE_DIR}" SIMDJSON_COMMIT_HASH)
+FetchContent_MakeAvailable(benchmarksuite)
 
 add_executable(
   "Json-Performance" 
-  "./main.cpp"
+ "main.cpp" 
 )
 
 target_link_libraries(
 	"Json-Performance" PUBLIC 
-	Jsonifier::Jsonifier glaze::glaze simdjson BenchmarkSuite::BenchmarkSuite
+	Jsonifier::Jsonifier benchmarksuite::benchmarksuite
 )
 
 target_compile_options(
 	"Json-Performance" PUBLIC
-	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/fsanitize=address>>"
 	"$<$<CXX_COMPILER_ID:CLANG>:-Wnull-dereference>"
 	"$<$<CXX_COMPILER_ID:CLANG>:-Wuninitialized>"
 	"$<$<CXX_COMPILER_ID:CLANG>:-Wconversion>"
@@ -71,11 +51,6 @@ target_compile_options(
 
 	"$<$<CXX_COMPILER_ID:MSVC>:/Wall>"
 	"$<$<CXX_COMPILER_ID:MSVC>:/W4>"
-)
-
-target_link_options(
-	"Json-Performance" PUBLIC
-	"$<$<CXX_COMPILER_ID:GNU>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:-fsanitize=address>>"
 )
 
 target_compile_definitions(

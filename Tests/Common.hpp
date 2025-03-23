@@ -22,13 +22,15 @@
 /// https://github.com/RealTimeChris/jsonifier
 #pragma once
 
-#include <BnchSwt/BenchmarkSuite.hpp>
 #include "UnicodeEmoji.hpp"
+#include <filesystem>
+#include <fstream>
 #include <thread>
 #include <random>
+#include <rt-ut>
 
-constexpr bnch_swt::string_literal basePath{ BASE_PATH };
-constexpr bnch_swt::string_literal testPath{ basePath };
+constexpr jsonifier::internal::string_literal basePath{ BASE_PATH };
+constexpr jsonifier::internal::string_literal testPath{ basePath };
 
 class test_base {
   public:
@@ -102,14 +104,10 @@ template<typename value_type> struct abc_test {
 	std::vector<value_type> z, y, x, w, v, u, t, s, r, q, p, o, n, m, l, k, j, i, h, g, f, e, d, c, b, a;
 };
 
-inline static std::random_device randomEngine{};
-inline static std::mt19937_64 gen{ randomEngine() };
-static inline constexpr std::string_view charset{ "!#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~\"\\\r\b\f\t\n" };
-
 template<typename value_type> struct test_generator {
 	std::vector<value_type> a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z;
 
-	static inline constexpr std::string_view charset{ "!#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~\"\\\r\b\f\t\n" };
+	inline static constexpr std::string_view charset{ "!#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~\"\\\r\b\f\t\n" };
 	inline static std::uniform_real_distribution<double> disDouble{ log(std::numeric_limits<double>::min()), log(std::numeric_limits<double>::max()) };
 	inline static std::uniform_int_distribution<int64_t> disInt{ std::numeric_limits<int64_t>::min(), std::numeric_limits<int64_t>::max() };
 	inline static std::uniform_int_distribution<size_t> disUint{ std::numeric_limits<size_t>::min(), std::numeric_limits<size_t>::max() };
@@ -135,7 +133,7 @@ template<typename value_type> struct test_generator {
 		auto length{ disString(gen) };
 		auto unicodeCount = length / 32ull;
 		std::vector<size_t> unicodeIndices{};
-		static inline constexpr auto checkForPresenceOfIndex = [](auto& indices, auto index, auto length, auto&& checkForPresenceOfIndexNew) -> void {
+		static constexpr auto checkForPresenceOfIndex = [](auto& indices, auto index, auto length, auto&& checkForPresenceOfIndexNew) -> void {
 			if (std::find(indices.begin(), indices.end(), index) != indices.end()) {
 				index = randomizeNumberUniform(0ull, length);
 				checkForPresenceOfIndexNew(indices, index, length, checkForPresenceOfIndexNew);
@@ -243,37 +241,50 @@ template<typename value_type> struct test_generator {
 	}
 };
 
-template<bool passTest = true, typename value_type>
-auto runTest(const std::string_view& testName, std::string_view dataToParse, const value_type& valueToCompare, jsonifier::jsonifier_core<>& parser) noexcept {
-	std::cout << testName << " Input: " << dataToParse << std::endl;
-	std::remove_const_t<value_type> data{};
-	auto result = parser.parseJson(data, dataToParse);
-	if constexpr (passTest) {
-		if (result && parser.getErrors().size() == 0) {
-			if (data == valueToCompare) {
-				std::cout << testName << " Succeeded - Output: " << data << std::endl;
-				std::cout << testName << " Succeeded - Expected Output: " << valueToCompare << std::endl;
-			} else {
-				std::cout << testName << " Failed - Output: " << data << std::endl;
-				std::cout << testName << " Failed - Expected Output: " << valueToCompare << std::endl;
-			}
-		} else {
-			std::cout << testName << " Failed." << std::endl;
-			for (auto& value: parser.getErrors()) {
-				std::cout << "Jsonifier Error: " << value << std::endl;
-			}
-		}
-	} else {
-		if (!result) {
-			std::cout << testName << " Succeeded - Output: " << data << std::endl;
-			std::cout << testName << " Succeeded - Expected Output: " << valueToCompare << std::endl;
-		} else {
-			std::cout << testName << " Failed - Output: " << data << std::endl;
-			std::cout << testName << " Failed - Expected Output: " << valueToCompare << std::endl;
-			for (auto& value: parser.getErrors()) {
-				std::cout << "Jsonifier Error: " << value << std::endl;
-			}
-		}
+template<rt_ut::string_literal test_suite, const auto& pass_tests, const auto& pass_values> struct pass_tests_runner {
+	template<uint64_t index> static void impl(jsonifier::jsonifier_core<>& parser) {
+		rt_ut::unit_test<test_suite + rt_ut::string_literal{ rt_ut::create_string_literal<pass_tests[index].size()>(pass_tests[index].data()) }, true>::assert_eq(
+			pass_values[index], [&]() {
+				using value_type = std::remove_cvref_t<decltype(pass_values[0])>;
+				value_type data{};
+				parser.parseJson(data, pass_tests[index]);
+				for (auto& value: parser.getErrors()) {
+					std::cout << "Jsonifier Error: " << value << std::endl;
+				}
+				return data;
+			});
 	}
-	return;
-}
+};
+
+template<rt_ut::string_literal test_suite, const auto& fail_tests, const auto fail_value> struct fail_tests_runner {
+	template<uint64_t index> static void impl(jsonifier::jsonifier_core<>& parser) {
+		rt_ut::unit_test<test_suite + rt_ut::string_literal{ rt_ut::create_string_literal<fail_tests[index].size()>(fail_tests[index].data()) }, true>::assert_ne(fail_value,
+			[&]() {
+				int64_t data{};
+				parser.parseJson(data, fail_tests[index]);
+				return parser.getErrors().size();
+			});
+	}
+};
+
+template<rt_ut::string_literal test_suite, const auto& pass_tests, const auto& pass_values, template<auto, const auto&, const auto&> typename functor, typename integer_sequence>
+struct pass_test_runner;
+
+template<rt_ut::string_literal test_suite, const auto& pass_tests, const auto& pass_values, template<auto, const auto&, const auto&> typename functor, uint64_t... indices>
+struct pass_test_runner<test_suite, pass_tests, pass_values, functor, std::integer_sequence<uint64_t, indices...>> {
+	static void impl() {
+		jsonifier::jsonifier_core<> parser{};
+		(functor<test_suite, pass_tests, pass_values>::template impl<indices>(parser), ...);
+	}
+};
+
+template<rt_ut::string_literal test_suite, const auto& fail_tests, const auto fail_values, template<auto, const auto&, const auto&> typename functor, typename integer_sequence>
+struct fail_test_runner;
+
+template<rt_ut::string_literal test_suite, const auto& fail_tests, const auto fail_values, template<auto, const auto&, const auto&> typename functor, uint64_t... indices>
+struct fail_test_runner<test_suite, fail_tests, fail_values, functor, std::integer_sequence<uint64_t, indices...>> {
+	static void impl() {
+		jsonifier::jsonifier_core<> parser{};
+		(functor<test_suite, fail_tests, fail_values>::template impl<indices>(parser), ...);
+	}
+};

@@ -55,7 +55,7 @@ namespace jsonifier {
 			return lhs.rawJson == rhs.rawJson;
 		}
 
-		string rawJson{};
+		string_view rawJson{};
 	};
 
 	class raw_json_data {
@@ -203,8 +203,8 @@ namespace jsonifier {
 
 	  protected:
 		std::vector<internal::error> errors{};
+		string_view jsonData{};
 		value_type value{};
-		string jsonData{};
 
 		template<typename parser_type> JSONIFIER_INLINE auto constructValueFromRawJsonData(parser_type& parser, const string& jsonDataNew) noexcept {
 			static constexpr parse_options optionsNew{};
@@ -219,7 +219,7 @@ namespace jsonifier {
 						context.iter	  = jsonDataNew.data();
 						internal::parse_impl<typename raw_json_data::object_type, internal::parse_context<typename parser_type::derived_type, string_view_ptr>, optionsNew,
 							false>::impl(results, context);
-						if (parser.derivedRef.getErrors().size() == 0) {
+						if (parser.getErrors().size() == 0) {
 							return value_type{ results };
 						} else {
 							return value_type{ null_type{} };
@@ -234,7 +234,7 @@ namespace jsonifier {
 						context.iter	  = jsonDataNew.data();
 						internal::parse_impl<typename raw_json_data::array_type, internal::parse_context<typename parser_type::derived_type, string_view_ptr>, optionsNew,
 							false>::impl(results, context);
-						if (parser.derivedRef.getErrors().size() == 0) {
+						if (parser.getErrors().size() == 0) {
 							return value_type{ results };
 						} else {
 							return value_type{ null_type{} };
@@ -249,7 +249,7 @@ namespace jsonifier {
 						context.iter	  = jsonDataNew.data();
 						internal::parse_impl<typename raw_json_data::string_type, internal::parse_context<typename parser_type::derived_type, string_view_ptr>, optionsNew,
 							false>::impl(results, context);
-						if (parser.derivedRef.getErrors().size() == 0) {
+						if (parser.getErrors().size() == 0) {
 							return value_type{ results };
 						} else {
 							return value_type{ null_type{} };

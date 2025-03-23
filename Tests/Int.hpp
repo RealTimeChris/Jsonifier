@@ -30,26 +30,19 @@
 
 namespace int_validation_tests {
 
-	constexpr jsonifier::internal::array<std::string_view, 24> stringViews01{ "0", "1", "-1", "42", "-42", "123456789", "-123456789", "2147483647", "-2147483648", "9223372036854775807",
-		"-9223372036854775808", "0.0", "1.5", "-1.5", "3.14159", "-2.71828", "123.456", "-789.012", "1e5", "-2e3", "3.14e10", "-4.2e-1", "5E2", "10000000e-7" };
+	constexpr jsonifier::internal::array<std::string_view, 24> stringViews01{ "0", "1", "-1", "42", "-42", "123456789", "-123456789", "2147483647", "-2147483648",
+		"9223372036854775807", "-9223372036854775808", "0.0", "1.5", "-1.5", "3.14159", "-2.71828", "123.456", "-789.012", "1e5", "-2e3", "3.14e10", "-4.2e-1", "5E2",
+		"10000000e-7" };
 
-	constexpr std::array<int64_t, 24> int64Values{ 0, 1, -1, 42, -42, 123456789, -123456789, 2147483647, -2147483648, 9223372036854775807LL, -9223372036854775808LL,
-		0, 1, -1, 3,
-		-2, 123, -789, 100000, -2000, 31400000000LL, 0, 500, 1 };
+	constexpr std::array<int64_t, 24> int64Values{ 0, 1, -1, 42, -42, 123456789, -123456789, 2147483647, -2147483648, 9223372036854775807LL, std::numeric_limits<int64_t>::min(), 0,
+		1, -1, 3, -2, 123, -789, 100000, -2000, 31400000000LL, 0, 500, 1 };
 
 	constexpr jsonifier::internal::array<std::string_view, 11> stringViews02{ "9223372036854775808", "-9223372036854775809", "-", "1.2.3", "1e", "1e+", "1e-", "\"abc\"", "true",
 		"null", "{}" };
 
-	bool intTests() noexcept {
-		jsonifier::jsonifier_core parser{};
-		std::cout << "Int Tests: " << std::endl;
-		for (size_t x = 0; x < std::size(stringViews01); ++x) {
-			runTest<true>("Int Pass Test #" + std::to_string(x), stringViews01[x], int64Values[x], parser);
-		}
-		for (size_t x = 0; x < std::size(stringViews02); ++x) {
-			runTest<false>("Int Fail Test #" + std::to_string(x), stringViews02[x], 0, parser);
-		}
-		return true;
+	void intTests() {
+		pass_test_runner<"Int Pass Tests: ", stringViews01, int64Values, pass_tests_runner, std::make_integer_sequence<uint64_t, stringViews01.size()>>::impl();
+		fail_test_runner<"Int Fail Tests: ", stringViews02, int64_t{ 0ULL }, fail_tests_runner, std::make_integer_sequence<uint64_t, stringViews02.size()>>::impl();
+		return;
 	}
-
 }

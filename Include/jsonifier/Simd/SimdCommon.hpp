@@ -38,7 +38,7 @@
 
 namespace jsonifier::simd {
 
-#if defined(JSONIFIER_MAC)
+#if JSONIFIER_PLATFORM_MAC
 	using avx_list = internal::type_list<internal::type_holder<16, internal::avx_type_wrapper<internal::avx_type::m128>, uint64_t, std::numeric_limits<uint64_t>::max()>,
 		internal::type_holder<32, internal::avx_type_wrapper<internal::avx_type::m256>, uint32_t, std::numeric_limits<uint32_t>::max()>,
 		internal::type_holder<64, internal::avx_type_wrapper<internal::avx_type::m512>, uint64_t, std::numeric_limits<uint64_t>::max()>>;
@@ -48,7 +48,7 @@ namespace jsonifier::simd {
 		internal::type_holder<64, internal::avx_type_wrapper<internal::avx_type::m512>, uint64_t, std::numeric_limits<uint64_t>::max()>>;
 #endif
 
-#if defined(JSONIFIER_MAC)
+#if JSONIFIER_PLATFORM_MAC
 	using avx_integer_list =
 		internal::type_list<internal::type_holder<8, uint64_t, uint64_t, 8>, internal::type_holder<16, internal::avx_type_wrapper<internal::avx_type::m128>, uint64_t, 16>,
 			internal::type_holder<32, internal::avx_type_wrapper<internal::avx_type::m256>, uint32_t, 32>,

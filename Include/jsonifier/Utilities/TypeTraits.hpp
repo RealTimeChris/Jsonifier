@@ -25,6 +25,7 @@
 
 #include <jsonifier/Core/Config.hpp>
 #include <cstdint>
+#include <vector>
 
 namespace jsonifier::internal {
 

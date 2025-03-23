@@ -176,7 +176,6 @@ struct status_data {
 	bool favorited{};
 	bool retweeted{};
 	std::string lang{};
-	std::shared_ptr<status_data> retweeted_status{};
 	std::optional<bool> possibly_sensitive{};
 };
 

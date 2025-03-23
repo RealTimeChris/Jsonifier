@@ -49,6 +49,10 @@ namespace jsonifier::internal {
 			return block;
 		}
 
+		JSONIFIER_INLINE uint64_t getRemainderBytes() const noexcept {
+			return length - index;
+		}
+
 		JSONIFIER_INLINE string_view_ptr fullBlock() noexcept {
 			string_view_ptr newPtr = inString + index;
 			index += bitsPerStep;
@@ -130,7 +134,7 @@ namespace jsonifier::internal {
 
 		JSONIFIER_INLINE void clear() noexcept {
 			if (structuralIndices) {
-				allocator::deallocate(structuralIndices);
+				allocator::deallocate(structuralIndices, structuralIndexCount);
 				structuralIndices	 = nullptr;
 				structuralIndexCount = 0;
 			}
@@ -141,10 +145,11 @@ namespace jsonifier::internal {
 			jsonifier_simd_int_t nextIsEscaped{};
 			jsonifier_simd_int_t escaped{};
 			while (stringBlockReader.hasFullBlock()) {
-				generateStructurals<false, minified>(stringBlockReader.fullBlock(), escaped, nextIsEscaped, rawStructurals);
+				generateStructurals<false, minified>(stringBlockReader.fullBlock(), escaped, nextIsEscaped, rawStructurals, bitsPerStep);
 			}
+			const auto remainderBytes = stringBlockReader.getRemainderBytes();
 			if JSONIFIER_LIKELY (auto newPtr = stringBlockReader.getRemainder(); newPtr) {
-				generateStructurals<true, minified>(newPtr, escaped, nextIsEscaped, rawStructurals);
+				generateStructurals<true, minified>(newPtr, escaped, nextIsEscaped, rawStructurals, remainderBytes);
 			}
 		}
 
@@ -193,7 +198,7 @@ namespace jsonifier::internal {
 				newPtr[0] = simd::gatherValues<jsonifier_simd_int_t>(valuesToLoad);
 				std::memcpy(valuesToLoad, values + (bytesPerStep), bytesPerStep);
 				newPtr[1] = simd::gatherValues<jsonifier_simd_int_t>(valuesToLoad);
-				std::memcpy(valuesToLoad, values + (bytesPerStep * 2) , bytesPerStep);
+				std::memcpy(valuesToLoad, values + (bytesPerStep * 2), bytesPerStep);
 				newPtr[2] = simd::gatherValues<jsonifier_simd_int_t>(valuesToLoad);
 				std::memcpy(valuesToLoad, values + (bytesPerStep * 3), bytesPerStep);
 				newPtr[3] = simd::gatherValues<jsonifier_simd_int_t>(valuesToLoad);
@@ -214,11 +219,28 @@ namespace jsonifier::internal {
 			return simd::collectIndices<minified>(newPtr);
 		}
 
+		JSONIFIER_INLINE void maskValidBits(size_type validBytes) noexcept {
+			size_type remaining = validBytes;
+			for (size_type i = 0; i < sixtyFourBitsPerStep; ++i) {
+				if (remaining >= 64) {
+					remaining -= 64;
+				} else if (remaining == 0) {
+					newBits[i] = 0;
+				} else {
+					newBits[i] &= (static_cast<size_type>(1) << remaining) - static_cast<size_type>(1);
+					remaining = 0;
+				}
+			}
+		}
+
 		template<bool collectAligned, bool minified> JSONIFIER_INLINE void generateStructurals(string_view_ptr values, jsonifier_simd_int_t& escaped,
-			jsonifier_simd_int_t& nextIsEscaped, simd::simd_int_t_holder& rawStructurals) noexcept {
+			jsonifier_simd_int_t& nextIsEscaped, simd::simd_int_t_holder& rawStructurals, size_type validBytes) noexcept {
 			rawStructurals = getRawIndices<collectAligned, minified>(values);
 			collectStructurals<minified>(escaped, nextIsEscaped, rawStructurals);
 			simd::store(rawStructurals.op, newBits);
+			if JSONIFIER_UNLIKELY (validBytes < bitsPerStep) {
+				maskValidBits(validBytes);
+			}
 			addTapeValues();
 			stringIndex += bitsPerStep;
 		}

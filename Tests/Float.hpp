@@ -53,33 +53,9 @@ namespace float_validation_tests {
 		10141204801825834086073718800384.0, 10141204801825835211973625643008.0, 5708990770823838890407843763683279797179383808.0, 5708990770823839524233143877797980545530986496.0,
 		5708990770823839524233143877797980545530986496.0, 5708990770823838890407843763683279797179383808.0, 5708990770823839524233143877797980545530986496.0 };
 
-	auto runTest(const std::string_view& testName, const std::string_view& dataToParse, double valueToCompare, jsonifier::jsonifier_core<>& parser) noexcept {
-		std::cout << testName << " Input: " << dataToParse << std::endl;
-		double data{};
-		if (parser.parseJson(data, dataToParse) && parser.getErrors().size() == 0) {
-			if (static_cast<uint64_t>(data) == static_cast<uint64_t>(valueToCompare)) {
-				std::cout << testName << " Succeeded - Output: " << data << std::endl;
-				std::cout << testName << " Succeeded - Expected Output: " << valueToCompare << std::endl;
-			} else {
-				std::cout << testName << " Failed - Output: " << static_cast<uint64_t>(data) << std::endl;
-				std::cout << testName << " Failed - Expected Output: " << static_cast<uint64_t>(valueToCompare) << std::endl;
-			}
-		} else {
-			std::cout << testName << " Failed." << std::endl;
-			for (auto& value: parser.getErrors()) {
-				std::cout << "Jsonifier Error: " << value << std::endl;
-			}
-		}
-		return true;
-	}
-
-	bool floatTests() noexcept {
-		jsonifier::jsonifier_core parser{};
-		std::cout << "Float Tests: " << std::endl;
-		for (size_t x = 0; x < std::size(stringArray); ++x) {
-			runTest("Float Test #" + std::to_string(x), stringArray[x], doubleArray[x], parser);
-		}
-		return true;
+	void floatTests() {
+		pass_test_runner<"Float Pass Tests: ", stringArray, doubleArray, pass_tests_runner, std::make_integer_sequence<uint64_t, stringArray.size()>>::impl();
+		return ;
 	}
 
 }

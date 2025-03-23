@@ -20,11 +20,11 @@
 	DEALINGS IN THE SOFTWARE.
 */
 /// https://github.com/RealTimeChris/jsonifier
-#include "Tests.hpp"
+#include "tests.hpp"
 
 int32_t main() {
 	try {
-		tests::testFunction();
+		tests::test_function();
 	} catch (std::runtime_error& error) {
 		std::cout << error.what() << std::endl;
 	} catch (std::out_of_range& error) {

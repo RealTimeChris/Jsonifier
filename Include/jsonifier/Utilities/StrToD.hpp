@@ -221,10 +221,12 @@ namespace jsonifier::internal {
 		if JSONIFIER_UNLIKELY (am.power2 < 0) {
 			am = digit_comp<value_type>(integer, fraction, mantissa, exponent, am);
 		}
-		to_float(negative, am, value);
-		if JSONIFIER_UNLIKELY ((mantissa != 0 && am.mantissa == 0 && am.power2 == 0) || am.power2 == binary_format<value_type>::infinite_power) {
+
+		if JSONIFIER_UNLIKELY (am.power2 == binary_format<value_type>::infinite_power) {
 			return false;
 		}
+
+		to_float(negative, am, value);
 		return true;
 	}
 }

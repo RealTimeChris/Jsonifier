@@ -142,8 +142,7 @@ namespace jsonifier::simd {
 	}
 
 	template<simd_int_256_type simd_int_type_new> JSONIFIER_INLINE static simd_int_type_new gatherValuesU(const void* str, void* str2) noexcept {
-		std::memcpy(str2, str, sizeof(simd_int_type_new));
-		return _mm256_load_si256(static_cast<const __m256i*>(str2));
+		return _mm256_loadu_si256(static_cast<const __m256i*>(str));
 	}
 
 	template<simd_int_256_type simd_int_type_new> JSONIFIER_INLINE static simd_int_type_new gatherValuesU(const void* str) noexcept {
@@ -189,10 +188,6 @@ namespace jsonifier::simd {
 	JSONIFIER_INLINE static auto opCmpLtRaw(const simd_int_t01& value, const simd_int_t02& other) noexcept {
 		const jsonifier_simd_int_256 offset = _mm256_set1_epi8(static_cast<char>(0x80));
 		return _mm256_cmpgt_epi8(_mm256_add_epi8(other, offset), _mm256_add_epi8(value, offset));
-	}
-
-	template<simd_int_256_type simd_int_t01> JSONIFIER_INLINE static uint32_t opBitMask(const simd_int_t01& value) noexcept {
-		return _mm256_movemask_epi8(value);
 	}
 
 	template<simd_int_256_type simd_int_t01, simd_int_256_type simd_int_t02>
@@ -245,12 +240,16 @@ namespace jsonifier::simd {
 		#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 
 	template<simd_int_512_type simd_int_type_new> JSONIFIER_INLINE static simd_int_type_new gatherValues(const void* str) noexcept {
-		return _mm512_load_si512(static_cast<const __m512i*>(str));
+		return _mm512_load_si512(str);
 	}
 
 	template<simd_int_512_type simd_int_type_new> JSONIFIER_INLINE static simd_int_type_new gatherValuesU(const void* str, void* str2) noexcept {
 		std::memcpy(str2, str, sizeof(simd_int_type_new));
-		return _mm512_load_si512(static_cast<const __m512i*>(str2));
+		return _mm512_load_si512(str2);
+	}
+
+	template<simd_int_512_type simd_int_type_new> JSONIFIER_INLINE static simd_int_type_new gatherValuesU(const void* str) noexcept {
+		return _mm512_loadu_si512(str);
 	}
 
 	template<simd_int_512_type simd_int_type_new, typename char_t>
@@ -266,11 +265,11 @@ namespace jsonifier::simd {
 	}
 
 	template<simd_int_512_type simd_int_type_new> JSONIFIER_INLINE static void store(const simd_int_type_new& value, void* storageLocation) noexcept {
-		_mm512_store_si512(static_cast<__m512i*>(storageLocation), value);
+		_mm512_store_si512(storageLocation, value);
 	}
 
 	template<simd_int_512_type simd_int_type_new> JSONIFIER_INLINE static void storeU(const simd_int_type_new& value, void* storageLocation, void* storageLocation02) noexcept {
-		_mm512_store_si512(static_cast<__m512i*>(storageLocation), value);
+		_mm512_store_si512(storageLocation, value);
 		std::memcpy(storageLocation02, storageLocation, sizeof(simd_int_type_new));
 	}
 
@@ -279,21 +278,21 @@ namespace jsonifier::simd {
 	}
 
 	template<simd_int_512_type simd_int_t01, simd_int_512_type simd_int_t02> JSONIFIER_INLINE static auto opCmpLt(const simd_int_t01& value, const simd_int_t02& other) noexcept {
-		return static_cast<uint64_t>(_mm512_cmpgt_epi8_mask(other, value));
+		return static_cast<uint64_t>(_mm512_cmplt_epu8_mask(value, other));
 	}
 
 	template<simd_int_512_type simd_int_t01, simd_int_512_type simd_int_t02>
 	JSONIFIER_INLINE static auto opCmpEqRaw(const simd_int_t01& value, const simd_int_t02& other) noexcept {
-		return _mm512_maskz_set1_epi8(_mm512_cmpeq_epi8_mask(value, other), 0xFF);
+		return _mm512_movm_epi8(_mm512_cmpeq_epi8_mask(value, other));
 	}
 
 	template<simd_int_512_type simd_int_t01, simd_int_512_type simd_int_t02>
 	JSONIFIER_INLINE static auto opCmpLtRaw(const simd_int_t01& value, const simd_int_t02& other) noexcept {
-		return _mm512_maskz_set1_epi8(_mm512_cmpeq_epi8_mask(value, other), 0xFF);
+		return _mm512_movm_epi8(_mm512_cmplt_epu8_mask(value, other));
 	}
 
-	template<simd_int_256_type simd_int_t01> JSONIFIER_INLINE static uint64_t opBitMask(const simd_int_t01& value) noexcept {
-		return _mm512_movepi8_mask(value);
+	template<simd_int_512_type simd_int_t01> JSONIFIER_INLINE static uint64_t opBitMask(const simd_int_t01& value) noexcept {
+		return static_cast<uint64_t>(_mm512_movepi8_mask(value));
 	}
 
 	template<simd_int_512_type simd_int_t01, simd_int_512_type simd_int_t02>
@@ -326,21 +325,21 @@ namespace jsonifier::simd {
 	}
 
 	template<simd_int_512_type simd_int_t01> JSONIFIER_INLINE static auto opTest(const simd_int_t01& value) noexcept {
-		return !_mm512_test_epi64_mask(value, value);
+		return _mm512_test_epi64_mask(value, value) != 0;
+	}
+
+	template<simd_int_512_type simd_int_t01> JSONIFIER_INLINE static auto opNot(const simd_int_t01& value) noexcept {
+		return _mm512_xor_si512(value, _mm512_set1_epi64(0xFFFFFFFFFFFFFFFFll));
 	}
 
 	template<simd_int_512_type simd_type> JSONIFIER_INLINE static jsonifier_simd_int_512 opSetLSB(const simd_type& value, bool valueNew) noexcept {
-		const jsonifier_simd_int_512 mask{ _mm512_set_epi64(0, 0, 0, 0, 0, 0, 0, 0x01u) };
+		const jsonifier_simd_int_512 mask{ _mm512_set_epi64(0, 0, 0, 0, 0, 0, 0, 0x01ll) };
 		return valueNew ? _mm512_or_si512(value, mask) : _mm512_andnot_si512(mask, value);
 	}
 
 	template<simd_int_512_type simd_type> JSONIFIER_INLINE static bool opGetMSB(const simd_type& value) noexcept {
 		const jsonifier_simd_int_512 result = _mm512_and_si512(value, _mm512_set_epi64(0x8000000000000000ll, 0x00ll, 0x00ll, 0x00ll, 0x00ll, 0x00ll, 0x00ll, 0x00ll));
-		return !_mm512_test_epi64_mask(result, result);
-	}
-
-	template<simd_int_512_type simd_int_t01> JSONIFIER_INLINE static auto opNot(const simd_int_t01& value) noexcept {
-		return _mm512_xor_si512(value, _mm512_set1_epi64(0xFFFFFFFFFFFFFFFFll));
+		return _mm512_test_epi64_mask(result, result) != 0;
 	}
 
 		#endif

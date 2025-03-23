@@ -31,16 +31,26 @@ namespace string_validation_tests {
 	constexpr jsonifier::internal::array<std::string_view, 9> stringViews01 = { "\"\"", "\"Hello\"", "\"Hello\\nWorld\"", "\"Hello\u0000World\"", "\"\\\"\\\\/\\b\\f\\n\\r\\t\"",
 		"\"\\u0024\"", "\"\\u00A2\"", "\"\\u20AC\"", "\"\\uD834\\uDD1E\"" };
 
-	jsonifier::internal::array<std::string, 9> stringValues = { "", "Hello", "Hello\nWorld", "Hello\0World", "\"\\/\b\f\n\r\t", "\x24", "\xC2\xA2", "\xE2\x82\xAC",
+	constexpr jsonifier::internal::array<std::string_view, 9> stringValues = { "", "Hello", "Hello\nWorld", "Hello\0World", "\"\\/\b\f\n\r\t", "\x24", "\xC2\xA2", "\xE2\x82\xAC",
 		"\xF0\x9D\x84\x9E" };
 
-	bool stringTests() noexcept {
-		jsonifier::jsonifier_core parser{};
-		std::cout << "String Tests: " << std::endl;
-		for (size_t x = 0; x < std::size(stringViews01); ++x) {
-			runTest<true>("String Pass Test #" + std::to_string(x), stringViews01[x], stringValues[x], parser);
+	template<rt_ut::string_literal test_suite, const auto& pass_tests, const auto& pass_values> struct pass_string_tests_runner {
+		template<uint64_t index> static void impl(jsonifier::jsonifier_core<>& parser) {
+			rt_ut::unit_test<test_suite + rt_ut::string_literal{ rt_ut::create_string_literal<pass_tests[index].size()>(pass_tests[index].data()) }, true>::assert_eq(
+				pass_values[index], [&]() {
+					static std::string data{};
+					parser.parseJson(data, pass_tests[index]);
+					for (auto& value: parser.getErrors()) {
+						std::cout << "Jsonifier Error: " << value << std::endl;
+					}
+					return static_cast<std::string_view>(data);
+				});
 		}
-		return true;
+	};
+
+	void stringTests() {
+		pass_test_runner<"String Pass Tests: ", stringViews01, stringValues, pass_string_tests_runner, std::make_integer_sequence<uint64_t, stringViews01.size()>>::impl();
+		return;
 	}
 
 }
