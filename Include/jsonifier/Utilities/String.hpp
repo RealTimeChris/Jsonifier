@@ -108,8 +108,8 @@ namespace jsonifier {
 			}
 		};
 
-		static inline constexpr size_type bufSize = 16 / sizeof(value_type) < 1 ? 1 : 16 / sizeof(value_type);
-		static inline constexpr size_type npos{ std::numeric_limits<size_type>::max() };
+		inline static constexpr size_type bufSize = 16 / sizeof(value_type) < 1 ? 1 : 16 / sizeof(value_type);
+		inline static constexpr size_type npos{ std::numeric_limits<size_type>::max() };
 
 		JSONIFIER_INLINE string_base& operator=(string_base&& other) noexcept {
 			if JSONIFIER_LIKELY (this != &other) {
@@ -422,10 +422,10 @@ namespace jsonifier {
 							if JSONIFIER_LIKELY (sizeVal > 0) {
 								std::uninitialized_move(dataVal, dataVal + sizeVal, newPtr);
 							}
-							allocator::deallocate(dataVal);
+							allocator::deallocate(dataVal, capacityVal);
 						}
 					} catch (...) {
-						allocator::deallocate(newPtr);
+						allocator::deallocate(newPtr, newSize + 1);
 						throw;
 					}
 					capacityVal = newSize;
@@ -456,10 +456,10 @@ namespace jsonifier {
 						if JSONIFIER_LIKELY (sizeVal > 0) {
 							std::uninitialized_move(dataVal, dataVal + sizeVal, newPtr);
 						}
-						allocator::deallocate(dataVal);
+						allocator::deallocate(dataVal, capacityVal);
 					}
 				} catch (...) {
-					allocator::deallocate(newPtr);
+					allocator::deallocate(newPtr, capacityNew + 1);
 					throw;
 				}
 				capacityVal = capacityNew;
@@ -599,7 +599,7 @@ namespace jsonifier {
 					std::destroy(dataVal, dataVal + sizeVal);
 					sizeVal = 0;
 				}
-				allocator::deallocate(dataVal);
+				allocator::deallocate(dataVal, capacityVal);
 				dataVal		= nullptr;
 				capacityVal = 0;
 			}

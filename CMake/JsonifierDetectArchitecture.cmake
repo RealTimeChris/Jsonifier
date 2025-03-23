@@ -91,10 +91,11 @@ else()
     check_instruction_set("Neon" "" 0x8)
     check_instruction_set("Avx" "-mavx;-mlzcnt;-mpopcnt;-mbmi;-mbmi2" 0x10)
     check_instruction_set("Avx2" "-mavx2;-mavx;-mlzcnt;-mpopcnt;-mbmi;-mbmi2" 0x20)
-    check_instruction_set("Avx512" "-mavx512f;-mavx2;-mavx;-mlzcnt;-mpopcnt;-mbmi;-mbmi2" 0x40)
+    check_instruction_set("Avx512" "-mavx512bw;-mavx512f;-mavx2;-mavx;-mlzcnt;-mpopcnt;-mbmi;-mbmi2" 0x40)
 endif()
 
 set(AVX_FLAG "${AVX_FLAG}" CACHE STRING "AVX flags" FORCE)
+set(JSONIFIER_SIMD_FLAGS "${AVX_FLAG}" CACHE STRING "SIMD flags" FORCE)
 set(JSONIFIER_CPU_INSTRUCTIONS "${JSONIFIER_CPU_INSTRUCTIONS}" CACHE STRING "CPU Instruction Sets" FORCE)
 
 # Generate JsonifierCPUInstructions.hpp
@@ -162,4 +163,8 @@ file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/Include/jsonifier/Simd/JsonifierCPUInstr
 
 #if !defined(JSONIFIER_ANY_AVX)
 	#define JSONIFIER_ANY_AVX (JSONIFIER_AVX | JSONIFIER_AVX2 | JSONIFIER_AVX512)
+#endif
+
+#if !defined(JSONIFIER_ANY_SIMD)
+	#define JSONIFIER_ANY_SIMD (JSONIFIER_AVX | JSONIFIER_AVX2 | JSONIFIER_AVX512 | JSONIFIER_NEON)
 #endif")

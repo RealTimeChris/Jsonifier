@@ -4,12 +4,12 @@ Jsonifier automatically validates JSON data against RFC standards when using the
 
 ### Using the `validateJson` Function
 ----
-To use the `jsonifier_core::validateJson()` function, call it as follows. It returns true if successful or false if validation fails. Additionally, you can follow the [steps here](https://github.com/RealTimeChris/Jsonifier/blob/main/Documentation/Errors.md) to check possible validation errors.
+To use the `jsonifier_core::validateJson()` function, call it as follows. It returns true if successful or false if validation fails. Additionally, you can follow the [steps here](Documentation/Errors.md) to check possible validation errors.
 
 ```cpp
 #include "jsonifier/Index.hpp"
 
-jsonifier::jsonifier_core parser{};
+jsonifier::jsonifier_core<> parser{};
 jsonifier::string buffer = "{\"key\": \"value\"}";
 
 // Validate JSON data
@@ -28,7 +28,7 @@ Jsonifier automatically validates JSON data during the parsing process. Simply c
 ```cpp
 #include "jsonifier/Index.hpp"
 
-jsonifier::jsonifier_core parser{};
+jsonifier::jsonifier_core<> parser{};
 twitter_message discordTest{};
 jsonifier::string buffer = "{\"key\": \"value\"}";
 

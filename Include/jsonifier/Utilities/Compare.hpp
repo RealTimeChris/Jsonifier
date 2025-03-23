@@ -29,16 +29,8 @@
 
 namespace jsonifier::internal {
 
-	template<const uint8_t repeat, concepts::uns16_t return_type> static constexpr return_type repeatByte() noexcept {
-		return 0x0101ull * repeat;
-	}
-
-	template<const uint8_t repeat, concepts::uns32_t return_type> static constexpr return_type repeatByte() noexcept {
-		return 0x01010101ull * repeat;
-	}
-
-	template<const uint8_t repeat, concepts::uns64_t return_type> static constexpr return_type repeatByte() noexcept {
-		return 0x0101010101010101ull * repeat;
+	template<const uint8_t repeat, concepts::unsigned_t return_type> static constexpr return_type repeatByte() noexcept {
+		return static_cast<return_type>(0x0101010101010101ull) * static_cast<return_type>(repeat);
 	}
 
 	template<char valueNewer, typename char_type> struct char_comparison {

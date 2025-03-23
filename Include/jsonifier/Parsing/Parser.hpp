@@ -32,11 +32,6 @@
 
 namespace jsonifier::internal {
 
-	JSONIFIER_INLINE static void printIterValues(auto iter, const std::source_location& title = std::source_location::current()) {
-		//std::cout<< "File: " << title.file_name() << ", Line: " << title.line() << std::endl;
-		//std::cout<< "Values: " << string_view{ iter, 32 } << std::endl;
-	}
-
 	template<typename derived_type> class parser;
 
 	template<typename derived_type, typename iterator_t> struct parse_context {
@@ -75,20 +70,28 @@ namespace jsonifier::internal {
 		{ value.getState() } -> std::same_as<bool>;
 	};
 
+	JSONIFIER_INLINE constexpr uint64_t str_len(const char* input) noexcept {
+		uint64_t return_val{};
+		while (input[return_val] != '\0') {
+			++return_val;
+		}
+		return return_val;
+	}
+
 	template<concepts::pointer_t value_type> JSONIFIER_INLINE static string_view_ptr getEndIter(value_type value) noexcept {
-		return reinterpret_cast<string_view_ptr>(char_comparison<'\0', decltype(*value)>::memchar(value, std::numeric_limits<size_t>::max()));
+		return value + str_len(value);
 	}
 
 	template<concepts::pointer_t value_type> JSONIFIER_INLINE static string_view_ptr getBeginIter(value_type value) noexcept {
-		return reinterpret_cast<string_view_ptr>(value);
+		return std::bit_cast<string_view_ptr>(value);
 	}
 
 	template<concepts::has_data value_type> JSONIFIER_INLINE static string_view_ptr getEndIter(value_type& value) noexcept {
-		return reinterpret_cast<string_view_ptr>(value.data() + value.size());
+		return std::bit_cast<string_view_ptr>(value.data() + value.size());
 	}
 
 	template<concepts::has_data value_type> JSONIFIER_INLINE static string_view_ptr getBeginIter(value_type& value) noexcept {
-		return reinterpret_cast<string_view_ptr>(value.data());
+		return std::bit_cast<string_view_ptr>(value.data());
 	}
 
 	template<typename value_type, typename context_type, parse_options optionsNew, bool minified> struct parse_partial_impl;
@@ -302,6 +305,10 @@ namespace jsonifier::internal {
 		void reportError(context_type& context, const std::source_location& sourceLocation = std::source_location::current()) noexcept {
 			derivedRef.errors.emplace_back(error::constructError<error_classes::Parsing, parseError>(getUnderlyingPtr(context.iter) - getUnderlyingPtr(context.rootIter),
 				getUnderlyingPtr(context.endIter) - getUnderlyingPtr(context.rootIter), getUnderlyingPtr(context.rootIter), sourceLocation));
+		}
+
+		const std::vector<internal::error>& getErrors() const noexcept {
+			return derivedRef.getErrors();
 		}
 
 	  protected:

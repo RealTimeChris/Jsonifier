@@ -40,15 +40,15 @@ namespace jsonifier {
 	#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 	using jsonifier_simd_int_t			= __m512i;
 	using jsonifier_string_parsing_type = size_t;
-	static inline constexpr size_t bitsPerStep{ 512 };
+	inline static constexpr size_t bitsPerStep{ 512 };
 	#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
 	using jsonifier_simd_int_t			= __m256i;
 	using jsonifier_string_parsing_type = uint32_t;
-	static inline constexpr size_t bitsPerStep{ 256 };
+	inline static constexpr size_t bitsPerStep{ 256 };
 	#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
 	using jsonifier_simd_int_t			= __m128i;
 	using jsonifier_string_parsing_type = uint16_t;
-	static inline constexpr size_t bitsPerStep{ 128 };
+	inline static constexpr size_t bitsPerStep{ 128 };
 	#endif
 
 #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
@@ -63,17 +63,17 @@ namespace jsonifier {
 
 	using jsonifier_simd_int_t			= uint8x16_t;
 	using jsonifier_string_parsing_type = uint16_t;
-	static inline constexpr size_t bitsPerStep{ 128 };
+	inline static constexpr size_t bitsPerStep{ 128 };
 
 #else
 
 namespace jsonifier {
 
-	using jsonifier_simd_int_128 = jsonifier::simd::__m128x;
+	using jsonifier_simd_int_128 = jsonifier::simd::simd_x<simd::simd_classes::x_128>;
 	using jsonifier_simd_int_256 = uint32_t;
 	using jsonifier_simd_int_512 = size_t;
 
-	using jsonifier_simd_int_t			= jsonifier::simd::__m128x;
+	using jsonifier_simd_int_t			= jsonifier::simd::simd_x<simd::simd_classes::x_128>;
 	using jsonifier_string_parsing_type = uint16_t;
 	inline constexpr size_t bitsPerStep{ 128 };
 
@@ -83,20 +83,20 @@ namespace jsonifier {
 	inline constexpr size_t sixtyFourBitsPerStep{ bitsPerStep / 64 };
 	inline constexpr size_t stridesPerStep{ bitsPerStep / bytesPerStep };
 
-	static inline constexpr uint16_t packValues2(const char* values) {
+	inline static constexpr uint16_t packValues2(const char* values) {
 		return static_cast<uint16_t>(static_cast<uint16_t>(values[0]) | static_cast<uint16_t>(values[1]) << 8);
 	}
 
-	static inline constexpr uint32_t packValues3(const char* values) {
+	inline static constexpr uint32_t packValues3(const char* values) {
 		return static_cast<uint32_t>(static_cast<uint32_t>(values[0]) | static_cast<uint32_t>(values[1]) << 8 | static_cast<uint32_t>(values[2]) << 16);
 	}
 
-	static inline constexpr uint32_t packValues4(const char* values) {
+	inline static constexpr uint32_t packValues4(const char* values) {
 		return static_cast<uint32_t>(
 			static_cast<uint32_t>(values[0]) | static_cast<uint32_t>(values[1]) << 8 | static_cast<uint32_t>(values[2]) << 16 | static_cast<uint32_t>(values[3]) << 24);
 	}
 
-	static inline constexpr uint64_t packValues5(const char* values) {
+	inline static constexpr uint64_t packValues5(const char* values) {
 		return static_cast<uint64_t>(static_cast<uint64_t>(values[0]) | static_cast<uint64_t>(values[1]) << 8 | static_cast<uint64_t>(values[2]) << 16 |
 			static_cast<uint64_t>(values[3]) << 24 | static_cast<uint64_t>(values[4]) << 32);
 	}
@@ -126,9 +126,9 @@ namespace jsonifier {
 	concept simd_int_type = std::is_same_v<jsonifier_simd_int_t, jsonifier::internal::remove_cvref_t<value_type>>;
 
 	JSONIFIER_INLINE static void jsonifierPrefetchImpl(const void* ptr) noexcept {
-#if defined(JSONIFIER_MAC) && defined(__arm64__)
+#if JSONIFIER_PLATFORM_MAC && defined(__arm64__)
 		__builtin_prefetch(ptr, 0, 0);
-#elif defined(JSONIFIER_MSVC) || defined(JSONIFIER_GNUCXX) || defined(JSONIFIER_CLANG)
+#elif JSONIFIER_COMPILER_MSVC || JSONIFIER_COMPILER_GCC || JSONIFIER_COMPILER_CLANG
 		_mm_prefetch(static_cast<string_view_ptr>(ptr), _MM_HINT_T0);
 #else
 	#error "Compiler or architecture not supported for prefetching"

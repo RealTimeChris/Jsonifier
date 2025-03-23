@@ -59,42 +59,51 @@ template<typename value_type_new> struct jsonifier::core<test<value_type_new>> {
 
 namespace bounds_tests {
 
-	bool boundsTests() noexcept {
+	void boundsTests() {
+		std::cout << "Starting bounds-truncation test.\n";
 		jsonifier::jsonifier_core<> parser{};
 		test_generator<test_struct> tests{};
-		partial_test<partial_test_struct> newTests{};
-		std::string testString{};
-		parser.serializeJson(tests, testString);
-		parser.parseJson(newTests, testString);
-		newTests.m.resize(5);
-		newTests.s.resize(3);
-		parser.serializeJson(newTests, testString);
-		if (!parser.validateJson(testString)) {
-			throw std::runtime_error{ "Failed to pass validation!" };
-		}
-		testString.resize(testString.size() - 1);
-		while (testString.size() > 0) {
-			test<test_struct> newData{};
-			parser.parseJson<jsonifier::parse_options{ .minified = true }>(newData, testString);
-			if (parser.validateJson(testString)) {
-				throw std::runtime_error{ "Failed to fail validation!" };
+		partial_test<partial_test_struct> seed{};
+		std::string buf;
+		parser.serializeJson(tests, buf);
+		parser.parseJson(seed, buf);
+		seed.m.resize(5);
+		seed.s.resize(3);
+
+		auto runTruncation = [&](std::string s, auto&& parseFn, const char* label) {
+			if (!parser.validateJson(s)) {
+				throw std::runtime_error{ std::string{ label } + ": baseline failed validation" };
 			}
-			testString.resize(testString.size() - 1);
-		}
-		parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(newTests, testString);
-		if (!parser.validateJson(testString)) {
-			throw std::runtime_error{ "Failed to pass validation!" };
-		}
-		testString.resize(testString.size() - 1);
-		while (testString.size() > 0) {
-			test<test_struct> newData{};
-			parser.parseJson(newData, testString);
-			if (parser.validateJson(testString)) {
-				throw std::runtime_error{ "Failed to fail validation!" };
+			s.pop_back();
+			while (!s.empty()) {
+				test<test_struct> sink{};
+				parseFn(sink, s);
+				if (parser.validateJson(s)) {
+					throw std::runtime_error{ std::string{ label } + ": truncated input validated at size=" + std::to_string(s.size()) };
+				}
+				s.pop_back();
 			}
-			testString.resize(testString.size() - 1);
-		}
-		return true;
+		};
+
+		std::string minified;
+		parser.serializeJson(seed, minified);
+		runTruncation(
+			minified,
+			[&](auto& d, const auto& src) {
+				parser.parseJson<jsonifier::parse_options{ .minified = true }>(d, src);
+			},
+			"minified");
+
+		std::string pretty;
+		parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(seed, pretty);
+		runTruncation(
+			pretty,
+			[&](auto& d, const auto& src) {
+				parser.parseJson(d, src);
+			},
+			"prettified");
+
+		std::cout << "Finished bounds-truncation test.\n";
 	}
 
 }

@@ -28,7 +28,7 @@ template<> struct jsonifier::core<available_tag> {
 // Define JSON data and the structure instance
 jsonifier::string testData{};
 available_tag tagsTest{};
-jsonifier::jsonifier_core parser{};
+jsonifier::jsonifier_core<> parser{};
 
 // Parse JSON data to populate the structure
 parser.parseJson(tagsTest, testData);
@@ -113,7 +113,7 @@ Instantiate a `jsonifier_core` object and use its `parseJson` method to populate
 ```cpp
 jsonifier::string testData{};
 available_tag tagsTest{};
-jsonifier::jsonifier_core parser{};
+jsonifier::jsonifier_core<> parser{};
 parser.parseJson(tagsTest, testData);
 ```
 

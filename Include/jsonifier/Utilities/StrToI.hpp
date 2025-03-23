@@ -35,37 +35,35 @@
 
 namespace jsonifier::internal {
 
-	 template<typename value_type> static inline constexpr array<uint64_t, 256> rawCompValsPos{ []() {
-		constexpr auto maxValue{ std::numeric_limits<std::decay_t<value_type>>::max() };
-		array<uint64_t, 256> returnValues{};
-		returnValues['0'] = (maxValue - 0) / 10;
-		returnValues['1'] = (maxValue - 1) / 10;
-		returnValues['2'] = (maxValue - 2) / 10;
-		returnValues['3'] = (maxValue - 3) / 10;
-		returnValues['4'] = (maxValue - 4) / 10;
-		returnValues['5'] = (maxValue - 5) / 10;
-		returnValues['6'] = (maxValue - 6) / 10;
-		returnValues['7'] = (maxValue - 7) / 10;
-		returnValues['8'] = (maxValue - 8) / 10;
-		returnValues['9'] = (maxValue - 9) / 10;
-		return returnValues;
+	template<bool negative> static constexpr uint64_t comp_val_addition{ [] {
+		if constexpr (negative) {
+			return 1;
+		} else {
+			return 0;
+		}
 	}() };
 
-	static inline constexpr array<uint64_t, 256> rawCompValsNeg{ []() {
-		constexpr auto maxValue{ static_cast<uint64_t>((std::numeric_limits<int64_t>::max)()) + 1 };
-		array<uint64_t, 256> returnValues{};
-		returnValues['0'] = (maxValue - 0) / 10;
-		returnValues['1'] = (maxValue - 1) / 10;
-		returnValues['2'] = (maxValue - 2) / 10;
-		returnValues['3'] = (maxValue - 3) / 10;
-		returnValues['4'] = (maxValue - 4) / 10;
-		returnValues['5'] = (maxValue - 5) / 10;
-		returnValues['6'] = (maxValue - 6) / 10;
-		returnValues['7'] = (maxValue - 7) / 10;
-		returnValues['8'] = (maxValue - 8) / 10;
-		returnValues['9'] = (maxValue - 9) / 10;
-		return returnValues;
-	}() };
+	template<typename v_type, bool negative> static constexpr std::array<std::make_unsigned_t<v_type>, 256> gen_raw_comp_vals() {
+		constexpr auto max_value{ static_cast<std::make_unsigned_t<v_type>>(std::numeric_limits<std::remove_cvref_t<v_type>>::max()) + comp_val_addition<negative> };
+		std::array<std::make_unsigned_t<v_type>, 256> return_values_interna{};
+		return_values_interna['0'] = (max_value - 0) / 10;
+		return_values_interna['1'] = (max_value - 1) / 10;
+		return_values_interna['2'] = (max_value - 2) / 10;
+		return_values_interna['3'] = (max_value - 3) / 10;
+		return_values_interna['4'] = (max_value - 4) / 10;
+		return_values_interna['5'] = (max_value - 5) / 10;
+		return_values_interna['6'] = (max_value - 6) / 10;
+		return_values_interna['7'] = (max_value - 7) / 10;
+		return_values_interna['8'] = (max_value - 8) / 10;
+		return_values_interna['9'] = (max_value - 9) / 10;
+		return return_values_interna;
+	};
+
+	template<typename v_type, bool negative> JSONIFIER_ALIGN(64)
+	static constexpr std::array<std::make_unsigned_t<v_type>, 256> raw_comp_vals{ gen_raw_comp_vals<v_type, negative>() };
+
+	template<typename v_type, bool negative> JSONIFIER_ALIGN(64)
+	static constexpr const std::make_unsigned_t<v_type>* __restrict comp_vals{ raw_comp_vals<v_type, negative>.data() };
 
 	template<typename = void> struct pow_tables {
 		static constexpr uint64_t powerOfTenUint[]{ 1ull, 10ull, 100ull, 1000ull, 10000ull, 100000ull, 1000000ull, 10000000ull, 100000000ull, 1000000000ull, 10000000000ull,
@@ -96,16 +94,11 @@ namespace jsonifier::internal {
 		}
 
 		JSONIFIER_INLINE static bool multiply(value_type& value, value_type expValue) noexcept {
-#if defined(__SIZEOF_INT128__)
+#if JSONIFIER_COMPILER_CLANG || JSONIFIER_COMPILER_GCC
 			const __int128_t res = static_cast<__int128_t>(value) * static_cast<__int128_t>(expValue);
 			value				 = static_cast<value_type>(res);
 			return res <= std::numeric_limits<value_type>::max();
-#elif defined(_M_ARM64) && !defined(__MINGW32__)
-			value_type values;
-			values = __mulh(value, expValue);
-			value  = value * expValue;
-			return values == 0;
-#elif (defined(_WIN64) && !defined(__clang__))
+#elif JSONIFIER_COMPILER_MSVC
 			value_type values;
 			value = _mul128(value, expValue, &values);
 			return values == 0;
@@ -117,11 +110,11 @@ namespace jsonifier::internal {
 		}
 
 		JSONIFIER_INLINE static bool divide(value_type& value, value_type expValue) noexcept {
-#if defined(__SIZEOF_INT128__)
+#if JSONIFIER_COMPILER_CLANG || JSONIFIER_COMPILER_GCC
 			const __int128_t dividend = static_cast<__int128_t>(value);
 			value					  = static_cast<value_type>(dividend / static_cast<__int128_t>(expValue));
 			return (dividend % static_cast<__int128_t>(expValue)) == 0;
-#elif (defined(_WIN64) && !defined(__clang__))
+#elif JSONIFIER_COMPILER_MSVC
 			value_type values;
 			value = _div128(0, value, expValue, &values);
 			return values == 0;
@@ -245,6 +238,7 @@ namespace jsonifier::internal {
 		}
 
 		template<bool negative> JSONIFIER_INLINE static const uint8_t* parseInteger(value_type& value, const uint8_t* iter) noexcept {
+			using v_type_local = std::make_unsigned_t<value_type>;
 			uint8_t numTmp{ *iter };
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
 				value = numTmp - zero;
@@ -255,7 +249,7 @@ namespace jsonifier::internal {
 			}
 
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
-				value = value * 10 + static_cast<value_type>(numTmp - zero);
+				value = static_cast<v_type_local>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = *iter;
 			}
@@ -280,7 +274,7 @@ namespace jsonifier::internal {
 			}
 
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
-				value = value * 10 + static_cast<value_type>(numTmp - zero);
+				value = static_cast<v_type_local>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = *iter;
 			}
@@ -301,7 +295,7 @@ namespace jsonifier::internal {
 			}
 
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
-				value = value * 10 + static_cast<value_type>(numTmp - zero);
+				value = static_cast<v_type_local>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = *iter;
 			}
@@ -322,7 +316,7 @@ namespace jsonifier::internal {
 			}
 
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
-				value = value * 10 + static_cast<value_type>(numTmp - zero);
+				value = static_cast<v_type_local>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = *iter;
 			}
@@ -343,7 +337,7 @@ namespace jsonifier::internal {
 			}
 
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
-				value = value * 10 + static_cast<value_type>(numTmp - zero);
+				value = static_cast<v_type_local>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = *iter;
 			}
@@ -364,7 +358,7 @@ namespace jsonifier::internal {
 			}
 
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
-				value = value * 10 + static_cast<value_type>(numTmp - zero);
+				value = static_cast<v_type_local>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = *iter;
 			}
@@ -385,7 +379,7 @@ namespace jsonifier::internal {
 			}
 
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
-				value = value * 10 + static_cast<value_type>(numTmp - zero);
+				value = static_cast<v_type_local>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = *iter;
 			}
@@ -406,7 +400,7 @@ namespace jsonifier::internal {
 			}
 
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
-				value = value * 10 + static_cast<value_type>(numTmp - zero);
+				value = static_cast<v_type_local>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = *iter;
 			}
@@ -427,7 +421,7 @@ namespace jsonifier::internal {
 			}
 
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
-				value = value * 10 + static_cast<value_type>(numTmp - zero);
+				value = static_cast<v_type_local>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = *iter;
 			}
@@ -448,7 +442,7 @@ namespace jsonifier::internal {
 			}
 
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
-				value = value * 10 + static_cast<value_type>(numTmp - zero);
+				value = static_cast<v_type_local>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = *iter;
 			}
@@ -469,7 +463,7 @@ namespace jsonifier::internal {
 			}
 
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
-				value = value * 10 + static_cast<value_type>(numTmp - zero);
+				value = static_cast<v_type_local>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = *iter;
 			}
@@ -490,7 +484,7 @@ namespace jsonifier::internal {
 			}
 
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
-				value = value * 10 + static_cast<value_type>(numTmp - zero);
+				value = static_cast<v_type_local>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = *iter;
 			}
@@ -511,7 +505,7 @@ namespace jsonifier::internal {
 			}
 
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
-				value = value * 10 + static_cast<value_type>(numTmp - zero);
+				value = static_cast<v_type_local>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = *iter;
 			}
@@ -532,7 +526,7 @@ namespace jsonifier::internal {
 			}
 
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
-				value = value * 10 + static_cast<value_type>(numTmp - zero);
+				value = static_cast<v_type_local>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = *iter;
 			}
@@ -553,7 +547,7 @@ namespace jsonifier::internal {
 			}
 
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
-				value = value * 10 + static_cast<value_type>(numTmp - zero);
+				value = static_cast<v_type_local>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = *iter;
 			}
@@ -574,7 +568,7 @@ namespace jsonifier::internal {
 			}
 
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
-				value = value * 10 + static_cast<value_type>(numTmp - zero);
+				value = static_cast<v_type_local>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = *iter;
 			}
@@ -595,7 +589,7 @@ namespace jsonifier::internal {
 			}
 
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
-				value = value * 10 + static_cast<value_type>(numTmp - zero);
+				value = static_cast<v_type_local>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = *iter;
 			}
@@ -616,18 +610,10 @@ namespace jsonifier::internal {
 			}
 
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
-				if constexpr (negative) {
-					if (static_cast<uint64_t>(value) > static_cast<uint64_t>(rawCompValsNeg[numTmp])) {
-						return nullptr;
-					}
-					value *= -1;
-					value = static_cast<value_type>(static_cast<uint64_t>(value * 10 - static_cast<uint64_t>(numTmp - zero)));
-				} else {
-					if (static_cast<value_type>(value) > static_cast<value_type>(rawCompValsPos<value_type>[numTmp])) {
-						return nullptr;
-					}
-					value = static_cast<int64_t>(value * 10 + static_cast<uint64_t>(numTmp - zero));
+				if JSONIFIER_UNLIKELY (static_cast<uint64_t>(value) > static_cast<uint64_t>(comp_vals<value_type, negative>[numTmp])) {
+					return nullptr;
 				}
+				value = static_cast<v_type_local>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = *iter;
 			}
@@ -646,40 +632,28 @@ namespace jsonifier::internal {
 					return finishParse(value, iter);
 				}
 			}
-
-			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
-				if constexpr (negative) {
-					value = value * 10 - static_cast<value_type>(numTmp - zero);
-				} else {
-					value = value * 10 + static_cast<value_type>(numTmp - zero);
-				}
-				++iter;
-				numTmp = *iter;
+			if constexpr (negative) {
+				value = -static_cast<v_type_local>(static_cast<v_type_local>(value));
 			}
-			JSONIFIER_ELSE_UNLIKELY(else) {
-				if JSONIFIER_LIKELY (!expFracTable[numTmp]) {
-					return iter;
-				}
-			}
-			return nullptr;
+			return iter;
 		}
 
 		JSONIFIER_INLINE static bool parseInt(value_type& value, string_view_ptr& iter, string_view_ptr end) noexcept {
 			if JSONIFIER_LIKELY (iter < end) {
 				if (*iter == minus) {
 					++iter;
-					const uint8_t* resultPtr = parseInteger<true>(value, reinterpret_cast<const uint8_t*>(iter));
+					const uint8_t* resultPtr = parseInteger<true>(value, std::bit_cast<const uint8_t*>(iter));
 					if JSONIFIER_LIKELY (resultPtr) {
-						iter += resultPtr - reinterpret_cast<const uint8_t*>(iter);
+						iter += resultPtr - std::bit_cast<const uint8_t*>(iter);
 						return true;
 					} else {
 						value = 0;
 						return false;
 					}
 				} else {
-					const uint8_t* resultPtr = parseInteger<false>(value, reinterpret_cast<const uint8_t*>(iter));
+					const uint8_t* resultPtr = parseInteger<false>(value, std::bit_cast<const uint8_t*>(iter));
 					if JSONIFIER_LIKELY (resultPtr) {
-						iter += resultPtr - reinterpret_cast<const uint8_t*>(iter);
+						iter += resultPtr - std::bit_cast<const uint8_t*>(iter);
 						return true;
 					} else {
 						value = 0;
@@ -710,16 +684,11 @@ namespace jsonifier::internal {
 		}
 
 		JSONIFIER_INLINE static bool multiply(value_type& value, value_type expValue) noexcept {
-#if defined(__SIZEOF_INT128__)
+#if JSONIFIER_COMPILER_CLANG || JSONIFIER_COMPILER_GCC
 			const __uint128_t res = static_cast<__uint128_t>(value) * static_cast<__uint128_t>(expValue);
 			value				  = static_cast<value_type>(res);
 			return res <= std::numeric_limits<value_type>::max();
-#elif defined(_M_ARM64) && !defined(__MINGW32__)
-			value_type values;
-			values = __umulh(value, expValue);
-			value  = value * expValue;
-			return values == 0;
-#elif (defined(_WIN64) && !defined(__clang__))
+#elif JSONIFIER_COMPILER_MSVC
 			value_type values;
 			value = _umul128(value, expValue, &values);
 			return values == 0;
@@ -731,11 +700,11 @@ namespace jsonifier::internal {
 		}
 
 		JSONIFIER_INLINE static bool divide(value_type& value, value_type expValue) noexcept {
-#if defined(__SIZEOF_INT128__)
+#if JSONIFIER_COMPILER_CLANG || JSONIFIER_COMPILER_GCC
 			const __uint128_t dividend = static_cast<__uint128_t>(value);
 			value					   = static_cast<value_type>(dividend / static_cast<__uint128_t>(expValue));
 			return (dividend % static_cast<__uint128_t>(expValue)) == 0;
-#elif (defined(_WIN64) && !defined(__clang__))
+#elif JSONIFIER_COMPILER_MSVC
 			value_type values;
 			value = _udiv128(0, value, expValue, &values);
 			return values == 0;
@@ -859,6 +828,7 @@ namespace jsonifier::internal {
 		}
 
 		JSONIFIER_INLINE static const uint8_t* parseInteger(value_type& value, const uint8_t* iter) noexcept {
+			using v_type_local = std::make_unsigned_t<value_type>;
 			uint8_t numTmp{ *iter };
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
 				value = static_cast<value_type>(numTmp - zero);
@@ -869,7 +839,7 @@ namespace jsonifier::internal {
 			}
 
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
-				value = value * 10 + static_cast<value_type>(numTmp - zero);
+				value = static_cast<v_type_local>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = *iter;
 			}
@@ -885,7 +855,7 @@ namespace jsonifier::internal {
 			}
 
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
-				value = value * 10 + static_cast<value_type>(numTmp - zero);
+				value = static_cast<v_type_local>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = *iter;
 			}
@@ -897,7 +867,7 @@ namespace jsonifier::internal {
 			}
 
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
-				value = value * 10 + static_cast<value_type>(numTmp - zero);
+				value = static_cast<v_type_local>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = *iter;
 			}
@@ -909,7 +879,7 @@ namespace jsonifier::internal {
 			}
 
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
-				value = value * 10 + static_cast<value_type>(numTmp - zero);
+				value = static_cast<v_type_local>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = *iter;
 			}
@@ -921,7 +891,7 @@ namespace jsonifier::internal {
 			}
 
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
-				value = value * 10 + static_cast<value_type>(numTmp - zero);
+				value = static_cast<v_type_local>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = *iter;
 			}
@@ -933,7 +903,7 @@ namespace jsonifier::internal {
 			}
 
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
-				value = value * 10 + static_cast<value_type>(numTmp - zero);
+				value = static_cast<v_type_local>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = *iter;
 			}
@@ -945,7 +915,7 @@ namespace jsonifier::internal {
 			}
 
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
-				value = value * 10 + static_cast<value_type>(numTmp - zero);
+				value = static_cast<v_type_local>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = *iter;
 			}
@@ -957,7 +927,7 @@ namespace jsonifier::internal {
 			}
 
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
-				value = value * 10 + static_cast<value_type>(numTmp - zero);
+				value = static_cast<v_type_local>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = *iter;
 			}
@@ -969,7 +939,7 @@ namespace jsonifier::internal {
 			}
 
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
-				value = value * 10 + static_cast<value_type>(numTmp - zero);
+				value = static_cast<v_type_local>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = *iter;
 			}
@@ -981,7 +951,7 @@ namespace jsonifier::internal {
 			}
 
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
-				value = value * 10 + static_cast<value_type>(numTmp - zero);
+				value = static_cast<v_type_local>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = *iter;
 			}
@@ -993,7 +963,7 @@ namespace jsonifier::internal {
 			}
 
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
-				value = value * 10 + static_cast<value_type>(numTmp - zero);
+				value = static_cast<v_type_local>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = *iter;
 			}
@@ -1005,7 +975,7 @@ namespace jsonifier::internal {
 			}
 
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
-				value = value * 10 + static_cast<value_type>(numTmp - zero);
+				value = static_cast<v_type_local>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = *iter;
 			}
@@ -1017,7 +987,7 @@ namespace jsonifier::internal {
 			}
 
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
-				value = value * 10 + static_cast<value_type>(numTmp - zero);
+				value = static_cast<v_type_local>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = *iter;
 			}
@@ -1029,7 +999,7 @@ namespace jsonifier::internal {
 			}
 
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
-				value = value * 10 + static_cast<value_type>(numTmp - zero);
+				value = static_cast<v_type_local>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = *iter;
 			}
@@ -1041,7 +1011,7 @@ namespace jsonifier::internal {
 			}
 
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
-				value = value * 10 + static_cast<value_type>(numTmp - zero);
+				value = static_cast<v_type_local>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = *iter;
 			}
@@ -1053,7 +1023,7 @@ namespace jsonifier::internal {
 			}
 
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
-				value = value * 10 + static_cast<value_type>(numTmp - zero);
+				value = static_cast<v_type_local>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = *iter;
 			}
@@ -1065,7 +1035,7 @@ namespace jsonifier::internal {
 			}
 
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
-				value = value * 10 + static_cast<value_type>(numTmp - zero);
+				value = static_cast<v_type_local>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = *iter;
 			}
@@ -1077,7 +1047,7 @@ namespace jsonifier::internal {
 			}
 
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
-				value = value * 10 + static_cast<value_type>(numTmp - zero);
+				value = static_cast<v_type_local>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = *iter;
 			}
@@ -1089,10 +1059,10 @@ namespace jsonifier::internal {
 			}
 
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
-				if (value > rawCompValsPos<value_type>[numTmp]) {
+				if JSONIFIER_UNLIKELY (static_cast<uint64_t>(value) > static_cast<uint64_t>(comp_vals<value_type, false>[numTmp])) {
 					return nullptr;
 				}
-				value = value * 10 + static_cast<value_type>(numTmp - zero);
+				value = static_cast<v_type_local>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = *iter;
 			}
@@ -1104,7 +1074,7 @@ namespace jsonifier::internal {
 			}
 
 			if JSONIFIER_LIKELY (JSONIFIER_IS_DIGIT(numTmp)) {
-				value = value * 10 + static_cast<value_type>(numTmp - zero);
+				value = static_cast<v_type_local>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = *iter;
 			}
@@ -1118,9 +1088,9 @@ namespace jsonifier::internal {
 
 		JSONIFIER_INLINE static bool parseInt(value_type& value, string_view_ptr& iter, string_view_ptr end) noexcept {
 			if JSONIFIER_LIKELY (iter < end) {
-				const uint8_t* resultPtr = parseInteger(value, reinterpret_cast<const uint8_t*>(iter));
+				const uint8_t* resultPtr = parseInteger(value, std::bit_cast<const uint8_t*>(iter));
 				if JSONIFIER_LIKELY (resultPtr) {
-					iter += resultPtr - reinterpret_cast<const uint8_t*>(iter);
+					iter += resultPtr - std::bit_cast<const uint8_t*>(iter);
 					return true;
 				} else {
 					value = 0;

@@ -39,16 +39,10 @@ namespace uint_validation_tests {
 	constexpr jsonifier::internal::array<std::string_view, 11> stringViews02{ "18446744073709551616", "-9223372036854775809", "-", "1.2.3", "1e", "1e+", "1e-", "\"abc\"", "true",
 		"null", "{}" };
 
-	bool uintTests() noexcept {
-		jsonifier::jsonifier_core parser{};
-		std::cout << "Uint Tests: " << std::endl;
-		for (size_t x = 0; x < std::size(stringViews01); ++x) {
-			runTest<true>("Uint Pass Test #" + std::to_string(x), stringViews01[x], uint64Values[x], parser);
-		}
-		for (size_t x = 0; x < std::size(stringViews02); ++x) {
-			runTest<false>("Uint Fail Test #" + std::to_string(x), stringViews02[x], 0, parser);
-		}
-		return true;
+	void uintTests() {
+		pass_test_runner<"Uint Pass Tests: ", stringViews01, uint64Values, pass_tests_runner, std::make_integer_sequence<uint64_t, stringViews01.size()>>::impl();
+		fail_test_runner<"Uint Fail Tests: ", stringViews02, uint64_t{ 0ULL }, fail_tests_runner, std::make_integer_sequence<uint64_t, stringViews02.size()>>::impl();
+		return;
 	}
 
 }
