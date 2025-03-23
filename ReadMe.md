@@ -5,7 +5,7 @@
 #### Jsonifier is fully [RFC8259](https://datatracker.ietf.org/doc/html/rfc8259) compliant.
 
 ### A few classes for validating, serializing, parsing, prettifying, and minifying objects into/from JSON strings - very rapidly.
-### ***It achieves this through the usage of [simd-instructions](https://github.com/RealTimeChris/Jsonifier/tree/main/Include/jsonifier/Simd) as well as compile-time [hash-maps](https://github.com/RealTimeChris/Jsonifier/blob/main/Include/jsonifier/HashMap.hpp) for the keys of the data being parsed.***
+### ***It achieves this through the usage of [simd-instructions](https://github.com/RealTimeChris/Jsonifier/tree/main/Include/jsonifier/Simd) as well as compile-time [hash-maps](https://github.com/RealTimeChris/Jsonifier/blob/main/Include/jsonifier/Utilities/HashMap.hpp) for the keys of the data being parsed.***
 ### [Benchmarks](https://github.com/RealTimeChris/Json-Performance)
 ### [More Benchmarks](https://github.com/Loki-Astari/JsonBenchmark)
 ----
