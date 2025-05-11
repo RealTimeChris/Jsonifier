@@ -23,6 +23,17 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(glaze)
 getCommitHash("${glaze_SOURCE_DIR}" GLAZE_COMMIT_HASH)
 
+set(BENCHMARK_ENABLE_GTEST_TESTS OFF CACHE BOOL "" FORCE)
+set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
+FetchContent_Declare(
+        benchmark
+        GIT_REPOSITORY "https://github.com/google/benchmark.git"
+        GIT_TAG main
+)
+FetchContent_MakeAvailable(benchmark)
+FetchContent_GetProperties(benchmark SOURCE_DIR BENCHMARK_INCLUDE_DIR)
+include_directories(${BENCHMARK_INCLUDE_DIR})
+
 FetchContent_Declare(
   BenchmarkSuite
   GIT_REPOSITORY https://github.com/RealTimeChris/BenchmarkSuite.git
@@ -47,7 +58,7 @@ add_executable(
 
 target_link_libraries(
 	"Json-Performance" PUBLIC 
-	Jsonifier::Jsonifier glaze::glaze simdjson BenchmarkSuite::BenchmarkSuite
+	Jsonifier::Jsonifier glaze::glaze simdjson BenchmarkSuite::BenchmarkSuite benchmark::benchmark
 )
 
 target_compile_options(

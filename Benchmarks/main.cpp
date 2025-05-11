@@ -22,13 +22,9 @@
 /// https://github.com/RealTimeChris/jsonifier
 #include "Tests.hpp"
 
-int32_t main() {
-	try {
-		tests::testFunction();
-	} catch (std::runtime_error& error) {
-		std::cout << error.what() << std::endl;
-	} catch (std::out_of_range& error) {
-		std::cout << error.what() << std::endl;
-	}
+// Main function
+int main(int argc, char** argv) {
+	benchmark::Initialize(&argc, argv);
+	tests::run_json_benchmarks();
 	return 0;
-};
+}

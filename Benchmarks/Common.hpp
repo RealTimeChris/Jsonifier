@@ -33,7 +33,7 @@
 #include <random>
 
 #if defined(NDEBUG)
-inline static constexpr auto maxIterations{ 1400 };
+inline static constexpr auto maxIterations{ 200 };
 inline static constexpr auto measuredIterations{ 20 };
 #else
 inline static constexpr auto maxIterations{ 200 };
