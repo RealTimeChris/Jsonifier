@@ -5,8 +5,8 @@
 #### Jsonifier is fully [RFC8259](https://datatracker.ietf.org/doc/html/rfc8259) compliant.
 
 ### A few classes for validating, serializing, parsing, prettifying, and minifying objects into/from JSON strings - very rapidly.
-### Jsonifier doesn’t just parse JSON — it survives it. Every build is battle-hardened against malformed input by a custom fuzz-simulation test that systematically corrupts a 2000+ character JSON string one byte at a time, generating thousands of progressively invalid permutations. Each variant is force-fed through both parsing and schema validation. The result? Zero crashes. Zero memory violations. Zero undefined behavior. Jsonifier passes this gauntlet under UBSAN and ASAN with full memory and bounds safety — proving it’s not just fast, but ferociously robust in the face of chaos.
 ### ***It achieves this through the usage of [simd-instructions](https://github.com/RealTimeChris/Jsonifier/tree/main/Include/jsonifier/Simd) as well as compile-time [hash-maps](https://github.com/RealTimeChris/Jsonifier/blob/main/Include/jsonifier/Utilities/HashMap.hpp) for the keys of the data being parsed.***
+### Jsonifier doesn’t just parse JSON — it survives it. Every build is battle-hardened against malformed input by a custom fuzz-simulation test that systematically corrupts a 2000+ character JSON string one byte at a time, generating thousands of progressively invalid permutations. Each variant is force-fed through both parsing and schema validation. The result? Zero crashes. Zero memory violations. Zero undefined behavior. Jsonifier passes this gauntlet under UBSAN and ASAN with full memory and bounds safety — proving it’s not just fast, but ferociously robust in the face of chaos.
 ### [Benchmarks](https://github.com/RealTimeChris/Json-Performance)
 ### [More Benchmarks](https://github.com/Loki-Astari/JsonBenchmark)
 ----
