@@ -37,7 +37,7 @@ namespace jsonifier {
 	};
 }
 
-using pass02 = std::vector<std::string>;
+using pass02 = jsonifier::raw_json_data;
 
 namespace conformance_tests {
 
