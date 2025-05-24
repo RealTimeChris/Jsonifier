@@ -97,11 +97,6 @@ namespace jsonifier::internal {
 		No_Input					   = 14,
 	};
 
-	std::ostream& operator<<(std::ostream& os, parse_errors error) {
-		os << simd::tzcnt(static_cast<uint64_t>(error));
-		return os;
-	}
-
 	inline const std::unordered_map<error_classes, std::unordered_map<uint64_t, string_view>> errorMap{
 		{ error_classes::Parsing,
 			std::unordered_map<uint64_t, string_view>{
