@@ -34,6 +34,7 @@ namespace tests {
 
 	void testFunction() {
 		bounds_tests::boundsTests();
+		bounds_tests::mutationTests();
 		conformance_tests::conformanceTests();
 		round_trip_tests::roundTripTests();
 		string_validation_tests::stringTests();
