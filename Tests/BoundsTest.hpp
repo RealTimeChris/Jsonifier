@@ -99,4 +99,64 @@ namespace bounds_tests {
 		return true;
 	}
 
+	uint64_t getUniquelyModifiedIndex(std::vector<bool>& alreadyTakenIndices) {
+		uint64_t newIndex = test_generator<uint64_t>::generateUint() % alreadyTakenIndices.size();
+		while (alreadyTakenIndices[newIndex  % alreadyTakenIndices.size()]) {
+			++newIndex;
+		}
+		alreadyTakenIndices[newIndex % alreadyTakenIndices.size()] = true;
+		return newIndex % alreadyTakenIndices.size();
+	}
+
+	bool mutationTests() noexcept {
+		jsonifier::jsonifier_core<> parser{};
+		test_generator<test_struct> tests{};
+		partial_test<partial_test_struct> newTests{};
+		std::string testString{};
+		parser.serializeJson(tests, testString);
+		parser.parseJson(newTests, testString);
+		newTests.m.resize(5);
+		newTests.s.resize(3);
+		parser.serializeJson(newTests, testString);
+		std::cout << "TEST STRING LENGTH: " << testString.size() << std::endl;
+		if (!parser.validateJson(testString)) {
+			throw std::runtime_error{ "Failed to pass validation!" };
+		}
+		testString.resize(testString.size() - 1);
+		std::vector<bool> alreadyTakenIndices{};
+		alreadyTakenIndices.resize(testString.size());
+		for (size_t index = 0; index < testString.size(); ++index) {
+			test<test_struct> newData{};
+			parser.parseJson<jsonifier::parse_options{ .minified = true }>(newData, testString);
+			if (parser.validateJson(testString)) {
+				throw std::runtime_error{ "Failed to fail validation!" };
+			}
+			size_t newIndex											  = getUniquelyModifiedIndex(alreadyTakenIndices);
+			testString[newIndex] = static_cast<char>(test_generator<char>::generateInt());
+		}
+		for (auto& value: parser.getErrors()) {
+			std::cout << "Jsonifier Error: " << value << std::endl;
+		}
+		parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(newTests, testString);
+		if (!parser.validateJson(testString)) {
+			throw std::runtime_error{ "Failed to pass validation!" };
+		}
+		testString.resize(testString.size() - 1);
+		alreadyTakenIndices.clear();
+		alreadyTakenIndices.resize(testString.size());
+		for (size_t index = 0; index < testString.size(); ++index) {
+			test<test_struct> newData{};
+			parser.parseJson(newData, testString);
+			if (parser.validateJson(testString)) {
+				throw std::runtime_error{ "Failed to fail validation!" };
+			}
+			testString[getUniquelyModifiedIndex(alreadyTakenIndices)] = static_cast<char>(test_generator<char>::generateInt());
+		}
+		for (auto& value: parser.getErrors()) {
+			std::cout << "Jsonifier Error: " << value << std::endl;
+		}
+		std::cout << "Succesfully passed the mutation test." << std::endl;
+		return true;
+	}
+
 }
