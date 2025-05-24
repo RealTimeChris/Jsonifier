@@ -521,11 +521,11 @@ namespace jsonifier::internal {
 		}
 	};
 
-	inline constexpr array<jsonifier::string_view, 256> escapeTable{ { "", R"(\u0001)", R"(\u0002)", R"(\u0003)", R"(\u0004)", R"(\u0005)", R"(\u0006)", R"(\a)",
-		R"(\b)", R"(\t)", R"(\n)", R"(\v)", R"(\f)", R"(\r)", R"(\u000E)", R"(\u000F)", R"(\u0010)", R"(\u0011)", R"(\u0012)", R"(\u0013)", R"(\u0014)", R"(\u0015)", R"(\u0016)",
-		R"(\u0017)", R"(\u0018)", R"(\u0019)", R"(\u001A)", R"(\u001B)", R"(\u001C)", R"(\u001D)", R"(\u001E)", R"(\u001F)", "", "", R"(\")", "", "", "", "", "", "", "", "", "",
-		"", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
-		"", "", "", "", "", R"(\\)", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" } };
+	inline constexpr jsonifier::string_view escapeTable[256]{ "", R"(\u0001)", R"(\u0002)", R"(\u0003)", R"(\u0004)", R"(\u0005)", R"(\u0006)", R"(\a)", R"(\b)", R"(\t)", R"(\n)",
+		R"(\v)", R"(\f)", R"(\r)", R"(\u000E)", R"(\u000F)", R"(\u0010)", R"(\u0011)", R"(\u0012)", R"(\u0013)", R"(\u0014)", R"(\u0015)", R"(\u0016)", R"(\u0017)", R"(\u0018)",
+		R"(\u0019)", R"(\u001A)", R"(\u001B)", R"(\u001C)", R"(\u001D)", R"(\u001E)", R"(\u001F)", "", "", R"(\")", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
+		"", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", R"(\\)",
+		"", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" };
 
 	inline constexpr array<const char*, 256> escapeTablePtrs{ []() constexpr {
 		array<const char*, 256> returnValues{};
@@ -771,14 +771,17 @@ namespace jsonifier::internal {
 					++context.iter;
 					const auto newPtr = string_parser<options, decltype(context.iter), decltype(context.parserPtr->getStringBuffer().data())>::impl(context.iter,
 						context.parserPtr->getStringBuffer().data(), static_cast<uint64_t>(context.endIter - context.iter));
-					if JSONIFIER_LIKELY(newPtr) {
+					if JSONIFIER_LIKELY (newPtr) {
 						const auto newSize = static_cast<uint64_t>(newPtr - context.parserPtr->getStringBuffer().data());
 						if constexpr (concepts::has_resize<value_type>) {
-							if JSONIFIER_UNLIKELY(value.size() != newSize) {
+							if JSONIFIER_UNLIKELY (value.size() != newSize) {
 								value.resize(newSize);
 							}
+							std::memcpy(value.data(), context.parserPtr->getStringBuffer().data(), newSize);
 						}
-						std::memcpy(value.data(), context.parserPtr->getStringBuffer().data(), newSize);
+						if constexpr (!std::is_const_v<std::remove_reference_t<decltype(value.data())>>) {
+							
+						}
 						++context.iter;
 					}
 					JSONIFIER_ELSE_UNLIKELY(else) {

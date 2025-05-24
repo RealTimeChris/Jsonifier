@@ -80,8 +80,8 @@ namespace jsonifier {
 		using minifier	 = internal::minifier<jsonifier_core<doWeUseInitialBuffer>>;
 		using parser	 = internal::parser<jsonifier_core<doWeUseInitialBuffer>>;
 
+		internal::simd_string_reader<1024 * 1024> section{};
 		string_base<char, 1024 * 1024> stringBuffer{};
-		internal::simd_string_reader<true> section{};
 		std::vector<internal::error> errors{};
 	};
 

@@ -22,8 +22,20 @@
 /// https://github.com/RealTimeChris/jsonifier
 #include "Tests.hpp"
 
+template<size_t index_new> struct test_struct_new {
+	static constexpr size_t index{ index_new };
+};
+
+struct test_derived_struct : public test_struct_new<3> {
+	size_t index{ test_struct_new<3>::index };
+};
+
 int32_t main() {
 	try {
+		test_derived_struct test_struct{};
+		std::cout << "CURRENT INDEX: " << test_struct.index << std::endl;
+		test_struct.index = 345;
+		std::cout << "CURRENT INDEX: " << test_struct.index << std::endl;
 		tests::testFunction();
 	} catch (std::runtime_error& error) {
 		std::cout << error.what() << std::endl;

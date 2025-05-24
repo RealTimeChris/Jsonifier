@@ -67,15 +67,15 @@ namespace jsonifier::internal {
 		uint64_t index{};
 	};
 
-	template<bool doWeUseInitialBuffer> class simd_string_reader : public alloc_wrapper<structural_index> {
+	template<uint64_t newerSize> class simd_string_reader : public alloc_wrapper<structural_index> {
 	  public:
 		using size_type = uint64_t;
 		using allocator = alloc_wrapper<structural_index>;
 		static constexpr double multiplier{ 4.5f / 5.0f };
 
 		JSONIFIER_INLINE simd_string_reader() noexcept {
-			if constexpr (doWeUseInitialBuffer) {
-				resize(1024 * 1024 * 4);
+			if constexpr (newerSize != 0) {
+				resize(newerSize);
 			}
 		}
 

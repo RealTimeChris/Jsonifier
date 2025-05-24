@@ -25,6 +25,7 @@
 
 #include <cstdint>
 #include <atomic>
+#include <utility>
 
 #if defined(__clang__) || (defined(__GNUC__) && defined(__llvm__))
 	#define JSONIFIER_CLANG 1
@@ -133,3 +134,45 @@
 #if !defined JSONIFIER_ALIGN
 	#define JSONIFIER_ALIGN(b) alignas(b)
 #endif
+
+template<typename value_type> struct alignas(64) static_aligned_const {
+	alignas(64) value_type value{};
+
+	JSONIFIER_INLINE constexpr operator const value_type&() const& {
+		return value;
+	}
+
+	JSONIFIER_INLINE operator value_type&() & {
+		return value;
+	}
+
+	JSONIFIER_INLINE operator value_type&&() && {
+		return std::move(value);
+	}
+
+	JSONIFIER_INLINE constexpr const value_type& operator*() const {
+		return value;
+	}
+
+	JSONIFIER_INLINE value_type& operator*() {
+		return value;
+	}
+
+	JSONIFIER_INLINE constexpr bool operator==(const static_aligned_const& other) const {
+		return value == other.value;
+	}
+
+	JSONIFIER_INLINE constexpr bool operator!=(const static_aligned_const& other) const {
+		return value != other.value;
+	}
+
+	JSONIFIER_INLINE constexpr bool operator<(const static_aligned_const& other) const {
+		return value < other.value;
+	}
+
+	JSONIFIER_INLINE constexpr bool operator>(const static_aligned_const& other) const {
+		return value > other.value;
+	}
+};
+
+template<typename value_type> static_aligned_const(value_type) -> static_aligned_const<value_type>;

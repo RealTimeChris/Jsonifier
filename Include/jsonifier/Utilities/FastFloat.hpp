@@ -439,15 +439,15 @@ namespace jsonifier_fast_float {
 
 	// credit @aqrit
 	JSONIFIER_INLINE static bool is_made_of_eight_digits_fast(uint64_t val) noexcept {
-		return !((((val + 0x4646464646464646) | (val - 0x3030303030303030)) & 0x8080808080808080));
+		return !(((val + 0x4646464646464646) | (val - 0x3030303030303030)) & 0x8080808080808080);
 	}
 
 	JSONIFIER_INLINE static bool is_made_of_eight_digits_no_sub(uint64_t val) noexcept {
-		return !((((val + 0x7676767676767676) | (val)) & 0x8080808080808080));
+		return !(((val + 0x7676767676767676) | (val)) & 0x8080808080808080);
 	}
 
 	JSONIFIER_INLINE static bool is_made_of_two_digits_no_sub(uint64_t val) noexcept {
-		return !((((val + 0x7676) | (val)) & 0x8080));
+		return !(((val + 0x7676) | (val)) & 0x8080);
 	}
 
 	JSONIFIER_INLINE static uint32_t parse_eight_digits_unrolled_no_sub(uint64_t val) {

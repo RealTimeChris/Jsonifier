@@ -131,7 +131,7 @@ template<typename value_type> struct test_generator {
 		jsonString += static_cast<std::string>(newStringView);
 	}
 
-	static std::string generateString() {
+	template<jsonifier::concepts::string_t value_type_new> static value_type_new generate() {
 		auto length{ disString(gen) };
 		auto unicodeCount = length / 32ull;
 		std::vector<size_t> unicodeIndices{};
@@ -165,21 +165,21 @@ template<typename value_type> struct test_generator {
 		return result;
 	}
 
-	static double generateDouble() {
+	template<jsonifier::concepts::float_t value_type_new> static value_type_new generate() {
 		double logValue = disDouble(gen);
-		bool negative{ generateBool() };
+		bool negative{ generate<bool>() };
 		return negative ? -std::exp(logValue) : std::exp(logValue);
 	}
 
-	static bool generateBool() {
+	template<jsonifier::concepts::bool_t value_type_new> static value_type_new generate() {
 		return static_cast<bool>(disBool(gen) >= 50);
 	}
 
-	static size_t generateUint() {
+	template<jsonifier::concepts::uns64_t value_type_new> static value_type_new generate() {
 		return disUint(gen);
 	}
 
-	static int64_t generateInt() {
+	template<jsonifier::concepts::sig64_t value_type_new> static value_type_new generate() {
 		return disInt(gen);
 	}
 
@@ -191,25 +191,25 @@ template<typename value_type> struct test_generator {
 				auto arraySize02 = randomizeNumberUniform(25ull, 35ull);
 				auto arraySize03 = randomizeNumberUniform(0ull, 10ull);
 				for (size_t y = 0; y < arraySize03; ++y) {
-					auto newString = generateString();
+					auto newString = generate<std::string>();
 					v[x].testString.emplace_back(newString);
 				}
 				arraySize03 = randomizeNumberUniform(0ull, 10ull);
 				for (size_t y = 0; y < arraySize03; ++y) {
-					v[x].testUint.emplace_back(generateUint());
+					v[x].testUint.emplace_back(generate<uint64_t>());
 				}
 				arraySize03 = randomizeNumberUniform(0ull, 10ull);
 				for (size_t y = 0; y < arraySize03; ++y) {
-					v[x].testInt.emplace_back(generateInt());
+					v[x].testInt.emplace_back(generate<int64_t>());
 				}
 				arraySize03 = randomizeNumberUniform(0ull, 10ull);
 				for (size_t y = 0; y < arraySize03; ++y) {
-					auto newBool = generateBool();
+					auto newBool = generate<bool>();
 					v[x].testBool.emplace_back(newBool);
 				}
 				arraySize03 = randomizeNumberUniform(0ull, 10ull);
 				for (size_t y = 0; y < arraySize03; ++y) {
-					v[x].testDouble.emplace_back(generateDouble());
+					v[x].testDouble.emplace_back(generate<double>());
 				}
 			}
 		};

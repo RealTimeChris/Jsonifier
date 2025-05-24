@@ -664,13 +664,9 @@ namespace jsonifier::internal {
 
 	template<concepts::variant_t value_type, typename context_type, serialize_options options> struct serialize_impl<value_type, context_type, options> {
 		template<typename value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
-			static constexpr auto lambda = [](auto&& valueNewer, auto&& contextNew) {
-				serialize<options>::impl(valueNewer, contextNew);
-			};
-			visit<lambda>(value, context);
+			visit<serialize<options>>(value, context);
 		}
 	};
-
 
 	template<concepts::optional_t value_type, typename context_type, serialize_options options> struct serialize_impl<value_type, context_type, options> {
 		inline static constexpr uint32_t nullV[]{ packValues4("null") };
