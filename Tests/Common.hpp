@@ -22,7 +22,7 @@
 /// https://github.com/RealTimeChris/jsonifier
 #pragma once
 
-#include <BnchSwt/BenchmarkSuite.hpp>
+#include <bnch_swt/index.hpp>
 #include "UnicodeEmoji.hpp"
 #include <thread>
 #include <random>
@@ -244,35 +244,60 @@ template<typename value_type> struct test_generator {
 };
 
 template<bool passTest = true, typename value_type>
-auto runTest(const std::string_view& testName, std::string_view dataToParse, const value_type& valueToCompare, jsonifier::jsonifier_core<>& parser) noexcept {
+auto runTestParse(const std::string_view& testName, std::string_view dataToParse, const value_type& valueToCompare, jsonifier::jsonifier_core<>& parser) noexcept {
 	std::cout << testName << " Input: " << dataToParse << std::endl;
 	std::remove_const_t<value_type> data{};
 	auto result = parser.parseJson(data, dataToParse);
 	if constexpr (passTest) {
 		if (result && parser.getErrors().size() == 0) {
 			if (data == valueToCompare) {
-				std::cout << testName << " Succeeded - Output: " << data << std::endl;
-				std::cout << testName << " Succeeded - Expected Output: " << valueToCompare << std::endl;
+				std::cout << testName << " Parsing Succeeded - Output: " << data << std::endl;
+				std::cout << testName << " Parsing Succeeded - Expected Output: " << valueToCompare << std::endl;
 			} else {
-				std::cout << testName << " Failed - Output: " << data << std::endl;
-				std::cout << testName << " Failed - Expected Output: " << valueToCompare << std::endl;
+				std::cout << testName << " Parsing Failed - Output: " << data << std::endl;
+				std::cout << testName << " Parsing Failed - Expected Output: " << valueToCompare << std::endl;
 			}
 		} else {
-			std::cout << testName << " Failed." << std::endl;
+			std::cout << testName << " Parsing Failed." << std::endl;
 			for (auto& value: parser.getErrors()) {
 				std::cout << "Jsonifier Error: " << value << std::endl;
 			}
 		}
 	} else {
 		if (!result) {
-			std::cout << testName << " Succeeded - Output: " << data << std::endl;
-			std::cout << testName << " Succeeded - Expected Output: " << valueToCompare << std::endl;
+			std::cout << testName << " Parsing Succeeded - Output: " << data << std::endl;
+			std::cout << testName << " Parsing Succeeded - Expected Output: " << valueToCompare << std::endl;
 		} else {
-			std::cout << testName << " Failed - Output: " << data << std::endl;
-			std::cout << testName << " Failed - Expected Output: " << valueToCompare << std::endl;
+			std::cout << testName << " Parsing Failed - Output: " << data << std::endl;
+			std::cout << testName << " Parsing Failed - Expected Output: " << valueToCompare << std::endl;
 			for (auto& value: parser.getErrors()) {
 				std::cout << "Jsonifier Error: " << value << std::endl;
 			}
+		}
+	}
+	return;
+}
+
+template<bool passTest = true, typename value_type>
+auto runTestSerialize(const std::string_view& testName, const value_type& valueToSerialize, const std::string_view& valueToCompare, jsonifier::jsonifier_core<>& parser) noexcept {
+	std::cout << testName << " Input: " << valueToSerialize << std::endl;
+	std::string test_string{};
+	auto result = parser.serializeJson(valueToSerialize, test_string);
+	if constexpr (passTest) {
+		if (test_string == valueToCompare) {
+			std::cout << testName << " Serializing Succeeded - Output: " << test_string << std::endl;
+			std::cout << testName << " Serializing Succeeded - Expected Output: " << valueToCompare << std::endl;
+		} else {
+			std::cout << testName << " Serializing Pass-Test Failed - Output: " << test_string << std::endl;
+			std::cout << testName << " Serializing Pass-Test Failed - Expected Output: " << valueToCompare << std::endl;
+		}
+	} else {
+		if (test_string != valueToCompare) {
+			std::cout << testName << " Serializing Succeeded - Output: " << test_string << std::endl;
+			std::cout << testName << " Serializing Succeeded - Expected Output: " << valueToCompare << std::endl;
+		} else {
+			std::cout << testName << " Serializing Fail-Test Failed - Output: " << test_string << std::endl;
+			std::cout << testName << " Serializing Fail-Test Failed - Expected Output: " << valueToCompare << std::endl;
 		}
 	}
 	return;

@@ -22,7 +22,7 @@
 /// https://github.com/RealTimeChris/jsonifier
 #pragma once
 
-#include <BnchSwt/BenchmarkSuite.hpp>
+#include <bnch_swt/index.hpp>
 #include <glaze/glaze.hpp>
 #include "Common.hpp"
 
