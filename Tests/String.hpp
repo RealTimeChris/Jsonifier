@@ -28,23 +28,17 @@
 
 namespace string_validation_tests {
 
-	constexpr jsonifier::internal::array parseStringViews01{ "\"\"", "\"Hello\"", "\"Hello\\nWorld\"", "\"Hello\u0000World\"", "\"\\\"\\\\/\\b\\f\\n\\r\\t\"", "\"\\u0024\"",
-		"\"\\u00A2\"", "\"\\u20AC\"", "\"\\uD834\\uDD1E\"" };
+	constexpr jsonifier::internal::array<std::string_view, 9> stringViews01 = { "\"\"", "\"Hello\"", "\"Hello\\nWorld\"", "\"Hello\u0000World\"", "\"\\\"\\\\/\\b\\f\\n\\r\\t\"",
+		"\"\\u0024\"", "\"\\u00A2\"", "\"\\u20AC\"", "\"\\uD834\\uDD1E\"" };
 
-	constexpr jsonifier::internal::array parsePassStringValues{ "", "Hello", "Hello\nWorld", "Hello\0World", "\\/\b\f\n\r\t", "\x24", "\xC2\xA2", "\xE2\x82\xAC", "\xF0\x9D\x84\x9E" };
-
-	constexpr jsonifier::internal::array serializeStringViews01{ "\"\"", "\"Hello\"", "\"Hello\\nWorld\"", "\"Hello\u0000World\"", "\"\\\"\\\\/\\b\\f\\n\\r\\t\"", "\"\\u0024\"",
-		"\"\\u00A2\"", "\"\\u20AC\"", "\"\\uD834\\uDD1E\"" };
-
-	constexpr jsonifier::internal::array serializePassStringValues{ "\"\"", "\"Hello\"", "\"Hello\\nWorld\"", "\"Hello\u0000World\"", "\"\\\"\\\\/\\b\\f\\n\\r\\t\"", "\"\\u0024\"",
-		"\"\\u00A2\"", "\"\\u20AC\"", "\"\\uD834\\uDD1E\"" };
+	jsonifier::internal::array<std::string, 9> stringValues = { "", "Hello", "Hello\nWorld", "Hello\0World", "\"\\/\b\f\n\r\t", "\x24", "\xC2\xA2", "\xE2\x82\xAC",
+		"\xF0\x9D\x84\x9E" };
 
 	bool stringTests() noexcept {
 		jsonifier::jsonifier_core parser{};
 		std::cout << "String Tests: " << std::endl;
-		for (size_t x = 0; x < std::size(parseStringViews01); ++x) {
-			//runTestParse<true>("String Pass Test #" + std::to_string(x), parseStringViews01[x], parsePassStringValues[x], parser);
-			runTestSerialize<true>("String Pass Test #" + std::to_string(x), serializeStringViews01[x], serializePassStringValues[x], parser);
+		for (size_t x = 0; x < std::size(stringViews01); ++x) {
+			runTest<true>("String Pass Test #" + std::to_string(x), stringViews01[x], stringValues[x], parser);
 		}
 		return true;
 	}

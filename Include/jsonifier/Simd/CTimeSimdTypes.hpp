@@ -64,7 +64,7 @@ namespace jsonifier::simd {
 			m128x_uint64[1] = 0;
 		}
 
-#if defined(JSONIFIER_WIN)
+#if JSONIFIER_PLATFORM_WINDOWS
 		int8_t m128x_int8[16]{};
 		int16_t m128x_int16[8];
 		int32_t m128x_int32[4];

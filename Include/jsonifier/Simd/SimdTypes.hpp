@@ -126,9 +126,9 @@ namespace jsonifier {
 	concept simd_int_type = std::is_same_v<jsonifier_simd_int_t, jsonifier::internal::remove_cvref_t<value_type>>;
 
 	JSONIFIER_INLINE static void jsonifierPrefetchImpl(const void* ptr) noexcept {
-#if defined(JSONIFIER_MAC) && defined(__arm64__)
+#if JSONIFIER_PLATFORM_MAC && defined(__arm64__)
 		__builtin_prefetch(ptr, 0, 0);
-#elif defined(JSONIFIER_MSVC) || defined(JSONIFIER_GNUCXX) || defined(JSONIFIER_CLANG)
+#elif JSONIFIER_COMPILER_MSVC || JSONIFIER_COMPILER_GCC || JSONIFIER_COMPILER_CLANG
 		_mm_prefetch(static_cast<string_view_ptr>(ptr), _MM_HINT_T0);
 #else
 	#error "Compiler or architecture not supported for prefetching"

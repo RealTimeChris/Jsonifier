@@ -131,11 +131,11 @@ template<typename value_type> struct test_generator {
 		jsonString += static_cast<std::string>(newStringView);
 	}
 
-	template<jsonifier::concepts::string_t value_type_new> static value_type_new generate() {
+	static std::string generateString() {
 		auto length{ disString(gen) };
 		auto unicodeCount = length / 32ull;
 		std::vector<size_t> unicodeIndices{};
-		static constexpr auto checkForPresenceOfIndex = [](auto& indices, auto index, auto length, auto&& checkForPresenceOfIndexNew) -> void {
+		inline static constexpr auto checkForPresenceOfIndex = [](auto& indices, auto index, auto length, auto&& checkForPresenceOfIndexNew) -> void {
 			if (std::find(indices.begin(), indices.end(), index) != indices.end()) {
 				index = randomizeNumberUniform(0ull, length);
 				checkForPresenceOfIndexNew(indices, index, length, checkForPresenceOfIndexNew);
@@ -165,21 +165,21 @@ template<typename value_type> struct test_generator {
 		return result;
 	}
 
-	template<jsonifier::concepts::float_t value_type_new> static value_type_new generate() {
+	static double generateDouble() {
 		double logValue = disDouble(gen);
-		bool negative{ generate<bool>() };
+		bool negative{ generateBool() };
 		return negative ? -std::exp(logValue) : std::exp(logValue);
 	}
 
-	template<jsonifier::concepts::bool_t value_type_new> static value_type_new generate() {
+	static bool generateBool() {
 		return static_cast<bool>(disBool(gen) >= 50);
 	}
 
-	template<jsonifier::concepts::uns64_t value_type_new> static value_type_new generate() {
+	static size_t generateUint() {
 		return disUint(gen);
 	}
 
-	template<jsonifier::concepts::sig64_t value_type_new> static value_type_new generate() {
+	static int64_t generateInt() {
 		return disInt(gen);
 	}
 
@@ -191,25 +191,25 @@ template<typename value_type> struct test_generator {
 				auto arraySize02 = randomizeNumberUniform(25ull, 35ull);
 				auto arraySize03 = randomizeNumberUniform(0ull, 10ull);
 				for (size_t y = 0; y < arraySize03; ++y) {
-					auto newString = generate<std::string>();
+					auto newString = generateString();
 					v[x].testString.emplace_back(newString);
 				}
 				arraySize03 = randomizeNumberUniform(0ull, 10ull);
 				for (size_t y = 0; y < arraySize03; ++y) {
-					v[x].testUint.emplace_back(generate<uint64_t>());
+					v[x].testUint.emplace_back(generateUint());
 				}
 				arraySize03 = randomizeNumberUniform(0ull, 10ull);
 				for (size_t y = 0; y < arraySize03; ++y) {
-					v[x].testInt.emplace_back(generate<int64_t>());
+					v[x].testInt.emplace_back(generateInt());
 				}
 				arraySize03 = randomizeNumberUniform(0ull, 10ull);
 				for (size_t y = 0; y < arraySize03; ++y) {
-					auto newBool = generate<bool>();
+					auto newBool = generateBool();
 					v[x].testBool.emplace_back(newBool);
 				}
 				arraySize03 = randomizeNumberUniform(0ull, 10ull);
 				for (size_t y = 0; y < arraySize03; ++y) {
-					v[x].testDouble.emplace_back(generate<double>());
+					v[x].testDouble.emplace_back(generateDouble());
 				}
 			}
 		};
@@ -244,60 +244,35 @@ template<typename value_type> struct test_generator {
 };
 
 template<bool passTest = true, typename value_type>
-auto runTestParse(const std::string_view& testName, std::string_view dataToParse, const value_type& valueToCompare, jsonifier::jsonifier_core<>& parser) noexcept {
+auto runTest(const std::string_view& testName, std::string_view dataToParse, const value_type& valueToCompare, jsonifier::jsonifier_core<>& parser) noexcept {
 	std::cout << testName << " Input: " << dataToParse << std::endl;
 	std::remove_const_t<value_type> data{};
 	auto result = parser.parseJson(data, dataToParse);
 	if constexpr (passTest) {
 		if (result && parser.getErrors().size() == 0) {
 			if (data == valueToCompare) {
-				std::cout << testName << " Parsing Succeeded - Output: " << data << std::endl;
-				std::cout << testName << " Parsing Succeeded - Expected Output: " << valueToCompare << std::endl;
+				std::cout << testName << " Succeeded - Output: " << data << std::endl;
+				std::cout << testName << " Succeeded - Expected Output: " << valueToCompare << std::endl;
 			} else {
-				std::cout << testName << " Parsing Failed - Output: " << data << std::endl;
-				std::cout << testName << " Parsing Failed - Expected Output: " << valueToCompare << std::endl;
+				std::cout << testName << " Failed - Output: " << data << std::endl;
+				std::cout << testName << " Failed - Expected Output: " << valueToCompare << std::endl;
 			}
 		} else {
-			std::cout << testName << " Parsing Failed." << std::endl;
+			std::cout << testName << " Failed." << std::endl;
 			for (auto& value: parser.getErrors()) {
 				std::cout << "Jsonifier Error: " << value << std::endl;
 			}
 		}
 	} else {
 		if (!result) {
-			std::cout << testName << " Parsing Succeeded - Output: " << data << std::endl;
-			std::cout << testName << " Parsing Succeeded - Expected Output: " << valueToCompare << std::endl;
+			std::cout << testName << " Succeeded - Output: " << data << std::endl;
+			std::cout << testName << " Succeeded - Expected Output: " << valueToCompare << std::endl;
 		} else {
-			std::cout << testName << " Parsing Failed - Output: " << data << std::endl;
-			std::cout << testName << " Parsing Failed - Expected Output: " << valueToCompare << std::endl;
+			std::cout << testName << " Failed - Output: " << data << std::endl;
+			std::cout << testName << " Failed - Expected Output: " << valueToCompare << std::endl;
 			for (auto& value: parser.getErrors()) {
 				std::cout << "Jsonifier Error: " << value << std::endl;
 			}
-		}
-	}
-	return;
-}
-
-template<bool passTest = true, typename value_type>
-auto runTestSerialize(const std::string_view& testName, const value_type& valueToSerialize, const std::string_view& valueToCompare, jsonifier::jsonifier_core<>& parser) noexcept {
-	std::cout << testName << " Input: " << valueToSerialize << std::endl;
-	std::string test_string{};
-	auto result = parser.serializeJson(valueToSerialize, test_string);
-	if constexpr (passTest) {
-		if (test_string == valueToCompare) {
-			std::cout << testName << " Serializing Succeeded - Output: " << test_string << std::endl;
-			std::cout << testName << " Serializing Succeeded - Expected Output: " << valueToCompare << std::endl;
-		} else {
-			std::cout << testName << " Serializing Pass-Test Failed - Output: " << test_string << std::endl;
-			std::cout << testName << " Serializing Pass-Test Failed - Expected Output: " << valueToCompare << std::endl;
-		}
-	} else {
-		if (test_string != valueToCompare) {
-			std::cout << testName << " Serializing Succeeded - Output: " << test_string << std::endl;
-			std::cout << testName << " Serializing Succeeded - Expected Output: " << valueToCompare << std::endl;
-		} else {
-			std::cout << testName << " Serializing Fail-Test Failed - Output: " << test_string << std::endl;
-			std::cout << testName << " Serializing Fail-Test Failed - Expected Output: " << valueToCompare << std::endl;
 		}
 	}
 	return;

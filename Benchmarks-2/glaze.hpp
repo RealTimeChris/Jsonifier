@@ -24,7 +24,7 @@
 
 #include <bnch_swt/index.hpp>
 #include <glaze/glaze.hpp>
-#include "Common.hpp"
+#include "common.hpp"
 
 #if !defined(ASAN_ENABLED)
 
@@ -238,46 +238,38 @@ template<> struct glz::meta<canada_message> {
 
 template<> struct glz::meta<test_element_final> {
 	using value_type			= test_element_final;
-	static constexpr auto value = object(&value_type::libraryName, &value_type::resultType, &value_type::resultSpeed, &value_type::color);
+	static constexpr auto value = object(&value_type::library_name, &value_type::result_type, &value_type::result_speed, &value_type::color);
 };
-
 template<> struct glz::meta<test_elements_final> {
 	using value_type			= test_elements_final;
-	static constexpr auto value = object(&value_type::results, &value_type::testName);
+	static constexpr auto value = object(&value_type::results, &value_type::test_name);
 };
-
 template<> struct glz::meta<test_struct> {
-	using value_type				 = test_struct;
-	static constexpr auto value = object(&value_type::testString, &value_type::testUint, &value_type::testInt, &value_type::testDouble, &value_type::testBool);
+	using value_type			= test_struct;
+	static constexpr auto value = object(&value_type::test_string, &value_type::test_uint, &value_type::test_int, &value_type::test_double, &value_type::test_bool);
 };
-
 template<> struct glz::meta<partial_test_struct> {
-	using value_type				 = partial_test_struct;
-	static constexpr auto value = object(&value_type::testBool, &value_type::testString);
+	using value_type			= partial_test_struct;
+	static constexpr auto value = object(&value_type::test_bool, &value_type::test_string);
 };
-
 template<> struct glz::meta<abc_test_struct> {
-	using value_type				 = abc_test_struct;
-	static constexpr auto value = object(&value_type::testBool, &value_type::testDouble, &value_type::testInt, &value_type::testUint, &value_type::testString);
+	using value_type			= abc_test_struct;
+	static constexpr auto value = object(&value_type::test_bool, &value_type::test_double, &value_type::test_int, &value_type::test_uint, &value_type::test_string);
 };
-
 template<> struct glz::meta<test<test_struct>> {
 	using value_type			= test<test_struct>;
 	static constexpr auto value = object(&value_type::a, &value_type::b, &value_type::c, &value_type::d, &value_type::e, &value_type::f, &value_type::g, &value_type::h,
 		&value_type::i, &value_type::j, &value_type::k, &value_type::l, &value_type::m, &value_type::n, &value_type::o, &value_type::p, &value_type::q, &value_type::r,
 		&value_type::s, &value_type::t, &value_type::u, &value_type::v, &value_type::w, &value_type::x, &value_type::y, &value_type::z);
 };
-
 template<typename value_type_new> struct glz::meta<partial_test<value_type_new>> {
 	using value_type			= partial_test<value_type_new>;
 	static constexpr auto value = object(&value_type::m);
 };
-
 template<typename value_type_new> struct glz::meta<abc_test<value_type_new>> {
 	using value_type			= abc_test<value_type_new>;
 	static constexpr auto value = object(&value_type::z, &value_type::y, &value_type::x, &value_type::w, &value_type::v, &value_type::u, &value_type::t, &value_type::s,
 		&value_type::r, &value_type::q, &value_type::p, &value_type::o, &value_type::n, &value_type::m, &value_type::l, &value_type::k, &value_type::j, &value_type::i,
 		&value_type::h, &value_type::g, &value_type::f, &value_type::e, &value_type::d, &value_type::c, &value_type::b, &value_type::a);
 };
-
 #endif

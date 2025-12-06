@@ -32,11 +32,6 @@
 
 namespace jsonifier::internal {
 
-	JSONIFIER_INLINE static void printIterValues(auto iter, const std::source_location& title = std::source_location::current()) {
-		//std::cout<< "File: " << title.file_name() << ", Line: " << title.line() << std::endl;
-		//std::cout<< "Values: " << string_view{ iter, 32 } << std::endl;
-	}
-
 	template<typename derived_type> class parser;
 
 	template<typename derived_type, typename iterator_t> struct parse_context {

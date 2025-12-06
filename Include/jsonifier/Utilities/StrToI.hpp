@@ -96,16 +96,11 @@ namespace jsonifier::internal {
 		}
 
 		JSONIFIER_INLINE static bool multiply(value_type& value, value_type expValue) noexcept {
-#if defined(__SIZEOF_INT128__)
+#if JSONIFIER_COMPILER_CLANG || JSONIFIER_COMPILER_GCC
 			const __int128_t res = static_cast<__int128_t>(value) * static_cast<__int128_t>(expValue);
 			value				 = static_cast<value_type>(res);
 			return res <= std::numeric_limits<value_type>::max();
-#elif defined(_M_ARM64) && !defined(__MINGW32__)
-			value_type values;
-			values = __mulh(value, expValue);
-			value  = value * expValue;
-			return values == 0;
-#elif (defined(_WIN64) && !defined(__clang__))
+#elif JSONIFIER_COMPILER_MSVC
 			value_type values;
 			value = _mul128(value, expValue, &values);
 			return values == 0;
@@ -117,11 +112,11 @@ namespace jsonifier::internal {
 		}
 
 		JSONIFIER_INLINE static bool divide(value_type& value, value_type expValue) noexcept {
-#if defined(__SIZEOF_INT128__)
+#if JSONIFIER_COMPILER_CLANG || JSONIFIER_COMPILER_GCC
 			const __int128_t dividend = static_cast<__int128_t>(value);
 			value					  = static_cast<value_type>(dividend / static_cast<__int128_t>(expValue));
 			return (dividend % static_cast<__int128_t>(expValue)) == 0;
-#elif (defined(_WIN64) && !defined(__clang__))
+#elif JSONIFIER_COMPILER_MSVC
 			value_type values;
 			value = _div128(0, value, expValue, &values);
 			return values == 0;
@@ -710,16 +705,11 @@ namespace jsonifier::internal {
 		}
 
 		JSONIFIER_INLINE static bool multiply(value_type& value, value_type expValue) noexcept {
-#if defined(__SIZEOF_INT128__)
+#if JSONIFIER_COMPILER_CLANG || JSONIFIER_COMPILER_GCC
 			const __uint128_t res = static_cast<__uint128_t>(value) * static_cast<__uint128_t>(expValue);
 			value				  = static_cast<value_type>(res);
 			return res <= std::numeric_limits<value_type>::max();
-#elif defined(_M_ARM64) && !defined(__MINGW32__)
-			value_type values;
-			values = __umulh(value, expValue);
-			value  = value * expValue;
-			return values == 0;
-#elif (defined(_WIN64) && !defined(__clang__))
+#elif JSONIFIER_COMPILER_MSVC
 			value_type values;
 			value = _umul128(value, expValue, &values);
 			return values == 0;
@@ -731,11 +721,11 @@ namespace jsonifier::internal {
 		}
 
 		JSONIFIER_INLINE static bool divide(value_type& value, value_type expValue) noexcept {
-#if defined(__SIZEOF_INT128__)
+#if JSONIFIER_COMPILER_CLANG || JSONIFIER_COMPILER_GCC
 			const __uint128_t dividend = static_cast<__uint128_t>(value);
 			value					   = static_cast<value_type>(dividend / static_cast<__uint128_t>(expValue));
 			return (dividend % static_cast<__uint128_t>(expValue)) == 0;
-#elif (defined(_WIN64) && !defined(__clang__))
+#elif JSONIFIER_COMPILER_MSVC
 			value_type values;
 			value = _udiv128(0, value, expValue, &values);
 			return values == 0;

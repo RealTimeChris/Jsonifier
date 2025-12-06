@@ -203,8 +203,8 @@ namespace jsonifier {
 
 	  protected:
 		std::vector<internal::error> errors{};
-		string jsonData{};
 		value_type value{};
+		string jsonData{};
 
 		template<typename parser_type> JSONIFIER_INLINE auto constructValueFromRawJsonData(parser_type& parser, const string& jsonDataNew) noexcept {
 			static constexpr parse_options optionsNew{};

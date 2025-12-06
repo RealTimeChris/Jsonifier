@@ -63,11 +63,11 @@ namespace jsonifier::simd {
 	}
 
 	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02> JSONIFIER_INLINE static auto opCmpEq(const simd_int_t01& value, const simd_int_t02& other) noexcept {
-		return vget_lane_u64(vreinterpret_u64_u8(vshrn_n_u16(vceqq_u8(value, other), 4)), 0);
+		return vget_lane_u64(vreinterpret_u64_u8(vshrn_n_u16(vreinterpretq_u16_u8(vceqq_u8(value, other)), 4)), 0);
 	}
 
 	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02> JSONIFIER_INLINE static auto opCmpLt(const simd_int_t01& value, const simd_int_t02& other) noexcept {
-		return vget_lane_u64(vreinterpret_u64_u8(vshrn_n_u16(vcgtq_u8(other, value), 4)), 0);
+		return vget_lane_u64(vreinterpret_u64_u8(vshrn_n_u16(vreinterpretq_u16_u8(vcgtq_u8(other, value)), 4)), 0);
 	}
 
 	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02>
@@ -81,7 +81,7 @@ namespace jsonifier::simd {
 	}
 
 	template<simd_int_128_type simd_int_t01> JSONIFIER_INLINE static uint64_t opBitMaskRaw(const simd_int_t01& value) noexcept {
-		return vget_lane_u64(vreinterpret_u64_u8(vshrn_n_u16(value, 4)), 0);
+		return vget_lane_u64(vreinterpret_u64_u8(vshrn_n_u16(vreinterpretq_u16_u8(value), 4)), 0);
 	}
 
 	template<simd_int_128_type simd_int_t01> JSONIFIER_INLINE static uint32_t opBitMask(const simd_int_t01& value) noexcept {

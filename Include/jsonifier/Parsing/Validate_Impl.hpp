@@ -30,7 +30,7 @@ namespace jsonifier::internal {
 	inline static constexpr parse_options optionsVal{};
 
 	template<typename derived_type> struct validate_impl<json_structural_type::object_start, derived_type> {
-		template<typename validator_type, typename iterator> JSONIFIER_NON_GCC_INLINE static bool impl(iterator&& iter, iterator&& end, validator_type& validatorRef) noexcept {
+		template<typename validator_type, typename iterator> inline static bool impl(iterator&& iter, iterator&& end, validator_type& validatorRef) noexcept {
 			if JSONIFIER_LIKELY (*iter && **iter == '{') {
 				++iter;
 				if JSONIFIER_UNLIKELY (*iter && **iter == '}') {
@@ -77,7 +77,7 @@ namespace jsonifier::internal {
 	};
 
 	template<typename derived_type> struct validate_impl<json_structural_type::array_start, derived_type> {
-		template<typename validator_type, typename iterator> JSONIFIER_NON_GCC_INLINE static bool impl(iterator&& iter, iterator&& end, validator_type& validatorRef) noexcept {
+		template<typename validator_type, typename iterator> inline static bool impl(iterator&& iter, iterator&& end, validator_type& validatorRef) noexcept {
 			if JSONIFIER_LIKELY (*iter && **iter == '[') {
 				++iter;
 				if JSONIFIER_UNLIKELY (*iter && **iter == ']') {

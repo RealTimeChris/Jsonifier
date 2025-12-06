@@ -32,7 +32,7 @@ namespace jsonifier::simd {
 	#define blsr(value) _blsr_u64(value)
 
 	template<concepts::uns16_t value_type> JSONIFIER_INLINE static value_type tzcnt(const value_type value) noexcept {
-	#if defined(JSONIFIER_LINUX)
+	#if JSONIFIER_PLATFORM_LINUX
 		return __tzcnt_u16(value);
 	#else
 		return _tzcnt_u16(value);

@@ -63,28 +63,15 @@ namespace jsonifier::internal {
 	template<typename value_type_new> class alloc_wrapper {
 	  public:
 		using value_type	   = value_type_new;
-		using pointer		   = value_type_new*;
-		using const_pointer	   = const value_type_new*;
-		using reference		   = value_type_new&;
-		using const_reference  = const value_type_new&;
-		using size_type		   = std::size_t;
-		using difference_type  = std::ptrdiff_t;
+		using pointer		   = value_type*;
+		using size_type		   = size_t;
 		using allocator_traits = std::allocator_traits<alloc_wrapper<value_type>>;
-
-		template<typename U> struct rebind {
-			using other = alloc_wrapper<U>;
-		};
-
-		JSONIFIER_INLINE alloc_wrapper() noexcept = default;
-
-		template<typename U> alloc_wrapper(const alloc_wrapper<U>&) noexcept {
-		}
 
 		JSONIFIER_INLINE static pointer allocate(size_type count) noexcept {
 			if JSONIFIER_UNLIKELY (count == 0) {
 				return nullptr;
 			}
-#if defined(JSONIFIER_WIN) || defined(JSONIFIER_LINUX)
+#if JSONIFIER_PLATFORM_WINDOWS || JSONIFIER_PLATFORM_LINUX
 			return static_cast<value_type*>(_mm_malloc(roundUpToMultiple<bytesPerStep>(count * sizeof(value_type)), bytesPerStep));
 #else
 			return static_cast<value_type*>(aligned_alloc(bytesPerStep, roundUpToMultiple<bytesPerStep>(count * sizeof(value_type))));
@@ -93,7 +80,7 @@ namespace jsonifier::internal {
 
 		JSONIFIER_INLINE void deallocate(pointer ptr, size_t = 0) noexcept {
 			if JSONIFIER_LIKELY (ptr) {
-#if defined(JSONIFIER_WIN) || defined(JSONIFIER_LINUX)
+#if JSONIFIER_PLATFORM_WINDOWS || JSONIFIER_PLATFORM_LINUX
 				_mm_free(ptr);
 #else
 				free(ptr);
@@ -102,7 +89,7 @@ namespace jsonifier::internal {
 		}
 
 		template<typename... arg_types> JSONIFIER_INLINE static void construct(pointer ptr, arg_types&&... args) noexcept {
-			new (ptr) value_type(std::forward<arg_types>(args)...);
+			new (ptr) value_type(internal::forward<arg_types>(args)...);
 		}
 
 		JSONIFIER_INLINE static size_type maxSize() noexcept {

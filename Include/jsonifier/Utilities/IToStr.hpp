@@ -32,7 +32,23 @@
 
 namespace jsonifier::internal {
 
-	template<typename typeName> struct int_tables {
+	inline static constexpr uint8_t decTrailingZeroTable[]{ 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0,
+		0, 0, 0 };
+
+	inline static constexpr uint8_t digitCounts[]{ 19, 19, 19, 19, 18, 18, 18, 17, 17, 17, 16, 16, 16, 16, 15, 15, 15, 14, 14, 14, 13, 13, 13, 13, 12, 12, 12, 11, 11, 11, 10, 10,
+		10, 10, 9, 9, 9, 8, 8, 8, 7, 7, 7, 7, 6, 6, 6, 5, 5, 5, 4, 4, 4, 4, 3, 3, 3, 2, 2, 2, 1, 1, 1, 1, 1 };
+
+	inline static constexpr uint64_t digitCountThresholds[]{ 0ULL, 9ULL, 99ULL, 999ULL, 9999ULL, 99999ULL, 999999ULL, 9999999ULL, 99999999ULL, 999999999ULL, 9999999999ULL,
+		99999999999ULL, 999999999999ULL, 9999999999999ULL, 99999999999999ULL, 999999999999999ULL, 9999999999999999ULL, 99999999999999999ULL, 999999999999999999ULL,
+		9999999999999999999ULL };
+
+	JSONIFIER_INLINE static uint64_t fastDigitCount(const uint64_t inputValue) {
+		const uint64_t originalDigitCount{ digitCounts[std::countl_zero(inputValue)] };
+		return originalDigitCount + static_cast<uint64_t>(inputValue > digitCountThresholds[originalDigitCount]);
+	}
+
+	template<typename typeName> struct fiwb {
 		inline static constexpr char charTable00[]{ 0x30u, 0x31u, 0x32u, 0x33u, 0x34u, 0x35u, 0x36u, 0x37u, 0x38u, 0x39u };
 
 		inline static constexpr char charTable01[]{ 0x30, 0x30, 0x30, 0x31, 0x30, 0x32, 0x30, 0x33, 0x30, 0x34, 0x30, 0x35, 0x30, 0x36, 0x30, 0x37, 0x30, 0x38, 0x30, 0x39, 0x31,
@@ -50,46 +66,22 @@ namespace jsonifier::internal {
 			0x3735, 0x3835, 0x3935, 0x3036, 0x3136, 0x3236, 0x3336, 0x3436, 0x3536, 0x3636, 0x3736, 0x3836, 0x3936, 0x3037, 0x3137, 0x3237, 0x3337, 0x3437, 0x3537, 0x3637, 0x3737,
 			0x3837, 0x3937, 0x3038, 0x3138, 0x3238, 0x3338, 0x3438, 0x3538, 0x3638, 0x3738, 0x3838, 0x3938, 0x3039, 0x3139, 0x3239, 0x3339, 0x3439, 0x3539, 0x3639, 0x3739, 0x3839,
 			0x3939 };
-
-		inline static constexpr uint8_t decTrailingZeroTable[]{ 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
-			0, 0, 0, 0, 0 };
-
-		inline static constexpr uint8_t digitCounts[]{ 19, 19, 19, 19, 18, 18, 18, 17, 17, 17, 16, 16, 16, 16, 15, 15, 15, 14, 14, 14, 13, 13, 13, 13, 12, 12, 12, 11, 11, 11, 10,
-			10, 10, 10, 9, 9, 9, 8, 8, 8, 7, 7, 7, 7, 6, 6, 6, 5, 5, 5, 4, 4, 4, 4, 3, 3, 3, 2, 2, 2, 1, 1, 1, 1, 1 };
-
-		inline static constexpr uint64_t digitCountThresholds[]{ 0ULL, 9ULL, 99ULL, 999ULL, 9999ULL, 99999ULL, 999999ULL, 9999999ULL, 99999999ULL, 999999999ULL, 9999999999ULL,
-			99999999999ULL, 999999999999ULL, 9999999999999ULL, 99999999999999ULL, 999999999999999ULL, 9999999999999999ULL, 99999999999999999ULL, 999999999999999999ULL,
-			9999999999999999999ULL };
 	};
 
-	JSONIFIER_INLINE static uint64_t fastDigitCount(const uint64_t inputValue) {
-		const uint64_t originalDigitCount{ int_tables<void>::digitCounts[std::countl_zero(inputValue)] };
-		return originalDigitCount + static_cast<uint64_t>(inputValue > int_tables<void>::digitCountThresholds[originalDigitCount]);
-	}
-
-	template<uint64_t divisor, uint64_t multiplier, uint32_t shift> struct multiply_and_shift {
+	template<uint64_t divisor, uint64_t multiplier, uint64_t shift> struct multiply_and_shift {
 		template<typename value_type> JSONIFIER_INLINE static uint64_t impl(value_type value) noexcept {
-#if defined(JSONIFIER_CLANG) && defined(_M_ARM64) && !defined(__MINGW32__)
-			return value / divisor;
-#else
-	#if defined(__SIZEOF_INT128__)
-			const __int128_t product = static_cast<__int128_t>(value) * multiplier;
+#if JSONIFIER_COMPILER_CLANG || JSONIFIER_COMPILER_GCC
+			const __uint128_t product = static_cast<__uint128_t>(value) * multiplier;
 			return static_cast<uint64_t>(product >> shift);
-	#elif defined(_M_ARM64) && !defined(__MINGW32__)
-			value_type values;
-			values = __umulh(value, expValue);
-			value  = value * expValue;
-			return values == 0;
-	#elif (defined(_WIN64) && !defined(__clang__))
+#elif JSONIFIER_COMPILER_MSVC
 			uint64_t high_part;
-			const uint64_t low_part = _umul128(value, multiplier, &high_part);
+			uint64_t low_part = _umul128(multiplier, value, &high_part);
 			if constexpr (shift < 64) {
 				return static_cast<uint64_t>((low_part >> shift) | (high_part << (64ULL - shift)));
 			} else {
 				return static_cast<uint64_t>(high_part >> (shift - 64ULL));
 			}
-	#else
+#else
 			uint64_t high_part;
 			const uint64_t low_part = mul128Generic(value, multiplier, &high_part);
 			if constexpr (shift < 64) {
@@ -97,439 +89,256 @@ namespace jsonifier::internal {
 			} else {
 				return static_cast<uint64_t>(high_part >> (shift - 64ULL));
 			}
-	#endif
 #endif
 		}
 	};
 
-	template<uint64_t, typename value_type> struct to_chars_impl {};
+	template<uint64_t digit_length> struct to_chars_impl;
 
-	template<typename value_type> struct to_chars_impl<1, value_type> {
-		JSONIFIER_INLINE static char* impl(char* buf, const value_type value) noexcept {
-			buf[0] = int_tables<void>::charTable00[value];
-			return buf + 1ULL;
+	template<> struct to_chars_impl<2> {
+		JSONIFIER_INLINE static char* impl(char* buf, const uint64_t value) noexcept {
+			const uint64_t lz = value < 10;
+			std::memcpy(buf, fiwb<void>::charTable01 + (value * 2 + lz), 2ULL);
+			buf -= lz;
+			return buf + 2ULL;
 		}
 	};
 
-	template<typename value_type> struct to_chars_impl<2, value_type> {};
-	template<typename value_type> struct to_chars_impl<3, value_type> {};
-	template<typename value_type> struct to_chars_impl<4, value_type> {};
-	template<typename value_type> struct to_chars_impl<5, value_type> {};
-	template<typename value_type> struct to_chars_impl<6, value_type> {};
-	template<typename value_type> struct to_chars_impl<7, value_type> {};
-	template<typename value_type> struct to_chars_impl<8, value_type> {};
-	template<typename value_type> struct to_chars_impl<9, value_type> {};
-	template<typename value_type> struct to_chars_impl<10, value_type> {};
-	template<typename value_type> struct to_chars_impl<11, value_type> {};
-	template<typename value_type> struct to_chars_impl<12, value_type> {};
-	template<typename value_type> struct to_chars_impl<13, value_type> {};
-	template<typename value_type> struct to_chars_impl<14, value_type> {};
-	template<typename value_type> struct to_chars_impl<15, value_type> {};
-	template<typename value_type> struct to_chars_impl<16, value_type> {};
-	template<typename value_type> struct to_chars_impl<17, value_type> {};
-	template<typename value_type> struct to_chars_impl<18, value_type> {};
-	template<typename value_type> struct to_chars_impl<19, value_type> {};
-	template<typename value_type> struct to_chars_impl<20, value_type> {};
+	template<> struct to_chars_impl<4> {
+		JSONIFIER_INLINE static char* impl(char* buf, const uint64_t value) noexcept {
+			const uint64_t aa = (value * 5243u) >> 19ULL;
+			const uint64_t lz = value < 1000;
+			std::memcpy(buf, fiwb<void>::charTable01 + (aa * 2 + lz), 2ULL);
+			buf -= lz;
+			std::memcpy(buf + 2ULL, fiwb<void>::charTable02 + (value - aa * 100u), 2ULL);
+			return buf + 4ULL;
+		}
+	};
 
+	template<> struct to_chars_impl<6> {
+		JSONIFIER_INLINE static char* impl(char* buf, const uint64_t value) noexcept {
+			uint64_t aa		  = (value * 429497ULL) >> 32ULL;
+			const uint64_t lz = value < 100000;
+			std::memcpy(buf, fiwb<void>::charTable01 + (aa * 2 + lz), 2ULL);
+			buf -= lz;
+			aa				  = value - aa * 10000u;
+			const uint64_t bb = (aa * 5243u) >> 19ULL;
+			std::memcpy(buf + 2ULL, fiwb<void>::charTable02 + bb, 2ULL);
+			std::memcpy(buf + 4ULL, fiwb<void>::charTable02 + (aa - bb * 100u), 2ULL);
+			return buf + 6ULL;
+		}
+	};
 
-	template<typename value_type> JSONIFIER_INLINE static char* toChars1(char* buf, const value_type value) noexcept {
-		buf[0] = int_tables<void>::charTable00[value];
-		return buf + 1ULL;
-	}
+	template<> struct to_chars_impl<8> {
+		JSONIFIER_INLINE static char* impl(char* buf, const uint64_t value) noexcept {
+			uint64_t aabb	  = (value * 109951163ULL) >> 40ULL;
+			uint64_t aa		  = (aabb * 5243u) >> 19ULL;
+			const uint64_t lz = value < 10000000;
+			std::memcpy(buf, fiwb<void>::charTable01 + (aa * 2 + lz), 2ULL);
+			buf -= lz;
+			std::memcpy(buf + 2ULL, fiwb<void>::charTable02 + (aabb - aa * 100u), 2ULL);
+			aabb = value - aabb * 10000u;
+			aa	 = (aabb * 5243u) >> 19ULL;
+			std::memcpy(buf + 4ULL, fiwb<void>::charTable02 + aa, 2ULL);
+			std::memcpy(buf + 6ULL, fiwb<void>::charTable02 + (aabb - aa * 100u), 2ULL);
+			return buf + 8ULL;
+		}
+	};
 
-	template<typename value_type> JSONIFIER_INLINE static char* toChars2(char* buf, const value_type value) noexcept {
-		std::memcpy(buf, int_tables<void>::charTable02 + value, 2ULL);
-		return buf + 2ULL;
-	}
+	template<> struct to_chars_impl<10> {
+		JSONIFIER_INLINE static char* impl(char* buf, const uint64_t value) noexcept {
+			const uint64_t high = multiply_and_shift<100000000ULL, 6189700196426901375ULL, 89>::impl(value);
+			const uint64_t low	= value - high * 100000000ULL;
+			const uint64_t lz	= high < 10;
+			std::memcpy(buf, fiwb<void>::charTable01 + (high * 2 + lz), 2ULL);
+			buf -= lz;
+			uint64_t aabb = (low * 109951163ULL) >> 40ULL;
+			uint64_t aa	  = (aabb * 5243u) >> 19ULL;
+			std::memcpy(buf + 2ULL, fiwb<void>::charTable02 + aa, 2ULL);
+			std::memcpy(buf + 4ULL, fiwb<void>::charTable02 + (aabb - aa * 100u), 2ULL);
+			aabb = low - aabb * 10000u;
+			aa	 = (aabb * 5243u) >> 19ULL;
+			std::memcpy(buf + 6ULL, fiwb<void>::charTable02 + aa, 2ULL);
+			std::memcpy(buf + 8ULL, fiwb<void>::charTable02 + (aabb - aa * 100u), 2ULL);
+			return buf + 10;
+		}
+	};
 
-	template<typename value_type> JSONIFIER_INLINE static char* toChars3(char* buf, const value_type value) noexcept {
-		const uint32_t aa = (value * 5243u) >> 19ULL;
-		buf[0]			  = int_tables<void>::charTable00[aa];
-		std::memcpy(buf + 1ULL, int_tables<void>::charTable02 + (value - aa * 100u), 2ULL);
-		return buf + 3ULL;
-	}
+	template<> struct to_chars_impl<12> {
+		JSONIFIER_INLINE static char* impl(char* buf, const uint64_t value) noexcept {
+			const uint64_t high = multiply_and_shift<100000000ULL, 6189700196426901375ULL, 89>::impl(value);
+			const uint64_t low	= value - high * 100000000ULL;
+			uint64_t aa			= (high * 5243u) >> 19ULL;
+			const uint64_t lz	= aa < 10;
+			std::memcpy(buf, fiwb<void>::charTable01 + (aa * 2 + lz), 2ULL);
+			buf -= lz;
+			std::memcpy(buf + 2ULL, fiwb<void>::charTable02 + (high - aa * 100u), 2ULL);
+			uint64_t aabb = (low * 109951163ULL) >> 40ULL;
+			aa			  = (aabb * 5243u) >> 19ULL;
+			std::memcpy(buf + 4ULL, fiwb<void>::charTable02 + aa, 2ULL);
+			std::memcpy(buf + 6ULL, fiwb<void>::charTable02 + (aabb - aa * 100u), 2ULL);
+			aabb = low - aabb * 10000u;
+			aa	 = (aabb * 5243u) >> 19ULL;
+			std::memcpy(buf + 8ULL, fiwb<void>::charTable02 + aa, 2ULL);
+			std::memcpy(buf + 10ULL, fiwb<void>::charTable02 + (aabb - aa * 100u), 2ULL);
+			return buf + 12ULL;
+		}
+	};
 
-	template<typename value_type> JSONIFIER_INLINE static char* toChars4(char* buf, const value_type value) noexcept {
-		const uint32_t aa = (value * 5243u) >> 19ULL;
-		std::memcpy(buf, int_tables<void>::charTable02 + aa, 2ULL);
-		std::memcpy(buf + 2ULL, int_tables<void>::charTable02 + (value - aa * 100u), 2ULL);
-		return buf + 4ULL;
-	}
+	template<> struct to_chars_impl<14> {
+		JSONIFIER_INLINE static char* impl(char* buf, const uint64_t value) noexcept {
+			const uint64_t high = multiply_and_shift<100000000ULL, 6189700196426901375ULL, 89>::impl(value);
+			const uint64_t low	= value - high * 100000000ULL;
+			uint64_t aa			= (high * 429497ULL) >> 32ULL;
+			const uint64_t lz	= aa < 10;
+			const uint64_t bbcc = high - aa * 10000u;
+			const uint64_t bb	= (bbcc * 5243u) >> 19ULL;
+			uint64_t cc			= bbcc - bb * 100u;
+			std::memcpy(buf, fiwb<void>::charTable01 + (aa * 2 + lz), 2ULL);
+			buf -= lz;
+			std::memcpy(buf + 2ULL, fiwb<void>::charTable02 + bb, 2ULL);
+			std::memcpy(buf + 4ULL, fiwb<void>::charTable02 + cc, 2ULL);
+			const uint64_t aabb = (low * 109951163ULL) >> 40ULL;
+			const uint64_t ccdd = low - aabb * 10000u;
+			aa					= (aabb * 5243u) >> 19ULL;
+			cc					= (ccdd * 5243u) >> 19ULL;
+			std::memcpy(buf + 6ULL, fiwb<void>::charTable02 + aa, 2ULL);
+			std::memcpy(buf + 8ULL, fiwb<void>::charTable02 + (aabb - aa * 100u), 2ULL);
+			std::memcpy(buf + 10ULL, fiwb<void>::charTable02 + cc, 2ULL);
+			std::memcpy(buf + 12ULL, fiwb<void>::charTable02 + (ccdd - cc * 100u), 2ULL);
+			return buf + 14ULL;
+		}
+	};
 
-	template<typename value_type> JSONIFIER_INLINE static char* toChars5(char* buf, const value_type value) noexcept {
-		uint32_t aa		  = static_cast<uint32_t>((value * 429497ULL) >> 32ULL);
-		buf[0]			  = int_tables<void>::charTable00[aa];
-		aa				  = value - aa * 10000u;
-		const uint32_t bb = (aa * 5243u) >> 19ULL;
-		std::memcpy(buf + 1ULL, int_tables<void>::charTable02 + bb, 2ULL);
-		std::memcpy(buf + 3ULL, int_tables<void>::charTable02 + (aa - bb * 100u), 2ULL);
-		return buf + 5ULL;
-	}
+	template<> struct to_chars_impl<16> {
+		JSONIFIER_INLINE static char* impl(char* buf, const uint64_t value) noexcept {
+			const uint64_t high = multiply_and_shift<100000000ULL, 6189700196426901375ULL, 89>::impl(value);
+			const uint64_t low	= value - high * 100000000ULL;
+			uint64_t aabb		= (high * 109951163ULL) >> 40ULL;
+			uint64_t ccdd		= high - aabb * 10000u;
+			uint64_t aa			= (aabb * 5243u) >> 19ULL;
+			const uint64_t lz	= aa < 10;
+			uint64_t cc			= (ccdd * 5243u) >> 19ULL;
+			const uint64_t bb	= aabb - aa * 100u;
+			const uint64_t dd	= ccdd - cc * 100u;
+			std::memcpy(buf, fiwb<void>::charTable01 + (aa * 2 + lz), 2ULL);
+			buf -= lz;
+			std::memcpy(buf + 2ULL, fiwb<void>::charTable02 + bb, 2ULL);
+			std::memcpy(buf + 4ULL, fiwb<void>::charTable02 + cc, 2ULL);
+			std::memcpy(buf + 6ULL, fiwb<void>::charTable02 + dd, 2ULL);
+			aabb = (low * 109951163ULL) >> 40ULL;
+			ccdd = low - aabb * 10000u;
+			aa	 = (aabb * 5243u) >> 19ULL;
+			cc	 = (ccdd * 5243u) >> 19ULL;
+			std::memcpy(buf + 8ULL, fiwb<void>::charTable02 + aa, 2ULL);
+			std::memcpy(buf + 10ULL, fiwb<void>::charTable02 + (aabb - aa * 100u), 2ULL);
+			std::memcpy(buf + 12ULL, fiwb<void>::charTable02 + cc, 2ULL);
+			std::memcpy(buf + 14ULL, fiwb<void>::charTable02 + (ccdd - cc * 100u), 2ULL);
+			return buf + 16ULL;
+		}
+	};
 
-	template<typename value_type> JSONIFIER_INLINE static char* toChars6(char* buf, const value_type value) noexcept {
-		uint32_t aa = static_cast<uint32_t>((value * 429497ULL) >> 32ULL);
-		std::memcpy(buf, int_tables<void>::charTable02 + aa, 2ULL);
-		aa				  = value - aa * 10000u;
-		const uint32_t bb = (aa * 5243u) >> 19ULL;
-		std::memcpy(buf + 2ULL, int_tables<void>::charTable02 + bb, 2ULL);
-		std::memcpy(buf + 4ULL, int_tables<void>::charTable02 + (aa - bb * 100u), 2ULL);
-		return buf + 6ULL;
-	}
+	template<> struct to_chars_impl<18> {
+		JSONIFIER_INLINE static char* impl(char* buf, const uint64_t value) noexcept {
+			const uint64_t high	  = multiply_and_shift<100000000ULL, 6189700196426901375ULL, 89>::impl(value);
+			const uint64_t low	  = value - high * 100000000ULL;
+			const uint64_t high10 = multiply_and_shift<100000000ULL, 6189700196426901375ULL, 89>::impl(high);
+			const uint64_t low10  = high - high10 * 100000000ULL;
+			const uint64_t lz	  = high10 < 10;
+			std::memcpy(buf, fiwb<void>::charTable01 + (high10 * 2 + lz), 2ULL);
+			buf -= lz;
+			uint64_t aabb = (low10 * 109951163ULL) >> 40ULL;
+			uint64_t aa	  = (aabb * 5243u) >> 19ULL;
+			std::memcpy(buf + 2ULL, fiwb<void>::charTable02 + aa, 2ULL);
+			std::memcpy(buf + 4ULL, fiwb<void>::charTable02 + (aabb - aa * 100u), 2ULL);
+			aabb = low10 - aabb * 10000u;
+			aa	 = (aabb * 5243u) >> 19ULL;
+			std::memcpy(buf + 6ULL, fiwb<void>::charTable02 + aa, 2ULL);
+			std::memcpy(buf + 8ULL, fiwb<void>::charTable02 + (aabb - aa * 100u), 2ULL);
+			aabb = (low * 109951163ULL) >> 40ULL;
+			aa	 = (aabb * 5243u) >> 19ULL;
+			std::memcpy(buf + 10ULL, fiwb<void>::charTable02 + aa, 2ULL);
+			std::memcpy(buf + 12ULL, fiwb<void>::charTable02 + (aabb - aa * 100u), 2ULL);
+			aabb = low - aabb * 10000u;
+			aa	 = (aabb * 5243u) >> 19ULL;
+			std::memcpy(buf + 14ULL, fiwb<void>::charTable02 + aa, 2ULL);
+			std::memcpy(buf + 16ULL, fiwb<void>::charTable02 + (aabb - aa * 100u), 2ULL);
+			return buf + 18ULL;
+		}
+	};
 
-	template<typename value_type> JSONIFIER_INLINE static char* toChars7(char* buf, const value_type value) noexcept {
-		uint32_t aabb = static_cast<uint32_t>((value * 109951163ULL) >> 40ULL);
-		uint32_t aa	  = (aabb * 5243u) >> 19ULL;
-		buf[0]		  = int_tables<void>::charTable00[aa];
-		std::memcpy(buf + 1ULL, int_tables<void>::charTable02 + (aabb - aa * 100u), 2ULL);
-		aabb = value - aabb * 10000u;
-		aa	 = (aabb * 5243u) >> 19ULL;
-		std::memcpy(buf + 3ULL, int_tables<void>::charTable02 + aa, 2ULL);
-		std::memcpy(buf + 5ULL, int_tables<void>::charTable02 + (aabb - aa * 100u), 2ULL);
-		return buf + 7ULL;
-	}
+	template<> struct to_chars_impl<20> {
+		JSONIFIER_INLINE static char* impl(char* buf, const uint64_t value) noexcept {
+			const uint64_t high	  = multiply_and_shift<100000000ULL, 6189700196426901375ULL, 89>::impl(value);
+			const uint64_t low	  = value - high * 100000000ULL;
+			const uint64_t high12 = multiply_and_shift<100000000ULL, 6189700196426901375ULL, 89>::impl(high);
+			const uint64_t low12  = high - high12 * 100000000ULL;
+			uint64_t aa			  = (high12 * 5243u) >> 19ULL;
+			const uint64_t lz	  = aa < 10;
+			std::memcpy(buf, fiwb<void>::charTable01 + (aa * 2 + lz), 2ULL);
+			buf -= lz;
+			std::memcpy(buf + 2ULL, fiwb<void>::charTable02 + (high12 - aa * 100u), 2ULL);
+			uint64_t aabb = (low12 * 109951163ULL) >> 40ULL;
+			aa			  = (aabb * 5243u) >> 19ULL;
+			std::memcpy(buf + 4ULL, fiwb<void>::charTable02 + aa, 2ULL);
+			std::memcpy(buf + 6ULL, fiwb<void>::charTable02 + (aabb - aa * 100u), 2ULL);
+			aabb = low12 - aabb * 10000u;
+			aa	 = (aabb * 5243u) >> 19ULL;
+			std::memcpy(buf + 8ULL, fiwb<void>::charTable02 + aa, 2ULL);
+			std::memcpy(buf + 10ULL, fiwb<void>::charTable02 + (aabb - aa * 100u), 2ULL);
+			aabb = (low * 109951163ULL) >> 40ULL;
+			aa	 = (aabb * 5243u) >> 19ULL;
+			std::memcpy(buf + 12ULL, fiwb<void>::charTable02 + aa, 2ULL);
+			std::memcpy(buf + 14ULL, fiwb<void>::charTable02 + (aabb - aa * 100u), 2ULL);
+			aabb = low - aabb * 10000u;
+			aa	 = (aabb * 5243u) >> 19ULL;
+			std::memcpy(buf + 16ULL, fiwb<void>::charTable02 + aa, 2ULL);
+			std::memcpy(buf + 18ULL, fiwb<void>::charTable02 + (aabb - aa * 100u), 2ULL);
+			return buf + 20ULL;
+		}
+	};
 
-	template<typename value_type> JSONIFIER_INLINE static char* toChars8(char* buf, const value_type value) noexcept {
-		uint32_t aabb = static_cast<uint32_t>((value * 109951163ULL) >> 40ULL);
-		uint32_t aa	  = (aabb * 5243u) >> 19ULL;
-		std::memcpy(buf, int_tables<void>::charTable02 + aa, 2ULL);
-		std::memcpy(buf + 2ULL, int_tables<void>::charTable02 + (aabb - aa * 100u), 2ULL);
-		aabb = value - aabb * 10000u;
-		aa	 = (aabb * 5243u) >> 19ULL;
-		std::memcpy(buf + 4ULL, int_tables<void>::charTable02 + aa, 2ULL);
-		std::memcpy(buf + 6ULL, int_tables<void>::charTable02 + (aabb - aa * 100u), 2ULL);
-		return buf + 8ULL;
-	}
+	template<typename value_type> struct to_chars;
 
-	template<typename value_type> JSONIFIER_INLINE static char* toChars9(char* buf, const value_type value) noexcept {
-		uint32_t high = static_cast<uint32_t>((value * 720575941ULL) >> 56ULL);
-		buf[0]		  = int_tables<void>::charTable00[high];
-		high		  = value - high * 100000000u;
-		uint32_t aabb = static_cast<uint32_t>((high * 109951163ULL) >> 40ULL);
-		uint32_t aa	  = (aabb * 5243u) >> 19ULL;
-		std::memcpy(buf + 1ULL, int_tables<void>::charTable02 + aa, 2ULL);
-		std::memcpy(buf + 3ULL, int_tables<void>::charTable02 + (aabb - aa * 100u), 2ULL);
-		aabb = high - aabb * 10000u;
-		aa	 = (aabb * 5243u) >> 19ULL;
-		std::memcpy(buf + 5ULL, int_tables<void>::charTable02 + aa, 2ULL);
-		std::memcpy(buf + 7ULL, int_tables<void>::charTable02 + (aabb - aa * 100u), 2ULL);
-		return buf + 9ULL;
-	}
-
-	template<typename value_type> JSONIFIER_INLINE static char* toChars10(char* buf, const value_type value) noexcept {
-		const uint32_t high = static_cast<uint32_t>((value * 1801439851ULL) >> 54ULL);
-		const uint32_t low	= static_cast<uint32_t>(value - high * 10000000ULL);
-		uint32_t aa			= (high * 5243u) >> 19ULL;
-		buf[0]				= int_tables<void>::charTable00[aa];
-		std::memcpy(buf + 1ULL, int_tables<void>::charTable02 + (high - aa * 100u), 2ULL);
-		uint32_t aabb = static_cast<uint32_t>((low * 109951163ULL) >> 40ULL);
-		aa			  = (aabb * 5243u) >> 19ULL;
-		buf[3]		  = int_tables<void>::charTable00[aa];
-		std::memcpy(buf + 4ULL, int_tables<void>::charTable02 + (aabb - aa * 100u), 2ULL);
-		aabb = low - aabb * 10000u;
-		aa	 = (aabb * 5243u) >> 19ULL;
-		std::memcpy(buf + 6ULL, int_tables<void>::charTable02 + aa, 2ULL);
-		std::memcpy(buf + 8ULL, int_tables<void>::charTable02 + (aabb - aa * 100u), 2ULL);
-		return buf + 10;
-	}
-
-	template<typename value_type> JSONIFIER_INLINE static char* toChars11(char* buf, const value_type value) noexcept {
-		const uint64_t high = multiply_and_shift<10000000ULL, 15474250491067253437ULL, 87>::impl(value);
-		const uint32_t low	= static_cast<uint32_t>(value - high * 10000000ULL);
-		uint32_t aa			= (high * 5243u) >> 19ULL;
-		std::memcpy(buf, int_tables<void>::charTable02 + aa, 2ULL);
-		std::memcpy(buf + 2ULL, int_tables<void>::charTable02 + (high - aa * 100u), 2ULL);
-		uint32_t aabb = static_cast<uint32_t>((low * 109951163ULL) >> 40ULL);
-		aa			  = (aabb * 5243u) >> 19ULL;
-		buf[4]		  = int_tables<void>::charTable00[aa];
-		std::memcpy(buf + 5ULL, int_tables<void>::charTable02 + (aabb - aa * 100u), 2ULL);
-		aabb = low - aabb * 10000u;
-		aa	 = (aabb * 5243u) >> 19ULL;
-		std::memcpy(buf + 7ULL, int_tables<void>::charTable02 + aa, 2ULL);
-		std::memcpy(buf + 9ULL, int_tables<void>::charTable02 + (aabb - aa * 100u), 2ULL);
-		return buf + 11;
-	}
-
-	template<typename value_type> JSONIFIER_INLINE static char* toChars12(char* buf, const value_type value) noexcept {
-		const uint64_t high = multiply_and_shift<100000000ULL, 6189700196426901375ULL, 89>::impl(value);
-		const uint64_t low	= static_cast<uint64_t>(value - high * 100000000ULL);
-		uint64_t aa			= (high * 5243u) >> 19ULL;
-		std::memcpy(buf, int_tables<void>::charTable02 + aa, 2ULL);
-		std::memcpy(buf + 2ULL, int_tables<void>::charTable02 + (high - aa * 100u), 2ULL);
-		uint64_t aabb = static_cast<uint64_t>((low * 109951163ULL) >> 40ULL);
-		aa			  = (aabb * 5243u) >> 19ULL;
-		std::memcpy(buf + 4ULL, int_tables<void>::charTable02 + aa, 2ULL);
-		std::memcpy(buf + 6ULL, int_tables<void>::charTable02 + (aabb - aa * 100u), 2ULL);
-		aabb = low - aabb * 10000u;
-		aa	 = (aabb * 5243u) >> 19ULL;
-		std::memcpy(buf + 8ULL, int_tables<void>::charTable02 + aa, 2ULL);
-		std::memcpy(buf + 10ULL, int_tables<void>::charTable02 + (aabb - aa * 100u), 2ULL);
-		return buf + 12;
-	}
-
-	template<typename value_type> JSONIFIER_INLINE static char* toChars13(char* buf, const value_type value) noexcept {
-		const uint64_t high = multiply_and_shift<100000000ULL, 6189700196426901375ULL, 89>::impl(value);
-		const uint32_t low	= static_cast<uint32_t>(value - high * 100000000ULL);
-		uint32_t aa			= static_cast<uint32_t>((high * 429497ULL) >> 32ULL);
-		const uint32_t bbcc = high - aa * 10000u;
-		const uint32_t bb	= (bbcc * 5243u) >> 19ULL;
-		uint32_t cc			= bbcc - bb * 100u;
-		buf[0]				= int_tables<void>::charTable00[aa];
-		std::memcpy(buf + 1ULL, int_tables<void>::charTable02 + bb, 2ULL);
-		std::memcpy(buf + 3ULL, int_tables<void>::charTable02 + cc, 2ULL);
-		const uint32_t aabb = static_cast<uint32_t>((low * 109951163ULL) >> 40ULL);
-		const uint32_t ccdd = low - aabb * 10000u;
-		aa					= (aabb * 5243u) >> 19ULL;
-		cc					= (ccdd * 5243u) >> 19ULL;
-		std::memcpy(buf + 5ULL, int_tables<void>::charTable02 + aa, 2ULL);
-		std::memcpy(buf + 7ULL, int_tables<void>::charTable02 + (aabb - aa * 100u), 2ULL);
-		std::memcpy(buf + 9ULL, int_tables<void>::charTable02 + cc, 2ULL);
-		std::memcpy(buf + 11ULL, int_tables<void>::charTable02 + (ccdd - cc * 100u), 2ULL);
-		return buf + 13ULL;
-	}
-
-	template<typename value_type> JSONIFIER_INLINE static char* toChars14(char* buf, const value_type value) noexcept {
-		const uint64_t high = multiply_and_shift<100000000ULL, 6189700196426901375ULL, 89>::impl(value);
-		const uint32_t low	= static_cast<uint32_t>(value - high * 100000000ULL);
-		uint32_t aa			= static_cast<uint32_t>((high * 429497ULL) >> 32ULL);
-		const uint32_t bbcc = high - aa * 10000u;
-		const uint32_t bb	= (bbcc * 5243u) >> 19ULL;
-		uint32_t cc			= bbcc - bb * 100u;
-		std::memcpy(buf, int_tables<void>::charTable02 + aa, 2ULL);
-		std::memcpy(buf + 2ULL, int_tables<void>::charTable02 + bb, 2ULL);
-		std::memcpy(buf + 4ULL, int_tables<void>::charTable02 + cc, 2ULL);
-		const uint32_t aabb = static_cast<uint32_t>((low * 109951163ULL) >> 40ULL);
-		const uint32_t ccdd = low - aabb * 10000u;
-		aa					= (aabb * 5243u) >> 19ULL;
-		cc					= (ccdd * 5243u) >> 19ULL;
-		std::memcpy(buf + 6ULL, int_tables<void>::charTable02 + aa, 2ULL);
-		std::memcpy(buf + 8ULL, int_tables<void>::charTable02 + (aabb - aa * 100u), 2ULL);
-		std::memcpy(buf + 10ULL, int_tables<void>::charTable02 + cc, 2ULL);
-		std::memcpy(buf + 12ULL, int_tables<void>::charTable02 + (ccdd - cc * 100u), 2ULL);
-		return buf + 14ULL;
-	}
-
-	template<typename value_type> JSONIFIER_INLINE static char* toChars15(char* buf, const value_type value) noexcept {
-		const uint64_t high = multiply_and_shift<100000000ULL, 6189700196426901375ULL, 89>::impl(value);
-		const uint32_t low	= static_cast<uint32_t>(value - high * 100000000ULL);
-		uint32_t aabb		= static_cast<uint32_t>((high * 109951163ULL) >> 40ULL);
-		uint32_t ccdd		= static_cast<uint32_t>(high - aabb * 10000u);
-		uint32_t aa			= (aabb * 5243u) >> 19ULL;
-		uint32_t cc			= (ccdd * 5243u) >> 19ULL;
-		const uint32_t bb	= aabb - aa * 100u;
-		const uint32_t dd	= ccdd - cc * 100u;
-		buf[0]				= int_tables<void>::charTable00[aa];
-		std::memcpy(buf + 1ULL, int_tables<void>::charTable02 + bb, 2ULL);
-		std::memcpy(buf + 3ULL, int_tables<void>::charTable02 + cc, 2ULL);
-		std::memcpy(buf + 5ULL, int_tables<void>::charTable02 + dd, 2ULL);
-		aabb = static_cast<uint32_t>((low * 109951163ULL) >> 40ULL);
-		ccdd = low - aabb * 10000u;
-		aa	 = (aabb * 5243u) >> 19ULL;
-		cc	 = (ccdd * 5243u) >> 19ULL;
-		std::memcpy(buf + 7ULL, int_tables<void>::charTable02 + aa, 2ULL);
-		std::memcpy(buf + 9ULL, int_tables<void>::charTable02 + (aabb - aa * 100u), 2ULL);
-		std::memcpy(buf + 11ULL, int_tables<void>::charTable02 + cc, 2ULL);
-		std::memcpy(buf + 13ULL, int_tables<void>::charTable02 + (ccdd - cc * 100u), 2ULL);
-		return buf + 15ULL;
-	}
-
-	template<typename value_type> JSONIFIER_INLINE static char* toChars16(char* buf, const value_type value) noexcept {
-		const uint64_t high = multiply_and_shift<100000000ULL, 6189700196426901375ULL, 89>::impl(value);
-		const uint32_t low	= static_cast<uint32_t>(value - high * 100000000ULL);
-		uint32_t aabb		= static_cast<uint32_t>((high * 109951163ULL) >> 40ULL);
-		uint32_t ccdd		= static_cast<uint32_t>(high - aabb * 10000u);
-		uint32_t aa			= (aabb * 5243u) >> 19ULL;
-		uint32_t cc			= (ccdd * 5243u) >> 19ULL;
-		const uint32_t bb	= aabb - aa * 100u;
-		const uint32_t dd	= ccdd - cc * 100u;
-		std::memcpy(buf, int_tables<void>::charTable02 + aa, 2ULL);
-		std::memcpy(buf + 2ULL, int_tables<void>::charTable02 + bb, 2ULL);
-		std::memcpy(buf + 4ULL, int_tables<void>::charTable02 + cc, 2ULL);
-		std::memcpy(buf + 6ULL, int_tables<void>::charTable02 + dd, 2ULL);
-		aabb = static_cast<uint32_t>((low * 109951163ULL) >> 40ULL);
-		ccdd = low - aabb * 10000u;
-		aa	 = (aabb * 5243u) >> 19ULL;
-		cc	 = (ccdd * 5243u) >> 19ULL;
-		std::memcpy(buf + 8ULL, int_tables<void>::charTable02 + aa, 2ULL);
-		std::memcpy(buf + 10ULL, int_tables<void>::charTable02 + (aabb - aa * 100u), 2ULL);
-		std::memcpy(buf + 12ULL, int_tables<void>::charTable02 + cc, 2ULL);
-		std::memcpy(buf + 14ULL, int_tables<void>::charTable02 + (ccdd - cc * 100u), 2ULL);
-		return buf + 16ULL;
-	}
-
-	template<typename value_type> JSONIFIER_INLINE static char* toChars17(char* buf, const value_type value) noexcept {
-		const uint64_t high	 = multiply_and_shift<100000000ULL, 6189700196426901375ULL, 89>::impl(value);
-		const uint64_t low	 = value - high * 100000000ULL;
-		const uint64_t high9 = (high * 720575941ULL) >> 56ULL;
-		const uint64_t low9	 = high - high9 * 100000000ULL;
-		buf[0]				 = int_tables<void>::charTable00[high9];
-		uint64_t aabb		 = (low9 * 109951163ULL) >> 40ULL;
-		uint64_t aa			 = (aabb * 5243u) >> 19ULL;
-		std::memcpy(buf + 1ULL, int_tables<void>::charTable02 + aa, 2ULL);
-		std::memcpy(buf + 3ULL, int_tables<void>::charTable02 + (aabb - aa * 100u), 2ULL);
-		aabb = low9 - aabb * 10000u;
-		aa	 = (aabb * 5243u) >> 19ULL;
-		std::memcpy(buf + 5ULL, int_tables<void>::charTable02 + aa, 2ULL);
-		std::memcpy(buf + 7ULL, int_tables<void>::charTable02 + (aabb - aa * 100u), 2ULL);
-		aabb = (low * 109951163ULL) >> 40ULL;
-		aa	 = (aabb * 5243u) >> 19ULL;
-		std::memcpy(buf + 9ULL, int_tables<void>::charTable02 + aa, 2ULL);
-		std::memcpy(buf + 11ULL, int_tables<void>::charTable02 + (aabb - aa * 100u), 2ULL);
-		aabb = low - aabb * 10000u;
-		aa	 = (aabb * 5243u) >> 19ULL;
-		std::memcpy(buf + 13ULL, int_tables<void>::charTable02 + aa, 2ULL);
-		std::memcpy(buf + 15ULL, int_tables<void>::charTable02 + (aabb - aa * 100u), 2ULL);
-		return buf + 17;
-	}
-
-	template<typename value_type> JSONIFIER_INLINE static char* toChars18(char* buf, const value_type value) noexcept {
-		const uint64_t high	  = multiply_and_shift<100000000ULL, 6189700196426901375ULL, 89>::impl(value);
-		const uint64_t low	  = value - high * 100000000ULL;
-		const uint64_t high10 = (high * 1801439851ULL) >> 54;
-		const uint64_t low10  = high - high10 * 10000000ULL;
-		uint64_t aa			  = (high10 * 5243u) >> 19ULL;
-		buf[0]				  = int_tables<void>::charTable00[aa];
-		std::memcpy(buf + 1ULL, int_tables<void>::charTable02 + (high10 - aa * 100u), 2ULL);
-		uint64_t aabb = (low10 * 109951163ULL) >> 40ULL;
-		aa			  = (aabb * 5243u) >> 19ULL;
-		buf[3]		  = int_tables<void>::charTable00[aa];
-		std::memcpy(buf + 4ULL, int_tables<void>::charTable02 + (aabb - aa * 100u), 2ULL);
-		aabb = low10 - aabb * 10000u;
-		aa	 = (aabb * 5243u) >> 19ULL;
-		std::memcpy(buf + 6ULL, int_tables<void>::charTable02 + aa, 2ULL);
-		std::memcpy(buf + 8ULL, int_tables<void>::charTable02 + (aabb - aa * 100u), 2ULL);
-		aabb = (low * 109951163ULL) >> 40ULL;
-		aa	 = (aabb * 5243u) >> 19ULL;
-		std::memcpy(buf + 10ULL, int_tables<void>::charTable02 + aa, 2ULL);
-		std::memcpy(buf + 12ULL, int_tables<void>::charTable02 + (aabb - aa * 100u), 2ULL);
-		aabb = low - aabb * 10000u;
-		aa	 = (aabb * 5243u) >> 19ULL;
-		std::memcpy(buf + 14ULL, int_tables<void>::charTable02 + aa, 2ULL);
-		std::memcpy(buf + 16ULL, int_tables<void>::charTable02 + (aabb - aa * 100u), 2ULL);
-		return buf + 18;
-	}
-
-	template<typename value_type> JSONIFIER_INLINE static char* toChars19(char* buf, const value_type value) noexcept {
-		const uint64_t high	  = multiply_and_shift<100000000ULL, 6189700196426901375ULL, 89>::impl(value);
-		const uint64_t low	  = value - high * 100000000ULL;
-		const uint64_t high11 = multiply_and_shift<10000000ULL, 15474250491067253437ULL, 87>::impl(high);
-		const uint64_t low11  = high - high11 * 10000000ULL;
-		uint64_t aa			  = (high11 * 5243u) >> 19ULL;
-		std::memcpy(buf, int_tables<void>::charTable02 + aa, 2ULL);
-		std::memcpy(buf + 2ULL, int_tables<void>::charTable02 + (high11 - aa * 100u), 2ULL);
-		uint64_t aabb = (low11 * 109951163ULL) >> 40ULL;
-		aa			  = (aabb * 5243u) >> 19ULL;
-		buf[4]		  = int_tables<void>::charTable00[aa];
-		std::memcpy(buf + 5ULL, int_tables<void>::charTable02 + (aabb - aa * 100u), 2ULL);
-		aabb = low11 - aabb * 10000u;
-		aa	 = (aabb * 5243u) >> 19ULL;
-		std::memcpy(buf + 7ULL, int_tables<void>::charTable02 + aa, 2ULL);
-		std::memcpy(buf + 9ULL, int_tables<void>::charTable02 + (aabb - aa * 100u), 2ULL);
-		aabb = (low * 109951163ULL) >> 40ULL;
-		aa	 = (aabb * 5243u) >> 19ULL;
-		std::memcpy(buf + 11ULL, int_tables<void>::charTable02 + aa, 2ULL);
-		std::memcpy(buf + 13ULL, int_tables<void>::charTable02 + (aabb - aa * 100u), 2ULL);
-		aabb = low - aabb * 10000u;
-		aa	 = (aabb * 5243u) >> 19ULL;
-		std::memcpy(buf + 15ULL, int_tables<void>::charTable02 + aa, 2ULL);
-		std::memcpy(buf + 17ULL, int_tables<void>::charTable02 + (aabb - aa * 100u), 2ULL);
-		return buf + 19;
-	}
-
-	template<typename value_type> JSONIFIER_INLINE static char* toChars20(char* buf, const value_type value) noexcept {
-		const uint64_t high	  = multiply_and_shift<100000000ULL, 6189700196426901375ULL, 89>::impl(value);
-		const uint64_t low	  = value - high * 100000000ULL;
-		const uint64_t high12 = multiply_and_shift<100000000ULL, 6189700196426901375ULL, 89>::impl(high);
-		const uint64_t low12  = high - high12 * 100000000ULL;
-		uint64_t aa			  = (high12 * 5243u) >> 19ULL;
-		std::memcpy(buf, int_tables<void>::charTable02 + aa, 2ULL);
-		std::memcpy(buf + 2ULL, int_tables<void>::charTable02 + (high12 - aa * 100u), 2ULL);
-		uint64_t aabb = (low12 * 109951163ULL) >> 40ULL;
-		aa			  = (aabb * 5243u) >> 19ULL;
-		std::memcpy(buf + 4ULL, int_tables<void>::charTable02 + aa, 2ULL);
-		std::memcpy(buf + 6ULL, int_tables<void>::charTable02 + (aabb - aa * 100u), 2ULL);
-		aabb = low12 - aabb * 10000u;
-		aa	 = (aabb * 5243u) >> 19ULL;
-		std::memcpy(buf + 8ULL, int_tables<void>::charTable02 + aa, 2ULL);
-		std::memcpy(buf + 10ULL, int_tables<void>::charTable02 + (aabb - aa * 100u), 2ULL);
-		aabb = (low * 109951163ULL) >> 40ULL;
-		aa	 = (aabb * 5243u) >> 19ULL;
-		std::memcpy(buf + 12ULL, int_tables<void>::charTable02 + aa, 2ULL);
-		std::memcpy(buf + 14ULL, int_tables<void>::charTable02 + (aabb - aa * 100u), 2ULL);
-		aabb = low - aabb * 10000u;
-		aa	 = (aabb * 5243u) >> 19ULL;
-		std::memcpy(buf + 16ULL, int_tables<void>::charTable02 + aa, 2ULL);
-		std::memcpy(buf + 18ULL, int_tables<void>::charTable02 + (aabb - aa * 100u), 2ULL);
-		return buf + 20;
-	}
-
-	template<concepts::uns64_t value_type> JSONIFIER_INLINE char* toChars(char* buf, const value_type value) noexcept {
-		switch (fastDigitCount(value)) {
-			case 20: {
-				return toChars20(buf, value);
-			}
-			case 19: {
-				return toChars19(buf, value);
-			}
-			case 18: {
-				return toChars18(buf, value);
-			}
-			case 17: {
-				return toChars17(buf, value);
-			}
-			case 16: {
-				return toChars16(buf, value);
-			}
-			case 15: {
-				return toChars15(buf, value);
-			}
-			case 14: {
-				return toChars14(buf, value);
-			}
-			case 13: {
-				return toChars13(buf, value);
-			}
-			case 12: {
-				return toChars12(buf, value);
-			}
-			case 11: {
-				return toChars11(buf, value);
-			}
-			case 10: {
-				return toChars10(buf, value);
-			}
-			case 9: {
-				return toChars9(buf, static_cast<uint32_t>(value));
-			}
-			case 8: {
-				return toChars8(buf, static_cast<uint32_t>(value));
-			}
-			case 7: {
-				return toChars7(buf, static_cast<uint32_t>(value));
-			}
-			case 6: {
-				return toChars6(buf, static_cast<uint32_t>(value));
-			}
-			case 5: {
-				return toChars5(buf, static_cast<uint32_t>(value));
-			}
-			case 4: {
-				return toChars4(buf, static_cast<uint32_t>(value));
-			}
-			case 3: {
-				return toChars3(buf, static_cast<uint32_t>(value));
-			}
-			case 2: {
-				return toChars2(buf, static_cast<uint32_t>(value));
-			}
-			default: {
-				return toChars1(buf, static_cast<uint32_t>(value));
+	template<std::integral value_type> struct to_chars<value_type> {
+		template<concepts::uns64_t value_type_new> JSONIFIER_INLINE static char* impl(char* buf, const value_type_new value) noexcept {
+			if (value < 10000ULL) {
+				if (value < 100ULL) {
+					return to_chars_impl<2>::impl(buf, value);
+				} else {
+					return to_chars_impl<4>::impl(buf, value);
+				}
+			} else if (value < 100000000ULL) {
+				if (value < 1000000ULL) {
+					return to_chars_impl<6>::impl(buf, value);
+				} else {
+					return to_chars_impl<8>::impl(buf, value);
+				}
+			} else if (value < 1000000000000ULL) {
+				if (value < 10000000000ULL) {
+					return to_chars_impl<10>::impl(buf, value);
+				} else {
+					return to_chars_impl<12>::impl(buf, value);
+				}
+			} else if (value < 10000000000000000ULL) {
+				if (value < 100000000000000ULL) {
+					return to_chars_impl<14>::impl(buf, value);
+				} else {
+					return to_chars_impl<16>::impl(buf, value);
+				}
+			} else if (value < 1000000000000000000ULL) {
+				return to_chars_impl<18>::impl(buf, value);
+			} else {
+				return to_chars_impl<20>::impl(buf, value);
 			}
 		}
-	}
 
-	template<concepts::sig64_t value_type> JSONIFIER_INLINE static char* toChars(char* buf, const value_type value) noexcept {
-		*buf = '-';
-		return toChars(buf + (value < 0), static_cast<uint64_t>(value ^ (value >> 63ULL)) - (value >> 63ULL));
-	}
+		template<concepts::sig64_t value_type_new> JSONIFIER_INLINE static char* impl(char* buf, const value_type_new value) noexcept {
+			constexpr auto shift_amount = sizeof(value_type_new) * 8 - 1;
+			using unsigned_type			= std::make_unsigned_t<value_type_new>;
+			*buf						= '-';
+			return to_chars::impl(buf + (value < 0), static_cast<uint64_t>((static_cast<unsigned_type>(value) ^ (value >> shift_amount)) - (value >> shift_amount)));
+		}
+	};
 
 };// namespace internal

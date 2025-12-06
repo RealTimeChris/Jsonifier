@@ -170,10 +170,8 @@ namespace jsonifier {
 				if JSONIFIER_LIKELY (newSize > 0 && newSize < maxSize()) {
 					reserve(newSize);
 					sizeVal = newSize;
-					if (dataVal) {
-						std::uninitialized_copy(other, other + newSize, dataVal);
-						allocator::construct(&(*this)[newSize], value_type{});
-					}
+					std::uninitialized_copy(other, other + newSize, dataVal);
+					allocator::construct(&(*this)[newSize], value_type{});
 				}
 			}
 		}

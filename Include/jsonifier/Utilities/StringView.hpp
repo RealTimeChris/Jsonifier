@@ -297,7 +297,7 @@ namespace jsonifier {
 	using string_view = string_view_base<char>;
 
 	std::ostream& operator<<(std::ostream& oStream, const string_view& stringNew) noexcept {
-		oStream << stringNew.data();
+		oStream << stringNew.operator string_base<char>();
 		return oStream;
 	}
 

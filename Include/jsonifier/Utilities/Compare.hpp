@@ -42,7 +42,7 @@ namespace jsonifier::internal {
 	}
 
 	template<char valueNewer, typename char_type> struct char_comparison {
-		inline static constexpr char value{ valueNewer };
+		static constexpr char value{ valueNewer };
 		JSONIFIER_INLINE static const char_type* memchar(const char_type* data, uint64_t lengthNew) noexcept {
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 			if (lengthNew >= 64) {
@@ -393,9 +393,9 @@ namespace jsonifier::internal {
 	};
 
 	template<gt_0_lt_16 sl_type, jsonifier::internal::remove_cvref_t<sl_type> stringNew> struct string_literal_comparitor<sl_type, stringNew> {
-		inline static constexpr auto stringLiteral{ stringNew };
-		inline static constexpr auto newCount{ stringLiteral.size() };
 		JSONIFIER_INLINE static bool impl(string_view_ptr str) noexcept {
+			static constexpr auto stringLiteral{ stringNew };
+			static constexpr auto newCount{ stringLiteral.size() };
 			if constexpr (newCount > 8) {
 				JSONIFIER_ALIGN(16) static constexpr auto valuesNew{ packValues<stringLiteral>() };
 				jsonifier_simd_int_128 data1{};
@@ -446,9 +446,9 @@ namespace jsonifier::internal {
 	};
 
 	template<eq_16 sl_type, jsonifier::internal::remove_cvref_t<sl_type> stringNew> struct string_literal_comparitor<sl_type, stringNew> {
-		inline static constexpr auto newLiteral{ stringNew };
-		JSONIFIER_ALIGN(16) inline static constexpr auto valuesNew{ packValues<newLiteral>() };
 		JSONIFIER_INLINE static bool impl(string_view_ptr str) noexcept {
+			static constexpr auto newLiteral{ stringNew };
+			JSONIFIER_ALIGN(16) static constexpr auto valuesNew{ packValues<newLiteral>() };
 			JSONIFIER_ALIGN(16) char valuesToLoad[16];
 			std::memcpy(valuesToLoad, str, 16);
 			const jsonifier_simd_int_128 data1{ simd::gatherValues<jsonifier_simd_int_128>(valuesToLoad) };
@@ -460,9 +460,9 @@ namespace jsonifier::internal {
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
 
 	template<eq_32 sl_type, jsonifier::internal::remove_cvref_t<sl_type> stringNew> struct string_literal_comparitor<sl_type, stringNew> {
-		inline static constexpr auto newLiteral{ stringNew };
-		JSONIFIER_ALIGN(32) inline static constexpr auto valuesNew{ packValues<newLiteral>() };
 		JSONIFIER_INLINE static bool impl(string_view_ptr str) noexcept {
+			static constexpr auto newLiteral{ stringNew };
+			JSONIFIER_ALIGN(32) static constexpr auto valuesNew{ packValues<newLiteral>() };
 			JSONIFIER_ALIGN(32) char valuesToLoad[32];
 			std::memcpy(valuesToLoad, str, 32);
 			const jsonifier_simd_int_256 data1{ simd::gatherValues<jsonifier_simd_int_256>(valuesToLoad) };
@@ -475,9 +475,9 @@ namespace jsonifier::internal {
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 	template<eq_64 sl_type, sl_type stringNew> struct string_literal_comparitor<sl_type, stringNew> {
-		inline static constexpr auto newLiteral{ stringNew };
-		JSONIFIER_ALIGN(64) inline static constexpr auto valuesNew{ packValues<newLiteral>() };
 		JSONIFIER_INLINE static bool impl(string_view_ptr str) noexcept {
+			static constexpr auto newLiteral{ stringNew };
+			JSONIFIER_ALIGN(64) static constexpr auto valuesNew{ packValues<newLiteral>() };
 			JSONIFIER_ALIGN(64) char valuesToLoad[64];
 			std::memcpy(valuesToLoad, str, 64);
 			const jsonifier_simd_int_512 data1{ simd::gatherValues<jsonifier_simd_int_512>(valuesToLoad) };
@@ -498,14 +498,14 @@ namespace jsonifier::internal {
 	}
 
 	template<gt_16 sl_type, jsonifier::internal::remove_cvref_t<sl_type> stringNew> struct string_literal_comparitor<sl_type, stringNew> {
-		inline static constexpr auto string{ offSetIntoLiteral<stringNew, getOffsetIntoLiteralSize(stringNew.size())>() };
-		inline static constexpr auto stringSize = string.size();
-		inline static constexpr auto stringNewer{ offSetNewLiteral<stringNew, stringSize>() };
 		JSONIFIER_INLINE static bool impl(string_view_ptr str) noexcept {
+			static constexpr auto string{ offSetIntoLiteral<stringNew, getOffsetIntoLiteralSize(stringNew.size())>() };
 			if (!string_literal_comparitor<decltype(string), string>::impl(str)) {
 				return false;
 			} else {
+				static constexpr auto stringSize = string.size();
 				str += stringSize;
+				static constexpr auto stringNewer{ offSetNewLiteral<stringNew, stringSize>() };
 				return string_literal_comparitor<decltype(stringNewer), stringNewer>::impl(str);
 			}
 		}

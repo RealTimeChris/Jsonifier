@@ -165,7 +165,7 @@ namespace jsonifier::internal {
 	}
 
 	template<uint64_t seedNew> struct rt_key_hasher {
-		inline static constexpr auto seed{ seedNew };
+		static constexpr auto seed{ seedNew };
 		/**
 		 * @brief Hashes a key at runtime.
 		 *

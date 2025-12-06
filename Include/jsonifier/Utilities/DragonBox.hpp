@@ -66,15 +66,15 @@
 // Suppress additional buffer overrun check.
 // I have no idea why MSVC thinks some functions here are vulnerable to the buffer overrun
 // attacks. No, they aren't.
-#if defined(JSONIFIER_GNUCXX) || defined(JSONIFIER_CLANG)
+#if JSONIFIER_COMPILER_GCC || JSONIFIER_COMPILER_CLANG
 	#define JSONIFIER_SAFEBUFFERS
-#elif defined(JSONIFIER_MSVC)
+#elif JSONIFIER_COMPILER_MSVC
 	#define JSONIFIER_SAFEBUFFERS __declspec(safebuffers)
 #else
 	#define JSONIFIER_SAFEBUFFERS
 #endif
 
-#if defined(JSONIFIER_MSVC)
+#if JSONIFIER_COMPILER_MSVC
 	#include <intrin.h>
 #elif defined(__INTEL_COMPILER)
 	#include <immintrin.h>
@@ -399,7 +399,7 @@ namespace jsonifier_jkj {
 #if defined(__SIZEOF_INT128__)
 				// To silence "error: ISO C++ does not support '__int128' for 'type name'
 				// [-Wpedantic]"
-	#if defined(JSONIFIER_GNUCXX)
+	#if JSONIFIER_COMPILER_GCC
 				__extension__
 	#endif
 					using builtin_uint128_t = unsigned __int128;
@@ -475,7 +475,7 @@ namespace jsonifier_jkj {
 						low_			 = std::uint_least64_t(result);
 						__builtin_ia32_addcarry_u64(carry, high_, 0, &result);
 						high_ = std::uint_least64_t(result);
-#elif defined(JSONIFIER_MSVC) && defined(_M_X64)
+#elif JSONIFIER_COMPILER_MSVC && defined(_M_X64)
 						// On MSVC, uint_least64_t and __int64 must be uint64_t; see
 						// https://learn.microsoft.com/en-us/cpp/c-runtime-library/standard-types
 						// and https://learn.microsoft.com/en-us/cpp/cpp/int8-int16-int32-int64.
@@ -496,7 +496,7 @@ namespace jsonifier_jkj {
 				};
 
 				JSONIFIER_INLINE static constexpr std::uint_least64_t umul64(std::uint_least32_t x, std::uint_least32_t y) noexcept {
-#if defined(JSONIFIER_MSVC) && defined(_M_IX86)
+#if JSONIFIER_COMPILER_MSVC && defined(_M_IX86)
 					JSONIFIER_IF_NOT_CONSTEVAL {
 						return __emulu(x, y);
 					}
@@ -527,7 +527,7 @@ namespace jsonifier_jkj {
 #if defined(__SIZEOF_INT128__)
 					const auto result = builtin_uint128_t(x) * builtin_uint128_t(y);
 					return { std::uint_least64_t(result >> 64), std::uint_least64_t(result) };
-#elif defined(JSONIFIER_MSVC) && defined(_M_X64)
+#elif JSONIFIER_COMPILER_MSVC && defined(_M_X64)
 					JSONIFIER_IF_CONSTEVAL {
 						// This redundant variable is to workaround MSVC's codegen bug caused by the
 						// interaction of NRVO and intrinsics.
@@ -570,7 +570,7 @@ namespace jsonifier_jkj {
 #if defined(__SIZEOF_INT128__)
 					const auto result = builtin_uint128_t(x) * builtin_uint128_t(y);
 					return std::uint_least64_t(result >> 64);
-#elif defined(JSONIFIER_MSVC) && defined(_M_X64)
+#elif JSONIFIER_COMPILER_MSVC && defined(_M_X64)
 					JSONIFIER_IF_CONSTEVAL {
 						// This redundant variable is to workaround MSVC's codegen bug caused by the
 						// interaction of NRVO and intrinsics.
@@ -600,7 +600,7 @@ namespace jsonifier_jkj {
 				// Get upper 64-bits of multiplication of a 32-bit unsigned integer and a 64-bit
 				// unsigned integer.
 				JSONIFIER_INLINE static constexpr std::uint_least64_t umul96_upper64(std::uint_least32_t x, std::uint_least64_t y) noexcept {
-#if defined(__SIZEOF_INT128__) || (defined(JSONIFIER_MSVC) && defined(_M_X64))
+#if defined(__SIZEOF_INT128__) || (JSONIFIER_COMPILER_MSVC && defined(_M_X64))
 					return umul128_upper64(std::uint_least64_t(x) << 32, y);
 #else
 					const auto yh = std::uint_least32_t(y >> 32);
@@ -1551,7 +1551,7 @@ namespace jsonifier_jkj {
 					using sign_policy					  = ignore_t;
 					static constexpr bool return_has_sign = false;
 
-#if defined(JSONIFIER_MSVC) && !defined(JSONIFIER_CLANG)
+#if JSONIFIER_COMPILER_MSVC && !JSONIFIER_COMPILER_CLANG
 					// See
 					// https://developercommunity.visualstudio.com/t/Failure-to-optimize-intrinsics/10628226
 					template<typename SignedSignificandBits, typename DecimalSignificand, typename DecimalExponentType>

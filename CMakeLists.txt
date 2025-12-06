@@ -71,19 +71,15 @@ if (NOT DEFINED JSONIFIER_CPU_INSTRUCTIONS)
 	include("JsonifierDetectArchitecture")
 endif()
 
+include("flags_and_options")
+
 target_compile_features("${PROJECT_NAME}" INTERFACE "cxx_std_23")
  
 target_compile_options(
 	"${PROJECT_NAME}" INTERFACE
 	"$<$<AND:$<STREQUAL:$<UPPER_CASE:${UBSAN}>,TRUE>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-fsanitize=undefined>"
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/fsanitize=address>>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/Zc:preprocessor>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/permissive>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/Zc:lambda>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/bigobj>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/GL>"
-	"$<$<CXX_COMPILER_ID:MSVC>:/Gy>"
-	"${AVX_FLAG}"
+	${JSONIFIER_COMPILE_OPTIONS}
 )
  
 target_link_options(
@@ -91,18 +87,12 @@ target_link_options(
     "$<$<AND:$<STREQUAL:$<UPPER_CASE:${UBSAN}>,TRUE>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-fsanitize=undefined>"
     "$<$<AND:$<CXX_COMPILER_ID:CLANG>,$<STREQUAL:${ASAN_ENABLED},TRUE>>:-fsanitize=address>"
     "$<$<AND:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:${ASAN_ENABLED},TRUE>>:-fsanitize=address>"
-    "$<$<CXX_COMPILER_ID:MSVC>:/INCREMENTAL:NO>"
-    "$<$<CXX_COMPILER_ID:MSVC>:/OPT:ICF>"
-    "$<$<CXX_COMPILER_ID:MSVC>:/OPT:REF>"
-    "$<$<CXX_COMPILER_ID:MSVC>:/LTCG>"
-    "$<$<CXX_COMPILER_ID:CLANG>:-flto>"
-    "$<$<CXX_COMPILER_ID:GNU>:-flto>"
-    "$<$<CXX_COMPILER_ID:CLANG>:-Wl,-O2>"
-    "$<$<CXX_COMPILER_ID:GNU>:-Wl,-O2>"
+    ${JSONIFIER_LINK_OPTIONS}
 )
 
 target_compile_definitions(
 	"${PROJECT_NAME}" INTERFACE 
+	${JSONIFIER_COMPILE_DEFINITIONS}
 	"$<$<STREQUAL:${ASAN_ENABLED},TRUE>:ASAN_ENABLED>"
 )
 

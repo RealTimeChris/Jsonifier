@@ -24,12 +24,12 @@ FetchContent_MakeAvailable(glaze)
 getCommitHash("${glaze_SOURCE_DIR}" GLAZE_COMMIT_HASH)
 
 FetchContent_Declare(
-  BenchmarkSuite
-  GIT_REPOSITORY https://github.com/RealTimeChris/BenchmarkSuite.git
+  benchmarksuite
+  GIT_REPOSITORY https://github.com/RealTimeChris/benchmarksuite.git
   GIT_TAG main
   GIT_SHALLOW TRUE
 )
-FetchContent_MakeAvailable(BenchmarkSuite)
+FetchContent_MakeAvailable(benchmarksuite)
 
 FetchContent_Declare(
   simdjson

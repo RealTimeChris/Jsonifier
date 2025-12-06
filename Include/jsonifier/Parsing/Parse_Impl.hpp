@@ -34,7 +34,7 @@ namespace jsonifier::internal {
 	template<typename value_type, typename context_type, parse_options options, bool minifiedOrInsideRepeated> struct parse_types_impl {
 		using base						  = derailleur<options, context_type>;
 		inline static constexpr auto memberCount = core_tuple_size<value_type>;
-		template<size_t index> JSONIFIER_CLANG_INLINE static bool processIndex(value_type& value, context_type& context) {
+		template<size_t index> inline static bool processIndex(value_type& value, context_type& context) {
 			static constexpr auto tupleElem						= get<index>(core<value_type>::parseValue);
 			static constexpr auto stringLiteral					= tupleElem.name;
 			static constexpr auto ptrNew						= tupleElem.memberPtr;
@@ -74,7 +74,7 @@ namespace jsonifier::internal {
 	template<typename value_type, typename context_type, parse_options options, bool minifiedOrInsideRepeated> struct parse_types_partial_impl {
 		using base						  = derailleur<options, context_type>;
 		static constexpr auto memberCount = core_tuple_size<value_type>;
-		template<size_t index> JSONIFIER_CLANG_INLINE static bool processIndex(value_type& value, context_type& context) {
+		template<size_t index> inline static bool processIndex(value_type& value, context_type& context) {
 			static constexpr auto tupleElem						= get<index>(core<value_type>::parseValue);
 			static constexpr auto stringLiteral					= tupleElem.name;
 			static constexpr auto ptrNew						= tupleElem.memberPtr;
@@ -169,12 +169,12 @@ namespace jsonifier::internal {
 	}() };
 
 	template<parse_options options, typename json_entity_type> struct json_entity_parse<options, json_entity_type, false> : public json_entity_type {
-		inline static constexpr auto memberCount{ core_tuple_size<typename json_entity_type::class_type> };
+		static constexpr auto memberCount{ core_tuple_size<typename json_entity_type::class_type> };
 
 		constexpr json_entity_parse() noexcept = default;
 
 		template<typename value_type, typename context_type>
-		JSONIFIER_CLANG_INLINE static void processIndexImpl(value_type& value, context_type& context, string_view_ptr wsStart, size_t wsSize) {
+		JSONIFIER_INLINE static void processIndexImpl(value_type& value, context_type& context, string_view_ptr wsStart, size_t wsSize) {
 			using base = derailleur<options, context_type>;
 
 			if constexpr (memberCount == 1) {
@@ -259,7 +259,7 @@ namespace jsonifier::internal {
 		}
 
 		template<typename value_type, typename context_type, bool haveWeStarted = false>
-		JSONIFIER_CLANG_INLINE static void processIndex(value_type& value, context_type& context, string_view_ptr wsStart, size_t wsSize) {
+		inline static void processIndex(value_type& value, context_type& context, string_view_ptr wsStart, size_t wsSize) {
 			using base = derailleur<options, context_type>;
 			if constexpr (memberCount > 0 && json_entity_type::index < memberCount) {
 				if JSONIFIER_LIKELY (context.iter < context.endIter) {
@@ -306,7 +306,7 @@ namespace jsonifier::internal {
 
 		constexpr json_entity_parse() noexcept = default;
 
-		template<typename value_type, typename context_type> JSONIFIER_CLANG_INLINE static void processIndexImpl(value_type& value, context_type& context) {
+		template<typename value_type, typename context_type> inline static void processIndexImpl(value_type& value, context_type& context) {
 			using base = derailleur<options, context_type>;
 			if constexpr (memberCount == 1) {
 				if JSONIFIER_LIKELY (parse_types_impl<value_type, context_type, options, true>::template processIndex<0>(value, context)) {
@@ -385,7 +385,7 @@ namespace jsonifier::internal {
 			}
 		}
 
-		template<typename value_type, typename context_type, bool haveWeStarted = false> JSONIFIER_CLANG_INLINE static void processIndex(value_type& value, context_type& context) {
+		template<typename value_type, typename context_type, bool haveWeStarted = false> JSONIFIER_INLINE static void processIndex(value_type& value, context_type& context) {
 			using base = derailleur<options, context_type>;
 			if constexpr (memberCount > 0 && json_entity_type::index < memberCount) {
 				if JSONIFIER_LIKELY (context.iter < context.endIter) {
@@ -426,7 +426,7 @@ namespace jsonifier::internal {
 	};
 
 	template<typename... bases> struct parse_map : public bases... {
-		template<typename json_entity_type, typename... arg_types> JSONIFIER_INLINE static void iterateValuesImpl(arg_types&&... args) {
+		template<typename json_entity_type, typename... arg_types> inline static void iterateValuesImpl(arg_types&&... args) {
 			json_entity_type::processIndex(internal::forward<arg_types>(args)...);
 		}
 
@@ -455,7 +455,7 @@ namespace jsonifier::internal {
 		constexpr json_entity_parse_partial() noexcept = default;
 
 		template<typename value_type, typename context_type, bool haveWeStarted = false>
-		JSONIFIER_CLANG_INLINE static void processIndex(value_type& value, context_type& context) noexcept {
+		JSONIFIER_INLINE static void processIndex(value_type& value, context_type& context) noexcept {
 			using base = derailleur<options, context_type>;
 			if constexpr (json_entity_type::index < memberCount) {
 				if (**context.iter != rBrace) {
@@ -528,7 +528,7 @@ namespace jsonifier::internal {
 	};
 
 	template<typename... bases> struct parse_partial_map : public bases... {
-		template<typename json_entity_type, typename... arg_types> JSONIFIER_INLINE static void iterateValuesImpl(arg_types&&... args) {
+		template<typename json_entity_type, typename... arg_types> inline static void iterateValuesImpl(arg_types&&... args) {
 			json_entity_type::processIndex(internal::forward<arg_types>(args)...);
 		}
 

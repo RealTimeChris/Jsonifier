@@ -37,7 +37,7 @@
 		#define JSONIFIER_TUPLET_HAS_NO_UNIQUE_ADDRESS 1
 		#define JSONIFIER_TUPLET_NO_UNIQUE_ADDRESS [[msvc::no_unique_address]]
 
-	#elif _MSC_VER
+	#elif JSONIFIER_COMPILER_MSVC
 		#define JSONIFIER_TUPLET_HAS_NO_UNIQUE_ADDRESS 0
 		#define JSONIFIER_TUPLET_NO_UNIQUE_ADDRESS
 
@@ -164,7 +164,7 @@ namespace jsonifier::internal {
 			return tuple<>{};
 		} else {
 #if !defined(JSONIFIER_TUPLET_CAT_BY_FORWARDING_TUPLE)
-	#if defined(__clang__)
+	#if JSONIFIER_COMPILER_CLANG
 		#define JSONIFIER_TUPLET_CAT_BY_FORWARDING_TUPLE 0
 	#else
 		#define JSONIFIER_TUPLET_CAT_BY_FORWARDING_TUPLE 1

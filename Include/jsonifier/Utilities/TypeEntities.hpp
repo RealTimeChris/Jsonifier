@@ -36,7 +36,6 @@
 #include <cstdint>
 #include <cstdlib>
 #include <variant>
-#include <vector>
 #include <chrono>
 #include <cfloat>
 #include <bitset>
@@ -143,15 +142,15 @@ namespace jsonifier::internal {
 		forEachImpl(internal::forward<function_type>(function), jsonifier::internal::make_index_sequence<limit>{}, internal::forward<arg_types>(args)...);
 	}
 
-	template<typename function_type, uint64_t currentIndex = 0, typename variant_type, typename... arg_types>
+	template<auto function, uint64_t currentIndex = 0, typename variant_type, typename... arg_types>
 	inline static constexpr void visit(variant_type&& variant, arg_types&&... args) noexcept {
 		if constexpr (currentIndex < std::variant_size_v<jsonifier::internal::remove_cvref_t<variant_type>>) {
 			variant_type&& variantNew = internal::forward<variant_type>(variant);
 			if JSONIFIER_UNLIKELY (variantNew.index() == currentIndex) {
-				function_type::impl(std::get<currentIndex>(internal::forward<variant_type>(variantNew)), internal::forward<arg_types>(args)...);
+				function(std::get<currentIndex>(internal::forward<variant_type>(variantNew)), internal::forward<arg_types>(args)...);
 				return;
 			}
-			visit<function_type, currentIndex + 1>(internal::forward<variant_type>(variantNew), internal::forward<arg_types>(args)...);
+			visit<function, currentIndex + 1>(internal::forward<variant_type>(variantNew), internal::forward<arg_types>(args)...);
 		}
 	}
 

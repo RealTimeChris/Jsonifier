@@ -163,8 +163,6 @@ namespace jsonifier::internal {
 		value_type dataVal[sizeNew];
 	};
 
-	template<typename value_type, typename... U> array(value_type, U...) -> array<value_type, 1 + sizeof...(U)>;
-
 	struct empty_array_element {};
 
 	template<class value_type_new> class array<value_type_new, 0> {

@@ -74,8 +74,7 @@ namespace jsonifier::internal {
 			serialize_context<decltype(derivedRef.stringBuffer)> context{ derivedRef.stringBuffer.data(), derivedRef.stringBuffer };
 			serialize<options>::impl(object, context);
 			context.index = static_cast<size_t>(context.bufferPtr - context.buffer.data());
-			//--context.index;
-			buffer.resize(context.index );
+			buffer.resize(context.index);
 			std::copy(derivedRef.stringBuffer.data(), derivedRef.stringBuffer.data() + context.index, buffer.data());
 			return true;
 		}

@@ -67,9 +67,9 @@ namespace jsonifier::internal {
 
 	template<typename value_type> using remove_class_pointer_t = typename remove_class_pointer<value_type>::type;
 
-#if defined(JSONIFIER_CLANG)
+#if JSONIFIER_COMPILER_CLANG
 	constexpr auto pretty_function_tail = "]";
-#elif defined(JSONIFIER_GNUCXX)
+#elif JSONIFIER_COMPILER_GCC
 	constexpr auto pretty_function_tail = ";";
 #endif
 
@@ -82,7 +82,7 @@ namespace jsonifier::internal {
 	 * @tparam p The member pointer.
 	 * @return The name of the member pointer.
 	 */
-#if defined(JSONIFIER_MSVC) && !defined(JSONIFIER_CLANG)
+#if JSONIFIER_COMPILER_MSVC && !JSONIFIER_COMPILER_CLANG
 	template<typename value_type, auto p> static consteval string_view getNameImpl() noexcept {
 		string_view str = std::source_location::current().function_name();
 		str				= str.substr(str.find("->") + 2);
@@ -100,7 +100,7 @@ namespace jsonifier::internal {
 	template<auto p>
 		requires(std::is_member_pointer_v<decltype(p)>)
 	inline static constexpr auto getName() noexcept {
-#if defined(JSONIFIER_MSVC) && !defined(JSONIFIER_CLANG)
+#if JSONIFIER_COMPILER_MSVC && !JSONIFIER_COMPILER_CLANG
 		using value_type		 = remove_member_pointer_t<decltype(p)>;
 		constexpr auto pNew		 = p;
 		constexpr auto newString = getNameImpl<value_type, &(external<value_type>.*pNew)>();

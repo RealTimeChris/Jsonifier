@@ -118,32 +118,6 @@ namespace jsonifier::internal {
 		}
 
 		template<prettify_options options, concepts::string_t string_type, typename iterator> inline uint64_t impl(iterator& iter, string_type&& out) noexcept {
-			static constexpr array<json_structural_type, 256> jsonTypes = []() constexpr {
-				array<json_structural_type, 256> returnValues{};
-				using enum json_structural_type;
-				returnValues['"'] = string;
-				returnValues[','] = comma;
-				returnValues['0'] = number;
-				returnValues['1'] = number;
-				returnValues['2'] = number;
-				returnValues['3'] = number;
-				returnValues['4'] = number;
-				returnValues['5'] = number;
-				returnValues['6'] = number;
-				returnValues['7'] = number;
-				returnValues['8'] = number;
-				returnValues['9'] = number;
-				returnValues['-'] = number;
-				returnValues[':'] = colon;
-				returnValues['['] = array_start;
-				returnValues[']'] = array_end;
-				returnValues['n'] = null;
-				returnValues['t'] = boolean;
-				returnValues['f'] = boolean;
-				returnValues['{'] = object_start;
-				returnValues['}'] = object_end;
-				return returnValues;
-			}();
 			string_view_ptr newPtr{};
 			uint64_t newSize{};
 			int64_t indent{};
@@ -231,21 +205,21 @@ namespace jsonifier::internal {
 						break;
 					}
 					case json_structural_type::null: {
-						static constexpr uint32_t nullV[]{ packValues4("null") };
-						std::memcpy(&out[index], &nullV, 4);
+						JSONIFIER_ALIGN(4) static constexpr char nullV[]{ "null" };
+						std::memcpy(&out[index], nullV, 4);
 						index += 4;
 						++iter;
 						break;
 					}
 					case json_structural_type::boolean: {
 						if (**iter == 'f') {
-							static constexpr uint64_t falseV[]{ packValues5("false") };
-							std::memcpy(&out[index], &falseV, 5);
+							JSONIFIER_ALIGN(8) static constexpr char falseV[]{ "false" };
+							std::memcpy(&out[index], falseV, 5);
 							index += 5;
 							++iter;
 						} else {
-							static constexpr uint32_t trueV[]{ packValues4("true") };
-							std::memcpy(&out[index], &trueV, 4);
+							JSONIFIER_ALIGN(4) static constexpr char trueV[]{ "true" };
+							std::memcpy(&out[index], trueV, 4);
 							index += 4;
 							++iter;
 						}

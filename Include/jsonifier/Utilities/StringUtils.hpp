@@ -356,8 +356,8 @@ namespace jsonifier::internal {
 			static constexpr integer_type mask		 = get_type_at_index<simd::avx_integer_list, index>::type::mask;
 			JSONIFIER_ALIGN(bytesProcessed) char valuesToLoad[bytesProcessed];
 			JSONIFIER_ALIGN(bytesProcessed) char valuesToStore[bytesProcessed];
-			const simd_type simdValues00 = simd::gatherValue<simd_type>('\\');
-			const simd_type simdValues01 = simd::gatherValue<simd_type>('"');
+			const simd_type simdValues00			 = simd::gatherValue<simd_type>('\\');
+			const simd_type simdValues01			 = simd::gatherValue<simd_type>('"');
 			simd_type simdValue;
 			integer_type nextBackslashOrQuote;
 			const auto stringEndNew = string1End - bytesProcessed;
@@ -504,11 +504,11 @@ namespace jsonifier::internal {
 		}
 	};
 
-	inline constexpr array<jsonifier::string_view, 256> escapeTable{ { "", R"(\u0001)", R"(\u0002)", R"(\u0003)", R"(\u0004)", R"(\u0005)", R"(\u0006)", R"(\a)", R"(\b)", R"(\t)",
-		R"(\n)", R"(\v)", R"(\f)", R"(\r)", R"(\u000E)", R"(\u000F)", R"(\u0010)", R"(\u0011)", R"(\u0012)", R"(\u0013)", R"(\u0014)", R"(\u0015)", R"(\u0016)", R"(\u0017)",
-		R"(\u0018)", R"(\u0019)", R"(\u001A)", R"(\u001B)", R"(\u001C)", R"(\u001D)", R"(\u001E)", R"(\u001F)", "", "", R"(\")", "", "", "", "", "", "", "", "", "", "", "", "", "",
+	inline constexpr array<jsonifier::string_view, 256> escapeTable{ { "", R"(\u0001)", R"(\u0002)", R"(\u0003)", R"(\u0004)", R"(\u0005)", R"(\u0006)", R"(\a)",
+		R"(\b)", R"(\t)", R"(\n)", R"(\v)", R"(\f)", R"(\r)", R"(\u000E)", R"(\u000F)", R"(\u0010)", R"(\u0011)", R"(\u0012)", R"(\u0013)", R"(\u0014)", R"(\u0015)", R"(\u0016)",
+		R"(\u0017)", R"(\u0018)", R"(\u0019)", R"(\u001A)", R"(\u001B)", R"(\u001C)", R"(\u001D)", R"(\u001E)", R"(\u001F)", "", "", R"(\")", "", "", "", "", "", "", "", "", "",
 		"", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
-		"", R"(\\)", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" } };
+		"", "", "", "", "", R"(\\)", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" } };
 
 	inline constexpr array<const char*, 256> escapeTablePtrs{ []() constexpr {
 		array<const char*, 256> returnValues{};

@@ -634,16 +634,11 @@ namespace jsonifier::internal {
 				: (keyStatsVal<value_type>.maxLength + 2);
 		}() };
 
-		JSONIFIER_INLINE static bool checkForEnd(const auto& iterNew, const auto& endNew, const auto distance) {
-			return (iterNew + distance) < endNew;
-		}
-
 		JSONIFIER_INLINE static size_t findIndex(iterator_newer iter, iterator_newer end) noexcept {
-#if !defined(NDEBUG)
-			if (!types.contains(typeid(value_type).name())) {
-				types[typeid(value_type).name()] = static_cast<uint32_t>(hashData<value_type>.type);
-			}
-#endif
+			static constexpr auto checkForEnd = [](const auto& iterNew, const auto& endNew, const auto distance) {
+				return (iterNew + distance) < endNew;
+			};
+
 			if constexpr (hashData<value_type>.type == hash_map_type::single_element) {
 				return 0ull;
 			} else if constexpr (hashData<value_type>.type == hash_map_type::double_element) {
