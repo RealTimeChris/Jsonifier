@@ -184,13 +184,155 @@ template<typename value_type> struct partial_test {
 	std::vector<value_type> m, s;
 };
 
+BNCH_SWT_HOST std::string generate_integer_part(uint64_t min_length = 1, uint64_t max_length = 15) {
+	uint64_t length = bnch_swt::random_generator<uint64_t>::impl(min_length, max_length);
+
+	if (length == 1 && bnch_swt::random_generator<uint64_t>::impl(0, 1) == 0 && bnch_swt::random_generator<uint64_t>::impl(0, 9) == 0)
+		return "0";
+
+	std::string s;
+	s += std::to_string(bnch_swt::random_generator<uint64_t>::impl(1, 9));
+
+	for (uint64_t i = 1; i < length; ++i) {
+		s += std::to_string(bnch_swt::random_generator<uint64_t>::impl(0, 9));
+	}
+	return s;
+}
+
+BNCH_SWT_HOST std::string maybe_add_sign(const std::string& s) {
+	return (bnch_swt::random_generator<uint64_t>::impl(0, 1) == 1) ? ("-" + s) : s;
+}
+
+BNCH_SWT_HOST std::string generate_1_simple_integer() {
+	return maybe_add_sign(generate_integer_part(1, 10));
+}
+
+BNCH_SWT_HOST std::string generate_2_simple_float() {
+	std::string s = generate_integer_part(1, 5);
+	s += ".";
+
+	uint64_t fractional_length = bnch_swt::random_generator<uint64_t>::impl(1, 10);
+	for (uint64_t i = 0; i < fractional_length; ++i) {
+		s += std::to_string(bnch_swt::random_generator<uint64_t>::impl(0, 9));
+	}
+	return maybe_add_sign(s);
+}
+
+BNCH_SWT_HOST std::string generate_3_scientific() {
+	std::string s;
+
+	if (bnch_swt::random_generator<uint64_t>::impl(0, 1) == 0) {
+		s = generate_integer_part(1, 3) + ".";
+		s += std::to_string(bnch_swt::random_generator<uint64_t>::impl(0, 9));
+	} else {
+		s = generate_integer_part(1, 5);
+	}
+
+	s += (bnch_swt::random_generator<uint64_t>::impl(0, 1) == 0 ? 'e' : 'E');
+	s += (bnch_swt::random_generator<uint64_t>::impl(0, 1) == 0 ? '+' : '-');
+	uint64_t exponent = bnch_swt::random_generator<uint64_t>::impl(1, 100);
+	s += std::to_string(exponent);
+
+	return maybe_add_sign(s);
+}
+
+BNCH_SWT_HOST std::string generate_4_min_max_boundary() {
+	if (bnch_swt::random_generator<uint64_t>::impl(0, 1) == 0) {
+		double mantissa	  = bnch_swt::random_generator<double>::impl(1.0, 9.9);
+		uint64_t exponent = bnch_swt::random_generator<uint64_t>::impl(300, 308);
+		double val		  = mantissa * std::pow(10.0, exponent);
+		if (bnch_swt::random_generator<uint64_t>::impl(0, 1) == 1)
+			val = -val;
+
+		std::stringstream ss;
+		ss << std::scientific << std::setprecision(16) << val;
+		return ss.str();
+	} else {
+		double mantissa	  = bnch_swt::random_generator<double>::impl(1.0, 9.9);
+		uint64_t exponent = bnch_swt::random_generator<uint64_t>::impl(300, 308);
+		double val		  = mantissa * std::pow(10.0, static_cast<double>(-static_cast<int64_t>(exponent)));
+		if (bnch_swt::random_generator<uint64_t>::impl(0, 1) == 1)
+			val = -val;
+
+		std::stringstream ss;
+		ss << std::scientific << std::setprecision(16) << val;
+		return ss.str();
+	}
+}
+
+BNCH_SWT_HOST std::string generate_5_precision_boundary() {
+	std::string s;
+	s += maybe_add_sign(std::to_string(bnch_swt::random_generator<uint64_t>::impl(1, 9)));
+	s += ".";
+
+	for (uint64_t i = 0; i < 18; ++i) {
+		s += std::to_string(bnch_swt::random_generator<uint64_t>::impl(0, 9));
+	}
+
+	if (bnch_swt::random_generator<uint64_t>::impl(0, 1) == 0) {
+		s += 'e';
+		s += std::to_string(bnch_swt::random_generator<uint64_t>::impl(1, 100));
+	}
+	return s;
+}
+
+BNCH_SWT_HOST std::string generate_6_zero_subnormal() {
+	if (bnch_swt::random_generator<uint64_t>::impl(0, 1) == 0) {
+		static constexpr std::array zero_forms = { "0", "0.0", "-0.0", "0e0", "-0e5", "0.0e-10" };
+		uint64_t index						   = bnch_swt::random_generator<uint64_t>::impl(0, zero_forms.size() - 1);
+		return zero_forms[index];
+	} else {
+		double mantissa = bnch_swt::random_generator<double>::impl(1.0, 9.9);
+		double val		= mantissa * std::pow(10.0, -315);
+
+		std::stringstream ss;
+		ss << std::scientific << std::setprecision(16) << val;
+		return maybe_add_sign(ss.str());
+	}
+}
+
+BNCH_SWT_HOST std::string generate_7_structural_edge() {
+	static constexpr std::array edge_forms = { "1e10", "-9e-10", "0.1", "-9.0", "1.2e0", "-3e+0", "123.000000", "0.0000001" };
+	uint64_t index						   = bnch_swt::random_generator<uint64_t>::impl(0, edge_forms.size() - 1);
+	return edge_forms[index];
+}
+
+BNCH_SWT_HOST std::string generate_random_double_string() {
+	static constexpr std::array weights = { 40.0, 30.0, 10.0, 5.0, 5.0, 5.0, 5.0 };
+
+	static constexpr std::array generators = { generate_1_simple_integer, generate_2_simple_float, generate_3_scientific, generate_4_min_max_boundary,
+		generate_5_precision_boundary, generate_6_zero_subnormal, generate_7_structural_edge };
+
+	uint64_t roll = bnch_swt::random_generator<uint64_t>::impl(0, 99);
+
+	uint64_t cumulative_weight = 0;
+	for (size_t i = 0; i < weights.size(); ++i) {
+		cumulative_weight += static_cast<uint64_t>(weights[i]);
+		if (roll < cumulative_weight) {
+			return generators[i]();
+		}
+	}
+	return generators.back()();
+}
+
+BNCH_SWT_HOST double generate_random_double() {
+	double test_double;
+	do {
+		std::string test_string = generate_random_double_string();
+		auto new_ptr			= test_string.data() + test_string.size();
+		test_double				= strtod(test_string.data(), &new_ptr);
+	} while (test_double == std::numeric_limits<double>::infinity() || test_double == std::numeric_limits<double>::quiet_NaN() ||
+		test_double == -std::numeric_limits<double>::infinity());
+	return test_double;
+}
+
 struct test_generator {
 	template<jsonifier::concepts::string_t value_type> static value_type generate_value() {
 		return bnch_swt::random_generator<std::string>::impl(bnch_swt::random_generator<uint64_t>::impl(16ull, 64ull));
 	}
 
 	template<jsonifier::concepts::float_t value_type> static value_type generate_value() {
-		return bnch_swt::random_generator<double>::impl();
+		return generate_random_double();
 	}
 
 	template<jsonifier::concepts::bool_t value_type> static value_type generate_value() {

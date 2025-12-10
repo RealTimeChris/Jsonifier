@@ -121,7 +121,7 @@ namespace jsonifier::internal {
 	template<serialize_options options, bool isItLast, typename context_type> JSONIFIER_INLINE static void writeObjectExit(context_type& context) {
 		if constexpr (!isItLast) {
 			if constexpr (options.prettify) {
-				JSONIFIER_ALIGN(2) static constexpr char packedValues[]{ ",\n" };
+				JSONIFIER_ALIGN(8) static constexpr char packedValues[]{ ",\n" };
 				std::memcpy(context.bufferPtr, packedValues, 2);
 				context.bufferPtr += 2;
 				std::memset(context.bufferPtr, ' ', context.indent * options.indentSize);
@@ -173,10 +173,10 @@ namespace jsonifier::internal {
 		typename get_serialize_base<options, value_type, context_type, make_index_sequence<core_tuple_size<value_type>>>::type;
 
 	template<concepts::jsonifier_object_t value_type, typename context_type, serialize_options options> struct serialize_impl<value_type, context_type, options> {
-		JSONIFIER_ALIGN(2) static constexpr char packedValues01[] { "{\n" };
-		JSONIFIER_ALIGN(2) static constexpr char packedValues02[] { ": " };
-		JSONIFIER_ALIGN(2) static constexpr char packedValues03[] { ",\n" };
-		JSONIFIER_ALIGN(2) static constexpr char packedValues04[] { "{}" };
+		JSONIFIER_ALIGN(8) static constexpr char packedValues01[] { "{\n" };
+		JSONIFIER_ALIGN(8) static constexpr char packedValues02[] { ": " };
+		JSONIFIER_ALIGN(8) static constexpr char packedValues03[] { ",\n" };
+		JSONIFIER_ALIGN(8) static constexpr char packedValues04[] { "{}" };
 		template<typename value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
 			static constexpr auto memberCount{ core_tuple_size<value_type> };
 			static constexpr auto paddingSize{ getPaddingSize<options, value_type>() * 4 };
@@ -223,10 +223,10 @@ namespace jsonifier::internal {
 	};
 
 	template<concepts::map_t value_type, typename context_type, serialize_options options> struct serialize_impl<value_type, context_type, options> {
-		JSONIFIER_ALIGN(2) static constexpr char packedValues01[] { "{\n" };
-		JSONIFIER_ALIGN(2) static constexpr char packedValues02[] { ": " };
-		JSONIFIER_ALIGN(2) static constexpr char packedValues03[] { ",\n" };
-		JSONIFIER_ALIGN(2) static constexpr char packedValues04[] { "{}" };
+		JSONIFIER_ALIGN(8) static constexpr char packedValues01[] { "{\n" };
+		JSONIFIER_ALIGN(8) static constexpr char packedValues02[] { ": " };
+		JSONIFIER_ALIGN(8) static constexpr char packedValues03[] { ",\n" };
+		JSONIFIER_ALIGN(8) static constexpr char packedValues04[] { "{}" };
 		template<typename value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
 			const auto newSize = value.size();
 			static constexpr auto paddingSize{ getPaddingSize<options, typename value_type::mapped_type>() };
@@ -303,9 +303,9 @@ namespace jsonifier::internal {
 	};
 
 	template<concepts::tuple_t value_type, typename context_type, serialize_options options> struct serialize_impl<value_type, context_type, options> {
-		JSONIFIER_ALIGN(2) static constexpr char packedValues01[] { "[\n" };
-		JSONIFIER_ALIGN(2) static constexpr char packedValues02[] { ",\n" };
-		JSONIFIER_ALIGN(2) static constexpr char packedValues03[] { "[]" };
+		JSONIFIER_ALIGN(8) static constexpr char packedValues01[] { "[\n" };
+		JSONIFIER_ALIGN(8) static constexpr char packedValues02[] { ",\n" };
+		JSONIFIER_ALIGN(8) static constexpr char packedValues03[] { "[]" };
 		template<typename value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
 			static constexpr auto additionalSize{ getPaddingSize<options, value_type>() };
 			context.index = static_cast<size_t>(context.bufferPtr - context.buffer.data());
@@ -361,9 +361,9 @@ namespace jsonifier::internal {
 	};
 
 	template<concepts::vector_t value_type, typename context_type, serialize_options options> struct serialize_impl<value_type, context_type, options> {
-		JSONIFIER_ALIGN(2) static constexpr char packedValues01[] { "[\n" };
-		JSONIFIER_ALIGN(2) static constexpr char packedValues02[] { ",\n" };
-		JSONIFIER_ALIGN(2) static constexpr char packedValues03[] { "[]" };
+		JSONIFIER_ALIGN(8) static constexpr char packedValues01[] { "[\n" };
+		JSONIFIER_ALIGN(8) static constexpr char packedValues02[] { ",\n" };
+		JSONIFIER_ALIGN(8) static constexpr char packedValues03[] { "[]" };
 		template<typename value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
 			const auto newSize = value.size();
 			static constexpr auto paddingSize{ getPaddingSize<options, typename value_type::value_type>() };
@@ -421,9 +421,9 @@ namespace jsonifier::internal {
 	};
 
 	template<concepts::raw_array_t value_type, typename context_type, serialize_options options> struct serialize_impl<value_type, context_type, options> {
-		JSONIFIER_ALIGN(2) static constexpr char packedValues01[] { "[\n" };
-		JSONIFIER_ALIGN(2) static constexpr char packedValues02[] { ",\n" };
-		JSONIFIER_ALIGN(2) static constexpr char packedValues03[] { "[]" };
+		JSONIFIER_ALIGN(8) static constexpr char packedValues01[] { "[\n" };
+		JSONIFIER_ALIGN(8) static constexpr char packedValues02[] { ",\n" };
+		JSONIFIER_ALIGN(8) static constexpr char packedValues03[] { "[]" };
 		template<template<typename, size_t> typename value_type_new, typename value_type_internal, size_t size>
 		JSONIFIER_INLINE static void impl(const value_type_new<value_type_internal, size>& value, context_type& context) noexcept {
 			static constexpr auto newSize = size;
@@ -482,7 +482,7 @@ namespace jsonifier::internal {
 	};
 
 	template<concepts::string_t value_type, typename context_type, serialize_options options> struct serialize_impl<value_type, context_type, options> {
-		JSONIFIER_ALIGN(2) static constexpr char packedValues01[] { "\"\"" };
+		JSONIFIER_ALIGN(8) static constexpr char packedValues01[] { "\"\"" };
 		template<typename value_type_new> JSONIFIER_INLINE static void impl(value_type_new&& value, context_type& context) noexcept {
 			const auto newSize = value.size();
 			static constexpr auto paddingSize{ getPaddingSize<options, typename value_type::value_type>() };
