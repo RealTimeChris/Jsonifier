@@ -114,7 +114,7 @@ namespace jsonifier::internal {
 		return value;
 	}
 
-	template<concepts::float_t value_type> struct to_chars<value_type> {
+	template<jsonifier::concepts::float_t value_type> struct to_chars<value_type> {
 		JSONIFIER_INLINE static char* impl(char* buf, value_type val) noexcept {
 			static_assert(std::numeric_limits<value_type>::is_iec559);
 			static_assert(std::numeric_limits<value_type>::radix == 2);

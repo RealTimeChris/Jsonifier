@@ -26,150 +26,140 @@
 #include <jsonifier/Utilities/HashMap.hpp>
 #include <jsonifier/Utilities/String.hpp>
 
+namespace std {
+
+	template<jsonifier::concepts::string_t string_type> struct hash<string_type> : public std::hash<std::string_view> {
+		JSONIFIER_INLINE uint64_t operator()(const string_type& string) const noexcept {
+			return std::hash<std::string_view>::operator()(std::string_view{ string });
+		}
+	};
+}
+
 namespace jsonifier {
 
-	class raw_json_data;
-
-	struct json_number {
-		JSONIFIER_INLINE json_number() noexcept = default;
-
-		JSONIFIER_INLINE json_number(const string& stringNew) noexcept : rawJson{ stringNew } {};
-
-		JSONIFIER_INLINE uint64_t getUint() const {
-			return strToUint64(rawJson);
-		}
-
-		JSONIFIER_INLINE int64_t getInt() const {
-			return strToInt64(rawJson);
-		}
-
-		JSONIFIER_INLINE double getDouble() const {
-			return strToDouble(rawJson);
-		}
-
-		JSONIFIER_INLINE friend bool operator!=(const json_number& lhs, const json_number& rhs) {
-			return lhs.rawJson != rhs.rawJson;
-		}
-
-		JSONIFIER_INLINE friend bool operator==(const json_number& lhs, const json_number& rhs) {
-			return lhs.rawJson == rhs.rawJson;
-		}
-
-		string rawJson{};
+	enum class json_token_type : uint8_t {
+		Unset  = 0,
+		Object = '{',
+		Array  = '[',
+		String = '"',
+		Number = '-',
+		Bool   = 't',
+		Null   = 'n',
 	};
+
+	class raw_json_data;
+}
+
+namespace jsonifier {
 
 	class raw_json_data {
 	  public:
 		using object_type = std::unordered_map<string, raw_json_data>;
 		using string_type = string;
 		using array_type  = std::vector<raw_json_data>;
-		using number_type = json_number;
-		using bool_type	  = bool;
-		using null_type	  = std::nullptr_t;
-		using error_type  = std::monostate;
-		using value_type  = std::variant<object_type, array_type, string_type, number_type, bool_type, null_type, error_type>;
+		using value_type  = std::variant<object_type, array_type, string_type, double, bool, std::nullptr_t>;
 
 		JSONIFIER_INLINE raw_json_data() noexcept {
-			value = null_type{};
+			value = std::nullptr_t{};
 		}
 
-		template<typename parser_type> JSONIFIER_INLINE raw_json_data(parser_type& parser, const string& jsonDataNew) noexcept {
+		template<typename parser_type> JSONIFIER_INLINE raw_json_data(parser_type& parser, const jsonifier::string& jsonDataNew) noexcept {
 			value	 = constructValueFromRawJsonData(parser, jsonDataNew);
 			jsonData = jsonDataNew;
 		}
 
-		JSONIFIER_INLINE json_type getType() const noexcept {
+		JSONIFIER_INLINE json_token_type getType() const noexcept {
 			if (std::holds_alternative<object_type>(value)) {
-				return json_type::object;
+				return json_token_type::Object;
 			} else if (std::holds_alternative<array_type>(value)) {
-				return json_type::array;
+				return json_token_type::Array;
 			} else if (std::holds_alternative<string_type>(value)) {
-				return json_type::string;
-			} else if (std::holds_alternative<number_type>(value)) {
-				return json_type::number;
-			} else if (std::holds_alternative<bool_type>(value)) {
-				return json_type::boolean;
-			} else if (std::holds_alternative<null_type>(value)) {
-				return json_type::null;
+				return json_token_type::String;
+			} else if (std::holds_alternative<double>(value)) {
+				return json_token_type::Number;
+			} else if (std::holds_alternative<bool>(value)) {
+				return json_token_type::Bool;
+			} else if (std::holds_alternative<std::nullptr_t>(value)) {
+				return json_token_type::Null;
 			} else {
-				return json_type::unset;
+				return json_token_type::Unset;
 			}
 		}
 
-		JSONIFIER_INLINE const object_type& getObject() const noexcept {
+		template<typename value_type> [[nodiscard]] JSONIFIER_INLINE value_type& get() noexcept {
+			return std::get<value_type>(value);
+		}
+
+		template<typename value_type> [[nodiscard]] JSONIFIER_INLINE const value_type& get() const noexcept {
+			return std::get<value_type>(value);
+		}
+
+		[[nodiscard]] JSONIFIER_INLINE bool& getBool() noexcept {
+			return std::get<bool>(value);
+		}
+
+		[[nodiscard]] JSONIFIER_INLINE double& getDouble() noexcept {
+			return std::get<double>(value);
+		}
+
+		[[nodiscard]] JSONIFIER_INLINE int64_t getInt() noexcept {
+			return static_cast<int64_t>(std::get<double>(value));
+		}
+
+		[[nodiscard]] JSONIFIER_INLINE uint64_t getUint() noexcept {
+			return static_cast<uint64_t>(std::get<double>(value));
+		}
+
+		[[nodiscard]] JSONIFIER_INLINE string& getString() noexcept {
+			return std::get<string>(value);
+		}
+
+		[[nodiscard]] JSONIFIER_INLINE object_type& getObject() noexcept {
 			return std::get<object_type>(value);
 		}
 
-		JSONIFIER_INLINE object_type& getObject() noexcept {
-			return std::get<object_type>(value);
-		}
-
-		JSONIFIER_INLINE const array_type& getArray() const noexcept {
+		[[nodiscard]] JSONIFIER_INLINE array_type& getArray() noexcept {
 			return std::get<array_type>(value);
 		}
 
-		JSONIFIER_INLINE array_type& getArray() noexcept {
-			return std::get<array_type>(value);
+		template<jsonifier::concepts::integer_t value_type> [[nodiscard]] JSONIFIER_INLINE value_type get() noexcept {
+			return static_cast<value_type>(std::get<double>(value));
 		}
 
-		JSONIFIER_INLINE const string_type& getString() const noexcept {
-			return std::get<string_type>(value);
+		template<jsonifier::concepts::integer_t value_type> [[nodiscard]] JSONIFIER_INLINE const value_type& get() const noexcept {
+			return static_cast<value_type>(std::get<double>(value));
 		}
 
-		JSONIFIER_INLINE string_type& getString() noexcept {
-			return std::get<string_type>(value);
+		template<jsonifier::concepts::string_t value_type> [[nodiscard]] JSONIFIER_INLINE value_type get() noexcept {
+			return static_cast<value_type>(std::get<string>(value));
 		}
 
-		JSONIFIER_INLINE const number_type& getNumber() const noexcept {
-			return std::get<number_type>(value);
-		}
-
-		JSONIFIER_INLINE number_type& getNumber() noexcept {
-			return std::get<number_type>(value);
-		}
-
-		JSONIFIER_INLINE double getDouble() const noexcept {
-			return std::get<number_type>(value).getDouble();
-		}
-
-		JSONIFIER_INLINE int64_t getInt() const noexcept {
-			return std::get<number_type>(value).getInt();
-		}
-
-		JSONIFIER_INLINE uint64_t getUint() const noexcept {
-			return std::get<number_type>(value).getUint();
-		}
-
-		JSONIFIER_INLINE const bool_type& getBool() const noexcept {
-			return std::get<bool_type>(value);
-		}
-
-		JSONIFIER_INLINE bool_type& getBool() noexcept {
-			return std::get<bool_type>(value);
+		template<jsonifier::concepts::string_t value_type> [[nodiscard]] JSONIFIER_INLINE const value_type& get() const noexcept {
+			return static_cast<value_type>(std::get<string>(value));
 		}
 
 		template<std::integral index_type> JSONIFIER_INLINE raw_json_data& operator[](index_type&& index) noexcept {
-			return (std::get<array_type>(value))[index];
+			return std::get<array_type>(value)[index];
 		}
 
 		template<std::integral index_type> JSONIFIER_INLINE const raw_json_data& operator[](index_type&& index) const noexcept {
-			return (std::get<array_type>(value))[index];
+			return std::get<array_type>(value)[index];
 		}
 
-		template<std::convertible_to<string_view> key_type> JSONIFIER_INLINE raw_json_data& operator[](key_type&& key) noexcept {
-			if (std::holds_alternative<null_type>(value)) {
+		template<std::convertible_to<std::string_view> key_type> JSONIFIER_INLINE raw_json_data& operator[](key_type&& key) noexcept {
+			if (std::holds_alternative<std::nullptr_t>(value)) {
 				value = object_type{};
 			}
 			auto& object = std::get<object_type>(value);
 			return object[key];
 		}
 
-		template<std::convertible_to<const string_view> key_type> JSONIFIER_INLINE const raw_json_data& operator[](key_type&& key) const noexcept {
+		template<std::convertible_to<const std::string_view> key_type> JSONIFIER_INLINE const raw_json_data& operator[](key_type&& key) const noexcept {
 			const auto& object = std::get<object_type>(value);
 			return object.at(key);
 		}
 
-		template<std::convertible_to<string_view> key_type> JSONIFIER_INLINE bool contains(key_type&& key) const noexcept {
+		template<std::convertible_to<std::string_view> key_type> [[nodiscard]] JSONIFIER_INLINE bool contains(key_type&& key) const noexcept {
 			if (!std::holds_alternative<object_type>(value)) {
 				return false;
 			}
@@ -177,24 +167,8 @@ namespace jsonifier {
 			return object.contains(key);
 		}
 
-		JSONIFIER_INLINE size_t size() const noexcept {
-			if (std::holds_alternative<object_type>(value)) {
-				return std::get<object_type>(value).size();
-			} else if (std::holds_alternative<array_type>(value)) {
-				return std::get<array_type>(value).size();
-			} else if (std::holds_alternative<string_type>(value)) {
-				return std::get<string_type>(value).size();
-			} else {
-				return 0;
-			}
-		}
-
 		JSONIFIER_INLINE string_view rawJson() const noexcept {
 			return jsonData;
-		}
-
-		JSONIFIER_INLINE const std::vector<internal::error>& getErrors() const noexcept {
-			return errors;
 		}
 
 		JSONIFIER_INLINE bool operator==(const raw_json_data& other) const noexcept {
@@ -202,66 +176,50 @@ namespace jsonifier {
 		}
 
 	  protected:
-		std::vector<internal::error> errors{};
 		value_type value{};
 		string jsonData{};
 
-		template<typename parser_type> JSONIFIER_INLINE auto constructValueFromRawJsonData(parser_type& parser, const string& jsonDataNew) noexcept {
-			static constexpr parse_options optionsNew{};
+		template<typename parser_type>
+		JSONIFIER_INLINE typename jsonifier::raw_json_data::value_type constructValueFromRawJsonData(parser_type& parser, const jsonifier::string& jsonDataNew) noexcept {
+			static constexpr jsonifier::parse_options optionsNew{};
 			if (jsonDataNew.size() > 0) {
 				switch (jsonDataNew[0]) {
 					case '{': {
-						typename raw_json_data::object_type results{};
-						internal::parse_context<typename parser_type::derived_type, string_view_ptr> context{};
-						context.parserPtr = &parser;
-						context.rootIter  = jsonDataNew.data();
-						context.endIter	  = jsonDataNew.data() + jsonDataNew.size();
-						context.iter	  = jsonDataNew.data();
-						internal::parse_impl<typename raw_json_data::object_type, internal::parse_context<typename parser_type::derived_type, string_view_ptr>, optionsNew,
-							false>::impl(results, context);
-						if (parser.derivedRef.getErrors().size() == 0) {
-							return value_type{ results };
-						} else {
-							return value_type{ null_type{} };
-						}
+						typename jsonifier::raw_json_data::object_type results{};
+						jsonifier::internal::parse_context<typename parser_type::derived_type, const char*> testContext{};
+						testContext.parserPtr = &parser;
+						testContext.rootIter  = jsonDataNew.data();
+						testContext.endIter	  = jsonDataNew.data() + jsonDataNew.size();
+						testContext.iter	  = jsonDataNew.data();
+						jsonifier::internal::object_val_parser<std::string, jsonifier::internal::parse_context<typename parser_type::derived_type, const char*>, optionsNew,
+							false>::impl(results, testContext);
+						return results;
 					}
 					case '[': {
-						typename raw_json_data::array_type results{};
-						internal::parse_context<typename parser_type::derived_type, string_view_ptr> context{};
-						context.parserPtr = &parser;
-						context.rootIter  = jsonDataNew.data();
-						context.endIter	  = jsonDataNew.data() + jsonDataNew.size();
-						context.iter	  = jsonDataNew.data();
-						internal::parse_impl<typename raw_json_data::array_type, internal::parse_context<typename parser_type::derived_type, string_view_ptr>, optionsNew,
-							false>::impl(results, context);
-						if (parser.derivedRef.getErrors().size() == 0) {
-							return value_type{ results };
-						} else {
-							return value_type{ null_type{} };
-						}
+						typename jsonifier::raw_json_data::array_type results{};
+						jsonifier::internal::parse_context<typename parser_type::derived_type, const char*> testContext{};
+						testContext.parserPtr = &parser;
+						testContext.rootIter  = jsonDataNew.data();
+						testContext.endIter	  = jsonDataNew.data() + jsonDataNew.size();
+						testContext.iter	  = jsonDataNew.data();
+						jsonifier::internal::array_val_parser<std::string, jsonifier::internal::parse_context<typename parser_type::derived_type, const char*>, optionsNew,
+							false>::impl(results, testContext);
+						return results;
 					}
 					case '"': {
-						typename raw_json_data::string_type results{};
-						internal::parse_context<typename parser_type::derived_type, string_view_ptr> context{};
-						context.parserPtr = &parser;
-						context.rootIter  = jsonDataNew.data();
-						context.endIter	  = jsonDataNew.data() + jsonDataNew.size();
-						context.iter	  = jsonDataNew.data();
-						internal::parse_impl<typename raw_json_data::string_type, internal::parse_context<typename parser_type::derived_type, string_view_ptr>, optionsNew,
-							false>::impl(results, context);
-						if (parser.derivedRef.getErrors().size() == 0) {
-							return value_type{ results };
+						if (jsonDataNew.size() > 1) {
+							return jsonifier::string{ jsonDataNew.data() + 1, jsonDataNew.size() - 2 };
 						} else {
-							return value_type{ null_type{} };
+							return std::nullptr_t{};
 						}
 					}
 					case 't':
-						return value_type{ bool_type{ true } };
+						return true;
 					case 'f': {
-						return value_type{ bool_type{ false } };
+						return false;
 					}
 					case 'n': {
-						return value_type{ null_type{} };
+						return std::nullptr_t{};
 					}
 					case '0':
 						[[fallthrough]];
@@ -284,19 +242,19 @@ namespace jsonifier {
 					case '9':
 						[[fallthrough]];
 					case '-': {
-						return value_type{ number_type{ jsonDataNew } };
+						return strToDouble(jsonDataNew);
 					}
 					default: {
-						return value_type{ null_type{} };
+						return std::nullptr_t{};
 					}
 				}
 			} else {
-				return value_type{ null_type{} };
+				return std::nullptr_t{};
 			}
 		}
 	};
 
-	std::ostream& operator<<(std::ostream& os, const raw_json_data& jsonValue) noexcept {
+	JSONIFIER_INLINE std::ostream& operator<<(std::ostream& os, const raw_json_data& jsonValue) noexcept {
 		os << jsonValue.rawJson();
 		return os;
 	}

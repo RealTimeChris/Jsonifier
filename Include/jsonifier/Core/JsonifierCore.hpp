@@ -31,58 +31,56 @@
 
 namespace jsonifier {
 
-	template<bool doWeUseInitialBuffer = true> class jsonifier_core : public internal::prettifier<jsonifier_core<doWeUseInitialBuffer>>,
-																	  public internal::serializer<jsonifier_core<doWeUseInitialBuffer>>,
-																	  public internal::validator<jsonifier_core<doWeUseInitialBuffer>>,
-																	  public internal::minifier<jsonifier_core<doWeUseInitialBuffer>>,
-																	  public internal::parser<jsonifier_core<doWeUseInitialBuffer>> {
+	template<bool doWeUseInitialBuffer = true> class jsonifier_core : public jsonifier::internal::prettifier<jsonifier_core<doWeUseInitialBuffer>>,
+																	  public jsonifier::internal::serializer<jsonifier_core<doWeUseInitialBuffer>>,
+																	  public jsonifier::internal::validator<jsonifier_core<doWeUseInitialBuffer>>,
+																	  public jsonifier::internal::minifier<jsonifier_core<doWeUseInitialBuffer>>,
+																	  public jsonifier::internal::parser<jsonifier_core<doWeUseInitialBuffer>> {
 	  public:
-		friend class internal::prettifier<jsonifier_core<doWeUseInitialBuffer>>;
-		friend class internal::serializer<jsonifier_core<doWeUseInitialBuffer>>;
-		friend class internal::validator<jsonifier_core<doWeUseInitialBuffer>>;
-		friend class internal::minifier<jsonifier_core<doWeUseInitialBuffer>>;
-		friend class internal::parser<jsonifier_core<doWeUseInitialBuffer>>;
+		friend class jsonifier::internal::prettifier<jsonifier_core<doWeUseInitialBuffer>>;
+		friend class jsonifier::internal::serializer<jsonifier_core<doWeUseInitialBuffer>>;
+		friend class jsonifier::internal::validator<jsonifier_core<doWeUseInitialBuffer>>;
+		friend class jsonifier::internal::minifier<jsonifier_core<doWeUseInitialBuffer>>;
+		friend class jsonifier::internal::parser<jsonifier_core<doWeUseInitialBuffer>>;
 
-		jsonifier_core() noexcept = default;
+		JSONIFIER_INLINE jsonifier_core() noexcept = default;
 
-		jsonifier_core& operator=(jsonifier_core&& other) noexcept {
+		JSONIFIER_INLINE jsonifier_core& operator=(jsonifier_core&& other) noexcept {
 			if JSONIFIER_LIKELY (this != &other) {
-				errors = internal::move(other.errors);
+				errors = jsonifier::internal::move(other.errors);
 			}
 			return *this;
 		}
 
-		jsonifier_core(jsonifier_core&& other) noexcept : prettifier{}, serializer{}, validator{}, minifier{}, parser{} {
-			*this = internal::move(other);
+		JSONIFIER_INLINE jsonifier_core(jsonifier_core&& other) noexcept : prettifier{}, serializer{}, validator{}, minifier{}, parser{} {
+			*this = jsonifier::internal::move(other);
 		};
 
-		jsonifier_core& operator=(const jsonifier_core& other) noexcept {
+		JSONIFIER_INLINE jsonifier_core& operator=(const jsonifier_core& other) noexcept {
 			if JSONIFIER_LIKELY (this != &other) {
 				errors = other.errors;
 			}
 			return *this;
 		}
 
-		jsonifier_core(const jsonifier_core& other) noexcept : prettifier{}, serializer{}, validator{}, minifier{}, parser{} {
+		JSONIFIER_INLINE jsonifier_core(const jsonifier_core& other) noexcept : prettifier{}, serializer{}, validator{}, minifier{}, parser{} {
 			*this = other;
 		}
 
-		std::vector<internal::error>& getErrors() noexcept {
+		JSONIFIER_INLINE std::vector<jsonifier::internal::error>& getErrors() noexcept {
 			return errors;
 		}
 
-		~jsonifier_core() noexcept = default;
+		JSONIFIER_INLINE ~jsonifier_core() noexcept = default;
 
 	  protected:
-		using prettifier = internal::prettifier<jsonifier_core<doWeUseInitialBuffer>>;
-		using serializer = internal::serializer<jsonifier_core<doWeUseInitialBuffer>>;
-		using validator	 = internal::validator<jsonifier_core<doWeUseInitialBuffer>>;
-		using minifier	 = internal::minifier<jsonifier_core<doWeUseInitialBuffer>>;
-		using parser	 = internal::parser<jsonifier_core<doWeUseInitialBuffer>>;
+		using prettifier = jsonifier::internal::prettifier<jsonifier_core<doWeUseInitialBuffer>>;
+		using serializer = jsonifier::internal::serializer<jsonifier_core<doWeUseInitialBuffer>>;
+		using validator	 = jsonifier::internal::validator<jsonifier_core<doWeUseInitialBuffer>>;
+		using minifier	 = jsonifier::internal::minifier<jsonifier_core<doWeUseInitialBuffer>>;
+		using parser	 = jsonifier::internal::parser<jsonifier_core<doWeUseInitialBuffer>>;
 
-		string_base<char, 1024 * 1024> stringBuffer{};
-		internal::simd_string_reader<true> section{};
-		std::vector<internal::error> errors{};
+		std::vector<jsonifier::internal::error> errors{};
 	};
 
 }
