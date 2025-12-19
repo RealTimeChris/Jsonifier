@@ -35,7 +35,7 @@
 
 namespace jsonifier::internal {
 
-	template<typename value_type> inline static constexpr array<uint64_t, 256> rawCompValsPos{ []() {
+	 template<typename value_type> inline static constexpr array<uint64_t, 256> rawCompValsPos{ []() {
 		constexpr auto maxValue{ std::numeric_limits<std::decay_t<value_type>>::max() };
 		array<uint64_t, 256> returnValues{};
 		returnValues['0'] = (maxValue - 0) / 10;
@@ -78,7 +78,7 @@ namespace jsonifier::internal {
 
 	template<typename value_type> struct integer_parser;
 
-	template<jsonifier::concepts::signed_t value_type> struct integer_parser<value_type> : public pow_tables<>, public exp_tables<> {
+	template<concepts::signed_t value_type> struct integer_parser<value_type> : public pow_tables<>, public exp_tables<> {
 		constexpr integer_parser() noexcept = default;
 
 		JSONIFIER_INLINE static value_type mul128Generic(value_type ab, value_type cd, value_type& hi) noexcept {
@@ -687,7 +687,7 @@ namespace jsonifier::internal {
 		}
 	};
 
-	template<jsonifier::concepts::unsigned_t value_type> struct integer_parser<value_type> : public pow_tables<>, public exp_tables<> {
+	template<concepts::unsigned_t value_type> struct integer_parser<value_type> : public pow_tables<>, public exp_tables<> {
 		constexpr integer_parser() noexcept = default;
 
 		JSONIFIER_INLINE static value_type umul128Generic(value_type ab, value_type cd, value_type& hi) noexcept {

@@ -29,17 +29,17 @@ namespace jsonifier::simd {
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_LZCNT) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
 
-	template<jsonifier::concepts::uns32_t value_type> JSONIFIER_ALWAYS_INLINE value_type lzcnt(value_type value) noexcept {
+	JSONIFIER_INLINE static uint32_t lzcnt(const uint32_t value) noexcept {
 		return _lzcnt_u32(value);
 	}
 
-	template<jsonifier::concepts::uns64_t value_type> JSONIFIER_ALWAYS_INLINE value_type lzcnt(value_type value) noexcept {
+	JSONIFIER_INLINE static uint64_t lzcnt(const uint64_t value) noexcept {
 		return _lzcnt_u64(value);
 	}
 
 #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 
-	template<jsonifier::concepts::uns32_t value_type> JSONIFIER_ALWAYS_INLINE value_type lzcnt(value_type value) noexcept {
+	template<concepts::uns32_t value_type> JSONIFIER_INLINE static value_type lzcnt(const value_type value) noexcept {
 	#if defined(JSONIFIER_REGULAR_VISUAL_STUDIO)
 		uint64_t leading_zero = 0;
 		if (_BitScanReverse32(&leading_zero, value)) {
@@ -52,7 +52,7 @@ namespace jsonifier::simd {
 	#endif
 	}
 
-	template<jsonifier::concepts::uns64_t value_type> JSONIFIER_ALWAYS_INLINE value_type lzcnt(value_type value) noexcept {
+	template<concepts::uns64_t value_type> JSONIFIER_INLINE static value_type lzcnt(const value_type value) noexcept {
 	#if defined(JSONIFIER_REGULAR_VISUAL_STUDIO)
 		uint64_t leading_zero = 0;
 		if (_BitScanReverse64(&leading_zero, value)) {
@@ -67,7 +67,7 @@ namespace jsonifier::simd {
 
 #else
 
-	template<jsonifier::concepts::unsigned_t value_type> JSONIFIER_ALWAYS_INLINE constexpr value_type lzcnt(value_type value) noexcept {
+	template<concepts::unsigned_t value_type> JSONIFIER_INLINE static constexpr value_type lzcnt(const value_type value) noexcept {
 		if (value == 0) {
 			return sizeof(value_type) * 8;
 		}

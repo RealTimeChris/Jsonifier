@@ -28,141 +28,266 @@
 
 namespace jsonifier::internal {
 
-	template<typename value_type_new, size_t sizeNew> struct array {
+	template<typename value_type_new, size_t sizeNew> class array {
+	  public:
+		static_assert(std::is_object_v<value_type_new>, "The C++ Standard forbids containers of non-object types because of [container.requirements].");
+
 		using value_type			 = value_type_new;
+		using size_type				 = size_t;
+		using difference_type		 = ptrdiff_t;
+		using pointer				 = value_type*;
+		using const_pointer			 = const value_type*;
 		using reference				 = value_type&;
 		using const_reference		 = const value_type&;
-		using size_type				 = size_t;
-		using iterator				 = basic_iterator<value_type>;
-		using const_iterator		 = basic_iterator<const value_type>;
+		using iterator				 = array_iterator<value_type, sizeNew>;
+		using const_iterator		 = const array_iterator<value_type, sizeNew>;
 		using reverse_iterator		 = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
-		constexpr array() noexcept = default;
-
-		constexpr array(std::initializer_list<value_type> initList) {
-			for (size_t i = 0; i < initList.size() && i < sizeNew; ++i) {
-				values[i] = initList.begin()[i];
-			}
+		JSONIFIER_INLINE constexpr void fill(const value_type& _Value) {
+			std::fill_n(dataVal, sizeNew, _Value);
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr iterator begin() noexcept {
-			return iterator(values);
+		JSONIFIER_INLINE constexpr void swap(array& _Other) noexcept(std::is_nothrow_swappable<value_type>::value) {
+			std::swap_ranges(dataVal, dataVal + sizeNew, _Other.dataVal);
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr const_iterator begin() const noexcept {
-			return const_iterator(values);
+		JSONIFIER_INLINE constexpr iterator begin() noexcept {
+			return iterator(dataVal);
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr iterator end() noexcept {
-			return iterator(values + sizeNew);
+		JSONIFIER_INLINE constexpr const_iterator begin() const noexcept {
+			return const_iterator(dataVal);
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr const_iterator end() const noexcept {
-			return const_iterator(values + sizeNew);
+		JSONIFIER_INLINE constexpr iterator end() noexcept {
+			return iterator(dataVal);
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr reverse_iterator rbegin() noexcept {
+		JSONIFIER_INLINE constexpr const_iterator end() const noexcept {
+			return const_iterator(dataVal);
+		}
+
+		JSONIFIER_INLINE constexpr reverse_iterator rbegin() noexcept {
 			return reverse_iterator(end());
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr const_reverse_iterator rbegin() const noexcept {
+		JSONIFIER_INLINE constexpr const_reverse_iterator rbegin() const noexcept {
 			return const_reverse_iterator(end());
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr reverse_iterator rend() noexcept {
+		JSONIFIER_INLINE constexpr reverse_iterator rend() noexcept {
 			return reverse_iterator(begin());
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr const_reverse_iterator rend() const noexcept {
+		JSONIFIER_INLINE constexpr const_reverse_iterator rend() const noexcept {
 			return const_reverse_iterator(begin());
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr const_reference operator[](size_type index) const noexcept {
-			return values[index];
+		JSONIFIER_INLINE constexpr const_iterator cbegin() const noexcept {
+			return begin();
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr reference operator[](size_type index) noexcept {
-			return values[index];
+		JSONIFIER_INLINE constexpr const_iterator cend() const noexcept {
+			return end();
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr const value_type* data() const noexcept {
-			return values;
+		JSONIFIER_INLINE constexpr const_reverse_iterator crbegin() const noexcept {
+			return rbegin();
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr value_type* data() noexcept {
-			return values;
+		JSONIFIER_INLINE constexpr const_reverse_iterator crend() const noexcept {
+			return rend();
 		}
 
-		constexpr void fill(const value_type& value) noexcept {
-			for (size_t i = 0; i < sizeNew; ++i) {
-				values[i] = value;
-			}
-		}
-
-		JSONIFIER_ALWAYS_INLINE constexpr size_type size() const noexcept {
+		JSONIFIER_INLINE constexpr size_type size() const noexcept {
 			return sizeNew;
 		}
 
-		value_type values[sizeNew]{};
+		JSONIFIER_INLINE constexpr size_type max_size() const noexcept {
+			return sizeNew;
+		}
+
+		JSONIFIER_INLINE constexpr bool empty() const noexcept {
+			return false;
+		}
+
+		JSONIFIER_INLINE constexpr reference at(size_type position) {
+			if (sizeNew <= position) {
+				std::runtime_error{ "invalid array<T, N> subscript" };
+			}
+
+			return dataVal[position];
+		}
+
+		JSONIFIER_INLINE constexpr const_reference at(size_type position) const {
+			if (sizeNew <= position) {
+				std::runtime_error{ "invalid array<T, N> subscript" };
+			}
+
+			return dataVal[position];
+		}
+
+		JSONIFIER_INLINE constexpr reference operator[](size_type position) noexcept {
+			return dataVal[position];
+		}
+
+		JSONIFIER_INLINE constexpr const_reference operator[](size_type position) const noexcept {
+			return dataVal[position];
+		}
+
+		JSONIFIER_INLINE constexpr reference front() noexcept {
+			return dataVal[0];
+		}
+
+		JSONIFIER_INLINE constexpr const_reference front() const noexcept {
+			return dataVal[0];
+		}
+
+		JSONIFIER_INLINE constexpr reference back() noexcept {
+			return dataVal[sizeNew - 1];
+		}
+
+		JSONIFIER_INLINE constexpr const_reference back() const noexcept {
+			return dataVal[sizeNew - 1];
+		}
+
+		JSONIFIER_INLINE constexpr value_type* data() noexcept {
+			return dataVal;
+		}
+
+		JSONIFIER_INLINE constexpr const value_type* data() const noexcept {
+			return dataVal;
+		}
+
+		value_type dataVal[sizeNew];
 	};
 
-	template<typename value_type_new> struct array<value_type_new, 0> {
+	struct empty_array_element {};
+
+	template<class value_type_new> class array<value_type_new, 0> {
+	  public:
+		static_assert(std::is_object_v<value_type_new>, "The C++ Standard forbids containers of non-object types because of [container.requirements].");
+
 		using value_type			 = value_type_new;
-		using reference				 = value_type&;
-		using const_reference		 = const value_type&;
+		using size_type				 = size_t;
+		using difference_type		 = ptrdiff_t;
 		using pointer				 = value_type*;
 		using const_pointer			 = const value_type*;
-		using const_iterator		 = const basic_iterator<value_type>;
-		using iterator				 = basic_iterator<value_type>;
-		using size_type				 = size_t;
+		using reference				 = value_type&;
+		using const_reference		 = const value_type&;
+		using iterator				 = array_iterator<value_type, 0>;
+		using const_iterator		 = const array_iterator<value_type, 0>;
 		using reverse_iterator		 = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
-		using difference_type		 = std::ptrdiff_t;
 
-		constexpr array(std::initializer_list<value_type>) {
+		JSONIFIER_INLINE constexpr void fill(const value_type&) {
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr const_pointer data() const noexcept {
-			return nullptr;
+		JSONIFIER_INLINE constexpr void swap(array&) noexcept {
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr pointer data() noexcept {
-			return nullptr;
+		JSONIFIER_INLINE constexpr iterator begin() noexcept {
+			return iterator{};
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr size_type size() const noexcept {
+		JSONIFIER_INLINE constexpr const_iterator begin() const noexcept {
+			return const_iterator{};
+		}
+
+		JSONIFIER_INLINE constexpr iterator end() noexcept {
+			return iterator{};
+		}
+
+		JSONIFIER_INLINE constexpr const_iterator end() const noexcept {
+			return const_iterator{};
+		}
+
+		JSONIFIER_INLINE constexpr reverse_iterator rbegin() noexcept {
+			return reverse_iterator(end());
+		}
+
+		JSONIFIER_INLINE constexpr const_reverse_iterator rbegin() const noexcept {
+			return const_reverse_iterator(end());
+		}
+
+		JSONIFIER_INLINE constexpr reverse_iterator rend() noexcept {
+			return reverse_iterator(begin());
+		}
+
+		JSONIFIER_INLINE constexpr const_reverse_iterator rend() const noexcept {
+			return const_reverse_iterator(begin());
+		}
+
+		JSONIFIER_INLINE constexpr const_iterator cbegin() const noexcept {
+			return begin();
+		}
+
+		JSONIFIER_INLINE constexpr const_iterator cend() const noexcept {
+			return end();
+		}
+
+		JSONIFIER_INLINE constexpr const_reverse_iterator crbegin() const noexcept {
+			return rbegin();
+		}
+
+		JSONIFIER_INLINE constexpr const_reverse_iterator crend() const noexcept {
+			return rend();
+		}
+
+		JSONIFIER_INLINE constexpr size_type size() const noexcept {
 			return 0;
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr const_reference operator[](size_type index) const noexcept {
-			return dataVal[index];
+		JSONIFIER_INLINE constexpr size_type max_size() const noexcept {
+			return 0;
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr reference operator[](size_type index) noexcept {
-			return dataVal[index];
+		JSONIFIER_INLINE constexpr bool empty() const noexcept {
+			return true;
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr iterator begin() noexcept {
+		JSONIFIER_INLINE constexpr reference at(size_type) {
+			std::runtime_error{ "invalid array<T, N> subscript" };
+		}
+
+		JSONIFIER_INLINE constexpr const_reference at(size_type) const {
+			std::runtime_error{ "invalid array<T, N> subscript" };
+		}
+
+		JSONIFIER_INLINE constexpr reference operator[](size_type) noexcept {
+			return *data();
+		}
+
+		JSONIFIER_INLINE constexpr const_reference operator[](size_type) const noexcept {
+			return *data();
+		}
+
+		JSONIFIER_INLINE constexpr reference front() noexcept {
+			return *data();
+		}
+
+		JSONIFIER_INLINE constexpr const_reference front() const noexcept {
+			return *data();
+		}
+
+		JSONIFIER_INLINE constexpr reference back() noexcept {
+			return *data();
+		}
+
+		JSONIFIER_INLINE constexpr const_reference back() const noexcept {
+			return *data();
+		}
+
+		JSONIFIER_INLINE constexpr value_type* data() noexcept {
 			return nullptr;
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr iterator end() noexcept {
+		JSONIFIER_INLINE constexpr const value_type* data() const noexcept {
 			return nullptr;
 		}
 
-		JSONIFIER_ALWAYS_INLINE constexpr const_iterator begin() const noexcept {
-			return nullptr;
-		}
-
-		JSONIFIER_ALWAYS_INLINE constexpr const_iterator end() const noexcept {
-			return nullptr;
-		}
-
-		constexpr void fill(const value_type&) noexcept {
-		}
-
-		value_type dataVal[0];
+		conditional_t<std::disjunction_v<std::is_default_constructible<value_type>, std::is_default_constructible<value_type>>, value_type, empty_array_element> dataVal[1]{};
 	};
 
 }
