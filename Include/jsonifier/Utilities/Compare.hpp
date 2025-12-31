@@ -290,6 +290,144 @@ namespace jsonifier::internal {
 		}
 	};
 
+	template<uint64_t size> JSONIFIER_ALIGN(bytesPerStep)
+	inline constexpr array<uint8_t, size> whitespaceArray{ []() constexpr {
+		constexpr const uint8_t values[]{ 0x20u, 0x64u, 0x64u, 0x64u, 0x11u, 0x64u, 0x71u, 0x02u, 0x64u, '\t', '\n', 0x70u, 0x64u, '\r', 0x64u, 0x64u };
+		array<uint8_t, size> returnValues{};
+		for (uint64_t x = 0; x < size; ++x) {
+			returnValues[x] = values[x % 16];
+		}
+		return returnValues;
+	}() };
+
+	template<typename simd_type, bool aligned = true> struct collect_whitespace_indices {
+		JSONIFIER_INLINE static auto impl(const char* values) noexcept {
+			static constexpr auto whiteSpaceArrayPtr{ whitespaceArray<sizeof(simd_type)>.data() };
+			const simd_type simdValues{ simd::gatherValues<simd_type>(whiteSpaceArrayPtr) };
+			const simd_type comparison_values{ simd::gatherValues<simd_type>(values) };
+			return simd::opCmpEqBitMask<simd_type>(simd::opShuffle<simd_type>(simdValues, comparison_values), comparison_values);
+		}
+	};
+
+	template<typename simd_type> struct collect_whitespace_indices<simd_type, false> {
+		JSONIFIER_INLINE static auto impl(const char* values) noexcept {
+			static constexpr auto whiteSpaceArrayPtr{ whitespaceArray<sizeof(simd_type)>.data() };
+			const simd_type simdValues{ simd::gatherValues<simd_type>(whiteSpaceArrayPtr) };
+			const simd_type comparison_values{ simd::gatherValuesU<simd_type>(values) };
+			return simd::opCmpEqBitMask<simd_type>(simd::opShuffle<simd_type>(simdValues, comparison_values), comparison_values);
+		}
+	};
+
+	struct whitespace_search {
+		template<typename char_type> JSONIFIER_INLINE static uint64_t find_first_not_of(const char_type* text, uint64_t length) noexcept {
+			int64_t i = 0;
+
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
+			if (i + 64ll <= static_cast<int64_t>(length)) {
+				using simd_type								= typename get_type_at_index<simd::avx_list, 2>::type::type::type;
+				static constexpr uint64_t vector_size		= get_type_at_index<simd::avx_list, 2>::type::bytesProcessed;
+				static constexpr uint64_t vector_size_sub_1 = vector_size - 1;
+				uintptr_t address							= std::bit_cast<uintptr_t>(text);
+				uint64_t distance_to_boundary				= (vector_size - (address & vector_size_sub_1)) & vector_size_sub_1;
+				if (distance_to_boundary > 0) {
+					uint64_t mask		 = (1ULL << distance_to_boundary) - 1;
+					uint64_t ws_mask	 = collect_whitespace_indices<simd_type, false>::impl(text);
+					uint64_t non_ws_mask = (~ws_mask) & mask;
+
+					if (non_ws_mask != 0) {
+						return static_cast<uint64_t>(simd::tzcnt(non_ws_mask));
+					}
+
+					text += distance_to_boundary;
+					i += distance_to_boundary;
+				}
+				while (i + static_cast<int64_t>(vector_size) <= static_cast<int64_t>(length)) {
+					uint64_t ws_mask	 = collect_whitespace_indices<simd_type, true>::impl(text);
+					uint64_t non_ws_mask = static_cast<uint64_t>(~ws_mask);
+					if (non_ws_mask != 0) {
+						return static_cast<uint64_t>(i) + static_cast<uint64_t>(simd::tzcnt(non_ws_mask));
+					}
+
+					text += vector_size;
+					i += vector_size;
+				}
+			}
+#endif
+
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
+			if (i + 32ll <= static_cast<int64_t>(length)) {
+				using simd_type								= typename get_type_at_index<simd::avx_list, 1>::type::type::type;
+				static constexpr uint64_t vector_size		= get_type_at_index<simd::avx_list, 1>::type::bytesProcessed;
+				static constexpr uint64_t vector_size_sub_1 = vector_size - 1;
+				uintptr_t address							= std::bit_cast<uintptr_t>(text);
+				uint64_t distance_to_boundary				= (vector_size - (address & vector_size_sub_1)) & vector_size_sub_1;
+				if (distance_to_boundary > 0) {
+					uint64_t mask		 = (1ULL << distance_to_boundary) - 1;
+					uint64_t ws_mask	 = collect_whitespace_indices<simd_type, false>::impl(text);
+					uint64_t non_ws_mask = (~ws_mask) & mask;
+
+					if (non_ws_mask != 0) {
+						return static_cast<uint64_t>(simd::tzcnt(non_ws_mask));
+					}
+
+					text += distance_to_boundary;
+					i += distance_to_boundary;
+				}
+				while (i + static_cast<int64_t>(vector_size) <= static_cast<int64_t>(length)) {
+					uint32_t ws_mask	 = collect_whitespace_indices<simd_type, true>::impl(text);
+					uint32_t non_ws_mask = static_cast<uint32_t>(~ws_mask);
+					if (non_ws_mask != 0) {
+						return static_cast<uint64_t>(i) + static_cast<uint64_t>(simd::tzcnt(non_ws_mask));
+					}
+
+					text += vector_size;
+					i += vector_size;
+				}
+			}
+#endif
+			if (i + 16ll <= static_cast<int64_t>(length)) {
+				using simd_type								= typename get_type_at_index<simd::avx_list, 0>::type::type::type;
+				static constexpr uint64_t vector_size		= get_type_at_index<simd::avx_list, 0>::type::bytesProcessed;
+				static constexpr uint64_t vector_size_sub_1 = vector_size - 1;
+				uintptr_t address							= std::bit_cast<uintptr_t>(text);
+				uint64_t distance_to_boundary				= (vector_size - (address & vector_size_sub_1)) & vector_size_sub_1;
+				if (distance_to_boundary > 0) {
+					uint64_t mask		 = (1ULL << distance_to_boundary) - 1;
+					uint64_t ws_mask	 = collect_whitespace_indices<simd_type, false>::impl(text);
+					uint64_t non_ws_mask = (~ws_mask) & mask;
+
+					if (non_ws_mask != 0) {
+						return static_cast<uint64_t>(simd::tzcnt(non_ws_mask));
+					}
+
+					text += distance_to_boundary;
+					i += distance_to_boundary;
+				}
+				while (i + static_cast<int64_t>(vector_size) <= static_cast<int64_t>(length)) {
+					uint16_t ws_mask	 = collect_whitespace_indices<simd_type, true>::impl(text);
+					uint16_t non_ws_mask = static_cast<uint16_t>(~ws_mask);
+					if (non_ws_mask != 0) {
+						return static_cast<uint64_t>(i) + static_cast<uint64_t>(simd::tzcnt(non_ws_mask));
+					}
+
+					text += vector_size;
+					i += vector_size;
+				}
+			}
+
+			while (i < static_cast<int64_t>(length)) {
+				char c = *text;
+				if (c != ' ' && c != '\t' && c != '\n' && c != '\r') {
+					return static_cast<uint64_t>(i);
+				}
+				++text;
+				++i;
+			}
+
+			return length;
+		}
+	};
+
 	template<uint64_t length> struct convert_length_to_int {
 		static_assert(length <= 8, "Sorry, but that string is too long!");
 		using type = jsonifier::internal::conditional_t<length == 1, uint8_t,
