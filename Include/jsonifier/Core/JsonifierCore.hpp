@@ -67,7 +67,7 @@ namespace jsonifier {
 			*this = other;
 		}
 
-		std::vector<internal::error>& getErrors() noexcept {
+		const std::vector<internal::error>& getErrors() const noexcept {
 			return errors;
 		}
 

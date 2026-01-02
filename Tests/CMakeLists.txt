@@ -48,6 +48,7 @@ add_executable(
 target_link_libraries(
 	"Json-Performance" PUBLIC 
 	Jsonifier::Jsonifier glaze::glaze simdjson benchmarksuite::benchmarksuite
+	rt-ut::rt-ut
 )
 
 target_compile_options(

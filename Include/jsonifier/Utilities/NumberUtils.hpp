@@ -48,7 +48,7 @@ namespace jsonifier {
 				returnstring.resize(static_cast<uint64_t>(newPtr - returnstring.data()));
 			} else if constexpr (concepts::signed_t<value_type01>) {
 				int64_t newValue{ static_cast<int64_t>(value) };
-				auto newPtr = internal::to_chars<value_type_new>::impl(returnstring.data(), newValue);
+				auto newPtr = internal::to_chars<int64_t>::impl(returnstring.data(), newValue);
 				returnstring.resize(static_cast<uint64_t>(newPtr - returnstring.data()));
 			} else {
 				double newValue{ static_cast<double>(value) };

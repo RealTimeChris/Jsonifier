@@ -71,19 +71,19 @@ namespace jsonifier::internal {
 	};
 
 	template<concepts::pointer_t value_type> JSONIFIER_INLINE static string_view_ptr getEndIter(value_type value) noexcept {
-		return reinterpret_cast<string_view_ptr>(char_comparison<'\0', decltype(*value)>::memchar(value, std::numeric_limits<size_t>::max()));
+		return std::bit_cast<string_view_ptr>(char_comparison<'\0', const char>::memchar(value, std::numeric_limits<size_t>::max()));
 	}
 
 	template<concepts::pointer_t value_type> JSONIFIER_INLINE static string_view_ptr getBeginIter(value_type value) noexcept {
-		return reinterpret_cast<string_view_ptr>(value);
+		return std::bit_cast<string_view_ptr>(value);
 	}
 
 	template<concepts::has_data value_type> JSONIFIER_INLINE static string_view_ptr getEndIter(value_type& value) noexcept {
-		return reinterpret_cast<string_view_ptr>(value.data() + value.size());
+		return std::bit_cast<string_view_ptr>(value.data() + value.size());
 	}
 
 	template<concepts::has_data value_type> JSONIFIER_INLINE static string_view_ptr getBeginIter(value_type& value) noexcept {
-		return reinterpret_cast<string_view_ptr>(value.data());
+		return std::bit_cast<string_view_ptr>(value.data());
 	}
 
 	template<typename value_type, typename context_type, parse_options optionsNew, bool minified> struct parse_partial_impl;
@@ -297,6 +297,10 @@ namespace jsonifier::internal {
 		void reportError(context_type& context, const std::source_location& sourceLocation = std::source_location::current()) noexcept {
 			derivedRef.errors.emplace_back(error::constructError<error_classes::Parsing, parseError>(getUnderlyingPtr(context.iter) - getUnderlyingPtr(context.rootIter),
 				getUnderlyingPtr(context.endIter) - getUnderlyingPtr(context.rootIter), getUnderlyingPtr(context.rootIter), sourceLocation));
+		}
+
+		const std::vector<internal::error>& getErrors() const noexcept {
+			return derivedRef.getErrors();
 		}
 
 	  protected:

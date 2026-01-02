@@ -39,9 +39,9 @@ namespace jsonifier::internal {
 
 	JSONIFIER_INLINE auto* writeu64Len15To17Trim(auto* buf, uint64_t sig) noexcept {
 		uint32_t tz1, tz2, tz;
-		const uint64_t abbccddee = multiply_and_shift<6189700196426901375ULL, 89ULL>::impl(sig);
+		const uint64_t abbccddee = multiply_and_shift<uint64_t, 100000000>::impl(sig);
 		const uint64_t ffgghhii	 = sig - abbccddee * 100000000;
-		uint32_t abbcc			 = abbccddee / 10000;
+		uint32_t abbcc			 = multiply_and_shift<uint64_t, 10000>::impl(abbccddee);
 		uint32_t ddee			 = abbccddee - abbcc * 10000;
 		uint32_t abb			 = uint32_t((uint64_t(abbcc) * 167773) >> 24);
 		uint32_t a				 = (abb * 41) >> 12;

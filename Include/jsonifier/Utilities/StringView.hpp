@@ -227,28 +227,28 @@ namespace jsonifier {
 		}
 
 		template<typename value_type_newer, size_type size>
-		JSONIFIER_INLINE constexpr friend string_base<value_type_newer> operator+(const value_type_newer (&lhs)[size], const string_view_base& rhs) noexcept {
+		JSONIFIER_INLINE friend constexpr string_base<value_type_newer> operator+(const value_type_newer (&lhs)[size], const string_view_base& rhs) noexcept {
 			string_base<value_type_newer> newLhs{ lhs };
 			newLhs += rhs;
 			return newLhs;
 		}
 
 		template<typename value_type_newer, size_type size>
-		JSONIFIER_INLINE constexpr friend string_base<value_type_newer> operator+=(const value_type_newer (&lhs)[size], const string_view_base& rhs) noexcept {
+		JSONIFIER_INLINE friend constexpr string_base<value_type_newer> operator+=(const value_type_newer (&lhs)[size], const string_view_base& rhs) noexcept {
 			string_base<value_type_newer> newLhs{ lhs };
 			newLhs += rhs;
 			return newLhs;
 		}
 
 		template<concepts::pointer_t string_type_newer>
-		JSONIFIER_INLINE constexpr friend string_base<string_type_newer> operator+(string_type_newer&& lhs, const string_view_base& rhs) noexcept {
+		JSONIFIER_INLINE friend constexpr string_base<string_type_newer> operator+(string_type_newer&& lhs, const string_view_base& rhs) noexcept {
 			string_base<jsonifier::internal::remove_pointer_t<string_type_newer>> newLhs{ lhs };
 			newLhs += rhs;
 			return newLhs;
 		}
 
 		template<concepts::pointer_t string_type_newer>
-		JSONIFIER_INLINE constexpr friend string_base<string_type_newer> operator+=(string_type_newer&& lhs, const string_view_base& rhs) noexcept {
+		JSONIFIER_INLINE friend constexpr string_base<string_type_newer> operator+=(string_type_newer&& lhs, const string_view_base& rhs) noexcept {
 			string_base<jsonifier::internal::remove_pointer_t<string_type_newer>> newLhs{ lhs };
 			newLhs += rhs;
 			return newLhs;

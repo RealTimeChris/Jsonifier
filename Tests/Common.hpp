@@ -135,7 +135,7 @@ template<typename value_type> struct test_generator {
 		auto length{ disString(gen) };
 		auto unicodeCount = length / 32ull;
 		std::vector<size_t> unicodeIndices{};
-		inline static constexpr auto checkForPresenceOfIndex = [](auto& indices, auto index, auto length, auto&& checkForPresenceOfIndexNew) -> void {
+		static constexpr auto checkForPresenceOfIndex = [](auto& indices, auto index, auto length, auto&& checkForPresenceOfIndexNew) -> void {
 			if (std::find(indices.begin(), indices.end(), index) != indices.end()) {
 				index = randomizeNumberUniform(0ull, length);
 				checkForPresenceOfIndexNew(indices, index, length, checkForPresenceOfIndexNew);

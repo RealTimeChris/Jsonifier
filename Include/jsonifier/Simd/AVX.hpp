@@ -38,10 +38,6 @@ namespace jsonifier::simd {
 		return _mm_load_si128(static_cast<const __m128i*>(str));
 	}
 
-	template<simd_int_128_type simd_int_type_new> JSONIFIER_INLINE static simd_int_type_new gatherValuesU(const void* str) noexcept {
-		return _mm_loadu_si128(static_cast<const __m128i*>(str));
-	}
-
 	template<simd_int_128_type simd_int_type_new> JSONIFIER_INLINE static simd_int_type_new gatherValuesU(const void* str, void* str2) noexcept {
 		std::memcpy(str2, str, sizeof(simd_int_type_new));
 		return _mm_load_si128(static_cast<const __m128i*>(str2));
@@ -255,10 +251,6 @@ namespace jsonifier::simd {
 	template<simd_int_512_type simd_int_type_new> JSONIFIER_INLINE static simd_int_type_new gatherValuesU(const void* str, void* str2) noexcept {
 		std::memcpy(str2, str, sizeof(simd_int_type_new));
 		return _mm512_load_si512(static_cast<const __m512i*>(str2));
-	}
-
-	template<simd_int_512_type simd_int_type_new> JSONIFIER_INLINE static simd_int_type_new gatherValuesU(const void* str) noexcept {
-		return _mm512_loadu_si512(static_cast<const __m256i*>(str));
 	}
 
 	template<simd_int_512_type simd_int_type_new, typename char_t>

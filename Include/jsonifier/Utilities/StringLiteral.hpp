@@ -82,7 +82,7 @@ namespace jsonifier::internal {
 			return newLiteral;
 		}
 
-		template<size_type sizeNew> constexpr friend auto operator+(const value_type (&lhs)[sizeNew], const string_literal<sizeVal>& str) noexcept {
+		template<size_type sizeNew> friend constexpr auto operator+(const value_type (&lhs)[sizeNew], const string_literal<sizeVal>& str) noexcept {
 			return string_literal<sizeNew>{ lhs } + str;
 		}
 

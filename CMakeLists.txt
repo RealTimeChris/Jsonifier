@@ -71,6 +71,17 @@ if (NOT DEFINED JSONIFIER_CPU_INSTRUCTIONS)
 	include("JsonifierDetectArchitecture")
 endif()
 
+if (JSONIFIER_UNIT_TESTS)
+    include(FetchContent)
+    
+    FetchContent_Declare(rt-ut
+        GIT_REPOSITORY https://github.com/realtimechris/rt-ut.git
+        GIT_TAG main
+    )
+    
+    FetchContent_MakeAvailable(rt-ut)
+endif()
+
 include("flags_and_options")
 
 target_compile_features("${PROJECT_NAME}" INTERFACE "cxx_std_23")
@@ -147,6 +158,6 @@ if("${JSONIFIER_BENCHMARKS}" STREQUAL "TRUE")
 	add_subdirectory("./Benchmarks")
 endif()
 
-if("${JSONIFIER_TESTS}" STREQUAL "TRUE")
+if("${JSONIFIER_UNIT_TESTS}" STREQUAL "TRUE")
 	add_subdirectory("./Tests")
 endif()

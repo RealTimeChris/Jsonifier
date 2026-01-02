@@ -663,18 +663,18 @@ namespace jsonifier::internal {
 			if JSONIFIER_LIKELY (iter < end) {
 				if (*iter == minus) {
 					++iter;
-					const uint8_t* resultPtr = parseInteger<true>(value, reinterpret_cast<const uint8_t*>(iter));
+					const uint8_t* resultPtr = parseInteger<true>(value, std::bit_cast<const uint8_t*>(iter));
 					if JSONIFIER_LIKELY (resultPtr) {
-						iter += resultPtr - reinterpret_cast<const uint8_t*>(iter);
+						iter += resultPtr - std::bit_cast<const uint8_t*>(iter);
 						return true;
 					} else {
 						value = 0;
 						return false;
 					}
 				} else {
-					const uint8_t* resultPtr = parseInteger<false>(value, reinterpret_cast<const uint8_t*>(iter));
+					const uint8_t* resultPtr = parseInteger<false>(value, std::bit_cast<const uint8_t*>(iter));
 					if JSONIFIER_LIKELY (resultPtr) {
-						iter += resultPtr - reinterpret_cast<const uint8_t*>(iter);
+						iter += resultPtr - std::bit_cast<const uint8_t*>(iter);
 						return true;
 					} else {
 						value = 0;
@@ -1108,9 +1108,9 @@ namespace jsonifier::internal {
 
 		JSONIFIER_INLINE static bool parseInt(value_type& value, string_view_ptr& iter, string_view_ptr end) noexcept {
 			if JSONIFIER_LIKELY (iter < end) {
-				const uint8_t* resultPtr = parseInteger(value, reinterpret_cast<const uint8_t*>(iter));
+				const uint8_t* resultPtr = parseInteger(value, std::bit_cast<const uint8_t*>(iter));
 				if JSONIFIER_LIKELY (resultPtr) {
-					iter += resultPtr - reinterpret_cast<const uint8_t*>(iter);
+					iter += resultPtr - std::bit_cast<const uint8_t*>(iter);
 					return true;
 				} else {
 					value = 0;

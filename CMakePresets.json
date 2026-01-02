@@ -42,7 +42,7 @@
       },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "JSONIFIER_TESTS": "TRUE"
+        "JSONIFIER_UNIT_TESTS": "TRUE"
       },
       "inherits": "Jsonifier-Windows-Base",
       "name": "Jsonifier-Windows-Release-Tests"
@@ -75,7 +75,7 @@
       },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "JSONIFIER_TESTS": "TRUE"
+        "JSONIFIER_UNIT_TESTS": "TRUE"
       },
       "inherits": "Jsonifier-Windows-Base",
       "name": "Jsonifier-Windows-Debug-Tests"
