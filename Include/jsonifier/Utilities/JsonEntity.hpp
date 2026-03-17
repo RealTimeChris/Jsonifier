@@ -73,7 +73,7 @@ namespace jsonifier::internal {
 
 	template<auto... values, size_t... indices> inline static constexpr auto createValueImpl(jsonifier::internal::index_sequence<indices...>) {
 		static_assert((convertible_to_json_entity<decltype(values)> && ...), "All arguments passed to createValue must be convertible to a json_entity.");
-		return makeTuple(makeJsonEntityAuto<sizeof...(values), indices, values>()...);
+		return make_tuple(makeJsonEntityAuto<sizeof...(values), indices, values>()...);
 	}
 
 }

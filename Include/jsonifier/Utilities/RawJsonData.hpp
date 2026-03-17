@@ -55,13 +55,13 @@ namespace jsonifier {
 			return lhs.rawJson == rhs.rawJson;
 		}
 
-		string rawJson{};
+		string_view rawJson{};
 	};
 
 	class raw_json_data {
 	  public:
 		using object_type = std::unordered_map<string, raw_json_data>;
-		using string_type = string;
+		using string_type = string_view;
 		using array_type  = std::vector<raw_json_data>;
 		using number_type = json_number;
 		using bool_type	  = bool;
@@ -203,8 +203,8 @@ namespace jsonifier {
 
 	  protected:
 		std::vector<internal::error> errors{};
+		string_view jsonData{};
 		value_type value{};
-		string jsonData{};
 
 		template<typename parser_type> JSONIFIER_INLINE auto constructValueFromRawJsonData(parser_type& parser, const string& jsonDataNew) noexcept {
 			static constexpr parse_options optionsNew{};

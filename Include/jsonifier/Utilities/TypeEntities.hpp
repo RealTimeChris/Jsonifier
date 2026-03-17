@@ -44,6 +44,16 @@
 
 namespace jsonifier::internal {
 
+	template<typename... rest_types> struct first;
+
+	template<typename first_type, typename... rest_types> struct first<first_type, rest_types...> {
+		using type = first_type;
+	};
+
+	template<typename... rest_types> using first_t = typename first<rest_types...>::type;
+
+	template<auto index> using tag = std::integral_constant<uint64_t, index>;
+
 	template<typename value_type> JSONIFIER_INLINE constexpr jsonifier::internal::remove_reference_t<value_type>&& move(value_type&& value) noexcept {
 		return static_cast<jsonifier::internal::remove_reference_t<value_type>&&>(value);
 	}

@@ -103,6 +103,11 @@ namespace jsonifier::internal {
 			return returnValues;
 		}
 
+		constexpr operator std::string() const noexcept {
+			JSONIFIER_ALIGN(bytesPerStep) std::string returnValues{ values, length };
+			return returnValues;
+		}
+
 		JSONIFIER_ALIGN(bytesPerStep) value_type values[sizeVal] {};
 	};
 
