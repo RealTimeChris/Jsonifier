@@ -189,16 +189,6 @@ namespace jsonifier::internal {
 		}
 	};
 
-	enum class operation_types {
-		eq,
-		neq,
-		ss,
-		lt,
-		lte,
-		gt,
-		gte,
-	};
-
 	template<typename index_sequence, typename operation_type> struct comparison_op;
 
 	template<uint64_t... indices> struct comparison_op<std::integer_sequence<uint64_t, indices...>, eq_op> {
@@ -403,7 +393,7 @@ namespace jsonifier::internal {
 		using result_type	   = join_tuples_t<list_types...>;
 		using lists_tuple_type = type_list_t<list_types*...>;
 
-		static consteval uint64_t get_map_values() {
+		static consteval auto get_map_values() {
 			if constexpr (total > 0) {
 				struct tuple_cat_index_map {
 					uint64_t list_idx[total]{};
@@ -420,14 +410,14 @@ namespace jsonifier::internal {
 				return m;
 			} else {
 				struct tuple_cat_index_map {
-					uint64_t list_idx[1]{};
-					uint64_t local_idx[1]{};
+					uint64_t list_idx[2]{};
+					uint64_t local_idx[2]{};
 				};
-				return 0ULL;
+				return tuple_cat_index_map{};
 			}
 		}
 
-		static constexpr uint64_t map{ get_map_values() };
+		static constexpr auto map{ get_map_values() };
 
 		template<uint64_t index, typename list_type> JSONIFIER_INLINE static constexpr decltype(auto) get_individual_element(list_type&& list) {
 			auto* tuple_ptr = list[tag<map.list_idx[index]>{}];
@@ -454,8 +444,8 @@ namespace jsonifier::internal {
 
 namespace std {
 
-	template<size_t I, typename... Ts> struct tuple_element<I, std::tuple<Ts...>> {
-		using type = std::tuple_element_t<I, std::tuple<Ts...>>;
+	template<size_t I, typename... Ts> struct tuple_element<I, jsonifier::internal::tuple<Ts...>> {
+		using type = jsonifier::internal::tuple_element_t<I, jsonifier::internal::tuple<Ts...>>;
 	};
 
 	template<size_t I, typename  Ts> JSONIFIER_INLINE constexpr decltype(auto) get(Ts&& t) noexcept {

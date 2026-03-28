@@ -193,7 +193,7 @@ namespace jsonifier::internal {
 				newPtr[0] = simd::gatherValues<jsonifier_simd_int_t>(valuesToLoad);
 				std::memcpy(valuesToLoad, values + (bytesPerStep), bytesPerStep);
 				newPtr[1] = simd::gatherValues<jsonifier_simd_int_t>(valuesToLoad);
-				std::memcpy(valuesToLoad, values + (bytesPerStep * 2) , bytesPerStep);
+				std::memcpy(valuesToLoad, values + (bytesPerStep * 2), bytesPerStep);
 				newPtr[2] = simd::gatherValues<jsonifier_simd_int_t>(valuesToLoad);
 				std::memcpy(valuesToLoad, values + (bytesPerStep * 3), bytesPerStep);
 				newPtr[3] = simd::gatherValues<jsonifier_simd_int_t>(valuesToLoad);

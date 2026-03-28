@@ -23,6 +23,7 @@
 #pragma once
 
 #include "jsonifier.hpp"
+#include "simdjson.hpp"
 #include "glaze.hpp"
 
 namespace tests {
@@ -61,7 +62,7 @@ namespace tests {
 			static constexpr bool partial_read{ std::is_same_v<test_data_type, partial_test<partial_test_struct>> || std::is_same_v<test_data_type, twitter_partial_message> };
 			static constexpr bool known_order{ true };
 			results_data r{ jsonifier_library_name.operator std::string(), test_name.operator std::string(), jsonifier_commit_url.operator std::string() };
-			jsonifier::jsonifier_core parser{};
+			jsonifier::jsonifier_core<> parser{};
 			std::vector<std::vector<std::string>> new_strings{ iterations };
 			for (size_t x = 0; x < iterations; ++x) {
 				new_strings[x].resize(test_data_new[x].size());
@@ -133,7 +134,7 @@ namespace tests {
 			static constexpr bool partial_read{ std::is_same_v<test_data_type, partial_test<partial_test_struct>> || std::is_same_v<test_data_type, twitter_partial_message> };
 			static constexpr bool known_order{ true };
 			results_data r{ jsonifier_library_name.operator std::string(), test_name.operator std::string(), jsonifier_commit_url.operator std::string() };
-			jsonifier::jsonifier_core parser{};
+			jsonifier::jsonifier_core<> parser{};
 			std::vector<std::string> new_strings{ iterations };
 			for (size_t x = 0; x < iterations; ++x) {
 				parser.serializeJson<jsonifier::serialize_options{ .prettify = !minified }>(test_data_new[x], new_strings[x]);
@@ -189,7 +190,7 @@ namespace tests {
 			static constexpr bool partial_read{ std::is_same_v<test_data_type, partial_test<partial_test_struct>> || std::is_same_v<test_data_type, twitter_partial_message> };
 			static constexpr bool known_order{ true };
 			results_data r{ jsonifier_library_name.operator std::string(), test_name.operator std::string(), jsonifier_commit_url.operator std::string() };
-			jsonifier::jsonifier_core parser{};
+			jsonifier::jsonifier_core<> parser{};
 			std::vector<std::string> new_strings{ iterations };
 			std::string new_string{ parser.serializeJson<jsonifier::serialize_options{ .prettify = !minified }>(test_data_new) };
 			std::vector<test_data_type> test_datas{ iterations };
@@ -239,7 +240,7 @@ namespace tests {
 		JSONIFIER_INLINE static auto run(std::string& new_buffer) {
 			static constexpr bnch_swt::string_literal test_name{ test_name_new };
 			results_data r{ jsonifier_library_name.operator std::string(), test_name.operator std::string(), jsonifier_commit_url.operator std::string() };
-			jsonifier::jsonifier_core parser{};
+			jsonifier::jsonifier_core<> parser{};
 			std::vector<std::string> new_strings{ iterations };
 			size_t current_index{};
 			struct prettify_test_struct {
@@ -270,7 +271,7 @@ namespace tests {
 			static constexpr bnch_swt::string_literal test_name{ test_name_new };
 			std::vector<std::string> new_strings{ iterations };
 			results_data r{ jsonifier_library_name.operator std::string(), test_name.operator std::string(), jsonifier_commit_url.operator std::string() };
-			jsonifier::jsonifier_core parser{};
+			jsonifier::jsonifier_core<> parser{};
 			size_t current_index{};
 			struct minify_test_struct {
 				JSONIFIER_INLINE static size_t impl(jsonifier::jsonifier_core<>& parser_new, size_t& current_index, std::vector<std::string>& new_strings,
@@ -307,7 +308,7 @@ namespace tests {
 					return static_cast<uint64_t>(newer_buffer.size());
 				}
 			};
-			jsonifier::jsonifier_core parser{};
+			jsonifier::jsonifier_core<> parser{};
 			auto read_result =
 				bnch_swt::benchmark_stage<test_name, iterations, measured_iterations>::template run_benchmark<jsonifier_library_name, validate_test_struct>(parser, new_buffer);
 
@@ -605,7 +606,7 @@ namespace tests {
 			return r;
 		}
 	};
-	/*
+
 	template<pod_type test_data_type, bool minified, size_t iterations, const bnch_swt::string_literal test_name_new>
 	struct json_test_helper<json_library::simdjson, test_type::parse_and_serialize, test_data_type, minified, iterations, test_name_new> {
 		JSONIFIER_INLINE static auto run(const test_data_type& test_data_new) {
@@ -776,7 +777,7 @@ namespace tests {
 			return r;
 		}
 	};
-	*/
+
 #if JSONIFIER_PLATFORM_MAC
 	constexpr bnch_swt::string_literal table_header = bnch_swt::string_literal{
 		R"(
@@ -868,10 +869,11 @@ In contrast, hash-based solutions offer a viable alternative by circumventing th
 			results_data glaze_results{};
 
 #if !defined(ASAN_ENABLED)
-			//simdjson_results = json_test_helper<json_library::simdjson, type, test_data_type, minified, iterations, test_name>::run(json_data_new);
-			if constexpr (!std::is_same_v<test_data_type, partial_test<partial_test_struct>> && !std::is_same_v<test_data_type, twitter_partial_message>) {
+			if constexpr (!std::is_same_v<test_data_type, twitter_message> && !std::is_same_v<test_data_type, status_data>) {
 				glaze_results = json_test_helper<json_library::glaze, type, test_data_type, minified, iterations, test_name>::run(json_data_new);
 				json_results.results.emplace_back(glaze_results);
+			} else {
+				std::cout << "Skipping Glaze for recursive type: " << test_name << " (Compile-time recursion limit)" << std::endl;
 			}
 #endif
 			jsonifier_results = json_test_helper<json_library::jsonifier, type, test_data_type, minified, iterations, test_name>::run(json_data_new);
@@ -934,7 +936,7 @@ In contrast, hash-based solutions offer a viable alternative by circumventing th
 			results_data simdjson_results{};
 			results_data glaze_results{};
 #if !defined(ASAN_ENABLED)
-			//simdjson_results = json_test_helper<json_library::simdjson, test_type::minify, std::string, false, iterations, test_name>::run(json_data_new);
+			simdjson_results = json_test_helper<json_library::simdjson, test_type::minify, std::string, false, iterations, test_name>::run(json_data_new);
 			glaze_results	 = json_test_helper<json_library::glaze, test_type::minify, std::string, false, iterations, test_name>::run(json_data_new);
 #endif
 			jsonifier_results = json_test_helper<json_library::jsonifier, test_type::minify, std::string, false, iterations, test_name>::run(json_data_new);
@@ -990,7 +992,7 @@ In contrast, hash-based solutions offer a viable alternative by circumventing th
 
 	JSONIFIER_INLINE void test_function() {
 		std::string json_data_new{};
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		std::vector<test<test_struct>> json_data_newer{ max_iterations };
 		for (size_t x = 0; x < max_iterations; ++x) {
 			json_data_newer[x] = test_generator::generate_test();

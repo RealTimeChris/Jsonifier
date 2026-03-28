@@ -40,7 +40,7 @@ namespace uint_validation_tests {
 		"null", "{}" };
 
 	bool uintTests() noexcept {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		std::cout << "Uint Tests: " << std::endl;
 		for (size_t x = 0; x < std::size(stringViews01); ++x) {
 			runTest<true>("Uint Pass Test #" + std::to_string(x), stringViews01[x], uint64Values[x], parser);

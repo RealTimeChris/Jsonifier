@@ -18,7 +18,7 @@ Here is an example demonstrating how to configure these options when setting up 
 #include <jsonifier/Index.hpp>
 
 int32_t main() {
-    jsonifier::jsonifier_core parser{};
+    jsonifier::jsonifier_core<> parser{};
     test_data_type testData{};
     jsonifier::string newBuffer{ your_json_string };
 

@@ -74,7 +74,7 @@ namespace float_validation_tests {
 	}
 
 	bool floatTests() noexcept {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		std::cout << "Float Tests: " << std::endl;
 		for (size_t x = 0; x < std::size(stringArray); ++x) {
 			runTest("Float Test #" + std::to_string(x), stringArray[x], doubleArray[x], parser);

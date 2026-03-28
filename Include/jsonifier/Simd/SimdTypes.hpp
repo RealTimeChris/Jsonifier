@@ -69,11 +69,11 @@ namespace jsonifier {
 
 namespace jsonifier {
 
-	using jsonifier_simd_int_128 = jsonifier::simd::__m128x;
+	using jsonifier_simd_int_128 = jsonifier::simd::simd_x<simd::simd_classes::x_128>;
 	using jsonifier_simd_int_256 = uint32_t;
 	using jsonifier_simd_int_512 = size_t;
 
-	using jsonifier_simd_int_t			= jsonifier::simd::__m128x;
+	using jsonifier_simd_int_t			= jsonifier::simd::simd_x<simd::simd_classes::x_128>;
 	using jsonifier_string_parsing_type = uint16_t;
 	inline constexpr size_t bitsPerStep{ 128 };
 

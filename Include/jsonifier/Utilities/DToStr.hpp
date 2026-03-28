@@ -52,27 +52,23 @@ namespace jsonifier::internal {
 		bool lz = bb < 10 && a == 0;
 		std::memcpy(buf, fiwb<void>::charTable01 + (bb * 2 + lz), 2);
 		buf -= lz;
-		std::memcpy(buf + 2, fiwb<void>::charTable01 + 2 * cc, 2);
+		std::memcpy(buf + 2, fiwb<void>::charTable02 + cc, 2);
 
 		if (ffgghhii) {
-			uint32_t dd	  = (ddee * 5243) >> 19;
-			uint32_t ee	  = ddee - dd * 100;
 			uint32_t ffgg = uint32_t((uint64_t(ffgghhii) * 109951163) >> 40);
 			uint32_t hhii = ffgghhii - ffgg * 10000;
 			uint32_t ff	  = (ffgg * 5243) >> 19;
 			uint32_t gg	  = ffgg - ff * 100;
-			std::memcpy(buf + 4, fiwb<void>::charTable01 + 2 * dd, 2);
-			std::memcpy(buf + 6, fiwb<void>::charTable01 + 2 * ee, 2);
-			std::memcpy(buf + 8, fiwb<void>::charTable01 + 2 * ff, 2);
-			std::memcpy(buf + 10, fiwb<void>::charTable01 + 2 * gg, 2);
+			std::memcpy(buf + 4, fiwb<void>::charTable04.data() + ddee, 4);
+			std::memcpy(buf + 8, fiwb<void>::charTable04.data() + ffgg, 4);
+			std::memcpy(buf + 10, fiwb<void>::charTable02 + gg, 2);
 			if (hhii) {
 				uint32_t hh = (hhii * 5243) >> 19;
 				uint32_t ii = hhii - hh * 100;
-				std::memcpy(buf + 12, fiwb<void>::charTable01 + 2 * hh, 2);
-				std::memcpy(buf + 14, fiwb<void>::charTable01 + 2 * ii, 2);
+				std::memcpy(buf + 12, fiwb<void>::charTable04.data() + hhii, 4);
 				tz1 = decTrailingZeroTable[hh];
 				tz2 = decTrailingZeroTable[ii];
-				tz	= ii ? tz2 : (tz1 + 2);
+				tz	= hhii ? tz2 : (tz1 + 2);
 				buf += 16 - tz;
 				return buf;
 			} else {
@@ -86,8 +82,7 @@ namespace jsonifier::internal {
 			if (ddee) {
 				uint32_t dd = (ddee * 5243) >> 19;
 				uint32_t ee = ddee - dd * 100;
-				std::memcpy(buf + 4, fiwb<void>::charTable01 + 2 * dd, 2);
-				std::memcpy(buf + 6, fiwb<void>::charTable01 + 2 * ee, 2);
+				std::memcpy(buf + 4, fiwb<void>::charTable04.data() + ddee, 4);
 				tz1 = decTrailingZeroTable[dd];
 				tz2 = decTrailingZeroTable[ee];
 				tz	= ee ? tz2 : (tz1 + 2);

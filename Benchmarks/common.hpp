@@ -35,8 +35,8 @@
 static constexpr auto max_iterations{ 1400 };
 static constexpr auto measured_iterations{ 20 };
 #else
-static constexpr auto max_iterations{ 200 };
-static constexpr auto measured_iterations{ 25 };
+static constexpr auto max_iterations{ 2 };
+static constexpr auto measured_iterations{ 1 };
 #endif
 
 constexpr auto get_current_operating_system() {

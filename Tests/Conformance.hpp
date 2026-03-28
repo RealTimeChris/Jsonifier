@@ -63,7 +63,7 @@ namespace conformance_tests {
 	}
 
 	bool conformanceTests() noexcept {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		std::unordered_map<std::string, test_base> jsonTests{};
 		processFilesInFolder(jsonTests, "/ConformanceTests");
 		std::cout << "Conformance Tests: " << std::endl;

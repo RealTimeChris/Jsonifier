@@ -9,7 +9,7 @@ To use the `jsonifier_core::validateJson()` function, call it as follows. It ret
 ```cpp
 #include "jsonifier/Index.hpp"
 
-jsonifier::jsonifier_core parser{};
+jsonifier::jsonifier_core<> parser{};
 jsonifier::string buffer = "{\"key\": \"value\"}";
 
 // Validate JSON data
@@ -28,7 +28,7 @@ Jsonifier automatically validates JSON data during the parsing process. Simply c
 ```cpp
 #include "jsonifier/Index.hpp"
 
-jsonifier::jsonifier_core parser{};
+jsonifier::jsonifier_core<> parser{};
 twitter_message discordTest{};
 jsonifier::string buffer = "{\"key\": \"value\"}";
 

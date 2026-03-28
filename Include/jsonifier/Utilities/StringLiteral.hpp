@@ -111,6 +111,8 @@ namespace jsonifier::internal {
 		JSONIFIER_ALIGN(bytesPerStep) value_type values[sizeVal] {};
 	};
 
+	template<size_t sizeVal> string_literal(const char (&)[sizeVal]) -> string_literal<sizeVal>;
+
 	template<size_t size> std::ostream& operator<<(std::ostream& os, const string_literal<size>& input) noexcept {
 		os << input.operator string_view();
 		return os;

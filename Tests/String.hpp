@@ -35,7 +35,7 @@ namespace string_validation_tests {
 		"\xF0\x9D\x84\x9E" };
 
 	bool stringTests() noexcept {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		std::cout << "String Tests: " << std::endl;
 		for (size_t x = 0; x < std::size(stringViews01); ++x) {
 			runTest<true>("String Pass Test #" + std::to_string(x), stringViews01[x], stringValues[x], parser);

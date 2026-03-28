@@ -76,7 +76,7 @@ namespace round_trip_tests {
 	}
 
 	bool roundTripTests() noexcept {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		std::unordered_map<std::string, test_base> jsonTests{};
 		processFilesInFolder(jsonTests, "/RoundTrip");
 		std::cout << "RoundTrip Tests: " << std::endl;

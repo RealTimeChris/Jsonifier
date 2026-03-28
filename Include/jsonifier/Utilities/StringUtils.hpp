@@ -202,7 +202,7 @@ namespace jsonifier::internal {
 	}
 
 	/// Sampled from Simdjson library: https://github.com/simdjson/simdjson
-	JSONIFIER_INLINE static uint64_t codePointToUtf8(uint32_t cp, string_buffer_ptr c) noexcept {
+	JSONIFIER_INLINE static uint32_t codePointToUtf8(uint32_t cp, char* c) noexcept {
 		if (cp <= 0x7F) {
 			c[0] = static_cast<char>(cp);
 			return 1;

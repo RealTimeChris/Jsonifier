@@ -32,232 +32,323 @@
 
 namespace jsonifier::simd {
 
-	union __m128x {
-		template<typename value_type> constexpr __m128x(value_type arg01, value_type arg02, value_type arg03, value_type arg04, value_type arg05, value_type arg06,
-			value_type arg07, value_type arg08, value_type arg09, value_type arg10, value_type arg11, value_type arg12, value_type arg13, value_type arg14, value_type arg15,
-			value_type arg16) noexcept {
-			m128x_uint64[0] = static_cast<size_t>(arg01);
-			m128x_uint64[0] |= static_cast<size_t>(arg02) << 8;
-			m128x_uint64[0] |= static_cast<size_t>(arg03) << 16;
-			m128x_uint64[0] |= static_cast<size_t>(arg04) << 24;
-			m128x_uint64[0] |= static_cast<size_t>(arg05) << 32;
-			m128x_uint64[0] |= static_cast<size_t>(arg06) << 40;
-			m128x_uint64[0] |= static_cast<size_t>(arg07) << 48;
-			m128x_uint64[0] |= static_cast<size_t>(arg08) << 56;
-			m128x_uint64[1] = static_cast<size_t>(arg09);
-			m128x_uint64[1] |= static_cast<size_t>(arg10) << 8;
-			m128x_uint64[1] |= static_cast<size_t>(arg11) << 16;
-			m128x_uint64[1] |= static_cast<size_t>(arg12) << 24;
-			m128x_uint64[1] |= static_cast<size_t>(arg13) << 32;
-			m128x_uint64[1] |= static_cast<size_t>(arg14) << 40;
-			m128x_uint64[1] |= static_cast<size_t>(arg15) << 48;
-			m128x_uint64[1] |= static_cast<size_t>(arg16) << 56;
-		}
-
-		constexpr __m128x(size_t argOne, size_t argTwo) noexcept {
-			m128x_uint64[0] = argOne;
-			m128x_uint64[1] = argTwo;
-		}
-
-		constexpr __m128x() noexcept {
-			m128x_uint64[0] = 0;
-			m128x_uint64[1] = 0;
-		}
-
-#if JSONIFIER_PLATFORM_WINDOWS
-		int8_t m128x_int8[16]{};
-		int16_t m128x_int16[8];
-		int32_t m128x_int32[4];
-		int64_t m128x_int64[2];
-		uint8_t m128x_uint8[16];
-		int16_t m128x_uint16[8];
-		int32_t m128x_uint32[4];
-		size_t m128x_uint64[2];
-#else
-		int64_t m128x_int64[2];
-		int32_t m128x_int32[4];
-		int16_t m128x_int16[8];
-		int8_t m128x_int8[16]{};
-		size_t m128x_uint64[2];
-		int32_t m128x_uint32[4];
-		int16_t m128x_uint16[8];
-		uint8_t m128x_uint8[16];
-#endif
+	enum class simd_classes {
+		x_128 = 16,
+		x_256 = 32,
+		x_512 = 64,
 	};
 
-	template<typename simd_int_t01, size_t... indices>
-	JSONIFIER_INLINE static constexpr uint16_t mm128MovemaskEpi8Impl(const simd_int_t01& a, jsonifier::internal::index_sequence<indices...>&&) noexcept {
-		uint16_t mask{};
-		((mask |= (a.m128x_int8[indices] & 0x80) ? (1 << indices) : 0), ...);
-		return mask;
-	}
+	template<typename... value_types> struct first;
 
-	template<typename simd_int_t01> JSONIFIER_INLINE static constexpr uint16_t mm128MovemaskEpi8(const simd_int_t01& a) noexcept {
-		return mm128MovemaskEpi8Impl(a, jsonifier::internal::make_index_sequence<16>{});
-	}
+	template<typename value_type, typename... value_types> struct first<value_type, value_types...> {
+		using type = value_type;
+	};
 
-	JSONIFIER_INLINE static constexpr __m128x mm128AddEpi8(const __m128x& a, const __m128x& b) noexcept {
-		__m128x result;
-		for (int32_t i = 0; i < 16; ++i) {
-			result.m128x_int8[i] = static_cast<int8_t>(a.m128x_int8[i] + b.m128x_int8[i]);
+	template<typename... value_types> using first_t = typename first<value_types...>::type;
+
+	template<simd_classes simd_class_new> struct simd_x {
+	  public:
+		static constexpr simd_classes simd_class{ simd_class_new };
+		static constexpr uint64_t sixty_four_per{ static_cast<uint64_t>(simd_class) / sizeof(uint64_t) };
+		static constexpr uint64_t thirty_two_per{ static_cast<uint64_t>(simd_class) / sizeof(uint32_t) };
+		static constexpr uint64_t sixteen_per{ static_cast<uint64_t>(simd_class) / sizeof(uint16_t) };
+		static constexpr uint64_t eight_per{ static_cast<uint64_t>(simd_class) / sizeof(uint8_t) };
+
+		union JSONIFIER_ALIGN(static_cast<uint64_t>(simd_class)) storage_type {
+			uint64_t x_uint64[sixty_four_per];
+			uint32_t x_uint32[thirty_two_per];
+			uint16_t x_uint16[sixteen_per];
+			uint8_t x_uint8[eight_per];
+			int64_t x_int64[sixty_four_per];
+			int32_t x_int32[thirty_two_per];
+			int16_t x_int16[sixteen_per];
+			int8_t x_int8[eight_per];
+		} values{};
+
+		template<typename integer_sequence> struct pack_values;
+
+		template<uint64_t... indices> struct pack_values<std::integer_sequence<uint64_t, indices...>> {
+			template<typename... value_type>
+				requires(sizeof(first_t<value_type...>) == 8 && sizeof...(value_type) == sixty_four_per)
+			JSONIFIER_INLINE static constexpr void impl(storage_type& values, value_type&&... args) {
+				((values.x_uint64[indices] = args), ...);
+			}
+			template<typename... value_type>
+				requires(sizeof(first_t<value_type...>) == 4 && sizeof...(value_type) == thirty_two_per)
+			JSONIFIER_INLINE static constexpr void impl(storage_type& values, value_type&&... args) {
+				((values.x_uint32[indices] = args), ...);
+			}
+
+			template<typename... value_type>
+				requires(sizeof(first_t<value_type...>) == 2 && sizeof...(value_type) == sixteen_per)
+			JSONIFIER_INLINE static constexpr void impl(storage_type& values, value_type&&... args) {
+				((values.x_uint16[indices] = args), ...);
+			}
+
+			template<typename... value_type>
+				requires(sizeof(first_t<value_type...>) == 1 && sizeof...(value_type) == eight_per)
+			JSONIFIER_INLINE static constexpr void impl(storage_type& values, value_type&&... args) {
+				((values.x_uint8[indices] = args), ...);
+			}
+
+			JSONIFIER_INLINE static constexpr void impl(storage_type& values, const uint64_t (&args)[sizeof...(indices)]) {
+				((values.x_uint64[indices] = args[indices]), ...);
+			}
+
+			JSONIFIER_INLINE static constexpr void impl(storage_type& values, const uint32_t (&args)[sizeof...(indices)]) {
+				((values.x_uint32[indices] = args[indices]), ...);
+			}
+
+			JSONIFIER_INLINE static constexpr void impl(storage_type& values, const uint16_t (&args)[sizeof...(indices)]) {
+				((values.x_uint16[indices] = args[indices]), ...);
+			}
+
+			JSONIFIER_INLINE static constexpr void impl(storage_type& values, const uint8_t (&args)[sizeof...(indices)]) {
+				((values.x_uint8[indices] = args[indices]), ...);
+			}
+		};
+
+		template<typename... value_type>
+			requires(sizeof...(value_type) == (static_cast<uint64_t>(simd_class) / sizeof(first_t<value_type...>)))
+		JSONIFIER_INLINE explicit constexpr simd_x(value_type&&... val_01) noexcept {
+			pack_values<std::make_integer_sequence<uint64_t, sizeof...(value_type)>>::impl(values, std::forward<value_type>(val_01)...);
 		}
+
+		template<typename value_type, uint64_t size>
+			requires(size == (static_cast<uint64_t>(simd_class) / sizeof(value_type)))
+		JSONIFIER_INLINE explicit constexpr simd_x(const value_type (&val_01)[size]) noexcept {
+			pack_values<std::make_integer_sequence<uint64_t, size>>::impl(values, val_01);
+		}
+
+		JSONIFIER_INLINE constexpr simd_x() noexcept {
+		}
+	};
+
+	template<uint64_t size> struct get_int_from_size {
+		using type = std::conditional_t<size == 16, uint16_t, std::conditional_t<size == 32, uint32_t, uint64_t>>;
+	};
+
+	template<uint64_t size> using get_int_from_size_t = typename get_int_from_size<size>::type;
+
+	template<typename integer_sequence> struct shuffle_epi8_impl;
+
+	template<uint64_t... indices> struct shuffle_epi8_impl<std::integer_sequence<uint64_t, indices...>> {
+		template<typename simd_int_t01> JSONIFIER_INLINE static constexpr simd_int_t01 impl(const simd_int_t01& a, const simd_int_t01& b) noexcept {
+			simd_int_t01 result{};
+			uint8_t control{};
+			((control = b.values.x_uint8[indices], result.values.x_uint8[indices] = (control & 0x80) ? 0 : a.values.x_uint8[(indices & ~0x0F) | (control & 0x0F)]), ...);
+			return result;
+		}
+	};
+
+	template<typename simd_class> JSONIFIER_INLINE static constexpr auto op_shuffle(const simd_class& a, const simd_class& b) noexcept {
+		return shuffle_epi8_impl<std::make_integer_sequence<uint64_t, static_cast<uint64_t>(simd_class::simd_class)>>::impl(a, b);
+	}
+
+	template<typename integer_sequence> struct op_cmp_eq_bitmask_impl;
+
+	template<uint64_t... indices> struct op_cmp_eq_bitmask_impl<std::integer_sequence<uint64_t, indices...>> {
+		template<typename simd_int_t01> JSONIFIER_INLINE static constexpr decltype(auto) impl(const simd_int_t01& a, const simd_int_t01& b) noexcept {
+			get_int_from_size_t<sizeof...(indices)> mask{};
+			((mask |= (a.values.x_uint8[indices] == b.values.x_uint8[indices] ? (static_cast<decltype(mask)>(1) << indices) : 0)), ...);
+			return mask;
+		}
+	};
+
+	template<typename simd_class> JSONIFIER_INLINE static constexpr auto op_cmp_eq_bitmask(const simd_class& a, const simd_class& b) noexcept {
+		return op_cmp_eq_bitmask_impl<std::make_integer_sequence<uint64_t, static_cast<uint64_t>(simd_class::simd_class)>>::impl(a, b);
+	}
+
+	template<typename integer_sequence> struct movemask_epi8_impl;
+
+	template<uint64_t... indices> struct movemask_epi8_impl<std::integer_sequence<uint64_t, indices...>> {
+		template<typename simd_int_t01> JSONIFIER_INLINE static constexpr auto impl(const simd_int_t01& a) noexcept {
+			get_int_from_size_t<sizeof...(indices)> mask{};
+			((mask |= (a.values.x_uint8[indices] & 0x80) ? (static_cast<decltype(mask)>(1) << indices) : 0), ...);
+			return mask;
+		}
+	};
+
+	template<typename simd_class> JSONIFIER_INLINE static constexpr auto op_bitmask(const simd_class& a) noexcept {
+		return movemask_epi8_impl<std::make_integer_sequence<uint64_t, static_cast<uint64_t>(simd_class::simd_class)>>::impl(a);
+	}
+
+	template<typename simd_class> JSONIFIER_INLINE static constexpr auto gather_values(const void* str) noexcept {
+		simd_class result{};
+		std::memcpy(&result, str, static_cast<uint64_t>(simd_class::simd_class));
 		return result;
 	}
 
-	JSONIFIER_INLINE static constexpr __m128x mm128CmpGtEpi8(const __m128x& a, const __m128x& b) noexcept {
-		__m128x result;
-
-		for (size_t i = 0; i < 16; ++i) {
-			result.m128x_uint8[i] = static_cast<uint8_t>(static_cast<int8_t>(a.m128x_uint8[i]) > static_cast<int8_t>(b.m128x_uint8[i]) ? 0xFF : 0x00);
-		}
-
+	template<typename simd_class> JSONIFIER_INLINE static constexpr auto gather_values_u(const void* str) noexcept {
+		simd_class result{};
+		std::memcpy(&result, str, static_cast<uint64_t>(simd_class::simd_class));
 		return result;
 	}
 
-	JSONIFIER_INLINE static constexpr __m128x mm128Set1Epi8(uint8_t value) noexcept {
-		__m128x result;
+	template<typename simd_class> JSONIFIER_INLINE static constexpr void store_values(const simd_class& simd_value, void* dst) noexcept {
+		std::memcpy(dst, &simd_value, static_cast<uint64_t>(simd_class::simd_class));
+	}
 
-		size_t repeated_value = 0;
-		for (int32_t i = 0; i < 8; ++i) {
-			repeated_value |= (static_cast<size_t>(value) << (i * 8));
+	template<typename simd_class> JSONIFIER_INLINE static constexpr void store_values_u(const simd_class& simd_value, void* dst) noexcept {
+		std::memcpy(dst, &simd_value, static_cast<uint64_t>(simd_class::simd_class));
+	}
+
+	template<typename integer_sequence> struct op_set1_impl;
+
+	template<uint64_t... indices> struct op_set1_impl<std::integer_sequence<uint64_t, indices...>> {
+		template<typename simd_int_t01, typename char_type>
+			requires(sizeof(char_type) == 1)
+		JSONIFIER_INLINE static constexpr decltype(auto) impl(char_type other) noexcept {
+			simd_int_t01 result{};
+			((result.values.x_int8[indices] = static_cast<int8_t>(other)), ...);
+			return result;
 		}
 
-		for (int32_t i = 0; i < 2; ++i) {
-			result.m128x_uint64[i] = repeated_value;
+		template<typename simd_int_t01, typename char_type>
+			requires(sizeof(char_type) == 8)
+		JSONIFIER_INLINE static constexpr decltype(auto) impl(char_type other) noexcept {
+			simd_int_t01 result{};
+			((result.values.x_uint64[indices] = static_cast<uint64_t>(other)), ...);
+			return result;
 		}
+	};
 
-		return result;
+	template<typename simd_class, typename char_type> JSONIFIER_INLINE static constexpr decltype(auto) op_set1_epi8(const char_type& other) noexcept {
+		return op_set1_impl<std::make_integer_sequence<uint64_t, static_cast<uint64_t>(simd_class::simd_class)>>::template impl<simd_class>(other);
 	}
 
-	template<typename simd_int_t01, typename simd_int_t02> JSONIFIER_INLINE static constexpr __m128x mm128OrSi128(const simd_int_t01& valOne, const simd_int_t02& valTwo) noexcept {
-		__m128x value{};
-		std::copy(valOne.m128x_uint64, valOne.m128x_uint64 + 2, value.m128x_uint64);
-		value.m128x_uint64[0] |= valTwo.m128x_uint64[0];
-		value.m128x_uint64[1] |= valTwo.m128x_uint64[1];
-		return value;
+	template<typename simd_class> JSONIFIER_INLINE static constexpr decltype(auto) op_set1_epi64(const uint64_t& other) noexcept {
+		return op_set1_impl<std::make_integer_sequence<uint64_t, static_cast<uint64_t>(simd_class::sixty_four_per)>>::template impl<simd_class>(other);
 	}
 
-	template<typename simd_int_t01, typename simd_int_t02>
-	JSONIFIER_INLINE static constexpr __m128x mm128AndSi128(const simd_int_t01& valOne, const simd_int_t02& valTwo) noexcept {
-		__m128x value{};
-		std::copy(valOne.m128x_uint64, valOne.m128x_uint64 + 2, value.m128x_uint64);
-		value.m128x_uint64[0] &= valTwo.m128x_uint64[0];
-		value.m128x_uint64[1] &= valTwo.m128x_uint64[1];
-		return value;
+	template<typename simd_class, typename... value_types>
+		requires(sizeof(first_t<value_types...>) == 8 && sizeof...(value_types) == simd_class::sixty_four_per)
+	JSONIFIER_INLINE static constexpr decltype(auto) op_set_epi64(const value_types&... vals) noexcept {
+		return simd_class{ vals... };
 	}
 
-	template<typename simd_int_t01, typename simd_int_t02>
-	JSONIFIER_INLINE static constexpr __m128x mm128AndNotSi128(const simd_int_t01& valOne, const simd_int_t02& valTwo) noexcept {
-		__m128x value{};
-		std::copy(valOne.m128x_uint64, valOne.m128x_uint64 + 2, value.m128x_uint64);
-		value.m128x_uint64[0] &= ~valOne.m128x_uint64[0];
-		value.m128x_uint64[1] &= ~valOne.m128x_uint64[1];
-		return value;
-	}
+	template<typename integer_sequence> struct op_xor_impl;
 
-	template<typename simd_int_t01, typename simd_int_t02>
-	JSONIFIER_INLINE static constexpr __m128x mm128XorSi128(const simd_int_t01& valOne, const simd_int_t02& valTwo) noexcept {
-		__m128x value{};
-		std::copy(valOne.m128x_uint64, valOne.m128x_uint64 + 2, value.m128x_uint64);
-		value.m128x_uint64[0] ^= valTwo.m128x_uint64[0];
-		value.m128x_uint64[1] ^= valTwo.m128x_uint64[1];
-		return value;
-	}
-
-	template<typename simd_int_t01, typename simd_int_t02, size_t... indices>
-	JSONIFIER_INLINE static constexpr __m128x mm128CmpEqEpi8Impl(const simd_int_t01& a, const simd_int_t02& b, jsonifier::internal::index_sequence<indices...>&&) noexcept {
-		__m128x result{};
-		((result.m128x_int8[indices] = (a.m128x_int8[indices] == b.m128x_int8[indices]) ? 0xFF : 0), ...);
-		return result;
-	}
-
-	template<typename simd_int_t01, typename simd_int_t02> JSONIFIER_INLINE static constexpr __m128x mm128CmpEqEpi8(const simd_int_t01& a, const simd_int_t02& b) noexcept {
-		return mm128CmpEqEpi8Impl(a, b, jsonifier::internal::make_index_sequence<16>{});
-	}
-
-	template<typename simd_int_t01, typename simd_int_t02> JSONIFIER_INLINE static constexpr bool mm128TestzSi128(simd_int_t01& valOneNew, simd_int_t02& valTwo) noexcept {
-		std::remove_const_t<simd_int_t01> valOne{ valOneNew };
-		valOne.m128x_uint64[0] &= valTwo.m128x_uint64[0];
-		valOne.m128x_uint64[1] &= valTwo.m128x_uint64[1];
-		return valOne.m128x_uint64[0] == 0 && valOne.m128x_uint64[1] == 0;
-	}
-
-	JSONIFIER_INLINE static constexpr __m128x mm128SetEpi64x(size_t argOne, size_t argTwo) noexcept {
-		__m128x returnValue{};
-		std::copy(&argOne, &argOne + 1, returnValue.m128x_uint64);
-		std::copy(&argTwo, &argTwo + 1, returnValue.m128x_uint64 + 1);
-		return returnValue;
-	}
-
-	JSONIFIER_INLINE static constexpr __m128x mm128Set1Epi64x(size_t argOne) noexcept {
-		__m128x returnValue{};
-		std::copy(&argOne, &argOne + 1, returnValue.m128x_uint64);
-		std::copy(&argOne, &argOne + 1, returnValue.m128x_uint64 + 1);
-		return returnValue;
-	}
-
-	JSONIFIER_INLINE static constexpr void mm128StoreUSi128(uint8_t* ptr, const __m128x& data) noexcept {
-		for (int32_t i = 0; i < 8; ++i) {
-			ptr[i] = static_cast<uint8_t>(data.m128x_uint64[0] >> (i * 8));
+	template<uint64_t... indices> struct op_xor_impl<std::integer_sequence<uint64_t, indices...>> {
+		template<typename simd_int_t01> JSONIFIER_INLINE static constexpr simd_int_t01 impl(const simd_int_t01& a, const simd_int_t01& b) noexcept {
+			simd_int_t01 result{};
+			((result.values.x_uint64[indices] = a.values.x_uint64[indices] ^ b.values.x_uint64[indices]), ...);
+			return result;
 		}
+	};
 
-		for (int32_t i = 0; i < 8; ++i) {
-			ptr[i + 8] = static_cast<uint8_t>(data.m128x_uint64[1] >> (i * 8));
+	template<typename simd_class> JSONIFIER_INLINE static constexpr auto op_xor(const simd_class& a, const simd_class& b) noexcept {
+		return op_xor_impl<std::make_integer_sequence<uint64_t, static_cast<uint64_t>(simd_class::sixty_four_per)>>::impl(a, b);
+	}
+
+	template<typename integer_sequence> struct op_sub_impl;
+
+	template<uint64_t... indices> struct op_sub_impl<std::integer_sequence<uint64_t, indices...>> {
+		template<typename simd_int_t01> JSONIFIER_INLINE static constexpr decltype(auto) impl(const simd_int_t01& a, const simd_int_t01& b) noexcept {
+			simd_int_t01 result{};
+			((result.values.x_uint8[indices] = a.values.x_uint8[indices] - b.values.x_uint8[indices]), ...);
+			return result;
 		}
+	};
+
+	template<typename simd_class> JSONIFIER_INLINE static constexpr decltype(auto) op_sub(const simd_class& a, const simd_class& b) noexcept {
+		return op_sub_impl<std::make_integer_sequence<uint64_t, static_cast<uint64_t>(simd_class::simd_class)>>::impl(a, b);
 	}
 
-	template<typename value_type> JSONIFIER_INLINE static constexpr void mm128StoreUSi128(value_type* ptr, const __m128x& data) noexcept {
-		for (int32_t i = 0; i < 2; ++i) {
-			ptr[i] = static_cast<size_t>(data.m128x_uint64[i]);
+	template<typename integer_sequence> struct op_cmp_gt_impl;
+
+	template<uint64_t... indices> struct op_cmp_gt_impl<std::integer_sequence<uint64_t, indices...>> {
+		template<typename simd_int_t01> JSONIFIER_INLINE static constexpr simd_int_t01 impl(const simd_int_t01& a, const simd_int_t01& b) noexcept {
+			simd_int_t01 result{};
+			((result.values.x_int8[indices] = (static_cast<int8_t>(a.values.x_int8[indices]) > static_cast<int8_t>(b.values.x_int8[indices])) ? 0x80 : 0x00), ...);
+			return result;
 		}
+	};
+
+	template<typename simd_class> JSONIFIER_INLINE static constexpr auto op_cmp_gt(const simd_class& a, const simd_class& b) noexcept {
+		return op_cmp_gt_impl<std::make_integer_sequence<uint64_t, static_cast<uint64_t>(simd_class::simd_class)>>::impl(a, b);
 	}
 
-	template<typename value_type> JSONIFIER_INLINE static constexpr uint32_t get32(const value_type* data, int32_t index) noexcept {
-		return (data[index / 2] >> (32 * (index % 2))) & 0xFFFFFFFF;
+	template<typename integer_sequence> struct op_add_impl;
+
+	template<uint64_t... indices> struct op_add_impl<std::integer_sequence<uint64_t, indices...>> {
+		template<typename simd_int_t01> JSONIFIER_INLINE static constexpr decltype(auto) impl(const simd_int_t01& a, const simd_int_t01& b) noexcept {
+			simd_int_t01 result{};
+			((result.values.x_uint8[indices] = a.values.x_uint8[indices] + b.values.x_uint8[indices]), ...);
+			return result;
+		}
+	};
+
+	template<typename simd_class> JSONIFIER_INLINE static constexpr decltype(auto) op_add(const simd_class& a, const simd_class& b) noexcept {
+		return op_add_impl<std::make_integer_sequence<uint64_t, static_cast<uint64_t>(simd_class::simd_class)>>::impl(a, b);
 	}
 
-	template<typename value_type> JSONIFIER_INLINE static constexpr void set32(value_type* data, int32_t index, uint32_t value) noexcept {
-		data[index / 2] &= ~(0xFFFFFFFFull << (32 * (index % 2)));
-		data[index / 2] |= (static_cast<size_t>(value) << (32 * (index % 2)));
+	template<typename integer_sequence> struct op_or_impl;
+
+	template<uint64_t... indices> struct op_or_impl<std::integer_sequence<uint64_t, indices...>> {
+		template<typename simd_int_t01> JSONIFIER_INLINE static constexpr simd_int_t01 impl(const simd_int_t01& a, const simd_int_t01& b) noexcept {
+			simd_int_t01 result{};
+			((result.values.x_uint64[indices] = a.values.x_uint64[indices] | b.values.x_uint64[indices]), ...);
+			return result;
+		}
+	};
+
+	template<typename simd_class> JSONIFIER_INLINE static constexpr auto op_or(const simd_class& a, const simd_class& b) noexcept {
+		return op_or_impl<std::make_integer_sequence<uint64_t, static_cast<uint64_t>(simd_class::sixty_four_per)>>::impl(a, b);
 	}
 
-	template<typename value_type> JSONIFIER_INLINE static constexpr void set64(value_type* data, int32_t index, size_t value) noexcept {
-		data[index] = value;
+	template<typename integer_sequence> struct op_and_impl;
+
+	template<uint64_t... indices> struct op_and_impl<std::integer_sequence<uint64_t, indices...>> {
+		template<typename simd_int_t01> JSONIFIER_INLINE static constexpr simd_int_t01 impl(const simd_int_t01& a, const simd_int_t01& b) noexcept {
+			simd_int_t01 result{};
+			((result.values.x_uint64[indices] = a.values.x_uint64[indices] & b.values.x_uint64[indices]), ...);
+			return result;
+		}
+	};
+
+	template<typename simd_class> JSONIFIER_INLINE static constexpr auto op_and(const simd_class& a, const simd_class& b) noexcept {
+		return op_and_impl<std::make_integer_sequence<uint64_t, static_cast<uint64_t>(simd_class::sixty_four_per)>>::impl(a, b);
 	}
 
-	JSONIFIER_INLINE static constexpr __m128x mm128ShuffleEpi32(const __m128x& a, int32_t imm8) noexcept {
-		__m128x result{};
-		set32(result.m128x_uint64, 0, get32(a.m128x_uint64, (imm8 >> 0) & 0x3));
-		set32(result.m128x_uint64, 1, get32(a.m128x_uint64, (imm8 >> 2) & 0x3));
-		set32(result.m128x_uint64, 2, get32(a.m128x_uint64, (imm8 >> 4) & 0x3));
-		set32(result.m128x_uint64, 3, get32(a.m128x_uint64, (imm8 >> 6) & 0x3));
-		return result;
+	template<typename integer_sequence> struct op_test_impl;
+
+	template<uint64_t... indices> struct op_test_impl<std::integer_sequence<uint64_t, indices...>> {
+		template<typename simd_int_t01> JSONIFIER_INLINE static constexpr bool impl(const simd_int_t01& value) noexcept {
+			return ((value.values.x_uint64[indices] != 0ULL) || ...);
+		}
+	};
+
+	template<typename simd_class> JSONIFIER_INLINE static constexpr bool op_test(const simd_class& value) noexcept {
+		return !op_test_impl<std::make_integer_sequence<uint64_t, static_cast<uint64_t>(simd_class::sixty_four_per)>>::impl(value);
 	}
 
-	template<typename value_type> JSONIFIER_INLINE static constexpr __m128x mm128LoadUSi128(const __m128x* ptr) noexcept {
-		return *ptr;
+	template<typename integer_sequence> struct op_andnot_impl;
+
+	template<uint64_t... indices> struct op_andnot_impl<std::integer_sequence<uint64_t, indices...>> {
+		template<typename simd_int_t01> JSONIFIER_INLINE static constexpr simd_int_t01 impl(const simd_int_t01& a, const simd_int_t01& b) noexcept {
+			simd_int_t01 result{};
+			((result.values.x_uint64[indices] = (~a.values.x_uint64[indices]) & b.values.x_uint64[indices]), ...);
+			return result;
+		}
+	};
+
+	template<typename simd_class> JSONIFIER_INLINE static constexpr auto op_andnot(const simd_class& a, const simd_class& b) noexcept {
+		return op_andnot_impl<std::make_integer_sequence<uint64_t, static_cast<uint64_t>(simd_class::sixty_four_per)>>::impl(a, b);
 	}
 
-	template<typename value_type>
-		requires(sizeof(value_type) == 8)
-	JSONIFIER_INLINE static constexpr __m128x mm128LoadUSi128(const value_type* ptr) noexcept {
-		__m128x returnValues{};
-		returnValues.m128x_uint64[0] = ptr[0];
-		returnValues.m128x_uint64[1] = ptr[1];
-		return returnValues;
-	}
+	template<typename integer_sequence> struct op_cmp_eq_impl;
 
-	JSONIFIER_INLINE static constexpr __m128x mm128LoadUSi128(const __m128x* ptr) noexcept {
-		__m128x returnValues{ *ptr };
-		return returnValues;
-	}
+	template<uint64_t... indices> struct op_cmp_eq_impl<std::integer_sequence<uint64_t, indices...>> {
+		template<typename simd_int_t01> JSONIFIER_INLINE static constexpr simd_int_t01 impl(const simd_int_t01& a, const simd_int_t01& b) noexcept {
+			simd_int_t01 result{};
+			((result.values.x_int8[indices] = (a.values.x_int8[indices] == b.values.x_int8[indices]) ? 0x80 : 0x00), ...);
+			return result;
+		}
+	};
 
-	template<typename simd_int_t01, typename simd_int_t02, size_t... indices>
-	JSONIFIER_INLINE static constexpr __m128x mm128ShuffleEpi8(const simd_int_t01& a, const simd_int_t02& b, jsonifier::internal::index_sequence<indices...>) noexcept {
-		__m128x result{};
-		size_t index{};
-		(((index = b.m128x_uint8[indices] & 0x0F), (result.m128x_uint8[indices] = a.m128x_uint8[index])), ...);
-		return result;
+	template<typename simd_class> JSONIFIER_INLINE static constexpr auto op_cmp_eq_epi8(const simd_class& a, const simd_class& b) noexcept {
+		return op_cmp_eq_impl<std::make_integer_sequence<uint64_t, static_cast<uint64_t>(simd_class::simd_class)>>::impl(a, b);
 	}
 
 }

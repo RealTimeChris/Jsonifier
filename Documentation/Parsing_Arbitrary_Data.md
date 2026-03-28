@@ -60,7 +60,7 @@ Use `jsonifier_core` to serialize a `custom_struct_raw` instance:
 
 ```cpp
 custom_struct_raw testData{};
-jsonifier::jsonifier_core parser{};
+jsonifier::jsonifier_core<> parser{};
 std::string testString{};
 parser.serializeJson(testData, testString);
 std::cout << "CURRENT DATA: " << testString << std::endl;

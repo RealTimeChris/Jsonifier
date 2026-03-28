@@ -259,12 +259,12 @@ template<> struct jsonifier::core<SharedPtrStruct> {
 };
 
 int main() {
-	jsonifier::jsonifier_core parser{};
+	jsonifier::jsonifier_core<> parser{};
 	size_t passed = 0;
 	size_t total  = 0;
 
 	auto test_basic_reflection = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		BasicStruct obj{ 42, 3.14, "Hello", { 1, 2, 3 } };
 		std::string json{};
 		parser.serializeJson(obj, json);
@@ -277,7 +277,7 @@ int main() {
 	};
 
 	auto test_meta_struct = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		MetaStruct obj{ 5, "Gadget" };
 		std::string json{};
 		parser.serializeJson(obj, json);
@@ -291,7 +291,7 @@ int main() {
 	};
 
 	auto test_optional_fields = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		WithOptional obj{};
 		std::string json{};
 		parser.serializeJson(obj, json);
@@ -310,7 +310,7 @@ int main() {
 	};
 
 	auto test_enum_as_string = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		EnumHolder obj{};
 		std::string json{};
 		parser.serializeJson(obj, json);
@@ -323,7 +323,7 @@ int main() {
 	};
 
 	auto test_enum_map_key = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		std::map<Color, bool> obj{ { Color::Red, true } };
 		std::string json{};
 		parser.serializeJson(obj, json);
@@ -337,7 +337,7 @@ int main() {
 	};
 
 	auto test_containers = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		ContainerStruct c{};
 		std::string json{};
 		parser.serializeJson(c, json);
@@ -348,7 +348,7 @@ int main() {
 	};
 
 	auto test_map_unordered = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		MapStruct ms{};
 		std::string json{};
 		parser.serializeJson(ms, json);
@@ -361,7 +361,7 @@ int main() {
 	};
 
 	auto test_prettify = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		PrettifyStruct pd{ 123, "Hello" };
 		std::string json{};
 		parser.serializeJson(pd, json);
@@ -377,7 +377,7 @@ int main() {
 	};
 
 	auto test_minify = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		std::string prettified = "{\n    \"id\": 42,\n    \"msg\": \"test\"\n}";
 		std::string minified{};
 		parser.minifyJson(prettified, minified);
@@ -385,19 +385,19 @@ int main() {
 	};
 
 	auto test_validate_valid = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		std::string json = R"({"i":42,"d":3.14,"str":"Hello","arr":[1,2,3]})";
 		return parser.validateJson(json);
 	};
 
 	auto test_validate_invalid = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		std::string json = R"({"i":42,"d":3.14,})";
 		return !parser.validateJson(json);
 	};
 
 	auto test_float_precision = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		FloatPrecision fp{};
 		std::string json{};
 		parser.serializeJson(fp, json);
@@ -405,7 +405,7 @@ int main() {
 	};
 
 	auto test_nested_struct = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		NestedStruct ns{};
 		ns.inner = { 42, 3.14, "nested", { 1, 2, 3 } };
 		ns.nums	 = { 10, 20, 30 };
@@ -419,7 +419,7 @@ int main() {
 	};
 
 	auto test_shared_ptr = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		SharedPtrStruct sps{};
 		sps.ptr		 = std::make_shared<BasicStruct>();
 		sps.ptr->i	 = 99;
@@ -434,7 +434,7 @@ int main() {
 	};
 
 	auto test_vector_of_structs = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		std::vector<BasicStruct> vec{ { 1, 1.1, "a", { 1, 2, 3 } }, { 2, 2.2, "b", { 4, 5, 6 } } };
 
 		std::string json{};
@@ -446,7 +446,7 @@ int main() {
 	};
 
 	auto test_array_of_enums = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		std::array<Color, 3> arr{ Color::Red, Color::Green, Color::Blue };
 		std::string json{};
 		parser.serializeJson(arr, json);
@@ -457,7 +457,7 @@ int main() {
 	};
 
 	auto test_optional_with_value = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		WithOptional obj{ "test", 5.5 };
 		std::string json{};
 		parser.serializeJson(obj, json);
@@ -468,7 +468,7 @@ int main() {
 	};
 
 	auto test_optional_without_value = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		WithOptional obj{ "test", std::nullopt };
 		std::string json{};
 		parser.serializeJson(obj, json);
@@ -479,7 +479,7 @@ int main() {
 	};
 
 	auto test_empty_containers = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		ContainerStruct c{};
 		c.vec.clear();
 		c.arr = { "", "" };
@@ -493,7 +493,7 @@ int main() {
 	};
 
 	auto test_large_numbers = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		BasicStruct obj{ 2147483647, 1.7976931348623157e+308, "max", { UINT32_MAX, UINT32_MAX - 1, UINT32_MAX - 2 } };
 		std::string json{};
 		parser.serializeJson(obj, json);
@@ -504,7 +504,7 @@ int main() {
 	};
 
 	auto test_special_string_chars = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		BasicStruct obj{ 1, 1.0, "test\"quote\\slash\nnewline", { 1, 2, 3 } };
 		std::string json{};
 		parser.serializeJson(obj, json);
@@ -515,7 +515,7 @@ int main() {
 	};
 
 	auto test_unicode_string = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		BasicStruct obj{ 1, 1.0, "Hello 世界 🌍", { 1, 2, 3 } };
 		std::string json{};
 		parser.serializeJson(obj, json);
@@ -526,7 +526,7 @@ int main() {
 	};
 
 	auto test_tuple_roundtrip = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		std::tuple<int32_t, double, std::string> tup{ 123, 4.56, "test" };
 		std::string json{};
 		parser.serializeJson(tup, json);
@@ -537,7 +537,7 @@ int main() {
 	};
 
 	auto test_nested_maps = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		std::map<std::string, std::map<std::string, int32_t>> nested{ { "outer1", { { "inner1", 1 }, { "inner2", 2 } } }, { "outer2", { { "inner3", 3 } } } };
 		std::string json{};
 		parser.serializeJson(nested, json);
@@ -548,7 +548,7 @@ int main() {
 	};
 
 	auto test_vector_of_vectors = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		std::vector<std::vector<int32_t>> vec{ { 1, 2 }, { 3, 4, 5 } };
 		std::string json{};
 		parser.serializeJson(vec, json);
@@ -639,7 +639,7 @@ int main() {
 	std::cout << "========================================\n";
 
 	auto test_char_empty = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		char_roundtrip original{};
 		std::string buffer{};
 		//parser.serializeJson(original, buffer);
@@ -650,7 +650,7 @@ int main() {
 	};
 
 	auto test_basic_serialize = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		simple_struct obj{ 42, "test", 3.14 };
 		std::string result{};
 		parser.serializeJson(obj, result);
@@ -658,7 +658,7 @@ int main() {
 	};
 
 	auto test_basic_parse = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		std::string json = R"({"id":42,"name":"test","value":3.14})";
 		simple_struct obj{};
 		parser.parseJson(obj, json);
@@ -666,7 +666,7 @@ int main() {
 	};
 
 	auto test_roundtrip = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		simple_struct original{ 99, "roundtrip", 2.71828 };
 		std::string serialized{};
 		parser.serializeJson(original, serialized);
@@ -676,7 +676,7 @@ int main() {
 	};
 
 	auto test_nested = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		nested_struct obj{};
 		obj.inner	= { 1, "nested", 1.5 };
 		obj.numbers = { 1, 2, 3, 4, 5 };
@@ -689,7 +689,7 @@ int main() {
 	};
 
 	auto test_double_write = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		std::string buffer{};
 		parser.serializeJson(3.14, buffer);
 		if (buffer != "3.14")
@@ -702,7 +702,7 @@ int main() {
 	};
 
 	auto test_double_parse = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		double num{};
 		parser.parseJson(num, "3.14");
 		if (num != 3.14)
@@ -715,7 +715,7 @@ int main() {
 	};
 
 	auto test_int_write = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		std::string buffer{};
 		parser.serializeJson(0, buffer);
 		if (buffer != "0")
@@ -728,7 +728,7 @@ int main() {
 	};
 
 	auto test_int_parse = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		int32_t num{};
 		parser.parseJson(num, "-1");
 		if (num != -1)
@@ -741,7 +741,7 @@ int main() {
 	};
 
 	auto test_bool_write = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		std::string buffer{};
 		parser.serializeJson(true, buffer);
 		if (buffer != "true")
@@ -751,7 +751,7 @@ int main() {
 	};
 
 	auto test_bool_parse = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		bool val{};
 		parser.parseJson(val, "true");
 		if (!val)
@@ -761,7 +761,7 @@ int main() {
 	};
 
 	auto test_string_write = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		std::string buffer{};
 		parser.serializeJson(std::string{ "fish" }, buffer);
 		if (buffer != "\"fish\"")
@@ -771,7 +771,7 @@ int main() {
 	};
 
 	auto test_string_parse = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		std::string val{};
 		parser.parseJson(val, "\"fish\"");
 		if (val != "fish")
@@ -781,7 +781,7 @@ int main() {
 	};
 
 	auto test_vector_serialize = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		std::vector<int32_t> vec{ 1, 2, 3, 4, 5 };
 		std::string json{};
 		parser.serializeJson(vec, json);
@@ -789,7 +789,7 @@ int main() {
 	};
 
 	auto test_vector_parse = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		std::string json = "[10,20,30,40,50]";
 		std::vector<int32_t> vec{};
 		parser.parseJson(vec, json);
@@ -797,7 +797,7 @@ int main() {
 	};
 
 	auto test_array_serialize = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		std::array<int32_t, 3> arr{ 1, 2, 3 };
 		std::string json{};
 		parser.serializeJson(arr, json);
@@ -805,7 +805,7 @@ int main() {
 	};
 
 	auto test_array_parse = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		std::string json = "[10,20,30]";
 		std::array<int32_t, 3> arr{};
 		parser.parseJson(arr, json);
@@ -813,7 +813,7 @@ int main() {
 	};
 
 	auto test_escaped_key = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		escaped_struct obj{ 5, "bye", "" };
 		std::string json{};
 		parser.serializeJson(obj, json);
@@ -823,7 +823,7 @@ int main() {
 	};
 
 	auto test_escaped_chars_parse = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		std::string json = R"({"escaped\"key":0,"escaped\"\"key2":"hi","escape_chars":"\b\f\n\r\t"})";
 		escaped_struct obj{};
 		parser.parseJson(obj, json);
@@ -831,7 +831,7 @@ int main() {
 	};
 
 	auto test_enum_serialize = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		Color color = Color::Green;
 		std::string json{};
 		parser.serializeJson(color, json);
@@ -839,7 +839,7 @@ int main() {
 	};
 
 	auto test_enum_parse = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		std::string json = "\"Red\"";
 		Color color{};
 		parser.parseJson(color, json);
@@ -847,7 +847,7 @@ int main() {
 	};
 
 	auto test_enum_array = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		std::array<Color, 3> arr{};
 		std::string json = R"(["Green","Red","Blue"])";
 		parser.parseJson(arr, json);
@@ -855,7 +855,7 @@ int main() {
 	};
 
 	auto test_vehicle_enum = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		Vehicle vehicle = Vehicle::Plane;
 		std::string json{};
 		parser.serializeJson(vehicle, json);
@@ -867,7 +867,7 @@ int main() {
 	};
 
 	auto test_complex_struct = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		Thing obj{};
 		std::string json{};
 		parser.serializeJson(obj, json);
@@ -877,7 +877,7 @@ int main() {
 	};
 
 	auto test_optional_empty = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		Thing obj{};
 		obj.optional = std::nullopt;
 		std::string json{};
@@ -888,7 +888,7 @@ int main() {
 	};
 
 	auto test_optional_value = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		Thing obj{};
 		obj.optional = V3{ 1.0, 2.0, 3.0 };
 		std::string json{};
@@ -899,7 +899,7 @@ int main() {
 	};
 
 	auto test_map = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		std::map<std::string, int32_t> map{ { "a", 4 }, { "f", 7 }, { "b", 12 } };
 		std::string json{};
 		parser.serializeJson(map, json);
@@ -909,7 +909,7 @@ int main() {
 	};
 
 	auto test_dummy_data = []() {
-		jsonifier::jsonifier_core parser{};
+		jsonifier::jsonifier_core<> parser{};
 		std::vector<dummy_data> test_data = { { 0, 0, TestData::None, TestData::None, TestData::None, TestData::None, 0 },
 			{ 1, 1, TestData::A, TestData::B, TestData::A, TestData::B, 0xDDDDDDDD }, { 2, 6, TestData::A, TestData::B, TestData::C, TestData::D, 0xEEEEEEEE },
 			{ 3, -1, TestData::ERROR_E, TestData::ERROR_E, TestData::ERROR_E, TestData::ERROR_E, 0xFFFFFFFF } };
