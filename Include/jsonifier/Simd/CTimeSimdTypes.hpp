@@ -27,6 +27,7 @@
 #include <jsonifier/Core/Config.hpp>
 #include <type_traits>
 #include <algorithm>
+#include <cstring>
 #include <cstdint>
 #include <utility>
 

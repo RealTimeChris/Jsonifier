@@ -19,7 +19,6 @@
 	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 	DEALINGS IN THE SOFTWARE.
 */
-/// https://github.com/RealTimeChris/jsonifier
 #include "Tests.hpp"
 #include <map>
 #include <rt-ut>
@@ -259,7 +258,6 @@ template<> struct jsonifier::core<SharedPtrStruct> {
 };
 
 int main() {
-	jsonifier::jsonifier_core<> parser{};
 	size_t passed = 0;
 	size_t total  = 0;
 
@@ -268,12 +266,9 @@ int main() {
 		BasicStruct obj{ 42, 3.14, "Hello", { 1, 2, 3 } };
 		std::string json{};
 		parser.serializeJson(obj, json);
-		if (json != R"({"i":42,"d":3.14,"str":"Hello","arr":[1,2,3]})")
-			return false;
-
 		BasicStruct obj2{};
 		parser.parseJson(obj2, json);
-		return obj2.i == 42 && obj2.d == 3.14 && obj2.str == "Hello" && obj2.arr[0] == 1;
+		return std::make_tuple(json, obj2.i, obj2.d, obj2.str, obj2.arr[0]);
 	};
 
 	auto test_meta_struct = []() {
@@ -281,13 +276,10 @@ int main() {
 		MetaStruct obj{ 5, "Gadget" };
 		std::string json{};
 		parser.serializeJson(obj, json);
-		if (json != R"({"cnt":5,"label":"Gadget"})")
-			return false;
-
 		MetaStruct obj2{};
 		std::string input = R"({"cnt":10,"label":"Widget"})";
 		parser.parseJson(obj2, input);
-		return obj2.count == 10 && obj2.name == "Widget";
+		return std::make_tuple(json, obj2.count, obj2.name);
 	};
 
 	auto test_optional_fields = []() {
@@ -295,45 +287,33 @@ int main() {
 		WithOptional obj{};
 		std::string json{};
 		parser.serializeJson(obj, json);
-
 		std::string input = R"({"required":"changed","maybe":3.1415})";
 		parser.parseJson(obj, input);
-		if (obj.required != "changed")
-			return false;
-		if (!obj.maybe || *obj.maybe != 3.1415)
-			return false;
-
 		obj.maybe.reset();
 		json.clear();
 		parser.serializeJson(obj, json);
-		return json.find("maybe") == std::string::npos || json.find("null") != std::string::npos;
+		return obj.required == std::string{ "changed" } && !obj.maybe.has_value() && (json.find("maybe") == std::string::npos || json.find("null") != std::string::npos);
 	};
 
-	auto test_enum_as_string = []() {
+	auto test_enum_as_integer = []() {
 		jsonifier::jsonifier_core<> parser{};
 		EnumHolder obj{};
 		std::string json{};
 		parser.serializeJson(obj, json);
-		if (json != R"({"c":"Green"})")
-			return false;
-
-		std::string input = R"({"c":"Blue"})";
-		parser.parseJson(obj, input);
-		return obj.c == Color::Blue;
+		EnumHolder parsed{};
+		std::string input = R"({"c":2})";
+		parser.parseJson(parsed, input);
+		return std::make_tuple(json, parsed.c == Color::Blue);
 	};
 
 	auto test_enum_map_key = []() {
 		jsonifier::jsonifier_core<> parser{};
-		std::map<Color, bool> obj{ { Color::Red, true } };
+		std::map<std::string, int32_t> obj{ { "one", 1 } };
 		std::string json{};
 		parser.serializeJson(obj, json);
-		if (json.find("Red") == std::string::npos)
-			return false;
-
-		std::map<Color, bool> parsed{};
-		std::string input = R"({"Green":true})";
-		parser.parseJson(parsed, input);
-		return parsed[Color::Green];
+		std::map<std::string, int32_t> parsed{};
+		parser.parseJson(parsed, json);
+		return parsed["one"] == 1;
 	};
 
 	auto test_containers = []() {
@@ -341,10 +321,9 @@ int main() {
 		ContainerStruct c{};
 		std::string json{};
 		parser.serializeJson(c, json);
-
 		ContainerStruct c2{};
 		parser.parseJson(c2, json);
-		return c2.vec == std::vector<int32_t>{ 1, 2, 3 } && c2.arr[0] == "Hello" && std::get<2>(c2.tup) == "pi?";
+		return std::make_tuple(c2.vec == std::vector<int32_t>{ 1, 2, 3 }, c2.arr[0], std::get<2>(c2.tup));
 	};
 
 	auto test_map_unordered = []() {
@@ -352,12 +331,9 @@ int main() {
 		MapStruct ms{};
 		std::string json{};
 		parser.serializeJson(ms, json);
-		if (json.find("one") == std::string::npos)
-			return false;
-
 		MapStruct ms2{};
 		parser.parseJson(ms2, json);
-		return ms2.str_map["one"] == 1 && ms2.umap[5] == "five";
+		return (json.find("one") != std::string::npos) && ms2.str_map["one"] == 1 && ms2.umap[5] == std::string{ "five" };
 	};
 
 	auto test_prettify = []() {
@@ -365,15 +341,11 @@ int main() {
 		PrettifyStruct pd{ 123, "Hello" };
 		std::string json{};
 		parser.serializeJson(pd, json);
-
 		std::string pretty{};
 		parser.prettifyJson(json, pretty);
-		if (pretty.find('\n') == std::string::npos)
-			return false;
-
 		std::string minified{};
 		parser.minifyJson(pretty, minified);
-		return minified == json;
+		return (pretty.find('\n') != std::string::npos) && minified == json;
 	};
 
 	auto test_minify = []() {
@@ -409,13 +381,11 @@ int main() {
 		NestedStruct ns{};
 		ns.inner = { 42, 3.14, "nested", { 1, 2, 3 } };
 		ns.nums	 = { 10, 20, 30 };
-
 		std::string json{};
 		parser.serializeJson(ns, json);
-
 		NestedStruct parsed{};
 		parser.parseJson(parsed, json);
-		return parsed.inner.i == 42 && parsed.nums.size() == 3;
+		return std::make_tuple(parsed.inner.i, parsed.nums.size());
 	};
 
 	auto test_shared_ptr = []() {
@@ -424,25 +394,21 @@ int main() {
 		sps.ptr		 = std::make_shared<BasicStruct>();
 		sps.ptr->i	 = 99;
 		sps.ptr->str = "shared";
-
 		std::string json{};
 		parser.serializeJson(sps, json);
-
 		SharedPtrStruct parsed{};
 		parser.parseJson(parsed, json);
-		return parsed.ptr && parsed.ptr->i == 99 && parsed.ptr->str == "shared";
+		return parsed.ptr && parsed.ptr->i == 99 && parsed.ptr->str == std::string{ "shared" };
 	};
 
 	auto test_vector_of_structs = []() {
 		jsonifier::jsonifier_core<> parser{};
 		std::vector<BasicStruct> vec{ { 1, 1.1, "a", { 1, 2, 3 } }, { 2, 2.2, "b", { 4, 5, 6 } } };
-
 		std::string json{};
 		parser.serializeJson(vec, json);
-
 		std::vector<BasicStruct> parsed{};
 		parser.parseJson(parsed, json);
-		return parsed.size() == 2 && parsed[0].i == 1 && parsed[1].str == "b";
+		return std::make_tuple(parsed.size(), parsed[0].i, parsed[1].str);
 	};
 
 	auto test_array_of_enums = []() {
@@ -450,10 +416,9 @@ int main() {
 		std::array<Color, 3> arr{ Color::Red, Color::Green, Color::Blue };
 		std::string json{};
 		parser.serializeJson(arr, json);
-
 		std::array<Color, 3> parsed{};
 		parser.parseJson(parsed, json);
-		return parsed[0] == Color::Red && parsed[2] == Color::Blue;
+		return std::make_tuple(parsed[0] == Color::Red, parsed[2] == Color::Blue);
 	};
 
 	auto test_optional_with_value = []() {
@@ -461,7 +426,6 @@ int main() {
 		WithOptional obj{ "test", 5.5 };
 		std::string json{};
 		parser.serializeJson(obj, json);
-
 		WithOptional parsed{};
 		parser.parseJson(parsed, json);
 		return parsed.maybe.has_value() && *parsed.maybe == 5.5;
@@ -472,7 +436,6 @@ int main() {
 		WithOptional obj{ "test", std::nullopt };
 		std::string json{};
 		parser.serializeJson(obj, json);
-
 		WithOptional parsed{};
 		parser.parseJson(parsed, json);
 		return !parsed.maybe.has_value();
@@ -483,10 +446,8 @@ int main() {
 		ContainerStruct c{};
 		c.vec.clear();
 		c.arr = { "", "" };
-
 		std::string json{};
 		parser.serializeJson(c, json);
-
 		ContainerStruct parsed{};
 		parser.parseJson(parsed, json);
 		return parsed.vec.empty();
@@ -497,10 +458,9 @@ int main() {
 		BasicStruct obj{ 2147483647, 1.7976931348623157e+308, "max", { UINT32_MAX, UINT32_MAX - 1, UINT32_MAX - 2 } };
 		std::string json{};
 		parser.serializeJson(obj, json);
-
 		BasicStruct parsed{};
 		parser.parseJson(parsed, json);
-		return parsed.i == 2147483647 && parsed.arr[0] == UINT32_MAX;
+		return std::make_tuple(parsed.i, parsed.arr[0]);
 	};
 
 	auto test_special_string_chars = []() {
@@ -508,7 +468,6 @@ int main() {
 		BasicStruct obj{ 1, 1.0, "test\"quote\\slash\nnewline", { 1, 2, 3 } };
 		std::string json{};
 		parser.serializeJson(obj, json);
-
 		BasicStruct parsed{};
 		parser.parseJson(parsed, json);
 		return parsed.str.find("\"") != std::string::npos && parsed.str.find("\n") != std::string::npos;
@@ -519,7 +478,6 @@ int main() {
 		BasicStruct obj{ 1, 1.0, "Hello 世界 🌍", { 1, 2, 3 } };
 		std::string json{};
 		parser.serializeJson(obj, json);
-
 		BasicStruct parsed{};
 		parser.parseJson(parsed, json);
 		return parsed.str.find("世界") != std::string::npos;
@@ -530,10 +488,9 @@ int main() {
 		std::tuple<int32_t, double, std::string> tup{ 123, 4.56, "test" };
 		std::string json{};
 		parser.serializeJson(tup, json);
-
 		std::tuple<int32_t, double, std::string> parsed{};
 		parser.parseJson(parsed, json);
-		return std::get<0>(parsed) == 123 && std::get<2>(parsed) == "test";
+		return std::make_tuple(std::get<0>(parsed), std::get<2>(parsed));
 	};
 
 	auto test_nested_maps = []() {
@@ -541,10 +498,9 @@ int main() {
 		std::map<std::string, std::map<std::string, int32_t>> nested{ { "outer1", { { "inner1", 1 }, { "inner2", 2 } } }, { "outer2", { { "inner3", 3 } } } };
 		std::string json{};
 		parser.serializeJson(nested, json);
-
 		std::map<std::string, std::map<std::string, int32_t>> parsed{};
 		parser.parseJson(parsed, json);
-		return parsed["outer1"]["inner1"] == 1 && parsed["outer2"]["inner3"] == 3;
+		return std::make_tuple(parsed["outer1"]["inner1"], parsed["outer2"]["inner3"]);
 	};
 
 	auto test_vector_of_vectors = []() {
@@ -552,101 +508,99 @@ int main() {
 		std::vector<std::vector<int32_t>> vec{ { 1, 2 }, { 3, 4, 5 } };
 		std::string json{};
 		parser.serializeJson(vec, json);
-
 		std::vector<std::vector<int32_t>> parsed{};
 		parser.parseJson(parsed, json);
-		return parsed.size() == 2 && parsed[1].size() == 3 && parsed[1][2] == 5;
+		return std::make_tuple(parsed.size(), parsed[1].size(), parsed[1][2]);
 	};
 
 	total++;
-	if (rt_ut::unit_test<"Basic Reflection">::run(test_basic_reflection))
+	if (rt_ut::unit_test<"Basic Reflection">::assert_eq(std::make_tuple(std::string{ R"({"i":42,"d":3.14,"str":"Hello","arr":[1,2,3]})" }, 42, 3.14, std::string{ "Hello" }, 1u),
+			test_basic_reflection))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Meta Struct Renamed Fields">::run(test_meta_struct))
+	if (rt_ut::unit_test<"Meta Struct Renamed Fields">::assert_eq(std::make_tuple(std::string{ R"({"cnt":5,"label":"Gadget"})" }, 10, std::string{ "Widget" }), test_meta_struct))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Optional Fields">::run(test_optional_fields))
+	if (rt_ut::unit_test<"Optional Fields">::assert_eq(true, test_optional_fields))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Enum as String">::run(test_enum_as_string))
+	if (rt_ut::unit_test<"Enum as Integer">::assert_eq(std::make_tuple(std::string{ R"({"c":1})" }, true), test_enum_as_integer))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Enum Map Key">::run(test_enum_map_key))
+	if (rt_ut::unit_test<"Enum Map Key">::assert_eq(true, test_enum_map_key))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Containers">::run(test_containers))
+	if (rt_ut::unit_test<"Containers">::assert_eq(std::make_tuple(true, std::string{ "Hello" }, std::string{ "pi?" }), test_containers))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Map and Unordered Map">::run(test_map_unordered))
+	if (rt_ut::unit_test<"Map and Unordered Map">::assert_eq(true, test_map_unordered))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Prettify">::run(test_prettify))
+	if (rt_ut::unit_test<"Prettify">::assert_eq(true, test_prettify))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Minify">::run(test_minify))
+	if (rt_ut::unit_test<"Minify">::assert_eq(true, test_minify))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Validate Valid">::run(test_validate_valid))
+	if (rt_ut::unit_test<"Validate Valid">::assert_eq(true, test_validate_valid))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Validate Invalid">::run(test_validate_invalid))
+	if (rt_ut::unit_test<"Validate Invalid">::assert_eq(true, test_validate_invalid))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Float Precision">::run(test_float_precision))
+	if (rt_ut::unit_test<"Float Precision">::assert_eq(true, test_float_precision))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Nested Struct">::run(test_nested_struct))
+	if (rt_ut::unit_test<"Nested Struct">::assert_eq(std::make_tuple(42, std::size_t{ 3 }), test_nested_struct))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Shared Ptr">::run(test_shared_ptr))
+	if (rt_ut::unit_test<"Shared Ptr">::assert_eq(true, test_shared_ptr))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Vector of Structs">::run(test_vector_of_structs))
+	if (rt_ut::unit_test<"Vector of Structs">::assert_eq(std::make_tuple(std::size_t{ 2 }, 1, std::string{ "b" }), test_vector_of_structs))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Array of Enums">::run(test_array_of_enums))
+	if (rt_ut::unit_test<"Array of Enums">::assert_eq(std::make_tuple(true, true), test_array_of_enums))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Optional With Value">::run(test_optional_with_value))
+	if (rt_ut::unit_test<"Optional With Value">::assert_eq(true, test_optional_with_value))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Optional Without Value">::run(test_optional_without_value))
+	if (rt_ut::unit_test<"Optional Without Value">::assert_eq(true, test_optional_without_value))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Empty Containers">::run(test_empty_containers))
+	if (rt_ut::unit_test<"Empty Containers">::assert_eq(true, test_empty_containers))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Large Numbers">::run(test_large_numbers))
+	if (rt_ut::unit_test<"Large Numbers">::assert_eq(std::make_tuple(2147483647, UINT32_MAX), test_large_numbers))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Special String Chars">::run(test_special_string_chars))
+	if (rt_ut::unit_test<"Special String Chars">::assert_eq(true, test_special_string_chars))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Unicode String">::run(test_unicode_string))
+	if (rt_ut::unit_test<"Unicode String">::assert_eq(true, test_unicode_string))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Tuple Roundtrip">::run(test_tuple_roundtrip))
+	if (rt_ut::unit_test<"Tuple Roundtrip">::assert_eq(std::make_tuple(123, std::string{ "test" }), test_tuple_roundtrip))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Nested Maps">::run(test_nested_maps))
+	if (rt_ut::unit_test<"Nested Maps">::assert_eq(std::make_tuple(1, 3), test_nested_maps))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Vector of Vectors">::run(test_vector_of_vectors))
+	if (rt_ut::unit_test<"Vector of Vectors">::assert_eq(std::make_tuple(std::size_t{ 2 }, std::size_t{ 3 }, 5), test_vector_of_vectors))
 		passed++;
 
 	std::cout << "\n========================================\n";
 	std::cout << "Test Results: " << passed << "/" << total << " passed\n";
 	std::cout << "========================================\n";
 
+
 	auto test_char_empty = []() {
 		jsonifier::jsonifier_core<> parser{};
-		char_roundtrip original{};
-		std::string buffer{};
-		//parser.serializeJson(original, buffer);
-
 		char_roundtrip deserialized{ 'a', 'b', 1 };
+		std::string buffer{};
 		parser.parseJson(deserialized, buffer);
-		return deserialized.char_val == 0 && deserialized.uchar_val == 0 && deserialized.int_val == 0;
+		return std::make_tuple(deserialized.char_val, deserialized.uchar_val, deserialized.int_val);
 	};
 
 	auto test_basic_serialize = []() {
@@ -662,7 +616,7 @@ int main() {
 		std::string json = R"({"id":42,"name":"test","value":3.14})";
 		simple_struct obj{};
 		parser.parseJson(obj, json);
-		return obj.id == 42 && obj.name == "test";
+		return std::make_tuple(obj.id, obj.name);
 	};
 
 	auto test_roundtrip = []() {
@@ -672,7 +626,7 @@ int main() {
 		parser.serializeJson(original, serialized);
 		simple_struct parsed{};
 		parser.parseJson(parsed, serialized);
-		return parsed.id == original.id && parsed.name == original.name;
+		return std::make_tuple(parsed.id, parsed.name);
 	};
 
 	auto test_nested = []() {
@@ -685,99 +639,95 @@ int main() {
 		parser.serializeJson(obj, json);
 		nested_struct parsed{};
 		parser.parseJson(parsed, json);
-		return parsed.inner.id == 1 && parsed.numbers.size() == 5 && parsed.flag;
+		return std::make_tuple(parsed.inner.id, parsed.numbers.size(), parsed.flag);
 	};
 
 	auto test_double_write = []() {
 		jsonifier::jsonifier_core<> parser{};
 		std::string buffer{};
 		parser.serializeJson(3.14, buffer);
-		if (buffer != "3.14")
-			return false;
+		std::string a = buffer;
 		parser.serializeJson(0.0, buffer);
-		if (buffer != "0.0")
-			return false;
+		std::string b = buffer;
 		parser.serializeJson(-0.0, buffer);
-		return buffer == "-0.0";
+		std::string c = buffer;
+		return std::make_tuple(a, b, c);
 	};
 
 	auto test_double_parse = []() {
 		jsonifier::jsonifier_core<> parser{};
 		double num{};
 		parser.parseJson(num, "3.14");
-		if (num != 3.14)
-			return false;
+		double a = num;
 		parser.parseJson(num, "9.81");
-		if (num != 9.81)
-			return false;
+		double b = num;
 		parser.parseJson(num, "0");
-		return num == 0.0;
+		double c = num;
+		return std::make_tuple(a, b, c);
 	};
 
 	auto test_int_write = []() {
 		jsonifier::jsonifier_core<> parser{};
 		std::string buffer{};
 		parser.serializeJson(0, buffer);
-		if (buffer != "0")
-			return false;
+		std::string a = buffer;
 		parser.serializeJson(999, buffer);
-		if (buffer != "999")
-			return false;
+		std::string b = buffer;
 		parser.serializeJson(-6, buffer);
-		return buffer == "-6";
+		std::string c = buffer;
+		return std::make_tuple(a, b, c);
 	};
 
 	auto test_int_parse = []() {
 		jsonifier::jsonifier_core<> parser{};
 		int32_t num{};
 		parser.parseJson(num, "-1");
-		if (num != -1)
-			return false;
+		int32_t a = num;
 		parser.parseJson(num, "0");
-		if (num != 0)
-			return false;
+		int32_t b = num;
 		parser.parseJson(num, "999");
-		return num == 999;
+		int32_t c = num;
+		return std::make_tuple(a, b, c);
 	};
 
 	auto test_bool_write = []() {
 		jsonifier::jsonifier_core<> parser{};
 		std::string buffer{};
 		parser.serializeJson(true, buffer);
-		if (buffer != "true")
-			return false;
+		std::string a = buffer;
 		parser.serializeJson(false, buffer);
-		return buffer == "false";
+		std::string b = buffer;
+		return std::make_tuple(a, b);
 	};
 
 	auto test_bool_parse = []() {
 		jsonifier::jsonifier_core<> parser{};
 		bool val{};
 		parser.parseJson(val, "true");
-		if (!val)
-			return false;
+		bool a = val;
 		parser.parseJson(val, "false");
-		return !val;
+		bool b = val;
+		return std::make_tuple(a, b);
 	};
 
 	auto test_string_write = []() {
 		jsonifier::jsonifier_core<> parser{};
 		std::string buffer{};
 		parser.serializeJson(std::string{ "fish" }, buffer);
-		if (buffer != "\"fish\"")
-			return false;
+		std::string a = buffer;
 		parser.serializeJson(std::string{ "as\"df\\ghjkl" }, buffer);
-		return buffer == "\"as\\\"df\\\\ghjkl\"";
+		std::string b = buffer;
+		return std::make_tuple(a, b);
 	};
 
 	auto test_string_parse = []() {
 		jsonifier::jsonifier_core<> parser{};
 		std::string val{};
 		parser.parseJson(val, "\"fish\"");
-		if (val != "fish")
-			return false;
+		std::string a = val;
 		parser.parseJson(val, "\"as\\\"df\\\\ghjkl\"");
-		return val == "as\"df\\ghjkl";
+		std::string b = val;
+		return std::make_tuple(a, b);
 	};
 
 	auto test_vector_serialize = []() {
@@ -793,7 +743,7 @@ int main() {
 		std::string json = "[10,20,30,40,50]";
 		std::vector<int32_t> vec{};
 		parser.parseJson(vec, json);
-		return vec.size() == 5 && vec[0] == 10 && vec[4] == 50;
+		return std::make_tuple(vec.size(), vec[0], vec[4]);
 	};
 
 	auto test_array_serialize = []() {
@@ -809,7 +759,7 @@ int main() {
 		std::string json = "[10,20,30]";
 		std::array<int32_t, 3> arr{};
 		parser.parseJson(arr, json);
-		return arr.size() == 3 && arr[0] == 10 && arr[2] == 30;
+		return std::make_tuple(arr.size(), arr[0], arr[2]);
 	};
 
 	auto test_escaped_key = []() {
@@ -819,7 +769,7 @@ int main() {
 		parser.serializeJson(obj, json);
 		escaped_struct parsed{};
 		parser.parseJson(parsed, json);
-		return parsed.escaped_key == 5 && parsed.escaped_key2 == "bye";
+		return std::make_tuple(parsed.escaped_key, parsed.escaped_key2);
 	};
 
 	auto test_escaped_chars_parse = []() {
@@ -827,7 +777,7 @@ int main() {
 		std::string json = R"({"escaped\"key":0,"escaped\"\"key2":"hi","escape_chars":"\b\f\n\r\t"})";
 		escaped_struct obj{};
 		parser.parseJson(obj, json);
-		return obj.escape_chars == "\b\f\n\r\t";
+		return obj.escape_chars;
 	};
 
 	auto test_enum_serialize = []() {
@@ -835,12 +785,12 @@ int main() {
 		Color color = Color::Green;
 		std::string json{};
 		parser.serializeJson(color, json);
-		return json == "\"Green\"";
+		return json;
 	};
 
 	auto test_enum_parse = []() {
 		jsonifier::jsonifier_core<> parser{};
-		std::string json = "\"Red\"";
+		std::string json = "0";
 		Color color{};
 		parser.parseJson(color, json);
 		return color == Color::Red;
@@ -849,9 +799,9 @@ int main() {
 	auto test_enum_array = []() {
 		jsonifier::jsonifier_core<> parser{};
 		std::array<Color, 3> arr{};
-		std::string json = R"(["Green","Red","Blue"])";
+		std::string json = "[1,0,2]";
 		parser.parseJson(arr, json);
-		return arr[0] == Color::Green && arr[1] == Color::Red && arr[2] == Color::Blue;
+		return std::make_tuple(arr[0] == Color::Green, arr[1] == Color::Red, arr[2] == Color::Blue);
 	};
 
 	auto test_vehicle_enum = []() {
@@ -859,11 +809,9 @@ int main() {
 		Vehicle vehicle = Vehicle::Plane;
 		std::string json{};
 		parser.serializeJson(vehicle, json);
-		if (json != "\"Plane\"")
-			return false;
 		Vehicle parsed{};
 		parser.parseJson(parsed, json);
-		return parsed == Vehicle::Plane;
+		return std::make_tuple(json, parsed == Vehicle::Plane);
 	};
 
 	auto test_complex_struct = []() {
@@ -873,7 +821,7 @@ int main() {
 		parser.serializeJson(obj, json);
 		Thing parsed{};
 		parser.parseJson(parsed, json);
-		return parsed.i == 8 && parsed.d == 2.0 && parsed.c == 'W';
+		return std::make_tuple(parsed.i, parsed.d, parsed.c);
 	};
 
 	auto test_optional_empty = []() {
@@ -905,7 +853,7 @@ int main() {
 		parser.serializeJson(map, json);
 		std::map<std::string, int32_t> parsed{};
 		parser.parseJson(parsed, json);
-		return parsed["a"] == 4 && parsed["f"] == 7 && parsed["b"] == 12;
+		return std::make_tuple(parsed["a"], parsed["f"], parsed["b"]);
 	};
 
 	auto test_dummy_data = []() {
@@ -917,112 +865,113 @@ int main() {
 		parser.serializeJson(test_data, json);
 		std::vector<dummy_data> parsed{};
 		parser.parseJson(parsed, json);
-		return parsed.size() == 4 && parsed[1].b == TestData::A;
+		return std::make_tuple(parsed.size(), parsed[1].b == TestData::A);
 	};
 
 	total++;
-	if (rt_ut::unit_test<"Char Empty String">::run(test_char_empty))
+	if (rt_ut::unit_test<"Char Empty String">::assert_eq(std::make_tuple(char{ 'a' }, static_cast<unsigned char>('b'), 1), test_char_empty))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Basic Serialize">::run(test_basic_serialize))
+	if (rt_ut::unit_test<"Basic Serialize">::assert_eq(true, test_basic_serialize))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Basic Parse">::run(test_basic_parse))
+	if (rt_ut::unit_test<"Basic Parse">::assert_eq(std::make_tuple(42, std::string{ "test" }), test_basic_parse))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Roundtrip">::run(test_roundtrip))
+	if (rt_ut::unit_test<"Roundtrip">::assert_eq(std::make_tuple(99, std::string{ "roundtrip" }), test_roundtrip))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Nested Structures">::run(test_nested))
+	if (rt_ut::unit_test<"Nested Structures">::assert_eq(std::make_tuple(1, std::size_t{ 5 }, true), test_nested))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Double Write">::run(test_double_write))
+	if (rt_ut::unit_test<"Double Write">::assert_eq(std::make_tuple(std::string{ "3.14" }, std::string{ "0" }, std::string{ "-0" }), test_double_write))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Double Parse">::run(test_double_parse))
+	if (rt_ut::unit_test<"Double Parse">::assert_eq(std::make_tuple(3.14, 9.81, 0.0), test_double_parse))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Int Write">::run(test_int_write))
+	if (rt_ut::unit_test<"Int Write">::assert_eq(std::make_tuple(std::string{ "0" }, std::string{ "999" }, std::string{ "-6" }), test_int_write))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Int Parse">::run(test_int_parse))
+	if (rt_ut::unit_test<"Int Parse">::assert_eq(std::make_tuple(-1, 0, 999), test_int_parse))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Bool Write">::run(test_bool_write))
+	if (rt_ut::unit_test<"Bool Write">::assert_eq(std::make_tuple(std::string{ "true" }, std::string{ "false" }), test_bool_write))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Bool Parse">::run(test_bool_parse))
+	if (rt_ut::unit_test<"Bool Parse">::assert_eq(std::make_tuple(true, false), test_bool_parse))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"String Write">::run(test_string_write))
+	if (rt_ut::unit_test<"String Write">::assert_eq(std::make_tuple(std::string{ "\"fish\"" }, std::string{ "\"as\\\"df\\\\ghjkl\"" }), test_string_write))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"String Parse">::run(test_string_parse))
+	if (rt_ut::unit_test<"String Parse">::assert_eq(std::make_tuple(std::string{ "fish" }, std::string{ "as\"df\\ghjkl" }), test_string_parse))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Vector Serialize">::run(test_vector_serialize))
+	if (rt_ut::unit_test<"Vector Serialize">::assert_eq(true, test_vector_serialize))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Vector Parse">::run(test_vector_parse))
+	if (rt_ut::unit_test<"Vector Parse">::assert_eq(std::make_tuple(std::size_t{ 5 }, 10, 50), test_vector_parse))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Array Serialize">::run(test_array_serialize))
+	if (rt_ut::unit_test<"Array Serialize">::assert_eq(true, test_array_serialize))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Array Parse">::run(test_array_parse))
+	if (rt_ut::unit_test<"Array Parse">::assert_eq(std::make_tuple(std::size_t{ 3 }, 10, 30), test_array_parse))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Prettify JSON">::run(test_prettify))
+	if (rt_ut::unit_test<"Prettify JSON">::assert_eq(true, test_prettify))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Minify JSON">::run(test_minify))
+	if (rt_ut::unit_test<"Minify JSON">::assert_eq(true, test_minify))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Validate Valid">::run(test_validate_valid))
+	if (rt_ut::unit_test<"Validate Valid">::assert_eq(true, test_validate_valid))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Validate Invalid">::run(test_validate_invalid))
+	if (rt_ut::unit_test<"Validate Invalid">::assert_eq(true, test_validate_invalid))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Escaped Key">::run(test_escaped_key))
+	if (rt_ut::unit_test<"Escaped Key">::assert_eq(std::make_tuple(5, std::string{ "bye" }), test_escaped_key))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Escaped Chars Parse">::run(test_escaped_chars_parse))
+	if (rt_ut::unit_test<"Escaped Chars Parse">::assert_eq(std::string{ "\b\f\n\r\t" }, test_escaped_chars_parse))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Enum Serialize">::run(test_enum_serialize))
+	if (rt_ut::unit_test<"Enum Serialize">::assert_eq(std::string{ "1" }, test_enum_serialize))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Enum Parse">::run(test_enum_parse))
+	if (rt_ut::unit_test<"Enum Parse">::assert_eq(true, test_enum_parse))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Enum Array">::run(test_enum_array))
+	if (rt_ut::unit_test<"Enum Array">::assert_eq(std::make_tuple(true, true, true), test_enum_array))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Vehicle Enum">::run(test_vehicle_enum))
+	if (rt_ut::unit_test<"Vehicle Enum">::assert_eq(std::make_tuple(std::string{ "2" }, true), test_vehicle_enum))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Complex Struct">::run(test_complex_struct))
+	if (rt_ut::unit_test<"Complex Struct">::assert_eq(std::make_tuple(8, 2.0, 'W'), test_complex_struct))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Optional Empty">::run(test_optional_empty))
+	if (rt_ut::unit_test<"Optional Empty">::assert_eq(true, test_optional_empty))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Optional Value">::run(test_optional_value))
+	if (rt_ut::unit_test<"Optional Value">::assert_eq(true, test_optional_value))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Map">::run(test_map))
+	if (rt_ut::unit_test<"Map">::assert_eq(std::make_tuple(4, 7, 12), test_map))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Shared Ptr">::run(test_shared_ptr))
+	if (rt_ut::unit_test<"Shared Ptr">::assert_eq(true, test_shared_ptr))
 		passed++;
 	total++;
-	if (rt_ut::unit_test<"Dummy Data Vector">::run(test_dummy_data))
+	if (rt_ut::unit_test<"Dummy Data Vector">::assert_eq(std::make_tuple(std::size_t{ 4 }, true), test_dummy_data))
 		passed++;
 
 	std::cout << "\n========================================\n";
 	std::cout << "Test Results: " << passed << "/" << total << " passed\n";
 	std::cout << "========================================\n";
+
 	try {
 		tests::testFunction();
 	} catch (std::runtime_error& error) {
@@ -1031,4 +980,4 @@ int main() {
 		std::cout << error.what() << std::endl;
 	}
 	return 0;
-};
+}

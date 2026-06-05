@@ -35,8 +35,8 @@
 static constexpr auto max_iterations{ 1400 };
 static constexpr auto measured_iterations{ 20 };
 #else
-static constexpr auto max_iterations{ 2 };
-static constexpr auto measured_iterations{ 1 };
+static constexpr auto max_iterations{ 200 };
+static constexpr auto measured_iterations{ 25 };
 #endif
 
 constexpr auto get_current_operating_system() {
@@ -185,22 +185,24 @@ template<typename value_type> struct partial_test {
 };
 
 BNCH_SWT_HOST std::string generate_integer_part(uint64_t min_length = 1, uint64_t max_length = 15) {
-	uint64_t length = bnch_swt::random_generator<uint64_t>::impl(min_length, max_length);
+	bnch_swt::random_generator<uint64_t> rg{};
+	uint64_t length = rg.impl(min_length, max_length);
 
-	if (length == 1 && bnch_swt::random_generator<uint64_t>::impl(0, 1) == 0 && bnch_swt::random_generator<uint64_t>::impl(0, 9) == 0)
+	if (length == 1 && rg.impl(0, 1) == 0 && rg.impl(0, 9) == 0)
 		return "0";
 
 	std::string s;
-	s += std::to_string(bnch_swt::random_generator<uint64_t>::impl(1, 9));
+	s += std::to_string(rg.impl(1, 9));
 
 	for (uint64_t i = 1; i < length; ++i) {
-		s += std::to_string(bnch_swt::random_generator<uint64_t>::impl(0, 9));
+		s += std::to_string(rg.impl(0, 9));
 	}
 	return s;
 }
 
 BNCH_SWT_HOST std::string maybe_add_sign(const std::string& s) {
-	return (bnch_swt::random_generator<uint64_t>::impl(0, 1) == 1) ? ("-" + s) : s;
+	bnch_swt::random_generator<uint64_t> rg{};
+	return (rg.impl(0, 1) == 1) ? ("-" + s) : s;
 }
 
 BNCH_SWT_HOST std::string generate_1_simple_integer() {
@@ -208,50 +210,54 @@ BNCH_SWT_HOST std::string generate_1_simple_integer() {
 }
 
 BNCH_SWT_HOST std::string generate_2_simple_float() {
+	bnch_swt::random_generator<uint64_t> rg{};
 	std::string s = generate_integer_part(1, 5);
 	s += ".";
 
-	uint64_t fractional_length = bnch_swt::random_generator<uint64_t>::impl(1, 10);
+	uint64_t fractional_length = rg.impl(1, 10);
 	for (uint64_t i = 0; i < fractional_length; ++i) {
-		s += std::to_string(bnch_swt::random_generator<uint64_t>::impl(0, 9));
+		s += std::to_string(rg.impl(0, 9));
 	}
 	return maybe_add_sign(s);
 }
 
 BNCH_SWT_HOST std::string generate_3_scientific() {
+	bnch_swt::random_generator<uint64_t> rg{};
 	std::string s;
 
-	if (bnch_swt::random_generator<uint64_t>::impl(0, 1) == 0) {
+	if (rg.impl(0, 1) == 0) {
 		s = generate_integer_part(1, 3) + ".";
-		s += std::to_string(bnch_swt::random_generator<uint64_t>::impl(0, 9));
+		s += std::to_string(rg.impl(0, 9));
 	} else {
 		s = generate_integer_part(1, 5);
 	}
 
-	s += (bnch_swt::random_generator<uint64_t>::impl(0, 1) == 0 ? 'e' : 'E');
-	s += (bnch_swt::random_generator<uint64_t>::impl(0, 1) == 0 ? '+' : '-');
-	uint64_t exponent = bnch_swt::random_generator<uint64_t>::impl(1, 100);
+	s += (rg.impl(0, 1) == 0 ? 'e' : 'E');
+	s += (rg.impl(0, 1) == 0 ? '+' : '-');
+	uint64_t exponent = rg.impl(1, 100);
 	s += std::to_string(exponent);
 
 	return maybe_add_sign(s);
 }
 
 BNCH_SWT_HOST std::string generate_4_min_max_boundary() {
-	if (bnch_swt::random_generator<uint64_t>::impl(0, 1) == 0) {
-		double mantissa	  = bnch_swt::random_generator<double>::impl(1.0, 9.9);
-		uint64_t exponent = bnch_swt::random_generator<uint64_t>::impl(300, 308);
+	bnch_swt::random_generator<uint64_t> rg{};
+	bnch_swt::random_generator<double> rg_double{};
+	if (rg.impl(0, 1) == 0) {
+		double mantissa	  = rg_double.impl(1.0, 9.9);
+		uint64_t exponent = rg.impl(300, 308);
 		double val		  = mantissa * std::pow(10.0, exponent);
-		if (bnch_swt::random_generator<uint64_t>::impl(0, 1) == 1)
+		if (rg.impl(0, 1) == 1)
 			val = -val;
 
 		std::stringstream ss;
 		ss << std::scientific << std::setprecision(16) << val;
 		return ss.str();
 	} else {
-		double mantissa	  = bnch_swt::random_generator<double>::impl(1.0, 9.9);
-		uint64_t exponent = bnch_swt::random_generator<uint64_t>::impl(300, 308);
+		double mantissa	  = rg_double.impl(1.0, 9.9);
+		uint64_t exponent = rg.impl(300, 308);
 		double val		  = mantissa * std::pow(10.0, static_cast<double>(-static_cast<int64_t>(exponent)));
-		if (bnch_swt::random_generator<uint64_t>::impl(0, 1) == 1)
+		if (rg.impl(0, 1) == 1)
 			val = -val;
 
 		std::stringstream ss;
@@ -261,28 +267,31 @@ BNCH_SWT_HOST std::string generate_4_min_max_boundary() {
 }
 
 BNCH_SWT_HOST std::string generate_5_precision_boundary() {
+	bnch_swt::random_generator<uint64_t> rg{};
 	std::string s;
-	s += maybe_add_sign(std::to_string(bnch_swt::random_generator<uint64_t>::impl(1, 9)));
+	s += maybe_add_sign(std::to_string(rg.impl(1, 9)));
 	s += ".";
 
 	for (uint64_t i = 0; i < 18; ++i) {
-		s += std::to_string(bnch_swt::random_generator<uint64_t>::impl(0, 9));
+		s += std::to_string(rg.impl(0, 9));
 	}
 
-	if (bnch_swt::random_generator<uint64_t>::impl(0, 1) == 0) {
+	if (rg.impl(0, 1) == 0) {
 		s += 'e';
-		s += std::to_string(bnch_swt::random_generator<uint64_t>::impl(1, 100));
+		s += std::to_string(rg.impl(1, 100));
 	}
 	return s;
 }
 
 BNCH_SWT_HOST std::string generate_6_zero_subnormal() {
-	if (bnch_swt::random_generator<uint64_t>::impl(0, 1) == 0) {
+	bnch_swt::random_generator<double> rg_double{};
+	bnch_swt::random_generator<uint64_t> rg{};
+	if (rg.impl(0, 1) == 0) {
 		static constexpr std::array zero_forms = { "0", "0.0", "-0.0", "0e0", "-0e5", "0.0e-10" };
-		uint64_t index						   = bnch_swt::random_generator<uint64_t>::impl(0, zero_forms.size() - 1);
+		uint64_t index						   = rg.impl(0, zero_forms.size() - 1);
 		return zero_forms[index];
 	} else {
-		double mantissa = bnch_swt::random_generator<double>::impl(1.0, 9.9);
+		double mantissa = rg_double.impl(1.0, 9.9);
 		double val		= mantissa * std::pow(10.0, -315);
 
 		std::stringstream ss;
@@ -292,18 +301,20 @@ BNCH_SWT_HOST std::string generate_6_zero_subnormal() {
 }
 
 BNCH_SWT_HOST std::string generate_7_structural_edge() {
+	bnch_swt::random_generator<uint64_t> rg{};
 	static constexpr std::array edge_forms = { "1e10", "-9e-10", "0.1", "-9.0", "1.2e0", "-3e+0", "123.000000", "0.0000001" };
-	uint64_t index						   = bnch_swt::random_generator<uint64_t>::impl(0, edge_forms.size() - 1);
+	uint64_t index						   = rg.impl(0, edge_forms.size() - 1);
 	return edge_forms[index];
 }
 
 BNCH_SWT_HOST std::string generate_random_double_string() {
+	bnch_swt::random_generator<uint64_t> rg{};
 	static constexpr std::array weights = { 40.0, 30.0, 10.0, 5.0, 5.0, 5.0, 5.0 };
 
 	static constexpr std::array generators = { generate_1_simple_integer, generate_2_simple_float, generate_3_scientific, generate_4_min_max_boundary,
 		generate_5_precision_boundary, generate_6_zero_subnormal, generate_7_structural_edge };
 
-	uint64_t roll = bnch_swt::random_generator<uint64_t>::impl(0, 99);
+	uint64_t roll = rg.impl(0, 99);
 
 	uint64_t cumulative_weight = 0;
 	for (size_t i = 0; i < weights.size(); ++i) {
@@ -320,7 +331,7 @@ BNCH_SWT_HOST double generate_random_double() {
 	do {
 		std::string test_string = generate_random_double_string();
 		auto new_ptr			= test_string.data() + test_string.size();
-		test_double				= strtod(test_string.data(), &new_ptr);
+		test_double= strtod(test_string.data(), &new_ptr);
 	} while (test_double == std::numeric_limits<double>::infinity() || test_double == std::numeric_limits<double>::quiet_NaN() ||
 		test_double == -std::numeric_limits<double>::infinity());
 	return test_double;
@@ -328,7 +339,9 @@ BNCH_SWT_HOST double generate_random_double() {
 
 struct test_generator {
 	template<jsonifier::concepts::string_t value_type> static value_type generate_value() {
-		return bnch_swt::random_generator<std::string>::impl(bnch_swt::random_generator<uint64_t>::impl(16ull, 64ull));
+		bnch_swt::random_generator<uint64_t> rg{};
+		bnch_swt::random_generator<std::string> rg_string{};
+		return rg_string.impl(rg.impl(16ull, 64ull));
 	}
 
 	template<jsonifier::concepts::float_t value_type> static value_type generate_value() {
@@ -336,15 +349,18 @@ struct test_generator {
 	}
 
 	template<jsonifier::concepts::bool_t value_type> static value_type generate_value() {
-		return bnch_swt::random_generator<bool>::impl();
+		bnch_swt::random_generator<bool> rg{};
+		return rg.impl();
 	}
 
 	template<jsonifier::concepts::uns64_t value_type> static value_type generate_value() {
-		return bnch_swt::random_generator<uint64_t>::impl();
+		bnch_swt::random_generator<uint64_t> rg{};
+		return rg.impl();
 	}
 
 	template<jsonifier::concepts::sig64_t value_type> static value_type generate_value() {
-		return bnch_swt::random_generator<int64_t>::impl();
+		bnch_swt::random_generator<int64_t> rg{};
+		return rg.impl();
 	}
 
 	static test_struct generate_test_struct() {
@@ -369,9 +385,10 @@ struct test_generator {
 	}
 
 	static test<test_struct> generate_test() {
+		bnch_swt::random_generator<uint64_t> rg{};
 		test<test_struct> return_values{};
 		auto fill = [&](auto& v) {
-			const auto array_size_01 = bnch_swt::random_generator<uint64_t>::impl(1ull, 15ull);
+			const auto array_size_01 = rg.impl(1ull, 15ull);
 			v.resize(array_size_01);
 			for (uint64_t x = 0; x < array_size_01; ++x) {
 				v[x] = generate_test_struct();
@@ -509,10 +526,10 @@ struct results_data {
 
 	results_data() noexcept = default;
 
-	results_data(const std::string& name_new, const std::string& test_new, const std::string& url_new) {
-		name = name_new;
-		test = test_new;
-		url	 = url_new;
+	results_data(const auto& name_new, const auto& test_new, const auto& url_new) {
+		name = static_cast<std::string>(name_new);
+		test = static_cast<std::string>(test_new);
+		url	 = static_cast<std::string>(url_new);
 	}
 
 	void check_for_missing_keys() {

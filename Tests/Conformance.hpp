@@ -37,7 +37,7 @@ namespace jsonifier {
 	};
 }
 
-using pass02 = std::vector<std::string>;
+using pass02 = jsonifier::raw_json_data;
 
 namespace conformance_tests {
 
@@ -85,9 +85,9 @@ namespace conformance_tests {
 		runTest<std::vector<std::string>>("fail15.json", jsonTests["fail15.json"].fileContents, parser);
 		runTest<std::vector<std::string>>("fail16.json", jsonTests["fail16.json"].fileContents, parser);
 		runTest<std::vector<std::string>>("fail17.json", jsonTests["fail17.json"].fileContents, parser);
-		runTest<std::unordered_map<std::string, int32_t*>>("fail19.json", jsonTests["fail19.json"].fileContents, parser);
-		runTest<std::unordered_map<std::string, int32_t*>>("fail20.json", jsonTests["fail20.json"].fileContents, parser);
-		runTest<std::unordered_map<std::string, int32_t*>>("fail21.json", jsonTests["fail21.json"].fileContents, parser);
+		runTest<std::unordered_map<std::string, int32_t>>("fail19.json", jsonTests["fail19.json"].fileContents, parser);
+		runTest<std::unordered_map<std::string, int32_t>>("fail20.json", jsonTests["fail20.json"].fileContents, parser);
+		runTest<std::unordered_map<std::string, int32_t>>("fail21.json", jsonTests["fail21.json"].fileContents, parser);
 		runTest<std::vector<std::string>>("fail22.json", jsonTests["fail22.json"].fileContents, parser);
 		runTest<std::vector<std::string>>("fail23.json", jsonTests["fail23.json"].fileContents, parser);
 		runTest<std::vector<std::string>>("fail24.json", jsonTests["fail24.json"].fileContents, parser);

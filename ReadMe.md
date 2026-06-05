@@ -10,17 +10,19 @@
 ### [More Benchmarks](https://github.com/Loki-Astari/JsonBenchmark)
 ----
 
-### Compiler Support
+## Compiler Support
 ----
-![MSVC](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/MSVC-Windows.yml?style=plastic&logo=microsoft&logoColor=green&label=MSVC&labelColor=pewter&color=blue&branch=dev)
-![GCC](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/GCC-Ubuntu.yml?style=plastic&logo=linux&logoColor=green&label=GCC&labelColor=pewter&color=blue&branch=dev)
-![CLANG](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/CLANG-MacOS.yml?style=plastic&logo=apple&logoColor=green&label=CLANG&labelColor=pewter&color=blue&branch=dev)
+![MSVC](https://img.shields.io/github/actions/workflow/status/realtimechris/jsonifier/Sanitizers.yml?style=plastic&logo=microsoft&logoColor=green&label=MSVC&labelColor=pewter&color=blue&branch=dev)
+![GCC](https://img.shields.io/github/actions/workflow/status/realtimechris/jsonifier/Sanitizers.yml?style=plastic&logo=linux&logoColor=green&label=GCC&labelColor=pewter&color=blue&branch=dev)
+![CLANG](https://img.shields.io/github/actions/workflow/status/realtimechris/jsonifier/Sanitizers.yml?style=plastic&logo=apple&logoColor=green&label=CLANG&labelColor=pewter&color=blue&branch=dev)
 
-### Operating System Support
+## Operating System Support
 ----
-![Windows](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/MSVC-Windows.yml?style=plastic&logo=microsoft&logoColor=green&label=Windows&labelColor=pewter&color=blue&branch=dev)
-![Linux](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/GCC-Ubuntu.yml?style=plastic&logo=linux&logoColor=green&label=Linux&labelColor=pewter&color=blue&branch=dev)
-![Mac](https://img.shields.io/github/actions/workflow/status/RealTimeChris/Jsonifier/CLANG-MacOS.yml?style=plastic&logo=apple&logoColor=green&label=MacOS&labelColor=pewter&color=blue&branch=dev)
+![Windows](https://img.shields.io/github/actions/workflow/status/realtimechris/jsonifier/Sanitizers.yml?style=plastic&logo=microsoft&logoColor=green&label=Windows&labelColor=pewter&color=blue&branch=dev)
+![Linux](https://img.shields.io/github/actions/workflow/status/realtimechris/jsonifier/Sanitizers.yml?style=plastic&logo=linux&logoColor=green&label=Linux&labelColor=pewter&color=blue&branch=dev)
+![Mac](https://img.shields.io/github/actions/workflow/status/realtimechris/jsonifier/Sanitizers.yml?style=plastic&logo=apple&logoColor=green&label=MacOS&labelColor=pewter&color=blue&branch=dev)
+
+---
 
 ### Usage Guide:
 ----

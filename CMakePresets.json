@@ -86,9 +86,8 @@
         "value": "x64"
       },
       "cacheVariables": {
-        "ASAN_ENABLED": "TRUE",
-        "CMAKE_BUILD_TYPE": "Release",
-        "JSONIFIER_TESTS": "TRUE"
+        "JSONIFIER_ASAN": "TRUE",
+        "CMAKE_BUILD_TYPE": "Release"
       },
       "inherits": "Jsonifier-Windows-Base",
       "name": "Jsonifier-Windows-Release-Asan"
@@ -99,9 +98,8 @@
         "strategy": "external"
       },
       "cacheVariables": {
-        "ASAN_ENABLED": "TRUE",
-        "CMAKE_BUILD_TYPE": "Debug",
-        "JSONIFIER_TESTS": "TRUE"
+        "JSONIFIER_ASAN": "TRUE",
+        "CMAKE_BUILD_TYPE": "Debug"
       },
       "inherits": "Jsonifier-Windows-Base",
       "name": "Jsonifier-Windows-Debug-Asan"

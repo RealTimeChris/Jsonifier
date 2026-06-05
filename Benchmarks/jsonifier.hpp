@@ -152,7 +152,7 @@ template<> struct jsonifier::core<status_data> {
 		&value_type::truncated, &value_type::in_reply_to_status_id, &value_type::in_reply_to_status_id_str, &value_type::in_reply_to_user_id, &value_type::in_reply_to_user_id_str,
 		&value_type::in_reply_to_screen_name, &value_type::user, &value_type::geo, &value_type::coordinates, &value_type::place, &value_type::contributors,
 		&value_type::retweet_count, &value_type::favorite_count, &value_type::entities, &value_type::favorited, &value_type::retweeted, &value_type::lang,
-		&value_type::retweeted_status, &value_type::possibly_sensitive>();
+		&value_type::possibly_sensitive>();
 };
 
 template<> struct jsonifier::core<twitter_message> {

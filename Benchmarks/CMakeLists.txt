@@ -52,7 +52,7 @@ target_link_libraries(
 
 target_compile_options(
 	"Json-Performance" PUBLIC
-	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/fsanitize=address>>"
+	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${JSONIFIER_ASAN},TRUE>:/fsanitize=address>>"
 	"$<$<CXX_COMPILER_ID:CLANG>:-Wnull-dereference>"
 	"$<$<CXX_COMPILER_ID:CLANG>:-Wuninitialized>"
 	"$<$<CXX_COMPILER_ID:CLANG>:-Wconversion>"
@@ -75,7 +75,7 @@ target_compile_options(
 
 target_link_options(
 	"Json-Performance" PUBLIC
-	"$<$<CXX_COMPILER_ID:GNU>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:-fsanitize=address>>"
+	"$<$<CXX_COMPILER_ID:GNU>:$<$<STREQUAL:${JSONIFIER_ASAN},TRUE>:-fsanitize=address>>"
 )
 
 target_compile_definitions(

@@ -70,8 +70,16 @@ namespace jsonifier::internal {
 		{ value.getState() } -> std::same_as<bool>;
 	};
 
+	JSONIFIER_INLINE constexpr uint64_t str_len(const char* input) noexcept {
+		uint64_t return_val{};
+		while (input[return_val] != '\0') {
+			++return_val;
+		}
+		return return_val;
+	}
+
 	template<concepts::pointer_t value_type> JSONIFIER_INLINE static string_view_ptr getEndIter(value_type value) noexcept {
-		return std::bit_cast<string_view_ptr>(char_comparison<'\0', const char>::memchar(value, std::numeric_limits<size_t>::max()));
+		return value + str_len(value);
 	}
 
 	template<concepts::pointer_t value_type> JSONIFIER_INLINE static string_view_ptr getBeginIter(value_type value) noexcept {

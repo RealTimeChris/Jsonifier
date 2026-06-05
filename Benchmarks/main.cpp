@@ -22,22 +22,9 @@
 /// https://github.com/RealTimeChris/jsonifier
 #include "tests.hpp"
 
-using namespace jsonifier::internal;
-
-template<uint64_t divisor> void test_function() {
-	std::cout << "DIVISOR: " << divisor << std::endl;
-	std::cout << "MUL: " << uint_type<uint64_t, 100000000>::collect_values().multiplicand << std::endl;
-	std::cout << "SHIFT: " << uint_type<uint64_t, 100000000>::collect_values().shift << std::endl;
-}
-
 int32_t main() {
 	try {
-		double val{ 3.333e307 };
-		std::string string{};
-		string.resize(128);
-		jsonifier::internal::to_chars<double>::impl(string.data(), val);
-		std::cout << "VALUE: " << string << std::endl;
-		//tests::test_function();
+		tests::test_function();
 	} catch (std::runtime_error& error) {
 		std::cout << error.what() << std::endl;
 	} catch (std::out_of_range& error) {

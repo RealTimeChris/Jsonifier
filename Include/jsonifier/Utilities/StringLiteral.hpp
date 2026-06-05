@@ -24,6 +24,7 @@
 #pragma once
 
 #include <jsonifier/Core/Config.hpp>
+#include <string_view>
 
 namespace jsonifier::internal {
 
@@ -100,11 +101,6 @@ namespace jsonifier::internal {
 
 		template<typename string_type> constexpr operator string_type() const noexcept {
 			JSONIFIER_ALIGN(bytesPerStep) string_type returnValues{ values, length };
-			return returnValues;
-		}
-
-		constexpr operator std::string() const noexcept {
-			JSONIFIER_ALIGN(bytesPerStep) std::string returnValues{ values, length };
 			return returnValues;
 		}
 

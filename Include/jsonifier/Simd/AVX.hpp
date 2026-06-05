@@ -289,10 +289,10 @@ namespace jsonifier::simd {
 
 	template<simd_int_512_type simd_int_t01, simd_int_512_type simd_int_t02>
 	JSONIFIER_INLINE static auto opCmpLtRaw(const simd_int_t01& value, const simd_int_t02& other) noexcept {
-		return _mm512_maskz_set1_epi8(_mm512_cmpeq_epi8_mask(value, other), 0xFF);
+		return _mm512_movm_epi8(_mm512_cmplt_epi8_mask(value, other));
 	}
 
-	template<simd_int_256_type simd_int_t01> JSONIFIER_INLINE static uint64_t opBitMask(const simd_int_t01& value) noexcept {
+	template<simd_int_512_type simd_int_t01> JSONIFIER_INLINE static uint64_t opBitMask(const simd_int_t01& value) noexcept {
 		return _mm512_movepi8_mask(value);
 	}
 

@@ -313,7 +313,7 @@ namespace jsonifier::internal {
 				context.buffer.resize((context.index + additionalSize) * 4);
 				context.bufferPtr = context.buffer.data() + context.index;
 			}
-			static constexpr auto size = tuple_size_v<jsonifier::internal::remove_reference_t<value_type>>;
+			static constexpr auto size = std::tuple_size_v<jsonifier::internal::remove_reference_t<value_type>>;
 			if constexpr (size > 0) {
 				*context.bufferPtr = lBracket;
 				++context.bufferPtr;

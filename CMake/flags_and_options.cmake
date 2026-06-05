@@ -35,199 +35,190 @@ set(JSONIFIER_COMPILE_DEFINITIONS
     "JSONIFIER_INLINE=$<IF:$<CUDA_COMPILER_ID:NVIDIA>,$<IF:$<CONFIG:Release>,__forceinline__ __host__,__noinline__ __host__>,$<IF:$<CONFIG:Release>,$<IF:$<CXX_COMPILER_ID:MSVC>,[[msvc::forceinline]] inline,inline __attribute__((always_inline))>,$<IF:$<CXX_COMPILER_ID:MSVC>,[[msvc::noinline]],__attribute__((noinline))>>>"
     "JSONIFIER_NOINLINE=$<IF:$<CUDA_COMPILER_ID:NVIDIA>,$<IF:$<CONFIG:Release>,__noinline__,__noinline__>,$<IF:$<CONFIG:Release>,$<IF:$<CXX_COMPILER_ID:MSVC>,[[msvc::noinline]],__attribute__((noinline))>,$<IF:$<CXX_COMPILER_ID:MSVC>,[[msvc::noinline]],__attribute__((noinline))>>>"
     $<$<CXX_COMPILER_ID:MSVC>:NOMINMAX;WIN32_LEAN_AND_MEAN>
-    ${JSONIFIER_SIMD_DEFINITIONS}
+    $<$<CONFIG:Release>:NDEBUG>
+    $<$<CONFIG:Debug>:DEBUG _DEBUG>
+    $<IF:$<CONFIG:Debug>,JSONIFIER_DEBUG=1,JSONIFIER_DEBUG=0>
+)
+
+target_compile_definitions(${PROJECT_NAME}
+    INTERFACE ${JSONIFIER_COMPILE_DEFINITIONS}
+)
+
+option(JSONIFIER_ASAN  "Enable AddressSanitizer"            OFF)
+option(JSONIFIER_UBSAN "Enable UndefinedBehaviorSanitizer"  OFF)
+
+set(JSONIFIER_ASAN_EFFECTIVE  ${JSONIFIER_ASAN})
+set(JSONIFIER_UBSAN_EFFECTIVE ${JSONIFIER_UBSAN})
+
+if(APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    if(JSONIFIER_ASAN)
+        message(WARNING
+            "JSONIFIER_ASAN is not supported with GCC on macOS -- ignoring for this "
+            "configure. Re-run with a Clang/AppleClang toolchain to enable.")
+        set(JSONIFIER_ASAN_EFFECTIVE OFF)
+    endif()
+    if(JSONIFIER_UBSAN)
+        message(WARNING
+            "JSONIFIER_UBSAN is not supported with GCC on macOS -- ignoring for this "
+            "configure. Re-run with a Clang/AppleClang toolchain to enable.")
+        set(JSONIFIER_UBSAN_EFFECTIVE OFF)
+    endif()
+endif()
+
+if(JSONIFIER_UBSAN_EFFECTIVE AND CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    message(WARNING
+        "JSONIFIER_UBSAN has no effect with MSVC (no equivalent runtime). "
+        "Use Clang-cl or a Clang/GCC build to get UBSan coverage.")
+    set(JSONIFIER_UBSAN_EFFECTIVE OFF)
+endif()
+
+if(APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set(JSONIFIER_ASAN_EFFECTIVE OFF)
+    set(JSONIFIER_UBSAN_EFFECTIVE OFF)
+    message(STATUS "Disabling sanitizers: not supported with GCC on macOS.")
+endif()
+
+set(JSONIFIER_HOMEBREW_GCC_LIBDIR "")
+if(APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    find_program(JSONIFIER_BREW_EXE brew)
+    if(JSONIFIER_BREW_EXE)
+        execute_process(
+            COMMAND ${JSONIFIER_BREW_EXE} --prefix gcc
+            OUTPUT_VARIABLE JSONIFIER_BREW_GCC_PREFIX
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            RESULT_VARIABLE JSONIFIER_BREW_RC
+        )
+        if(JSONIFIER_BREW_RC EQUAL 0 AND JSONIFIER_BREW_GCC_PREFIX)
+            file(GLOB JSONIFIER_GCC_LIB_CANDIDATES
+                "${JSONIFIER_BREW_GCC_PREFIX}/lib/gcc/*")
+            if(JSONIFIER_GCC_LIB_CANDIDATES)
+                list(SORT JSONIFIER_GCC_LIB_CANDIDATES)
+                list(REVERSE JSONIFIER_GCC_LIB_CANDIDATES)
+                list(GET JSONIFIER_GCC_LIB_CANDIDATES 0 JSONIFIER_HOMEBREW_GCC_LIBDIR)
+            endif()
+        endif()
+    endif()
+    if(NOT JSONIFIER_HOMEBREW_GCC_LIBDIR)
+        message(STATUS
+            "Could not auto-detect Homebrew GCC runtime path; link-time "
+            "rpath for libstdc++ will not be added. Set "
+            "JSONIFIER_HOMEBREW_GCC_LIBDIR manually if needed.")
+    endif()
+endif()
+
+target_include_directories(${PROJECT_NAME}
+    INTERFACE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
 )
 
 set(JSONIFIER_CLANG_COMPILE_OPTIONS
-    -O3
-    -funroll-loops
-    -fvectorize
-    -fslp-vectorize
-    -finline-functions
-    -fomit-frame-pointer
-    -fmerge-all-constants
-    -ffunction-sections
-    -fdata-sections
-    -falign-functions=32
-    -fno-math-errno
-    -ffp-contract=on
-    -fvisibility=hidden
-    -fvisibility-inlines-hidden
-    -fno-rtti
-    -fno-asynchronous-unwind-tables
-    -fno-unwind-tables
-    -fno-ident
-    -pipe
-    -fno-common
-    -fwrapv
-    -Weverything
-    -Wnon-virtual-dtor
-    -Wno-c++98-compat
-    -Wno-c++98-compat-pedantic
-    -Wno-unsafe-buffer-usage
-    -Wno-padded
-    -Wno-c++20-compat
-    -Wno-exit-time-destructors
-    -Wno-c++20-extensions
+    $<$<AND:$<CONFIG:Release>,$<NOT:$<BOOL:${JSONIFIER_ASAN_EFFECTIVE}>>>:
+        -O3
+        -march=native
+        -flto
+        -finline-functions
+        -fomit-frame-pointer
+        -fno-rtti
+        -fno-vectorize
+        -fno-slp-vectorize
+        -fno-stack-protector
+    >
+    $<$<AND:$<CONFIG:Release>,$<BOOL:${JSONIFIER_ASAN_EFFECTIVE}>>:
+        -O1
+        -fno-rtti
+    >
+    $<$<CONFIG:Debug>:
+        -O0
+        -g
+        -fno-omit-frame-pointer
+    >
+    $<$<BOOL:${JSONIFIER_ASAN_EFFECTIVE}>:
+        -fsanitize=address
+        -fno-omit-frame-pointer
+        -fno-optimize-sibling-calls
+        -fsanitize-address-use-after-scope
+        -U_FORTIFY_SOURCE
+        -D_FORTIFY_SOURCE=0
+    >
+    $<$<BOOL:${JSONIFIER_UBSAN_EFFECTIVE}>:
+        -fsanitize=undefined
+        -fno-sanitize-recover=all
+    >
 )
 
-set(JSONIFIER_APPLECLANG_COMPILE_OPTIONS 
-    -O3
-    -funroll-loops
-    -fvectorize
-    -fslp-vectorize
-    -finline-functions
-    -fomit-frame-pointer
-    -fmerge-all-constants
-    -ffunction-sections
-    -fdata-sections
-    -falign-functions=32
-    -fno-math-errno
-    -ffp-contract=on
-    -fvisibility=hidden
-    -fvisibility-inlines-hidden
-    -fno-rtti
-    -fno-asynchronous-unwind-tables
-    -fno-unwind-tables
-    -fno-ident
-    -pipe
-    -fno-common
-    -fwrapv
-    -Weverything
-    -Wnon-virtual-dtor
-    -Wno-c++98-compat
-    -Wno-c++98-compat-pedantic
-    -Wno-unsafe-buffer-usage
-    -Wno-padded
-    -Wno-c++20-compat
-    -Wno-exit-time-destructors
-    -Wno-poison-system-directories
-    -Wno-c++20-extensions
-)
-
-set(JSONIFIER_GNU_COMPILE_OPTIONS 
-    -O3
-    -funroll-loops
-    -finline-functions
-    -fomit-frame-pointer
-    -fno-math-errno
-    -falign-functions=32
-    -falign-loops=32
-    -fprefetch-loop-arrays
-    -ftree-vectorize
-    -fstrict-aliasing
-    -ffunction-sections
-    -fdata-sections
-    -fvisibility=hidden
-    -fvisibility-inlines-hidden
-    -fno-keep-inline-functions
-    -fno-ident
-    -fmerge-all-constants
-    -fno-rtti
-    -fgcse-after-reload
-    -ftree-loop-distribute-patterns
-    -fpredictive-commoning
-    -funswitch-loops
-    -ftree-loop-vectorize
-    -ftree-slp-vectorize
-    -Wall
-    -Wextra
-    -Wpedantic
-    -Wnon-virtual-dtor
-    -Wlogical-op
-    -Wduplicated-cond
-    -Wduplicated-branches
-    -Wnull-dereference
-    -Wdouble-promotion
-)
-
-set(JSONIFIER_MSVC_RELEASE_FLAGS
-    /Ob3
-    /Ot
-    /Oy
-    /GT
-    $<$<NOT:$<CUDA_COMPILER_ID:NVIDIA>>:/GL>
-    /fp:precise
-    /Qpar
-    /GS-
+set(JSONIFIER_GNU_COMPILE_OPTIONS
+    $<$<BOOL:${JSONIFIER_ASAN_EFFECTIVE}>:
+        -fsanitize=address
+        -fsanitize-address-use-after-scope
+        -U_FORTIFY_SOURCE
+        -D_FORTIFY_SOURCE=0
+    >
+    $<$<BOOL:${JSONIFIER_UBSAN_EFFECTIVE}>:
+        -fsanitize=undefined
+        -fno-sanitize-recover=all
+    >
+    $<$<CONFIG:Debug>:-O0>
+    $<$<CONFIG:Debug>:-g>
+    $<$<NOT:$<CONFIG:Debug>>:-fwhole-program>
 )
 
 set(JSONIFIER_MSVC_COMPILE_OPTIONS
-    /Gy    
-    /Gw
-    $<$<NOT:$<CUDA_COMPILER_ID:NVIDIA>>:/Zc:inline>    
-    /Zc:throwingNew
-    /W4
-    $<$<NOT:$<CUDA_COMPILER_ID:NVIDIA>>:/bigobj>
-    /permissive-
-    /Zc:__cplusplus
-    /wd4820
-    /wd4324
-    /wd5002
-    /Zc:alignedNew
-    /Zc:auto
-    /Zc:forScope
-    /Zc:implicitNoexcept
-    /Zc:noexceptTypes
-    /Zc:referenceBinding
-    /Zc:rvalueCast
-    /Zc:sizedDealloc
-    /Zc:strictStrings
-    /Zc:ternary
-    /Zc:wchar_t
-    $<$<CONFIG:Release>:${JSONIFIER_MSVC_RELEASE_FLAGS}>
-)
-
-set(JSONIFIER_CXX_COMPILE_OPTIONS
-    $<$<CXX_COMPILER_ID:Clang>:${JSONIFIER_CLANG_COMPILE_OPTIONS}>
-    $<$<CXX_COMPILER_ID:AppleClang>:${JSONIFIER_APPLECLANG_COMPILE_OPTIONS}>
-    $<$<CXX_COMPILER_ID:GNU>:${JSONIFIER_GNU_COMPILE_OPTIONS}>
-    $<$<CXX_COMPILER_ID:MSVC>:${JSONIFIER_MSVC_COMPILE_OPTIONS}>
+    $<$<AND:$<CONFIG:Debug>,$<NOT:$<BOOL:${JSONIFIER_ASAN_EFFECTIVE}>>>:/Od /Zi /RTC1>
+    $<$<AND:$<CONFIG:Debug>,$<BOOL:${JSONIFIER_ASAN_EFFECTIVE}>>:/Od /Zi>
+    $<$<CONFIG:Release>:/O2 /Ob2 /GL /GS- /Gy>
+    $<$<BOOL:${JSONIFIER_ASAN_EFFECTIVE}>:/fsanitize=address>
+    /arch:AVX2
 )
 
 set(JSONIFIER_COMPILE_OPTIONS
-    $<$<COMPILE_LANGUAGE:CXX>:${JSONIFIER_CXX_COMPILE_OPTIONS}>
+    $<$<CXX_COMPILER_ID:AppleClang>:${JSONIFIER_CLANG_COMPILE_OPTIONS}>
+    $<$<CXX_COMPILER_ID:Clang>:${JSONIFIER_CLANG_COMPILE_OPTIONS}>
+    $<$<CXX_COMPILER_ID:MSVC>:${JSONIFIER_MSVC_COMPILE_OPTIONS}>
+    $<$<CXX_COMPILER_ID:GNU>:${JSONIFIER_GNU_COMPILE_OPTIONS}>
     ${JSONIFIER_SIMD_FLAGS}
 )
 
-set(JSONIFIER_LINK_OPTIONS
-    $<$<AND:$<CXX_COMPILER_ID:Clang>,$<PLATFORM_ID:Darwin>>:
-        -Wl,-dead_strip
-        -Wl,-x
-        -Wl,-S
-    >
-    $<$<AND:$<CXX_COMPILER_ID:AppleClang>,$<PLATFORM_ID:Darwin>>:
-        -Wl,-dead_strip
-        -Wl,-x
-        -Wl,-S
-    >
-    $<$<AND:$<CXX_COMPILER_ID:GNU>,$<PLATFORM_ID:Darwin>>:
-        -Wl,-dead_strip
-        -Wl,-x
-        -Wl,-S
-    >
-    $<$<AND:$<CXX_COMPILER_ID:Clang>,$<PLATFORM_ID:Linux>>:
-        -Wl,--gc-sections
-        -Wl,--strip-all
-        -Wl,--build-id=none
-        -Wl,--hash-style=gnu
-        -Wl,-z,now
-        -Wl,-z,relro
-        -flto=thin
-        -fwhole-program-vtables
-    >
-    $<$<AND:$<CXX_COMPILER_ID:GNU>,$<PLATFORM_ID:Linux>>:
-        -Wl,--gc-sections
-        -Wl,--strip-all
-        -Wl,--as-needed
-        -Wl,-O3
-    >
-    $<$<AND:$<CXX_COMPILER_ID:MSVC>,$<PLATFORM_ID:Windows>>:
-        /DYNAMICBASE:NO
-        /OPT:REF
-        /OPT:ICF
-        /INCREMENTAL:NO
-        /MACHINE:X64
-        /LTCG
-    >
+target_compile_options(${PROJECT_NAME}
+    INTERFACE ${JSONIFIER_COMPILE_OPTIONS}
 )
+
+set(JSONIFIER_CLANG_LINK_OPTIONS
+    $<$<BOOL:${JSONIFIER_UBSAN_EFFECTIVE}>:-fsanitize=undefined>    
+    $<$<BOOL:${JSONIFIER_ASAN_EFFECTIVE}>:-fsanitize=address>
+    $<$<NOT:$<PLATFORM_ID:Darwin>>:-s>
+    $<$<PLATFORM_ID:Darwin>:-Wl,-x>
+)
+
+set(JSONIFIER_GNU_LINK_OPTIONS
+    $<$<BOOL:${JSONIFIER_UBSAN_EFFECTIVE}>:-fsanitize=undefined>
+    $<$<BOOL:${JSONIFIER_ASAN_EFFECTIVE}>:-fsanitize=address>
+    $<$<PLATFORM_ID:Linux>:-static-libasan>
+    $<$<NOT:$<PLATFORM_ID:Darwin>>:-s>
+    $<$<PLATFORM_ID:Darwin>:-Wl,-x>
+    $<$<CONFIG:Release>:-flto>
+)
+
+set(JSONIFIER_MSVC_LINK_OPTIONS
+    $<$<BOOL:${JSONIFIER_ASAN_EFFECTIVE}>:/INFERASANLIBS>
+    $<$<CONFIG:Release>:/LTCG /OPT:REF /OPT:ICF>
+)
+
+set(JSONIFIER_LINK_OPTIONS
+    $<$<CXX_COMPILER_ID:AppleClang>:${JSONIFIER_CLANG_LINK_OPTIONS}>
+    $<$<CXX_COMPILER_ID:Clang>:${JSONIFIER_CLANG_LINK_OPTIONS}>
+    $<$<CXX_COMPILER_ID:MSVC>:${JSONIFIER_MSVC_LINK_OPTIONS}>
+    $<$<CXX_COMPILER_ID:GNU>:${JSONIFIER_GNU_LINK_OPTIONS}>
+)
+
+target_link_options(${PROJECT_NAME}
+    INTERFACE ${JSONIFIER_LINK_OPTIONS}
+)
+
+if(JSONIFIER_HOMEBREW_GCC_LIBDIR)
+    target_link_options(${PROJECT_NAME}
+        INTERFACE
+            -L${JSONIFIER_HOMEBREW_GCC_LIBDIR}
+            -Wl,-rpath,${JSONIFIER_HOMEBREW_GCC_LIBDIR}
+    )
+endif()

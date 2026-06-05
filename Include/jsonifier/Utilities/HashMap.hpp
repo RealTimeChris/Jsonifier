@@ -659,12 +659,13 @@ namespace jsonifier::internal {
 			} else if constexpr (hashData<value_type>.type == hash_map_type::first_byte_and_unique_index) {
 				static constexpr auto uniqueFirstByteCount{ countFirstBytes(tupleReferencesByFirstByte<value_type>) };
 				static constexpr auto firstBytes{ collectFirstBytes<uniqueFirstByteCount>(tupleReferencesByFirstByte<value_type>) };
-				static constexpr auto mappings{ generateMappingsForFirstBytes<getMaxFirstByte(firstBytes)>(firstBytes, hashData<value_type>.uniqueIndices) };
+				static constexpr auto maxFirstByte{ getMaxFirstByte(firstBytes) };
+				static constexpr auto mappings{ generateMappingsForFirstBytes<maxFirstByte>(firstBytes, hashData<value_type>.uniqueIndices) };
 				const uint8_t firstByte = static_cast<uint8_t>(iter[0]);
 				const uint8_t uniqueIdx = hashData<value_type>.uniqueIndices[firstByte];
 				if JSONIFIER_LIKELY (checkForEnd(iter, end, uniqueIdx)) {
 					const uint8_t keyChar	  = static_cast<uint8_t>(iter[uniqueIdx]);
-					const size_t flattenedIdx = (static_cast<size_t>(firstByte) << 8) | static_cast<size_t>(keyChar);
+					const size_t flattenedIdx = static_cast<size_t>(firstByte) * static_cast<size_t>(maxFirstByte) + static_cast<size_t>(keyChar);
 					return mappings[flattenedIdx];
 				}
 				return hashData<value_type>.storageSize;

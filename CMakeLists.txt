@@ -85,26 +85,22 @@ endif()
 include("flags_and_options")
 
 target_compile_features("${PROJECT_NAME}" INTERFACE "cxx_std_23")
- 
+
 target_compile_options(
-	"${PROJECT_NAME}" INTERFACE
-	"$<$<AND:$<STREQUAL:$<UPPER_CASE:${UBSAN}>,TRUE>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-fsanitize=undefined>"
-	"$<$<CXX_COMPILER_ID:MSVC>:$<$<STREQUAL:${ASAN_ENABLED},TRUE>:/fsanitize=address>>"
-	${JSONIFIER_COMPILE_OPTIONS}
+    "${PROJECT_NAME}" INTERFACE
+    ${JSONIFIER_COMPILE_OPTIONS}
 )
- 
+
 target_link_options(
     "${PROJECT_NAME}" INTERFACE
-    "$<$<AND:$<STREQUAL:$<UPPER_CASE:${UBSAN}>,TRUE>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-fsanitize=undefined>"
-    "$<$<AND:$<CXX_COMPILER_ID:CLANG>,$<STREQUAL:${ASAN_ENABLED},TRUE>>:-fsanitize=address>"
-    "$<$<AND:$<CXX_COMPILER_ID:GNU>,$<STREQUAL:${ASAN_ENABLED},TRUE>>:-fsanitize=address>"
     ${JSONIFIER_LINK_OPTIONS}
 )
 
 target_compile_definitions(
-	"${PROJECT_NAME}" INTERFACE 
-	${JSONIFIER_COMPILE_DEFINITIONS}
-	"$<$<STREQUAL:${ASAN_ENABLED},TRUE>:ASAN_ENABLED>"
+    "${PROJECT_NAME}" INTERFACE
+    ${JSONIFIER_COMPILE_DEFINITIONS}
+    "$<$<BOOL:${JSONIFIER_ASAN_ENABLED}>:JSONIFIER_ASAN>"
+    "$<$<BOOL:${JSONIFIER_UBSAN_ENABLED}>:JSONIFIER_UBSAN>"
 )
 
 set(CONFIG_FILE_NAME "${PROJECT_NAME}Config.cmake")

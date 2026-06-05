@@ -823,6 +823,8 @@ namespace jsonifier::internal {
 						} else {
 							parseObjects<true>(value, context, wsStart, wsSize);
 						}
+					} else {
+						value.clear();
 					}
 					++context.iter;
 					JSONIFIER_SKIP_WS();
@@ -1028,6 +1030,8 @@ namespace jsonifier::internal {
 						} else {
 							parseObjects(value, context);
 						}
+					} else {
+						value.clear();
 					}
 					++context.iter;
 					JSONIFIER_SKIP_WS();
@@ -1370,6 +1374,7 @@ namespace jsonifier::internal {
 				parse<options, minified>::impl(value.emplace(), context);
 			} else {
 				if JSONIFIER_LIKELY (parseNull(context.iter)) {
+					value.reset();
 					if constexpr (!minified) {
 						JSONIFIER_SKIP_WS();
 					}
@@ -1902,6 +1907,7 @@ namespace jsonifier::internal {
 			} else {
 				if JSONIFIER_LIKELY (parseNull(*context.iter)) {
 					++context.iter;
+					value.reset();
 					return;
 				}
 				JSONIFIER_ELSE_UNLIKELY(else) {

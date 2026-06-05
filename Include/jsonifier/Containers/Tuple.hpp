@@ -251,10 +251,6 @@ namespace jsonifier::internal {
 
 	template<typename... value_type> struct tuple_size;
 
-	template<typename... value_type> struct tuple_size<tuple<value_type...>> : public std::integral_constant<uint64_t, sizeof...(value_type)> {};
-
-	template<typename tuple_type> static constexpr uint64_t tuple_size_v = tuple_size<std::remove_cvref_t<tuple_type>>::value;
-
 	template<typename... value_types> struct tuple : type_list_t<value_types...> {
 		static constexpr uint64_t size{ sizeof...(value_types) };
 
@@ -332,6 +328,12 @@ namespace jsonifier::internal {
 			return true;
 		}
 	};
+
+	template<typename... value_type> struct tuple_size<tuple<value_type...>> : public std::integral_constant<uint64_t, sizeof...(value_type)> {};
+
+	template<typename... value_type> struct tuple_size<std::tuple<value_type...>> : public std::integral_constant<uint64_t, sizeof...(value_type)> {};
+
+	template<typename tuple_type> static constexpr uint64_t tuple_size_v = tuple_size<std::remove_cvref_t<tuple_type>>::value;
 
 	template<typename... value_types> tuple(value_types&&...) -> tuple<value_types...>;
 
@@ -447,6 +449,8 @@ namespace std {
 	template<size_t I, typename... Ts> struct tuple_element<I, jsonifier::internal::tuple<Ts...>> {
 		using type = jsonifier::internal::tuple_element_t<I, jsonifier::internal::tuple<Ts...>>;
 	};
+
+	template<typename... Ts> struct tuple_size<jsonifier::internal::tuple<Ts...>> : public integral_constant<uint64_t, jsonifier::internal::tuple<Ts...>::size> {};
 
 	template<size_t I, typename  Ts> JSONIFIER_INLINE constexpr decltype(auto) get(Ts&& t) noexcept {
 		return std::get<I>(t);

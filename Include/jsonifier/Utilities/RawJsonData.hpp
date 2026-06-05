@@ -61,7 +61,7 @@ namespace jsonifier {
 	class raw_json_data {
 	  public:
 		using object_type = std::unordered_map<string, raw_json_data>;
-		using string_type = string_view;
+		using string_type = string;
 		using array_type  = std::vector<raw_json_data>;
 		using number_type = json_number;
 		using bool_type	  = bool;

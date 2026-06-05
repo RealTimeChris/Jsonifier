@@ -36,7 +36,7 @@ namespace round_trip_tests {
 
 	struct Obj3 {
 		std::unique_ptr<int32_t> a;
-		std::string* foo;
+		std::unique_ptr<std::string> foo;
 	};
 }
 

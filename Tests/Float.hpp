@@ -57,12 +57,12 @@ namespace float_validation_tests {
 		std::cout << testName << " Input: " << dataToParse << std::endl;
 		double data{};
 		if (parser.parseJson(data, dataToParse) && parser.getErrors().size() == 0) {
-			if (static_cast<uint64_t>(data) == static_cast<uint64_t>(valueToCompare)) {
+			if (data== valueToCompare) {
 				std::cout << testName << " Succeeded - Output: " << data << std::endl;
 				std::cout << testName << " Succeeded - Expected Output: " << valueToCompare << std::endl;
 			} else {
-				std::cout << testName << " Failed - Output: " << static_cast<uint64_t>(data) << std::endl;
-				std::cout << testName << " Failed - Expected Output: " << static_cast<uint64_t>(valueToCompare) << std::endl;
+				std::cout << testName << " Failed - Output: " << data << std::endl;
+				std::cout << testName << " Failed - Expected Output: " << valueToCompare << std::endl;
 			}
 		} else {
 			std::cout << testName << " Failed." << std::endl;

@@ -22,13 +22,14 @@
 /// https://github.com/RealTimeChris/jsonifier
 #pragma once
 
-#include <bnch_swt/index.hpp>
 #include "UnicodeEmoji.hpp"
+#include <filesystem>
+#include <fstream>
 #include <thread>
 #include <random>
 
-constexpr bnch_swt::string_literal basePath{ BASE_PATH };
-constexpr bnch_swt::string_literal testPath{ basePath };
+constexpr jsonifier::internal::string_literal basePath{ BASE_PATH };
+constexpr jsonifier::internal::string_literal testPath{ basePath };
 
 class test_base {
   public:

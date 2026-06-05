@@ -496,7 +496,7 @@ namespace jsonifier::internal {
 			return string_parser_impl<3, options, basic_iterator01, basic_iterator02>::impl(string1Start, string1End, string2);
 #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
 			return string_parser_impl<2, options, basic_iterator01, basic_iterator02>::impl(string1Start, string1End, string2);
-#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
+#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
 			return string_parser_impl<1, options, basic_iterator01, basic_iterator02>::impl(string1Start, string1End, string2);
 #else
 			return string_parser_impl<0, options, basic_iterator01, basic_iterator02>::impl(string1Start, string1End, string2);

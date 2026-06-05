@@ -26,7 +26,7 @@
 #include "simdjson.h"
 #include "common.hpp"
 
-#if !defined(ASAN_ENABLED)
+#if !defined(JSONIFIER_ASAN)
 
 template<typename value_type>
 concept bool_t =
@@ -558,7 +558,6 @@ template<> void get_value(status_data& value, simdjson::ondemand::value jsonData
 	get_value(value.favorited, obj, "favorited");
 	get_value(value.retweeted, obj, "retweeted");
 	get_value(value.lang, obj, "lang");
-	get_value(value.retweeted_status, obj, "retweeted_status");
 	get_value(value.possibly_sensitive, obj, "possibly_sensitive");
 }
 
