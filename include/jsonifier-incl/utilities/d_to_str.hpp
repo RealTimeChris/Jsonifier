@@ -20,7 +20,22 @@
 	DEALINGS IN THE SOFTWARE.
 */
 /// https://github.com/RealTimeChris/jsonifier
-/// Feb 3, 2023
+/// Nov 13, 2023
 #pragma once
 
-#include <jsonifier-incl/index.hpp>
+#include <jsonifier-incl/containers/allocator.hpp>
+#include <jsonifier-incl/utilities/zmij.hpp>
+
+#include <concepts>
+#include <cstdint>
+#include <cstring>
+#include <array>
+
+namespace jsonifier::internal {
+
+	template<concepts::float_t value_type> struct to_chars<value_type> {
+		JSONIFIER_INLINE static char* impl(char* buf, value_type val) noexcept {
+			return zmij::detail::write(val, buf);
+		}
+	};
+}

@@ -5,7 +5,7 @@
 
 if (UNIX OR APPLE)
     file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/cmake/BuildFeatureTester.sh" "#!/bin/bash
-\"${CMAKE_COMMAND}\" -S ./ -B ./Build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+\"${CMAKE_COMMAND}\" -S ./ -B ./Build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
 \"${CMAKE_COMMAND}\" --build ./Build --config=Release")
     execute_process(
         COMMAND chmod +x "${CMAKE_CURRENT_SOURCE_DIR}/cmake/BuildFeatureTester.sh"
@@ -99,7 +99,7 @@ set(JSONIFIER_SIMD_FLAGS "${AVX_FLAG}" CACHE STRING "SIMD flags" FORCE)
 set(JSONIFIER_CPU_INSTRUCTIONS "${JSONIFIER_CPU_INSTRUCTIONS}" CACHE STRING "CPU Instruction Sets" FORCE)
 
 # Generate JsonifierCPUInstructions.hpp
-file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/include/jsonifier-incl/simd/JsonifierCPUInstructions.hpp" "/*
+file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/include/jsonifier-incl/simd/jsonifier_cpu_instructions.hpp" "/*
 	MIT License
 
 	Copyright (c) 2023 RealTimeChris

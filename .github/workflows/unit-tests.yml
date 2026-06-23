@@ -42,6 +42,7 @@ jobs:
           DEV_VERSION=$(awk -F'[][]' '/LLVM_VERSION_PATTERNS/ {print $2}' llvm.sh | sort -n | tail -n 1)
           sudo ./llvm.sh $DEV_VERSION
           echo "CXX_BIN=/usr/bin/clang++-$DEV_VERSION" >> $GITHUB_ENV
+          echo "C_BIN=/usr/bin/clang-$DEV_VERSION" >> $GITHUB_ENV
           export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup GCC (Ubuntu)
@@ -52,6 +53,7 @@ jobs:
           DEV_VERSION=$(apt-cache search '^g\+\+-[0-9]+$' | awk '{print $1}' | sort -V | tail -n 1 | sed 's/g++-//')
           sudo apt-get install -y gcc-$DEV_VERSION g++-$DEV_VERSION
           echo "CXX_BIN=/usr/bin/g++-$DEV_VERSION" >> $GITHUB_ENV
+          echo "C_BIN=/usr/bin/gcc-$DEV_VERSION" >> $GITHUB_ENV
           export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Clang (macOS)
@@ -59,6 +61,7 @@ jobs:
         run: |
           brew install llvm
           echo "CXX_BIN=$(brew --prefix llvm)/bin/clang++" >> $GITHUB_ENV
+          echo "C_BIN=$(brew --prefix llvm)/bin/clang" >> $GITHUB_ENV
 
       - name: Setup GCC (macOS)
         if: matrix.os == 'macos-latest' && matrix.compiler == 'gcc'
@@ -66,6 +69,7 @@ jobs:
           brew install gcc
           GCC_VERSION=$(brew list --versions gcc | awk '{print $2}' | cut -d. -f1)
           echo "CXX_BIN=g++-$GCC_VERSION" >> $GITHUB_ENV
+          echo "C_BIN=gcc-$GCC_VERSION" >> $GITHUB_ENV
 
       - name: Setup MSVC (Windows)
         if: matrix.os == 'windows-latest'
@@ -73,7 +77,7 @@ jobs:
 
       - name: Configure CMake (Unix)
         if: runner.os != 'Windows'
-        run: cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=${{ env.CXX_BIN }} -DJSONIFIER_UNIT_TESTS=TRUE -DJSONIFIER_ASAN=TRUE -DJSONIFIER_UBSAN=TRUE
+        run: cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=${{ env.CXX_BIN }} -DCMAKE_C_COMPILER=${{ env.C_BIN }} -DJSONIFIER_UNIT_TESTS=TRUE -DJSONIFIER_ASAN=TRUE -DJSONIFIER_UBSAN=TRUE
 
       - name: Configure CMake (Windows)
         if: runner.os == 'Windows'

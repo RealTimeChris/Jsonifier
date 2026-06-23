@@ -26,8 +26,6 @@
 
 namespace tests {
 
-
-
 	inline static jsonifier::string_base<char, 1024 * 1024> stringBuffer{};
 
 	static constexpr jsonifier::parse_options opts{};

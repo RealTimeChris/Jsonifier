@@ -75,8 +75,8 @@ namespace round_trip_tests {
 	inline static bool roundTripTests() {
 		jsonifier::jsonifier_core<> parser{};
 		std::unordered_map<std::string, test_base> jsonTests{};
-		processFilesInFolder(jsonTests, "/RoundTrip");
-		std::cout << "RoundTrip Tests: " << std::endl;
+		processFilesInFolder(jsonTests, "/round_trip");
+		std::cout << "round_trip Tests: " << std::endl;
 		runRoundTripTest<"roundtrip01.json", std::vector<int32_t*>>(jsonTests["roundtrip01.json"].fileContents, parser);
 		runRoundTripTest<"roundtrip02.json", std::vector<bool>>(jsonTests["roundtrip02.json"].fileContents, parser);
 		runRoundTripTest<"roundtrip03.json", std::vector<bool>>(jsonTests["roundtrip03.json"].fileContents, parser);

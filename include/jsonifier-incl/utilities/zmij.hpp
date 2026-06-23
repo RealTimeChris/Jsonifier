@@ -16,8 +16,8 @@ namespace zmij {
 #include <stddef.h>// uint64_t
 #include <stdint.h>// uint64_t
 #include <string.h>// memcpy
-#include <jsonifier-incl/simd/AVX.hpp>
-#include <jsonifier-incl/simd/Neon.hpp>
+#include <jsonifier-incl/simd/avx.hpp>
+#include <jsonifier-incl/simd/neon.hpp>
 
 #include <limits>// std::numeric_limits
 #include <type_traits>// std::conditional_t

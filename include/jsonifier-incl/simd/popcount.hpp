@@ -23,4 +23,33 @@
 /// Feb 3, 2023
 #pragma once
 
-#include <jsonifier-incl/index.hpp>
+#include <jsonifier-incl/utilities/type_entities.hpp>
+
+namespace jsonifier::simd {
+
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_POPCNT) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
+
+	#define popcnt(value) _mm_popcnt_u64(value)
+
+#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
+
+	#define popcnt(value) __builtin_popcountll(value)
+
+#else
+
+	template<concepts::unsigned_t value_type> JSONIFIER_INLINE static value_type popcnt(value_type value) noexcept {
+		value_type count{};
+
+		while (value > 0) {
+			count += value & 1;
+			value >>= 1;
+		}
+
+		return count;
+	}
+
+	#define popcnt(value) simd::popcnt(value)
+
+#endif
+
+}

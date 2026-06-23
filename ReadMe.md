@@ -216,7 +216,7 @@ int main() {
 
 ### core Usage
 - [Reflection](Documentation/Reflection.md) - Registering structures with compile-time reflection
-- [serializing & parsing](Documentation/Usage_serializing_parsing.md) - Complete serialization/parsing guide
+- [Serializing & Parsing](Documentation/Usage_Serializing_Parsing.md) - Complete serialization/parsing guide
 - [Validating](Documentation/Validating.md) - JSON validation against RFC standards
 
 ### Optimization
@@ -231,8 +231,8 @@ int main() {
 ### Advanced Topics
 - [Error Handling](Documentation/Errors.md) - Detailed error reporting and handling
 - [Excluding Keys at Runtime](Documentation/Excluding_Keys.md) - Dynamic key exclusion during serialization
-- [Custom parsing & serializing](Documentation/Custom_parsing_And_serializing.md) - Specialized type handling
-- [parsing Arbitrary Data](Documentation/parsing_Arbitrary_Data.md) - Working with unknown JSON structures
+- [Custom Parsing & Serializing](Documentation/Custom_Parsing_And_Serializing.md) - Specialized type handling
+- [Parsing Arbitrary Data](Documentation/Parsing_Arbitrary_Data.md) - Working with unknown JSON structures
 
 ---
 
