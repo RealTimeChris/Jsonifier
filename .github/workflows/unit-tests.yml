@@ -42,6 +42,7 @@ jobs:
           DEV_VERSION=$(awk -F'[][]' '/LLVM_VERSION_PATTERNS/ {print $2}' llvm.sh | sort -n | tail -n 1)
           sudo ./llvm.sh $DEV_VERSION
           echo "CXX_BIN=/usr/bin/clang++-$DEV_VERSION" >> $GITHUB_ENV
+          export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup GCC (Ubuntu)
         if: matrix.os == 'ubuntu-latest' && matrix.compiler == 'gcc'
@@ -51,6 +52,7 @@ jobs:
           DEV_VERSION=$(apt-cache search '^g\+\+-[0-9]+$' | awk '{print $1}' | sort -V | tail -n 1 | sed 's/g++-//')
           sudo apt-get install -y gcc-$DEV_VERSION g++-$DEV_VERSION
           echo "CXX_BIN=/usr/bin/g++-$DEV_VERSION" >> $GITHUB_ENV
+          export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Clang (macOS)
         if: matrix.os == 'macos-latest' && matrix.compiler == 'clang'

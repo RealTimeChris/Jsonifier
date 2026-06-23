@@ -43,3 +43,4 @@ Windows-MSVC.md
 Json/Windows-MSVC/
 CMake/BuildFeatureTester.bat
 CMake/BuildFeatureTester.sh
+cmake/BuildFeatureTester.bat

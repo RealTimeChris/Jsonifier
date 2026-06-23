@@ -141,7 +141,7 @@ namespace jsonifier::internal {
 		}
 
 		template<bool minified> JSONIFIER_INLINE void generateJsonIndices() noexcept {
-			simd::simd_int_t_holder rawStructurals{};
+			simd::simd_int_t_holder<minified> rawStructurals{};
 			jsonifier_simd_int_t nextIsEscaped{};
 			jsonifier_simd_int_t escaped{};
 			while (stringBlockReader.hasFullBlock()) {
@@ -213,7 +213,7 @@ namespace jsonifier::internal {
 			}
 		}
 
-		template<bool collectAligned, bool minified> JSONIFIER_INLINE simd::simd_int_t_holder getRawIndices(string_view_ptr values) noexcept {
+		template<bool collectAligned, bool minified> JSONIFIER_INLINE auto getRawIndices(string_view_ptr values) noexcept {
 			jsonifier_simd_int_t newPtr[stridesPerStep];
 			collectStringValues<collectAligned>(values, newPtr);
 			return simd::collectIndices<minified>(newPtr);
@@ -234,7 +234,7 @@ namespace jsonifier::internal {
 		}
 
 		template<bool collectAligned, bool minified> JSONIFIER_INLINE void generateStructurals(string_view_ptr values, jsonifier_simd_int_t& escaped,
-			jsonifier_simd_int_t& nextIsEscaped, simd::simd_int_t_holder& rawStructurals, size_type validBytes) noexcept {
+			jsonifier_simd_int_t& nextIsEscaped, auto& rawStructurals, size_type validBytes) noexcept {
 			rawStructurals = getRawIndices<collectAligned, minified>(values);
 			collectStructurals<minified>(escaped, nextIsEscaped, rawStructurals);
 			simd::store(rawStructurals.op, newBits);
@@ -260,7 +260,7 @@ namespace jsonifier::internal {
 			}
 		}
 
-		JSONIFIER_INLINE void collectEscaped(jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped, simd::simd_int_t_holder& rawStructurals) noexcept {
+		JSONIFIER_INLINE void collectEscaped(jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped, auto& rawStructurals) noexcept {
 			const jsonifier_simd_int_t simdValue			 = simd::gatherValue<jsonifier_simd_int_t>(static_cast<char>(0xAA));
 			const jsonifier_simd_int_t potentialEscape		 = simd::opAndNot(rawStructurals.backslashes, nextIsEscaped);
 			const jsonifier_simd_int_t escapeAndTerminalCode = simd::opXor(simd::opSub(simd::opOr(simd::opShl<1>(potentialEscape), simdValue), potentialEscape), simdValue);
@@ -274,12 +274,12 @@ namespace jsonifier::internal {
 			escaped				  = escapedNew;
 		}
 
-		JSONIFIER_INLINE void collectEscapedCharacters(jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped, simd::simd_int_t_holder& rawStructurals) noexcept {
+		JSONIFIER_INLINE void collectEscapedCharacters(jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped, auto& rawStructurals) noexcept {
 			return simd::opTest(rawStructurals.backslashes) ? collectEscaped(escaped, nextIsEscaped, rawStructurals) : collectEmptyEscaped(escaped, nextIsEscaped);
 		}
 
 		template<bool minified>
-		JSONIFIER_INLINE void collectStructurals(jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped, simd::simd_int_t_holder& rawStructurals) noexcept {
+		JSONIFIER_INLINE void collectStructurals(jsonifier_simd_int_t& escaped, jsonifier_simd_int_t& nextIsEscaped, auto& rawStructurals) noexcept {
 			collectEscapedCharacters(escaped, nextIsEscaped, rawStructurals);
 			rawStructurals.quotes = simd::opAndNot(rawStructurals.quotes, escaped);
 			jsonifier_simd_int_t scalar;

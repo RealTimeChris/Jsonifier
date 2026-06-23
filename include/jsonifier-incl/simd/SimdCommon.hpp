@@ -149,7 +149,13 @@ namespace jsonifier::simd {
 		return opSetLSB(opShl<1>(value), oldOverflow);
 	}
 
-	struct simd_int_t_holder {
+	template<bool minified = true> struct simd_int_t_holder {
+		jsonifier_simd_int_t backslashes;
+		jsonifier_simd_int_t quotes;
+		jsonifier_simd_int_t op;
+	};
+
+	template<> struct simd_int_t_holder<false> {
 		jsonifier_simd_int_t backslashes;
 		jsonifier_simd_int_t whitespace;
 		jsonifier_simd_int_t quotes;
@@ -246,14 +252,14 @@ namespace jsonifier::simd {
 		return gatherValues<jsonifier_simd_int_t>(valuesNew);
 	}
 
-	template<bool minified> JSONIFIER_INLINE static simd_int_t_holder collectIndices(const jsonifier_simd_int_t* values) noexcept {
+	template<bool minified> JSONIFIER_INLINE static simd_int_t_holder<minified> collectIndices(const jsonifier_simd_int_t* values) noexcept {
 		if constexpr (!minified) {
-			return simd_int_t_holder{ .backslashes = collectValues<'\\'>(values),
-				.whitespace						   = collectWhitespaceIndices(values),
-				.quotes							   = collectValues<'"'>(values),
-				.op								   = collectStructuralIndices(values) };
+			return simd_int_t_holder<minified>{ .backslashes = collectValues<'\\'>(values),
+				.whitespace									 = collectWhitespaceIndices(values),
+				.quotes										 = collectValues<'"'>(values),
+				.op											 = collectStructuralIndices(values) };
 		} else {
-			return simd_int_t_holder{ .backslashes = collectValues<'\\'>(values), .whitespace = {}, .quotes = collectValues<'"'>(values), .op = collectStructuralIndices(values) };
+			return simd_int_t_holder<minified>{ .backslashes = collectValues<'\\'>(values), .quotes = collectValues<'"'>(values), .op = collectStructuralIndices(values) };
 		}
 	}
 

@@ -117,7 +117,7 @@ vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/License.md")
 }';
 
         echo GREEN . "Writing portfile...\n" . WHITE;
-        file_put_contents('./Vcpkg/ports/jsonifier/vcpkg.json', $versionFileContent);
+        file_put_contents('./vcpkg/ports/jsonifier/vcpkg.json', $versionFileContent);
         return $portFileContent;
     }
 
@@ -129,7 +129,7 @@ vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/License.md")
         echo GREEN . "Create /usr/local/share/vcpkg/ports/jsonifier/\n" . WHITE;
         $this->sudo('mkdir -p /usr/local/share/vcpkg/ports/jsonifier/');
         echo GREEN . "Copy vcpkg.json to /usr/local/share/vcpkg/ports/jsonifier/vcpkg.json\n" . WHITE;
-        $this->sudo('cp -v -R ./Vcpkg/ports/jsonifier/vcpkg.json /usr/local/share/vcpkg/ports/jsonifier/vcpkg.json');
+        $this->sudo('cp -v -R ./vcpkg/ports/jsonifier/vcpkg.json /usr/local/share/vcpkg/ports/jsonifier/vcpkg.json');
 
         file_put_contents('/tmp/portfile', $portFileContent);
         $this->sudo('cp -v -R /tmp/portfile /usr/local/share/vcpkg/ports/jsonifier/portfile.cmake');
@@ -160,7 +160,7 @@ vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/License.md")
         return '';
     }
 
-    public function secondBuild(string $portFileContent): bool
+   public function secondBuild(string $portFileContent): bool
      {
          if (!$this->firstBuildComplete) {
              throw new RuntimeException("No SHA512 sum is available, first build has not been run!");
