@@ -24,63 +24,94 @@
 
 #include "common.hpp"
 
-#include <jsonifier>
-#include <filesystem>
-#include <fstream>
-
 namespace bounds_tests {
 
-	inline static void boundsTests() {
-		std::cout << "Starting bounds-truncation test.\n";
-		jsonifier::jsonifier_core<> parser{};
-		abc_test_generator<abc_test_struct> tests{};
-		abc_partial_test<abc_partial_test_struct> seed{};
-		std::string buf;
-		parser.serializeJson(tests, buf);
-		parser.parseJson(seed, buf);
-		seed.z.resize(5);
-		seed.a.resize(3);
+	inline void sliceStringBySize(std::string& input) {
+		if (input.empty()) {
+			return;
+		}
 
-		auto runTruncation = [&](std::string s, auto&& parseFn, const char* label) {
-			if (!parser.validateJson(s)) {
-				throw std::runtime_error{ std::string{ label } + ": baseline failed validation" };
-			}
-			s.pop_back();
-			while (!s.empty()) {
-				abc_test<abc_test_struct> sink{};
-				parseFn(sink, s, label);
-				if (parser.validateJson(s)) {
-					throw std::runtime_error{ std::string{ label } + ": truncated input validated at size=" + std::to_string(s.size()) };
+		const size_t size			  = input.size();
+		static constexpr size_t tenKb = 10 * 1024;
+
+		if (size > tenKb) {
+			input.resize(input.size() * 9 / 10);
+		} else if (size >= 2000) {
+			input.resize(input.size() / 2);
+		} else {
+			input.pop_back();
+		}
+	}
+
+	template<rt_ut::string_literal testNameNew, typename test_data_type, bool prettified, bool partial, bool knownOrder> inline static void boundsTestsImpl() {
+		static constexpr rt_ut::string_literal testName{ testNameNew };
+		static constexpr rt_ut::string_literal testNameRtUt{ testNameNew + ", " + testTypePartial<partial> + testTypeKnownOrder<knownOrder> };
+		auto dataToParse = file_handle::get(basePath.operator std::string() + "/json/" + testName.operator std::string() + ".json");
+		jsonifier::jsonifier_core<> parser{};
+		rt_ut::unit_test<testNameRtUt, true>::run(
+			[&](std::string s) {
+				test_data_type jsonifierValue;
+				parser.parseJson<jsonifier::parse_options{ .partialRead = partial, .knownOrder = knownOrder, .minified = !prettified, .validateUtf8 = true }>(jsonifierValue, s);
+				if (parser.getErrors().size()) {
+					return false;
 				}
 				s.pop_back();
-			}
-		};
-
-		std::string minified;
-		parser.serializeJson(seed, minified);
-		runTruncation(
-			minified,
-			[&](auto& d, const auto& src, const char* label) {
-				parser.parseJson<jsonifier::parse_options{ .minified = true }>(d, src);
-				if (parser.getErrors().size() == 0) {
-					throw std::runtime_error{ std::string{ label } + ": truncated input validated at size=" + std::to_string(src.size()) };
+				while (!s.empty()) {
+					test_data_type jsonifierValueLocal;
+					parser.parseJson<jsonifier::parse_options{ .partialRead = partial, .knownOrder = knownOrder, .minified = !prettified, .validateUtf8 = true }>(
+						jsonifierValueLocal, s);
+					if (!parser.getErrors().size()) {
+						return false;
+					}
+					parser.getErrors().clear();
+					sliceStringBySize(s);
 				}
+				return true;
 			},
-			"minified");
+			dataToParse);
+	}
 
-		std::string pretty;
-		parser.serializeJson<jsonifier::serialize_options{ .prettify = true }>(seed, pretty);
-		runTruncation(
-			pretty,
-			[&](auto& d, const auto& src, const char* label) {
-				parser.parseJson(d, src);
-				if (parser.getErrors().size() == 0) {
-					throw std::runtime_error{ std::string{ label } + ": truncated input validated at size=" + std::to_string(src.size()) };
-				}
-			},
-			"prettified");
+	template<bool partial, bool knownOrder> inline static void boundsTestsImpl() {
+		std::cout << "Starting Bounds-Truncation Test, " << testTypePartial<partial> << testTypeKnownOrder<knownOrder> << ": " << std::endl;
+		boundsTestsImpl<"Abc (In Order) Partial Test (Minified)", abc_in_order_partial_test, false, partial, knownOrder>();
+		boundsTestsImpl<"Abc (In Order) Partial Test (Prettified)", abc_in_order_partial_test, true, partial, knownOrder>();
+		boundsTestsImpl<"Abc (In Order) Test (Minified)", abc_in_order_test, false, partial, knownOrder>();
+		boundsTestsImpl<"Abc (In Order) Test (Prettified)", abc_in_order_test, true, partial, knownOrder>();
+		boundsTestsImpl<"Abc (Out of Order) Partial Test (Minified)", abc_out_of_order_partial_test, false, partial, knownOrder>();
+		boundsTestsImpl<"Abc (Out of Order) Partial Test (Prettified)", abc_out_of_order_partial_test, true, partial, knownOrder>();
+		boundsTestsImpl<"Abc (Out of Order) Test (Minified)", abc_out_of_order_test, false, partial, knownOrder>();
+		boundsTestsImpl<"Abc (Out of Order) Test (Prettified)", abc_out_of_order_test, true, partial, knownOrder>();
+		boundsTestsImpl<"Apache Builds Test (Minified)", apache_builds_message, false, partial, knownOrder>();
+		boundsTestsImpl<"Apache Builds Test (Prettified)", apache_builds_message, true, partial, knownOrder>();
+		boundsTestsImpl<"Canada Test (Minified)", canada_message, false, partial, knownOrder>();
+		boundsTestsImpl<"Canada Test (Prettified)", canada_message, true, partial, knownOrder>();
+		boundsTestsImpl<"CitmCatalog Test (Minified)", citm_catalog_message, false, partial, knownOrder>();
+		boundsTestsImpl<"CitmCatalog Test (Prettified)", citm_catalog_message, true, partial, knownOrder>();
+		boundsTestsImpl<"Discord Test (Minified)", discord_message, false, partial, knownOrder>();
+		boundsTestsImpl<"Discord Test (Prettified)", discord_message, true, partial, knownOrder>();
+		boundsTestsImpl<"Github Events Test (Minified)", github_events_message, false, partial, knownOrder>();
+		boundsTestsImpl<"Github Events Test (Prettified)", github_events_message, true, partial, knownOrder>();
+		boundsTestsImpl<"Google Maps Response Test (Minified)", google_maps_response_message, false, partial, knownOrder>();
+		boundsTestsImpl<"Google Maps Response Test (Prettified)", google_maps_response_message, true, partial, knownOrder>();
+		boundsTestsImpl<"Instruments Test (Minified)", instruments_message, false, partial, knownOrder>();
+		boundsTestsImpl<"Instruments Test (Prettified)", instruments_message, true, partial, knownOrder>();
+		boundsTestsImpl<"Marine IK Test (Minified)", marine_ik, false, partial, knownOrder>();
+		boundsTestsImpl<"Marine IK Test (Prettified)", marine_ik, true, partial, knownOrder>();
+		boundsTestsImpl<"Mesh Test (Minified)", mesh_message, false, partial, knownOrder>();
+		boundsTestsImpl<"Mesh Test (Prettified)", mesh_message, true, partial, knownOrder>();
+		boundsTestsImpl<"Random Test (Minified)", random_message, false, partial, knownOrder>();
+		boundsTestsImpl<"Random Test (Prettified)", random_message, true, partial, knownOrder>();
+		boundsTestsImpl<"Twitter Partial Test (Minified)", twitter_partial_message, false, partial, knownOrder>();
+		boundsTestsImpl<"Twitter Partial Test (Prettified)", twitter_partial_message, true, partial, knownOrder>();
+		boundsTestsImpl<"Twitter Test (Minified)", twitter_message, false, partial, knownOrder>();
+		boundsTestsImpl<"Twitter Test (Prettified)", twitter_message, true, partial, knownOrder>();
+	}
 
-		std::cout << "Finished bounds-truncation test.\n";
+	inline static void boundsTests() {
+		boundsTestsImpl<false, false>();
+		boundsTestsImpl<false, true>();
+		boundsTestsImpl<true, false>();
+		boundsTestsImpl<true, true>();
 	}
 
 }

@@ -22,8 +22,11 @@
 /// https://github.com/RealTimeChris/jsonifier
 #pragma once
 
+#include "utf8_validation.hpp"
+#include "parsing_tests.hpp"
 #include "conformance.hpp"
 #include "bounds_test.hpp"
+#include "unit_tests.hpp"
 #include "round_trip.hpp"
 #include "string.hpp"
 #include "float.hpp"
@@ -33,13 +36,16 @@
 namespace tests {
 
 	inline static void testFunction() {
+		utf8_validation_tests::runUtf8CorrectnessTests();
 		conformance_tests::conformanceTests();
+		parsing_tests::parsingTests();
 		bounds_tests::boundsTests();
 		round_trip_tests::roundTripTests();
 		string_validation_tests::stringTests();
 		float_validation_tests::floatTests();
 		uint_validation_tests::uintTests();
 		int_validation_tests::intTests();
+		unit_tests::unitTests();
 	};
 
 }

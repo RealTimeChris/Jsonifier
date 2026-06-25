@@ -25,7 +25,6 @@
 namespace string_validation_tests {
 
 	struct unit_test_string {
-
 		constexpr unit_test_string() noexcept = default;
 
 		template<uint64_t N> constexpr unit_test_string(const char (&string)[N]) : size_val(N - 1) {
@@ -57,7 +56,7 @@ namespace string_validation_tests {
 			return true;
 		}
 
-		template<typename string_type> constexpr friend bool operator==(const string_type& lhs, const unit_test_string&rhs)  {
+		template<typename string_type> constexpr friend bool operator==(const string_type& lhs, const unit_test_string& rhs) {
 			if (rhs.size_val != lhs.size()) {
 				return false;
 			}
@@ -73,7 +72,7 @@ namespace string_validation_tests {
 			return size_val;
 		}
 
-		constexpr const char* data() const {
+		constexpr jsonifier::string_view_ptr data() const {
 			return values;
 		}
 
@@ -106,11 +105,19 @@ namespace string_validation_tests {
 		"\"\\v\"", "\"\\q\"", "\"\\8\"", "\"\\9\"", "\"\\017\"", "\"\\uD800\"", "\"\\uDC00\"", "\"\\uD800\\uD800\"", "\"\\uDC00\\uDC00\"", "\"\\uD800A\"", "\"\\uD800\\uFFFF\"",
 		"\"\\uFFFF\\uD800\"", "\"\\uDBFF\"", "\"\\uD800\\uE000\"", "\"\\uDBFF\\uE000\"", "\"\\uD7FF\\uDC00\"", "\"abc", "\"abc\\" } };
 
+	template<bool partial, bool knownOrder> inline static void stringTestsImpl() {
+		std::cout << "String Pass Tests, " << testTypePartial<partial> << testTypeKnownOrder<knownOrder> << ": " << std::endl;
+		pass_test_runner<std::string_view, std::string, inputValues, outputValues, partial, knownOrder, pass_tests_runner,
+			jsonifier::internal::make_integer_sequence<inputValues.size()>>::impl();
+		std::cout << "String Fail Tests, " << testTypePartial<partial> << testTypeKnownOrder<knownOrder> << ": " << std::endl;
+		fail_test_runner<std::string, failValues, partial, knownOrder, fail_tests_runner, jsonifier::internal::make_integer_sequence<failValues.size()>>::impl();
+	}
+
 	inline static void stringTests() {
-		std::cout << "String Pass Tests: " << std::endl;
-		pass_test_runner<std::string_view, std::string, inputValues, outputValues, pass_tests_runner, std::make_integer_sequence<uint64_t, inputValues.size()>>::impl();
-		std::cout << "String Fail Tests: " << std::endl;
-		fail_test_runner<std::string, failValues, fail_tests_runner, std::make_integer_sequence<uint64_t, failValues.size()>>::impl();
+		stringTestsImpl<false, false>();
+		stringTestsImpl<false, true>();
+		stringTestsImpl<true, false>();
+		stringTestsImpl<true, true>();
 	}
 
 }

@@ -90,7 +90,8 @@ namespace jsonifier::internal {
 	  protected:
 		derived_type& derivedRef{ initializeSelfRef() };
 
-		serializer() noexcept : derivedRef{ initializeSelfRef() } {}
+		serializer() noexcept : derivedRef{ initializeSelfRef() } {
+		}
 
 		derived_type& initializeSelfRef() noexcept {
 			return *static_cast<derived_type*>(this);

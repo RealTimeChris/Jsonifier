@@ -20,14 +20,12 @@
 	DEALINGS IN THE SOFTWARE.
 */
 /// https://github.com/RealTimeChris/jsonifier
-/// Feb 3, 2023
 #pragma once
 
-#include <jsonifier-incl/utilities/type_entities.hpp>
+#include <jsonifier-incl/utilities/utility.hpp>
 #include <jsonifier-incl/utilities/string_literal.hpp>
 #include <jsonifier-incl/utilities/string_view.hpp>
 #include <jsonifier-incl/core/core.hpp>
-#include <source_location>
 
 namespace jsonifier::internal {
 
@@ -76,7 +74,7 @@ namespace jsonifier::internal {
 
 	template<auto p>
 		requires(std::is_member_pointer_v<decltype(p)>)
-	inline static constexpr string_view getName() noexcept {
+	static constexpr string_view getName() noexcept {
 #if JSONIFIER_COMPILER_MSVC && !JSONIFIER_COMPILER_CLANG
 		using value_type		 = remove_member_pointer_t<decltype(p)>;
 		constexpr auto pNew		 = p;

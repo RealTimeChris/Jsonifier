@@ -72,6 +72,7 @@ set(JSONIFIER_MSVC_COMPILER_OPTIONS
     /wd4710
     /wd5045
     /wd4711
+    /wd4686
     /Wall
     /W4
     /bigobj
@@ -79,7 +80,7 @@ set(JSONIFIER_MSVC_COMPILER_OPTIONS
 )
 
 set(JSONIFIER_CLANG_COMPILER_OPTIONS
-    $<$<AND:$<CONFIG:Release>,$<BOOL:${JSONIFIER_ASAN_EFFECTIVE}>>:-O1;-fno-rtti>
+    $<$<AND:$<CONFIG:Release>,$<BOOL:${JSONIFIER_ASAN_EFFECTIVE}>>:-O1>
     $<$<CONFIG:Debug>:-O0;-g;-fno-omit-frame-pointer>
     $<$<BOOL:${JSONIFIER_ASAN_EFFECTIVE}>:-fsanitize=address;-fno-omit-frame-pointer;-fno-optimize-sibling-calls;-fsanitize-address-use-after-scope;-U_FORTIFY_SOURCE;-D_FORTIFY_SOURCE=0>
     $<$<BOOL:${JSONIFIER_UBSAN_EFFECTIVE}>:-fsanitize=undefined;-fno-sanitize-recover=all>
@@ -101,6 +102,7 @@ set(JSONIFIER_GNU_COMPILER_OPTIONS
     $<$<BOOL:${JSONIFIER_ASAN_EFFECTIVE}>:-fsanitize=address;-fsanitize-address-use-after-scope;-U_FORTIFY_SOURCE;-D_FORTIFY_SOURCE=0>
     $<$<BOOL:${JSONIFIER_UBSAN_EFFECTIVE}>:-fsanitize=undefined;-fno-sanitize-recover=all>
     -Wpedantic
+    -Wno-ignored-attributes
     -Werror
     -Wextra
     -Wall

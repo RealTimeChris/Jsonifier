@@ -23,15 +23,6 @@
 /// https://github.com/RealTimeChris/
 #pragma once
 
-#include <source_location>
-#include <unordered_map>
-#include <exception>
-#include <cstring>
-#include <string>
-#include <iostream>
-#include <array>
-#include <bit>
-
 namespace jsonifier::internal {
 
 	struct xoshiro256 {
@@ -76,7 +67,7 @@ namespace jsonifier::internal {
 		}
 	};
 
-	inline constexpr array<uint64_t, 135> prns{ { 1033321092324544984ull, 2666561049963377653ull, 3901177690447069239ull, 4218182233242110882ull, 5911765535454950103ull,
+	static constexpr array<uint64_t, 135ULL> prns{ { 1033321092324544984ull, 2666561049963377653ull, 3901177690447069239ull, 4218182233242110882ull, 5911765535454950103ull,
 		6788651254494793497ull, 7100864855074445223ull, 8121427956336305945ull, 9038010914689427860ull, 14840306302415334885ull, 2861875790078914964ull, 3162274379479658823ull,
 		4716213344225307449ull, 540950270129450019ull, 6138393194460717092ull, 7344427311844191385ull, 8475133706542525636ull, 9707373313909664576ull, 13125261184447140558ull,
 		2935828130652229499ull, 3352961464321085856ull, 4654333323360932970ull, 5071886467123008198ull, 6337413869067417456ull, 7068363609472928302ull, 8706829452892616150ull,
@@ -97,10 +88,13 @@ namespace jsonifier::internal {
 		8724494295438506783ull, 9277533619161797917ull, 13495127262014153477ull, 2883303557104387784ull, 3039599040070277986ull, 4196273005435491662ull, 5417879022829474871ull,
 		6476778602757520149ull, 7959620869796075525ull, 8518936512742009562ull, 9635246566869230345ull } };
 
-	template<typename value_type> static constexpr value_type readBitsCt(string_view_ptr ptr) noexcept {
+	template<typename value_type> constexpr value_type readBitsCt(string_view_ptr ptr) noexcept {
 		value_type chunk{};
 		for (uint64_t x = 0; x < sizeof(value_type); ++x) {
 			chunk |= static_cast<value_type>(static_cast<uint8_t>(ptr[x])) << (x * 8);
+		}
+		if constexpr (std::endian::native == std::endian::big) {
+			chunk = byteswap(chunk);
 		}
 		return chunk;
 	}
@@ -114,34 +108,31 @@ namespace jsonifier::internal {
 		}
 
 		constexpr void updateSeed() noexcept {
-			seed = prns[index];
+			seed = prns[index % prns.size()];
 			++index;
 		}
 
 		constexpr uint64_t hashKeyCt(string_view_ptr value, uint64_t length) const noexcept {
 			uint64_t seed64{ seed };
 			while (length >= 8) {
-				seed64 ^= readBitsCt<uint64_t>(value);
+				seed64 = (seed64 ^ readBitsCt<uint64_t>(value)) * 0x9E3779B185EBCA87ull;
 				value += 8;
 				length -= 8;
 			}
-
 			if (length >= 4) {
-				seed64 ^= readBitsCt<uint32_t>(value);
+				seed64 = (seed64 ^ readBitsCt<uint32_t>(value)) * 0x9E3779B185EBCA87ull;
 				value += 4;
 				length -= 4;
 			}
-
 			if (length >= 2) {
-				seed64 ^= readBitsCt<uint16_t>(value);
+				seed64 = (seed64 ^ readBitsCt<uint16_t>(value)) * 0x9E3779B185EBCA87ull;
 				value += 2;
 				length -= 2;
 			}
-
 			if (length == 1) {
-				seed64 ^= static_cast<uint64_t>(*value);
+				seed64 = (seed64 ^ static_cast<uint64_t>(*value)) * 0x9E3779B185EBCA87ull;
 			}
-			return seed64;
+			return seed64 ^ (seed64 >> 32);
 		}
 	};
 
@@ -154,36 +145,31 @@ namespace jsonifier::internal {
 
 		JSONIFIER_INLINE uint64_t hashKeyRt(string_view_ptr value, uint64_t length) const noexcept {
 			uint64_t seed64{ constEval(seed) };
+			uint64_t chunk64{};
+			uint32_t chunk32{};
+			uint16_t chunk16{};
 			while (length >= 8) {
 				std::memcpy(&chunk64, value, 8);
-				seed64 ^= chunk64;
+				seed64 ^= chunk64 * 0x9E3779B185EBCA87ull;
 				value += 8;
 				length -= 8;
 			}
-
 			if (length >= 4) {
 				std::memcpy(&chunk32, value, 4);
-				seed64 ^= chunk32;
+				seed64 ^= chunk32 * 0x9E3779B185EBCA87ull;
 				value += 4;
 				length -= 4;
 			}
-
 			if (length >= 2) {
 				std::memcpy(&chunk16, value, 2);
-				seed64 ^= chunk16;
+				seed64 ^= chunk16 * 0x9E3779B185EBCA87ull;
 				value += 2;
 				length -= 2;
 			}
-
 			if (length == 1) {
 				seed64 ^= static_cast<uint64_t>(*value);
 			}
-			return seed64;
+			return seed64 ^ (seed64 >> 32);
 		}
-
-	  protected:
-		mutable uint64_t chunk64{};
-		mutable uint32_t chunk32{};
-		mutable uint16_t chunk16{};
 	};
 }

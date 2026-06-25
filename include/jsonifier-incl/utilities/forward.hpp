@@ -20,14 +20,19 @@
 	DEALINGS IN THE SOFTWARE.
 */
 /// https://github.com/RealTimeChris/jsonifier
-/// Feb 3, 2023
+
 #pragma once
 
 #include <jsonifier-incl/core/config.hpp>
-#include <cstdint>
-#include <vector>
+#include <jsonifier-incl/simd/simd_types.hpp>
 
 namespace jsonifier::internal {
+
+	// from
+	// https://stackoverflow.com/questions/16337610/how-to-know-if-a-type-is-a-specialization-of-stdvector
+	template<typename, template<typename...> typename> constexpr bool is_specialization_v = false;
+
+	template<template<typename...> typename value_type, typename... arg_types> constexpr bool is_specialization_v<value_type<arg_types...>, value_type> = true;
 
 	template<typename value_type> struct remove_cv {
 		using type = value_type;
@@ -73,35 +78,6 @@ namespace jsonifier::internal {
 
 	template<typename value_type> using remove_cvref_t = remove_cv_t<remove_reference_t<value_type>>;
 
-	template<uint64_t... indices> struct index_sequence {};
-
-	template<uint64_t index, typename index_sequence> struct make_index_sequence_impl;
-
-	template<uint64_t... indices> struct make_index_sequence_impl<0, index_sequence<indices...>> {
-		using type = index_sequence<indices...>;
-	};
-
-	template<uint64_t index, uint64_t... indices> struct make_index_sequence_impl<index, index_sequence<indices...>> {
-		using type = typename make_index_sequence_impl<index - 1, index_sequence<index - 1, indices...>>::type;
-	};
-
-	template<uint64_t index> using make_index_sequence = typename make_index_sequence_impl<index, index_sequence<>>::type;
-
-	template<class value_type_new, value_type_new valueNew> struct integral_constant {
-		static constexpr value_type_new value = valueNew;
-
-		using value_type = value_type_new;
-		using type		 = integral_constant;
-
-		inline constexpr operator value_type() const noexcept {
-			return value;
-		}
-
-		inline constexpr value_type operator()() const noexcept {
-			return value;
-		}
-	};
-
 	template<bool condition, typename type01, typename type02> struct conditional;
 
 	template<typename type01, typename type02> struct conditional<true, type01, type02> {
@@ -113,5 +89,33 @@ namespace jsonifier::internal {
 	};
 
 	template<bool condition, typename type01, typename type02> using conditional_t = conditional<condition, type01, type02>::type;
+
+	template<typename... rest_types> struct first;
+
+	template<typename first_type, typename... rest_types> struct first<first_type, rest_types...> {
+		using type = first_type;
+	};
+
+	template<typename... rest_types> using first_t = typename first<rest_types...>::type;
+
+	template<typename derived_type> class parser;
+
+	template<typename derived_type, uint64_t = 0> class vector;
+
+	enum class avx_type { m128 = 0, m256 = 1, m512 = 2 };
+
+	template<avx_type type> struct avx_type_wrapper;
+
+	template<> struct avx_type_wrapper<avx_type::m128> {
+		using type = jsonifier_simd_int_128;
+	};
+
+	template<> struct avx_type_wrapper<avx_type::m256> {
+		using type = jsonifier_simd_int_256;
+	};
+
+	template<> struct avx_type_wrapper<avx_type::m512> {
+		using type = jsonifier_simd_int_512;
+	};
 
 }

@@ -20,7 +20,6 @@
 	DEALINGS IN THE SOFTWARE.
 */
 /// https://github.com/RealTimeChris/jsonifier
-/// Feb 3, 2023
 #pragma once
 
 #include <jsonifier-incl/parsing/parse_impl.hpp>

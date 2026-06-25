@@ -95,9 +95,15 @@ jobs:
         if: matrix.os != 'windows-latest'
         run: |
             sudo chmod +x /usr/local/bin/jsonifier-unit-tests
-            sudo ASAN_OPTIONS=symbolize=1:detect_leaks=1 \
-                ASAN_SYMBOLIZER_PATH=${{ env.LLVM_SYMBOLIZER }} \
-                /usr/local/bin/jsonifier-unit-tests
+            set +e
+            ASAN_OPTIONS=symbolize=1:detect_leaks=0:abort_on_error=1 /usr/local/bin/jsonifier-unit-tests 2>&1 | tee asan.log
+            TEST_EXIT=${PIPESTATUS[0]}
+            set -e
+            if [ "$TEST_EXIT" -ne 0 ]; then
+              echo "TESTS DIED WITH EXIT CODE $TEST_EXIT - running under lldb"
+              lldb -o run -o "bt all" -o quit /usr/local/bin/jsonifier-unit-tests 2>&1 | tail -100
+              exit $TEST_EXIT
+            fi
     
       - name: Run the Test (Windows)
         if: matrix.os == 'windows-latest'

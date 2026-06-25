@@ -20,25 +20,32 @@
 	DEALINGS IN THE SOFTWARE.
 */
 /// https://github.com/RealTimeChris/jsonifier
-/// Feb 3, 2023
 #pragma once
 
-#include <cstdint>
+#include <jsonifier-incl/simd/jsonifier_cpu_instructions.hpp>
+#include <source_location>
+#include <unordered_map>
+#include <algorithm>
+#include <iostream>
+#include <optional>
+#include <variant>
+#include <cstring>
+#include <sstream>
+#include <cfloat>
 #include <atomic>
+#include <vector>
+#include <bit>
 
-#if JSONIFIER_COMPILER_MSVC
-	#define JSONIFIER_VISUAL_STUDIO 1
-	#if JSONIFIER_COMPILER_CLANG
-		#define JSONIFIER_CLANG_VISUAL_STUDIO 1
-	#else
-		#define JSONIFIER_REGULAR_VISUAL_STUDIO 1
-	#endif
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
+	#include <immintrin.h>
+#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
+	#include <arm_neon.h>
 #endif
 
-#if defined(__has_builtin)
-	#define JSONIFIER_HAS_BUILTIN(x) __has_builtin(x)
-#else
-	#define JSONIFIER_HAS_BUILTIN(x) 0
+#if JSONIFIER_PLATFORM_WINDOWS
+	#include <windows.h>
+#elif JSONIFIER_PLATFORM_LINUX || JSONIFIER_PLATFORM_MAC
+	#include <sys/mman.h>
 #endif
 
 #if !defined(JSONIFIER_LIKELY)
@@ -56,3 +63,23 @@
 #if !defined JSONIFIER_ALIGN
 	#define JSONIFIER_ALIGN(b) alignas(b)
 #endif
+
+namespace jsonifier {
+
+	struct serialize_options {
+		uint64_t indentSize{ 3 };
+		char indentChar{ ' ' };
+		uint64_t indent{};
+		bool prettify{};
+	};
+
+	struct parse_options {
+		bool partialRead{};
+		bool knownOrder{};
+		bool minified{};
+		bool validateUtf8{};
+		bool nullTerminated{ true };
+		uint64_t maxDepth{ 1024 };
+	};
+
+}

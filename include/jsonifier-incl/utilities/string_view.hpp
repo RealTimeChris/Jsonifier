@@ -302,9 +302,9 @@ namespace jsonifier {
 
 	using string_view = string_view_base<char>;
 
-	JSONIFIER_INLINE static std::ostream& operator<<(std::ostream& oStream, const string_view& stringNew) noexcept {
-		oStream << stringNew.operator string_base<char>();
-		return oStream;
+	JSONIFIER_INLINE static std::ostream& operator<<(std::ostream& os, const string_view& input) noexcept {
+		os.write(input.data(), static_cast<std::streamsize>(input.size()));
+		return os;
 	}
 
 	JSONIFIER_INLINE constexpr string_view operator""_sv(string_view_ptr stringNew, size_t lengthNew) noexcept {

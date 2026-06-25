@@ -20,7 +20,6 @@
 	DEALINGS IN THE SOFTWARE.
 */
 /// https://github.com/RealTimeChris/jsonifier
-/// Feb 3, 2023
 #pragma once
 
 #include <jsonifier-incl/containers/allocator.hpp>
@@ -36,27 +35,27 @@ namespace jsonifier {
 	template<uint64_t> class jsonifier_core;
 
 	template<typename value_type_new = char, concepts::num_t value_type01> inline static string_base<value_type_new> toString(const value_type01& value) noexcept {
-		string_base<value_type_new> returnstring{};
-		returnstring.resize(64);
+		string_base<value_type_new> returnString{};
+		returnString.resize(64);
 		if constexpr (sizeof(value_type01) == 8) {
-			auto newPtr = internal::to_chars<value_type_new>::impl(returnstring.data(), value);
-			returnstring.resize(static_cast<uint64_t>(newPtr - returnstring.data()));
+			auto newPtr = internal::to_chars<value_type_new>::impl(returnString.data(), value);
+			returnString.resize(static_cast<uint64_t>(newPtr - returnString.data()));
 		} else {
-			if constexpr (concepts::unsigned_t<value_type01>) {
+			if constexpr (concepts::uint_types<value_type01>) {
 				uint64_t newValue{ static_cast<uint64_t>(value) };
-				auto newPtr = internal::to_chars<value_type_new>::impl(returnstring.data(), newValue);
-				returnstring.resize(static_cast<uint64_t>(newPtr - returnstring.data()));
-			} else if constexpr (concepts::signed_t<value_type01>) {
+				auto newPtr = internal::to_chars<value_type_new>::impl(returnString.data(), newValue);
+				returnString.resize(static_cast<uint64_t>(newPtr - returnString.data()));
+			} else if constexpr (concepts::int_types<value_type01>) {
 				int64_t newValue{ static_cast<int64_t>(value) };
-				auto newPtr = internal::to_chars<int64_t>::impl(returnstring.data(), newValue);
-				returnstring.resize(static_cast<uint64_t>(newPtr - returnstring.data()));
+				auto newPtr = internal::to_chars<int64_t>::impl(returnString.data(), newValue);
+				returnString.resize(static_cast<uint64_t>(newPtr - returnString.data()));
 			} else {
 				double newValue{ static_cast<double>(value) };
-				auto newPtr = internal::to_chars<value_type_new>::impl(returnstring.data(), newValue);
-				returnstring.resize(static_cast<uint64_t>(newPtr - returnstring.data()));
+				auto newPtr = internal::to_chars<value_type_new>::impl(returnString.data(), newValue);
+				returnString.resize(static_cast<uint64_t>(newPtr - returnString.data()));
 			}
 		}
-		return returnstring;
+		return returnString;
 	}
 
 	template<uint64_t base = 10> inline static double strToDouble(const string& stringNew) noexcept {
@@ -120,15 +119,15 @@ namespace jsonifier::internal {
 		using value_type = value_type_new;
 
 		if constexpr (concepts::integer_t<value_type>) {
-			if constexpr (concepts::unsigned_t<value_type>) {
-				if constexpr (concepts::uns64_t<value_type>) {
+			if constexpr (concepts::uint_types<value_type>) {
+				if constexpr (concepts::uint64_types<value_type>) {
 					return integer_parser<value_type>::parseInt(value, iter, end);
 				} else {
 					uint64_t i;
 					return integer_parser<uint64_t>::parseInt(i, iter, end) ? (value = static_cast<value_type>(i), true) : false;
 				}
 			} else {
-				if constexpr (concepts::sig64_t<value_type>) {
+				if constexpr (concepts::int64_types<value_type>) {
 					return integer_parser<value_type>::parseInt(value, iter, end);
 				} else {
 					int64_t i;
