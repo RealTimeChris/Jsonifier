@@ -157,4 +157,31 @@ namespace jsonifier::internal {
 		return output;
 	}
 
+	template<string_literal tracker_name> struct time_tracker {
+		uint64_t total_time_in_ns{};
+		uint64_t execution_count{};
+		stop_watch<> watch{};
+
+		time_tracker() = default;
+
+		time_tracker& operator=(const time_tracker&) = delete;
+		time_tracker(const time_tracker&) = delete;
+
+		JSONIFIER_INLINE void start() {
+			watch.start();
+		}
+
+		JSONIFIER_INLINE void stop() {
+			watch.stop();
+			total_time_in_ns += static_cast<uint64_t>(watch.get_elapsed_time().count());
+			++execution_count;
+		}
+
+		JSONIFIER_INLINE ~time_tracker() {
+			if (execution_count > 0) {
+				std::cout << "Total time per execution for time_tracker (" << tracker_name << "): " << total_time_in_ns / execution_count << "ns" << std::endl;
+			}
+		}
+	};
+
 }

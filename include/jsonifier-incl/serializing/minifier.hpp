@@ -67,13 +67,14 @@ namespace jsonifier::internal {
 			rootIter = in.data();
 			endIter	 = rootIter + in.size();
 			derivedRef.section.template reset<false>(rootIter, in.size());
-			string_view_ptr* iter{ derivedRef.section.begin() };
+			uint32_t* iter{ derivedRef.section.begin() };
+			auto* endStructural = derivedRef.section.end();
 			jsonifier::internal::remove_cvref_t<string_type> newString{};
-			if (!*iter) {
-				getErrors().emplace_back(error::constructError<status_classes::Minifying, minify_status::No_Input>(*iter - rootIter, in.end() - in.begin(), rootIter));
+			if (iter == endStructural) {
+				getErrors().emplace_back(error::constructError<status_classes::Minifying, minify_status::No_Input>(0, in.size(), rootIter));
 				return newString;
 			}
-			auto index = impl(iter, derivedRef.stringBuffer);
+			auto index = impl(iter, endStructural, derivedRef.stringBuffer);
 			if (index != std::numeric_limits<uint32_t>::max()) {
 				newString.resize(index);
 				std::memcpy(newString.data(), derivedRef.stringBuffer.data(), index);
@@ -91,12 +92,13 @@ namespace jsonifier::internal {
 			rootIter = in.data();
 			endIter	 = rootIter + in.size();
 			derivedRef.section.template reset<false>(rootIter, in.size());
-			string_view_ptr* iter{ derivedRef.section.begin() };
-			if (!*iter) {
-				getErrors().emplace_back(error::constructError<status_classes::Minifying, minify_status::No_Input>(*iter - rootIter, in.end() - in.begin(), rootIter));
+			uint32_t* iter{ derivedRef.section.begin() };
+			auto* endStructural = derivedRef.section.end();
+			if (iter == endStructural) {
+				getErrors().emplace_back(error::constructError<status_classes::Minifying, minify_status::No_Input>(0, static_cast<int64_t>(in.size()), rootIter));
 				return false;
 			}
-			auto index = impl(iter, derivedRef.stringBuffer);
+			auto index = impl(iter, endStructural, derivedRef.stringBuffer);
 			if JSONIFIER_LIKELY (index != std::numeric_limits<uint32_t>::max()) {
 				if JSONIFIER_LIKELY (buffer.size() != index) {
 					buffer.resize(index);
@@ -123,18 +125,18 @@ namespace jsonifier::internal {
 		}
 
 		template<typename iterator_type> inline void backTrackWs(int64_t& currentDistance, string_view_ptr& previousPtr, iterator_type iter) noexcept {
-			currentDistance = *iter - previousPtr;
+			currentDistance = (rootIter + *iter) - previousPtr;
 			skipWs(currentDistance, previousPtr);
 			++currentDistance;
 		}
 
-		template<concepts::string_t string_type, typename iterator> inline uint64_t impl(iterator& iter, string_type&& out) noexcept {
-			auto previousPtr = *iter;
+		template<concepts::string_t string_type, typename iterator> inline uint64_t impl(iterator& iter, iterator endStructural, string_type&& out) noexcept {
+			auto previousPtr = rootIter + *iter;
 			int64_t currentDistance{};
 			uint64_t index{};
 			++iter;
 
-			while (*iter) {
+			while (iter < endStructural) {
 				switch (static_cast<uint64_t>(jsonTypes[static_cast<uint8_t>(*previousPtr)])) {
 					case static_cast<uint64_t>(json_structural_type::string): {
 						backTrackWs(currentDistance, previousPtr, iter);
@@ -142,8 +144,8 @@ namespace jsonifier::internal {
 							std::memcpy(&out[index], previousPtr, static_cast<uint64_t>(currentDistance));
 							index += static_cast<uint64_t>(currentDistance);
 						} else {
-							this->getErrors().emplace_back(error::constructError<status_classes::Minifying, minify_status::Invalid_String_Length>(
-								static_cast<int64_t>(getUnderlyingPtr(iter) - this->rootIter), static_cast<int64_t>(this->endIter - this->rootIter), this->rootIter));
+							this->getErrors().emplace_back(error::constructError<status_classes::Minifying, minify_status::Invalid_String_Length>(static_cast<int64_t>(*iter),
+								static_cast<int64_t>(this->endIter - this->rootIter), this->rootIter));
 							return std::numeric_limits<uint32_t>::max();
 						}
 						break;
@@ -155,14 +157,14 @@ namespace jsonifier::internal {
 					}
 					case static_cast<uint64_t>(json_structural_type::number): {
 						currentDistance = 0;
-						while (!whitespaceTable[static_cast<uint8_t>(previousPtr[++currentDistance])] && ((previousPtr + currentDistance) < (*iter))) {
+						while (!whitespaceTable[static_cast<uint8_t>(previousPtr[++currentDistance])] && ((previousPtr + currentDistance) < (rootIter + *iter))) {
 						}
 						if JSONIFIER_LIKELY (currentDistance > 0) {
 							std::memcpy(&out[index], previousPtr, static_cast<uint64_t>(currentDistance));
 							index += static_cast<uint64_t>(currentDistance);
 						} else {
-							this->getErrors().emplace_back(error::constructError<status_classes::Minifying, minify_status::Invalid_Number_Value>(
-								static_cast<int64_t>(getUnderlyingPtr(iter) - this->rootIter), static_cast<int64_t>(this->endIter - this->rootIter), this->rootIter));
+							this->getErrors().emplace_back(error::constructError<status_classes::Minifying, minify_status::Invalid_Number_Value>(static_cast<int64_t>(*iter),
+								static_cast<int64_t>(this->endIter - this->rootIter), this->rootIter));
 							return std::numeric_limits<uint32_t>::max();
 						}
 						break;
@@ -218,12 +220,12 @@ namespace jsonifier::internal {
 					case static_cast<uint64_t>(json_structural_type::error):
 						[[fallthrough]];
 					default: {
-						this->getErrors().emplace_back(error::constructError<status_classes::Minifying, minify_status::Incorrect_Structural_Index>(
-							static_cast<int64_t>(getUnderlyingPtr(iter) - this->rootIter), static_cast<int64_t>(this->endIter - this->rootIter), this->rootIter));
+						this->getErrors().emplace_back(error::constructError<status_classes::Minifying, minify_status::Incorrect_Structural_Index>(static_cast<int64_t>(*iter),
+							static_cast<int64_t>(this->endIter - this->rootIter), this->rootIter));
 						return std::numeric_limits<uint32_t>::max();
 					}
 				}
-				previousPtr = (*iter);
+				previousPtr = rootIter + *iter;
 				++iter;
 			}
 			if (previousPtr) {

@@ -31,27 +31,27 @@ namespace jsonifier::internal {
 
 	template<typename derived_type> struct validate_impl<json_structural_type::object_start, derived_type> {
 		template<typename validator_type, typename iterator> inline static bool impl(iterator&& iter, iterator&& end, validator_type& validatorRef) noexcept {
-			if JSONIFIER_LIKELY (*iter && **iter == '{') {
+			if JSONIFIER_LIKELY (iter < end && validatorRef.rootIter[*iter] == '{') {
 				++iter;
-				if JSONIFIER_UNLIKELY (*iter && **iter == '}') {
+				if JSONIFIER_UNLIKELY (iter < end && validatorRef.rootIter[*iter] == '}') {
 					++iter;
 					return true;
 				}
 
-				while (*iter < *end) {
-					if JSONIFIER_LIKELY (validate_impl<json_structural_type::string, derived_type>::impl(iter, validatorRef)) {
-						if JSONIFIER_LIKELY (*iter && **iter == ':') {
+				while (iter < end) {
+					if JSONIFIER_LIKELY (validate_impl<json_structural_type::string, derived_type>::impl(iter, end, validatorRef)) {
+						if JSONIFIER_LIKELY (iter < end && validatorRef.rootIter[*iter] == ':') {
 							++iter;
 							if JSONIFIER_LIKELY (validator<derived_type>::impl(iter, end, validatorRef)) {
-								if JSONIFIER_LIKELY (*iter && **iter == ',') {
+								if JSONIFIER_LIKELY (iter < end && validatorRef.rootIter[*iter] == ',') {
 									++iter;
 								} else {
-									if (!*iter || **iter == '}') {
+									if (iter < end && validatorRef.rootIter[*iter] == '}') {
 										++iter;
 										return true;
 									} else {
 										validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::Missing_Comma_Or_Closing_Brace>(
-											getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
+											(iter < end ? *iter : 0), validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 										return false;
 									}
 								}
@@ -59,8 +59,8 @@ namespace jsonifier::internal {
 								return false;
 							}
 						} else {
-							validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::Missing_Colon>(
-								getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
+							validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::Missing_Colon>((iter < end ? *iter : 0),
+								validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 							return false;
 						}
 					} else {
@@ -69,8 +69,8 @@ namespace jsonifier::internal {
 				}
 				return false;
 			} else {
-				validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::Missing_Object_Start>(
-					getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
+				validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::Missing_Object_Start>((iter < end ? *iter : 0),
+					validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 				return false;
 			}
 		}
@@ -78,24 +78,23 @@ namespace jsonifier::internal {
 
 	template<typename derived_type> struct validate_impl<json_structural_type::array_start, derived_type> {
 		template<typename validator_type, typename iterator> inline static bool impl(iterator&& iter, iterator&& end, validator_type& validatorRef) noexcept {
-			if JSONIFIER_LIKELY (*iter && **iter == '[') {
+			if JSONIFIER_LIKELY (iter < end && validatorRef.rootIter[*iter] == '[') {
 				++iter;
-				if JSONIFIER_UNLIKELY (*iter && **iter == ']') {
+				if JSONIFIER_UNLIKELY (iter < end && validatorRef.rootIter[*iter] == ']') {
 					++iter;
 					return true;
 				}
-
-				while (*iter) {
+				while (iter < end) {
 					if JSONIFIER_LIKELY (validator<derived_type>::impl(iter, end, validatorRef)) {
-						if JSONIFIER_LIKELY (*iter && **iter == ',') {
+						if JSONIFIER_LIKELY (iter < end && validatorRef.rootIter[*iter] == ',') {
 							++iter;
 						} else {
-							if (*iter && **iter == ']') {
+							if (iter < end && validatorRef.rootIter[*iter] == ']') {
 								++iter;
 								return true;
 							} else {
 								validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::Missing_Comma_Or_Closing_Brace>(
-									getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
+									(iter < end ? *iter : 0), validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 								return false;
 							}
 						}
@@ -105,33 +104,33 @@ namespace jsonifier::internal {
 				}
 				return false;
 			} else {
-				validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::Missing_Array_Start>(
-					getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
+				validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::Missing_Array_Start>((iter < end ? *iter : 0),
+					validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 				return false;
 			}
 		}
 	};
 
 	template<typename derived_type> struct validate_impl<json_structural_type::string, derived_type> {
-		template<typename validator_type, typename iterator> inline static bool impl(iterator&& iter, validator_type& validatorRef) noexcept {
-			if JSONIFIER_LIKELY (*iter && **iter == '"') {
-				auto newPtr = *iter;
+		template<typename validator_type, typename iterator> inline static bool impl(iterator&& iter, iterator&& end, validator_type& validatorRef) noexcept {
+			if JSONIFIER_LIKELY (iter < end && validatorRef.rootIter[*iter] == '"') {
+				auto newPtr = validatorRef.rootIter + *iter;
 				++iter;
-				auto endPtr = *iter;
+				auto endPtr = validatorRef.rootIter + *iter;
 				newPtr		= string_parser<optionsVal, decltype(newPtr), decltype(validatorRef.getStringBuffer().data())>::impl(newPtr, validatorRef.getStringBuffer().data(),
 						 static_cast<uint64_t>(endPtr - newPtr));
 				if JSONIFIER_LIKELY (newPtr) {
 					return true;
 				}
 				JSONIFIER_ELSE_UNLIKELY(else) {
-					validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::Invalid_String_Characters>(
-						getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
+					validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::Invalid_String_Characters>((iter < end ? *iter : 0),
+						validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 					return false;
 				}
 			}
 			JSONIFIER_ELSE_UNLIKELY(else) {
-				validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::Invalid_String_Characters>(
-					getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
+				validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::Invalid_String_Characters>((iter < end ? *iter : 0),
+					validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 				return false;
 			}
 		}
@@ -162,18 +161,16 @@ namespace jsonifier::internal {
 			return;
 		}
 
-		template<typename validator_type, typename iterator> inline static bool impl(iterator&& iter, validator_type& validatorRef) noexcept {
-			auto newPtr = *iter;
+		template<typename validator_type, typename iterator> inline static bool impl(iterator&& iter, iterator&& end, validator_type& validatorRef) noexcept {
+			auto newPtr = validatorRef.rootIter + *iter;
 			++iter;
-			if JSONIFIER_LIKELY (*iter && (*newPtr != 0x30u || !numberTable[static_cast<uint64_t>(*(newPtr + 1))])) {
+			if JSONIFIER_LIKELY (iter < end && (*newPtr != 0x30u || !numberTable[static_cast<uint64_t>(*(newPtr + 1))])) {
 				consumeSign(newPtr);
-
 				consumeDigits(newPtr);
-
 				if (consumeChar(0x2Eu, newPtr)) {
-					if (!*iter || !consumeDigits(newPtr)) {
-						validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::Invalid_Number_Value>(
-							getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
+					if (iter >= end || !consumeDigits(newPtr)) {
+						validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::Invalid_Number_Value>((iter < end ? *iter : 0),
+							validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 						return false;
 					}
 				}
@@ -182,34 +179,34 @@ namespace jsonifier::internal {
 				}
 				return true;
 			} else {
-				validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::Invalid_Number_Value>(
-					getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
+				validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::Invalid_Number_Value>((iter < end ? *iter : 0),
+					validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 				return false;
 			}
 		}
 	};
 
 	template<typename derived_type> struct validate_impl<json_structural_type::boolean, derived_type> {
-		template<typename validator_type, typename iterator> inline static bool impl(iterator&& iter, validator_type& validatorRef) noexcept {
-			if JSONIFIER_LIKELY ((*iter + 4) < validatorRef.endIter && validateBool(*iter)) {
+		template<typename validator_type, typename iterator> inline static bool impl(iterator&& iter, iterator&& end, validator_type& validatorRef) noexcept {
+			if JSONIFIER_LIKELY ((validatorRef.rootIter + *iter + 4) < validatorRef.endIter && validateBool(validatorRef.rootIter + *iter)) {
 				++iter;
 				return true;
 			} else {
-				validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::Invalid_Bool_Value>(
-					getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
+				validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::Invalid_Bool_Value>((iter < end ? *iter : 0),
+					validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 				return false;
 			}
 		}
 	};
 
 	template<typename derived_type> struct validate_impl<json_structural_type::null, derived_type> {
-		template<typename validator_type, typename iterator> inline static bool impl(iterator&& iter, validator_type& validatorRef) noexcept {
-			if JSONIFIER_LIKELY (validateNull(*iter)) {
+		template<typename validator_type, typename iterator> inline static bool impl(iterator&& iter, iterator&& end, validator_type& validatorRef) noexcept {
+			if JSONIFIER_LIKELY (validateNull(validatorRef.rootIter + *iter)) {
 				++iter;
 				return true;
 			} else {
-				validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::Invalid_Null_Value>(
-					getUnderlyingPtr(*iter) - validatorRef.rootIter, validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
+				validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::Invalid_Null_Value>((iter < end ? *iter : 0),
+					validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 				return false;
 			}
 		}

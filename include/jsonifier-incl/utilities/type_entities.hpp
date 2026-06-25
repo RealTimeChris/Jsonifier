@@ -480,71 +480,61 @@ namespace jsonifier::internal {
 		return value1 < static_cast<value_type01>(value2) ? value1 : static_cast<value_type01>(value2);
 	}
 
-	template<concepts::time_t value_type> class stop_watch {
+	template<typename value_type = std::chrono::nanoseconds> class stop_watch {
 	  public:
-		using hr_clock = std::chrono::high_resolution_clock;
+		using time_type = value_type;
 
-		stop_watch(uint64_t newTime) noexcept {
-			totalNumberOfTimeUnits.store(value_type{ newTime }, std::memory_order_release);
+		JSONIFIER_INLINE constexpr stop_watch() noexcept {
 		}
 
-		stop_watch(value_type newTime) noexcept {
-			totalNumberOfTimeUnits.store(newTime, std::memory_order_release);
-		}
-
-		stop_watch& operator=(stop_watch&& other) noexcept {
-			if JSONIFIER_LIKELY (this != &other) {
-				totalNumberOfTimeUnits.store(other.totalNumberOfTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
-				startTimeInTimeUnits.store(other.startTimeInTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
-			}
+		JSONIFIER_INLINE constexpr stop_watch& operator=(stop_watch&& other) noexcept {
+			copy_from(other);
 			return *this;
 		}
 
-		stop_watch(stop_watch&& other) noexcept {
-			*this = move(other);
+		JSONIFIER_INLINE constexpr stop_watch(stop_watch&& other) noexcept {
+			copy_from(other);
 		}
 
-		stop_watch& operator=(const stop_watch& other) noexcept {
-			if JSONIFIER_LIKELY (this != &other) {
-				totalNumberOfTimeUnits.store(other.totalNumberOfTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
-				startTimeInTimeUnits.store(other.startTimeInTimeUnits.load(std::memory_order_acquire), std::memory_order_release);
-			}
+		JSONIFIER_INLINE constexpr stop_watch& operator=(const stop_watch& other) noexcept {
+			copy_from(other);
 			return *this;
 		}
 
-		stop_watch(const stop_watch& other) noexcept {
-			*this = other;
+		JSONIFIER_INLINE constexpr stop_watch(const stop_watch& other) noexcept {
+			copy_from(other);
 		}
 
-		bool hasTimeElapsed() noexcept {
-			if JSONIFIER_LIKELY (std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()) - startTimeInTimeUnits.load(std::memory_order_acquire) >=
-				totalNumberOfTimeUnits.load(std::memory_order_acquire)) {
-				return true;
-			} else {
-				return false;
-			}
+		JSONIFIER_INLINE void start() noexcept {
+			start_time_units.store(get_current_time(), std::memory_order_release);
 		}
 
-		void reset(value_type newTimeValue = value_type{}) noexcept {
-			if JSONIFIER_LIKELY (newTimeValue != value_type{}) {
-				totalNumberOfTimeUnits.store(newTimeValue, std::memory_order_release);
-				startTimeInTimeUnits.store(std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()), std::memory_order_release);
-			} else {
-				startTimeInTimeUnits.store(std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()), std::memory_order_release);
-			}
+		JSONIFIER_INLINE void stop() noexcept {
+			elapsed_time_units.store(total_time_elapsed(), std::memory_order_release);
 		}
 
-		value_type getTotalWaitTime() const noexcept {
-			return totalNumberOfTimeUnits.load(std::memory_order_acquire);
-		}
-
-		value_type totalTimeElapsed() noexcept {
-			return std::chrono::duration_cast<value_type>(hr_clock::now().time_since_epoch()) - startTimeInTimeUnits.load(std::memory_order_acquire);
+		template<typename value_type_newer = value_type> JSONIFIER_INLINE auto get_elapsed_time() noexcept {
+			return std::chrono::duration_cast<value_type_newer>(std::chrono::steady_clock::duration{ elapsed_time_units.load(std::memory_order_acquire) });
 		}
 
 	  protected:
-		std::atomic<value_type> totalNumberOfTimeUnits{};
-		std::atomic<value_type> startTimeInTimeUnits{};
+		std::atomic<time_type> elapsed_time_units{};
+		std::atomic<time_type> start_time_units{};
+
+		JSONIFIER_INLINE void copy_from(const stop_watch& other) noexcept {
+			if (this != &other) {
+				elapsed_time_units.store(other.elapsed_time_units.load(std::memory_order_acquire), std::memory_order_release);
+				start_time_units.store(other.start_time_units.load(std::memory_order_acquire), std::memory_order_release);
+			}
+		}
+
+		JSONIFIER_INLINE time_type get_current_time() noexcept {
+			return static_cast<time_type>(std::chrono::steady_clock::now().time_since_epoch().count());
+		}
+
+		JSONIFIER_INLINE time_type total_time_elapsed() noexcept {
+			return get_current_time() - start_time_units.load(std::memory_order_acquire);
+		}
 	};
 
 	template<concepts::time_t value_type> stop_watch(value_type) -> stop_watch<value_type>;

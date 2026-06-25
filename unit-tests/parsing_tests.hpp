@@ -33,18 +33,21 @@ namespace tests {
 		validate,
 	};
 
-	template<test_types test_type, rt_ut::string_literal testName, typename value_type, bool prettified, bool partial, bool knownOder>
+	template<test_types test_type, rt_ut::string_literal testName, typename value_type, bool prettified, bool partial, bool knownOder, bool printSerialization = false>
 	inline static void parsing_tests(jsonifier::jsonifier_core<>& parser) {
 		auto dataToParse = file_handle::get(basePath.operator std::string() + "/json/" + testName.operator std::string() + ".json");
 		value_type value;
 		rt_ut::unit_test<testName, true>::run([&]() {
 			if constexpr (test_type == test_types::parse_serialize) {
 				parser.parseJson<jsonifier::parse_options{ .partialRead = partial, .knownOrder = knownOder, .minified = !prettified }>(value, dataToParse);
-				parser.template serializeJson<jsonifier::serialize_options{ .prettify = prettified }, value_type>(value);
+				[[maybe_unused]] auto result = parser.template serializeJson<jsonifier::serialize_options{ .prettify = prettified }, value_type>(value);
+				if constexpr (printSerialization) {
+					std::cout << result << std::endl;
+				}
 			} else if constexpr (test_type == test_types::minify) {
-				parser.minifyJson(value, dataToParse);
+				parser.minifyJson(dataToParse, value);
 			} else if constexpr (test_type == test_types::prettify) {
-				parser.prettifyJson(value, dataToParse);
+				parser.prettifyJson(dataToParse, value);
 			} else if constexpr (test_type == test_types::validate) {
 				parser.validateJson(dataToParse);
 			}
@@ -61,8 +64,8 @@ namespace tests {
 
 	template<bool knownOrder> inline static void parsing_tests_impl() {
 		jsonifier::jsonifier_core<> parser{};
-		parsing_tests<test_types::parse_serialize, "Abc (Out of Order) Partial Test (Minified)", abc_partial_test<abc_partial_test_struct>, false, true, knownOrder>(parser);
-		parsing_tests<test_types::parse_serialize, "Abc (Out of Order) Partial Test (Prettified)", abc_partial_test<abc_partial_test_struct>, true, true, knownOrder>(parser);
+		parsing_tests<test_types::parse_serialize, "Abc (Out of Order) Partial Test (Minified)", abc_partial_test<abc_partial_test_struct>, false, true, knownOrder, true>(parser);
+		parsing_tests<test_types::parse_serialize, "Abc (Out of Order) Partial Test (Prettified)", abc_partial_test<abc_partial_test_struct>, true, true, knownOrder, true>(parser);
 		parsing_tests<test_types::parse_serialize, "Abc (Out of Order) Test (Minified)", abc_test<abc_test_struct>, false, false, knownOrder>(parser);
 		parsing_tests<test_types::parse_serialize, "Abc (Out of Order) Test (Prettified)", abc_test<abc_test_struct>, true, false, knownOrder>(parser);
 		parsing_tests<test_types::parse_serialize, "Apache Builds Test (Minified)", apache_builds_message, false, false, knownOrder>(parser);
@@ -87,8 +90,8 @@ namespace tests {
 		parsing_tests<test_types::parse_serialize, "Random Test (Prettified)", random_message, true, false, knownOrder>(parser);
 		parsing_tests<test_types::parse_serialize, "Twitter Test (Minified)", twitter_message, false, false, knownOrder>(parser);
 		parsing_tests<test_types::parse_serialize, "Twitter Test (Prettified)", twitter_message, true, false, knownOrder>(parser);
-		parsing_tests<test_types::parse_serialize, "Twitter Partial Test (Minified)", twitter_partial_message, false, true, knownOrder>(parser);
-		parsing_tests<test_types::parse_serialize, "Twitter Partial Test (Prettified)", twitter_partial_message, true, true, knownOrder>(parser);
+		parsing_tests<test_types::parse_serialize, "Twitter Partial Test (Minified)", twitter_partial_message, false, true, knownOrder, true>(parser);
+		parsing_tests<test_types::parse_serialize, "Twitter Partial Test (Prettified)", twitter_partial_message, true, true, knownOrder, true>(parser);
 		parsing_tests<test_types::minify, "Minify Test", std::string, false, false, knownOrder>(parser);
 		parsing_tests<test_types::prettify, "Prettify Test", std::string, false, false, knownOrder>(parser);
 		parsing_tests<test_types::validate, "Validate Test", std::string, false, false, knownOrder>(parser);

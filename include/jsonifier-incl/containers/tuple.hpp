@@ -384,9 +384,30 @@ namespace jsonifier::internal {
 		return std::forward<tuple_type>(tuple_val)[tag<index>{}];
 	}
 
+#if JSONIFIER_COMPILER_GCC && JSONIFIER_PLATFORM_MAC
+
 	template<typename... types> JSONIFIER_INLINE static constexpr auto make_tuple(types&&... args) noexcept {
-		return tuple<types...>{ { { std::forward<types>(args) }... } };
+		auto result = tuple<types...>{};
+		if constexpr (sizeof...(types) > 0) {
+			constructInPlace<0>(result, std::forward<types>(args)...);
+		}
+		return result;
 	}
+
+	template<uint64_t I, typename tuple_t, typename arg_t, typename... rest_t>
+	JSONIFIER_INLINE static constexpr void constructInPlace(tuple_t& t, arg_t&& arg, rest_t&&... rest) noexcept {
+		t[tag<I>{}] = std::forward<arg_t>(arg);
+		if constexpr (sizeof...(rest) > 0) {
+			constructInPlace<I + 1>(t, std::forward<rest_t>(rest)...);
+		}
+	}
+
+#else
+	template<typename... types> JSONIFIER_INLINE static constexpr auto make_tuple(types&&... args) noexcept {
+		using base = type_list_t<types...>;
+		return tuple<types...>{ base{ { std::forward<types>(args) }... } };
+	}
+#endif
 
 	template<typename... tuple_types> struct join_tuples;
 

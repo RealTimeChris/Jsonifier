@@ -82,6 +82,7 @@ namespace jsonifier {
 	inline constexpr uint64_t bytesPerStep{ bitsPerStep / 8 };
 	inline constexpr uint64_t sixtyFourBitsPerStep{ bitsPerStep / 64 };
 	inline constexpr uint64_t stridesPerStep{ bitsPerStep / bytesPerStep };
+	inline constexpr uint64_t registersPerSixtyFourBits{ 64 / bytesPerStep };	
 
 	inline static constexpr uint16_t packValues2(const char* values) {
 		return static_cast<uint16_t>(static_cast<uint16_t>(values[0]) | static_cast<uint16_t>(values[1]) << 8);

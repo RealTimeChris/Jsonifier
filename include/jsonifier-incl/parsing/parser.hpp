@@ -56,12 +56,13 @@ namespace jsonifier::internal {
 			return (currentArrayDepth > 0 || currentObjectDepth > 0);
 		}
 
-		mutable parser<derived_type>* parserPtr{};
-		mutable int64_t currentObjectDepth{};
-		mutable int64_t currentArrayDepth{};
-		mutable iterator_type rootIter{};
-		mutable iterator_type endIter{};
-		mutable iterator_type iter{};
+		parser<derived_type>* parserPtr{};
+		int64_t currentObjectDepth{};
+		int64_t currentArrayDepth{};
+		const char* stringRoot{};
+		iterator_type rootIter{};
+		iterator_type endIter{};
+		iterator_type iter{};
 	};
 
 	template<typename value_type>
@@ -91,7 +92,10 @@ namespace jsonifier::internal {
 
 	template<concepts::has_data value_type> JSONIFIER_INLINE static string_view_ptr getBeginIter(value_type& value) noexcept {
 		return std::bit_cast<string_view_ptr>(value.data());
-	}
+	}	
+
+	//inline static time_tracker<"parse::impl"> parse_implTracker{};
+	//inline static time_tracker<"parse_partial_impl"> parse_partial_implTracker{};
 
 	template<typename value_type, typename context_type, parse_options optionsNew, bool minified> struct parse_partial_impl;
 	template<typename value_type, typename context_type, parse_options optionsNew, bool minified> struct parse_impl;
@@ -124,13 +128,14 @@ namespace jsonifier::internal {
 		template<parse_options options = parse_options{}, typename value_type, typename buffer_type> inline bool parseJson(value_type&& object, buffer_type&& in) noexcept {
 			if constexpr (options.partialRead) {
 				static constexpr parse_options optionsNew{ options };
-				constexpr parse_context_partial<derived_type, string_view_ptr*> context{ constEval(parse_context_partial<derived_type, string_view_ptr*>{}) };
+				parse_context_partial<derived_type, uint32_t*> context{ constEval(parse_context_partial<derived_type, uint32_t*>{}) };
 				auto rootIter = getBeginIter(in);
 				auto endIter  = getEndIter(in);
 				derivedRef.section.template reset<options.minified>(rootIter, static_cast<uint64_t>(endIter - rootIter));
 				context.rootIter  = derivedRef.section.begin();
 				context.iter	  = derivedRef.section.begin();
 				context.endIter	  = derivedRef.section.end();
+				context.stringRoot = rootIter;
 				context.parserPtr = this;
 				auto newSize	  = static_cast<uint64_t>((context.endIter - context.iter) / 2);
 				if (derivedRef.stringBuffer.size() < newSize) {
@@ -180,13 +185,14 @@ namespace jsonifier::internal {
 
 		template<typename value_type, parse_options options = parse_options{}, typename buffer_type> inline bool parseManyJson(value_type&& object, buffer_type&& in) noexcept {
 			static constexpr parse_options optionsNew{ options };
-			constexpr parse_context_partial<derived_type, string_view_ptr*> context{ constEval(parse_context_partial<derived_type, string_view_ptr*>{}) };
+			parse_context_partial<derived_type, uint32_t*> context{ constEval(parse_context_partial<derived_type, string_view_ptr*>{}) };
 			auto rootIter = getBeginIter(in);
 			auto endIter  = getEndIter(in);
 			derivedRef.section.template reset<options.minified>(rootIter, static_cast<uint64_t>(endIter - rootIter));
 			context.rootIter  = derivedRef.section.begin();
 			context.iter	  = derivedRef.section.begin();
-			context.endIter	  = derivedRef.section.end();
+			context.endIter	   = derivedRef.section.end();
+			context.stringRoot = rootIter;
 			context.parserPtr = this;
 			auto newSize	  = static_cast<uint64_t>((endIter - rootIter) / 2);
 			if (derivedRef.stringBuffer.size() < newSize) {
@@ -221,13 +227,14 @@ namespace jsonifier::internal {
 		template<typename value_type, parse_options options = parse_options{}, concepts::string_t buffer_type> inline value_type parseJson(buffer_type&& in) noexcept {
 			if constexpr (options.partialRead) {
 				static constexpr parse_options optionsNew{ options };
-				constexpr parse_context_partial<derived_type, string_view_ptr*> context{ constEval(parse_context_partial<derived_type, string_view_ptr*>{}) };
+				parse_context_partial<derived_type, string_view_ptr*> context{ constEval(parse_context_partial<derived_type, string_view_ptr*>{}) };
 				auto rootIter = getBeginIter(in);
 				auto endIter  = getEndIter(in);
 				derivedRef.section.template reset<options.minified>(rootIter, static_cast<uint64_t>(endIter - rootIter));
 				context.rootIter  = derivedRef.section.begin();
 				context.iter	  = derivedRef.section.begin();
-				context.endIter	  = derivedRef.section.end();
+				context.endIter	   = derivedRef.section.end();
+				context.stringRoot = rootIter;
 				context.parserPtr = this;
 				auto newSize	  = static_cast<uint64_t>((context.endIter - context.iter) / 2);
 				if (derivedRef.stringBuffer.size() < newSize) {
@@ -278,10 +285,15 @@ namespace jsonifier::internal {
 			}
 		}
 
-		template<auto parseError, typename context_type>
-		void reportError(context_type& context, const std::source_location& sourceLocation = std::source_location::current()) noexcept {
+		template<auto parseError, typename context_type> void reportError(context_type& context, const std::source_location& sourceLocation = std::source_location::current()) noexcept {
 			derivedRef.errors.emplace_back(error::constructError<status_classes::Parsing, parseError>(getUnderlyingPtr(context.iter) - getUnderlyingPtr(context.rootIter),
 				getUnderlyingPtr(context.endIter) - getUnderlyingPtr(context.rootIter), getUnderlyingPtr(context.rootIter), sourceLocation));
+		}
+
+		template<auto parseError, partial_reading_context_t context_type>
+		void reportError(context_type& context, const std::source_location& sourceLocation = std::source_location::current()) noexcept {
+			derivedRef.errors.emplace_back(
+				error::constructError<status_classes::Parsing, parseError>(*context.iter, *context.endIter - *context.rootIter, context.stringRoot, sourceLocation));
 		}
 
 		const std::vector<internal::error>& getErrors() const noexcept {

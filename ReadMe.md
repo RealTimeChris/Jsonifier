@@ -212,27 +212,27 @@ int main() {
 ## Documentation
 
 ### Getting Started
-- [Installation](Documentation/Installation.md) - Install via vcpkg, CMake FetchContent, or source
+- [Installation](documentation/Installation.md) - Install via vcpkg, CMake FetchContent, or source
 
 ### core Usage
-- [Reflection](Documentation/Reflection.md) - Registering structures with compile-time reflection
-- [Serializing & Parsing](Documentation/Usage_Serializing_Parsing.md) - Complete serialization/parsing guide
-- [Validating](Documentation/Validating.md) - JSON validation against RFC standards
+- [Reflection](documentation/Reflection.md) - Registering structures with compile-time reflection
+- [Serializing & Parsing](documentation/Usage_Serializing_Parsing.md) - Complete serialization/parsing guide
+- [Validating](documentation/Validating.md) - JSON validation against RFC standards
 
 ### Optimization
-- [Optimizing For Minified JSON](Documentation/Optimizing_For_Minified_Json.md) - Boost performance for minified input
-- [Partial Reading](Documentation/PartialReading.md) - Parse unordered or partial JSON structures
-- [CPU Architecture Selection](Documentation/CPU_Architecture_Selection.md) - Manual CPU instruction set configuration
+- [Optimizing For Minified JSON](documentation/Optimizing_For_Minified_Json.md) - Boost performance for minified input
+- [Partial Reading](documentation/PartialReading.md) - Parse unordered or partial JSON structures
+- [CPU Architecture Selection](documentation/CPU_Architecture_Selection.md) - Manual CPU instruction set configuration
 
 ### Output Formatting
-- [Prettifying](Documentation/Prettifying.md) - Pretty-print JSON with customizable indentation
-- [Minifying](Documentation/Minifying.md) - Minify JSON for compact output
+- [Prettifying](documentation/Prettifying.md) - Pretty-print JSON with customizable indentation
+- [Minifying](documentation/Minifying.md) - Minify JSON for compact output
 
 ### Advanced Topics
-- [Error Handling](Documentation/Errors.md) - Detailed error reporting and handling
-- [Excluding Keys at Runtime](Documentation/Excluding_Keys.md) - Dynamic key exclusion during serialization
-- [Custom Parsing & Serializing](Documentation/Custom_Parsing_And_Serializing.md) - Specialized type handling
-- [Parsing Arbitrary Data](Documentation/Parsing_Arbitrary_Data.md) - Working with unknown JSON structures
+- [Error Handling](documentation/Errors.md) - Detailed error reporting and handling
+- [Excluding Keys at Runtime](documentation/Excluding_Keys.md) - Dynamic key exclusion during serialization
+- [Custom Parsing & Serializing](documentation/Custom_Parsing_And_Serializing.md) - Specialized type handling
+- [Parsing Arbitrary Data](documentation/Parsing_Arbitrary_Data.md) - Working with unknown JSON structures
 
 ---
 

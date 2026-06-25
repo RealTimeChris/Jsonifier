@@ -42,7 +42,7 @@ namespace jsonifier::simd {
 		return vld1q_u8(static_cast<const uint8_t*>(str));
 	}
 
-	template<simd_int_128_type simd_int_type_new> [[maybe_unused]] JSONIFIER_INLINE static simd_int_type_new gatherValuesU(const void* str, void*) noexcept {
+	template<simd_int_128_type simd_int_type_new> [[maybe_unused]] JSONIFIER_INLINE static simd_int_type_new gatherValuesU(const void* str) noexcept {
 		return vld1q_u8(static_cast<const uint8_t*>(str));
 	}
 

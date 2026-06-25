@@ -105,15 +105,6 @@ namespace jsonifier::internal {
 	} \
 	JSONIFIER_SKIP_WS()
 
-
-	JSONIFIER_INLINE static string_view_ptr getUnderlyingPtr(string_view_ptr* ptr) noexcept {
-		if (ptr) {
-			return *ptr;
-		} else {
-			return nullptr;
-		}
-	}
-
 	JSONIFIER_INLINE static string_view_ptr getUnderlyingPtr(string_view_ptr ptr) noexcept {
 		return ptr;
 	}
@@ -482,7 +473,7 @@ namespace jsonifier::internal {
 
 		JSONIFIER_INLINE static basic_iterator02 impl(basic_iterator01& string1Start JSONIFIER_LIFETIME_BOUND, basic_iterator02 string2 JSONIFIER_LIFETIME_BOUND,
 			uint64_t lengthNew) noexcept {
-			const basic_iterator01 string1End = string1Start + lengthNew;
+			const basic_iterator01 string1End = static_cast<basic_iterator01>(string1Start + lengthNew);
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
 			return string_parser_impl<3, options, basic_iterator01, basic_iterator02>::impl(string1Start, string1End, string2);
 #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
@@ -657,6 +648,28 @@ namespace jsonifier::internal {
 		return false;
 	}
 
+	template<typename context_type, jsonifier::concepts::bool_t bool_type> JSONIFIER_INLINE static bool parseBool(bool_type& value, context_type& context) noexcept {
+		if (compareStringAsInt<"true">(&context.stringRoot[*context.iter])) {
+			value = true;
+			++context.iter;
+			return true;
+		} else if (compareStringAsInt<"fals">(&context.stringRoot[*context.iter]) && context.stringRoot[(*context.iter) + 4] == 'e') {
+			value = false;
+			++context.iter;
+			return true;
+		}
+		return false;
+	}
+
+	template<typename context_type> JSONIFIER_INLINE static bool parseNull(context_type& context) noexcept {
+		if JSONIFIER_LIKELY (compareStringAsInt<"null">(&context.stringRoot[*context.iter])) {
+			++context.iter;
+			return true;
+		} else {
+			return false;
+		}
+	}
+
 	JSONIFIER_INLINE static bool parseNull(string_view_ptr& context) noexcept {
 		if JSONIFIER_LIKELY (compareStringAsInt<"null">(context)) {
 			context += 4;
@@ -706,8 +719,8 @@ namespace jsonifier::internal {
 	template<const auto options, typename context_type> struct derailleur {
 		template<typename value_type> JSONIFIER_INLINE static bool parseString(value_type& value, context_type& context) noexcept {
 			if constexpr (options.partialRead) {
-				if JSONIFIER_LIKELY ((context.iter < context.endIter) && **context.iter == '"') {
-					auto newerPtr	  = (*context.iter) + 1;
+				if JSONIFIER_LIKELY ((context.iter < context.endIter) && context.stringRoot[*context.iter] == '"') {
+					auto newerPtr	  = (&context.stringRoot[(*context.iter)]) + 1;
 					const auto newPtr = string_parser<options, decltype(newerPtr), decltype(context.parserPtr->getStringBuffer().data())>::impl(newerPtr,
 						context.parserPtr->getStringBuffer().data(), static_cast<uint64_t>(*context.endIter - *context.iter));
 					if JSONIFIER_LIKELY (newPtr) {
@@ -803,7 +816,7 @@ namespace jsonifier::internal {
 			if constexpr (options.partialRead) {
 				uint64_t depth{ 1 };
 				while (depth > 0 && context.iter < context.endIter) {
-					switch (**context.iter) {
+					switch (context.stringRoot[*context.iter]) {
 						case '{': {
 							++depth;
 							break;
@@ -864,7 +877,7 @@ namespace jsonifier::internal {
 				++context.iter;
 				uint64_t currentDepth{ 1 };
 				while (context.iter != context.endIter && currentDepth > 0) {
-					switch (**context.iter) {
+					switch (context.stringRoot[*context.iter]) {
 						[[unlikely]] case '{': {
 							++currentDepth;
 							++context.iter;
@@ -945,7 +958,7 @@ namespace jsonifier::internal {
 				++context.iter;
 				uint64_t currentDepth{ 1 };
 				while (context.iter != context.endIter && currentDepth > 0) {
-					switch (**context.iter) {
+					switch (context.stringRoot[*context.iter]) {
 						[[unlikely]] case '[': {
 							++currentDepth;
 							break;
@@ -995,7 +1008,7 @@ namespace jsonifier::internal {
 
 		static void skipToNextValue(context_type& context) noexcept {
 			if constexpr (options.partialRead) {
-				switch (**context.iter) {
+				switch (context.stringRoot[*context.iter]) {
 					case '{': {
 						skipObject(context);
 						break;

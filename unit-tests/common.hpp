@@ -23,10 +23,9 @@
 #pragma once
 
 #include "unicode_emoji.hpp"
-#include <jsonifier>
 #include <filesystem>
+#include <jsonifier>
 #include <fstream>
-#include <thread>
 #include <random>
 #include <rt-ut>
 
