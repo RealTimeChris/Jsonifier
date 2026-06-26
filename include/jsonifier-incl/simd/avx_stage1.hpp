@@ -25,7 +25,7 @@
 #include <jsonifier-incl/containers/array.hpp>
 #include <jsonifier-incl/simd/avx.hpp>
 
-namespace jsonifier {
+namespace jsonifier::simd {
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
 
@@ -49,20 +49,62 @@ namespace jsonifier {
 		}
 	};
 
-	template<typename derived_type> struct scalar_follow_op {
-		uint64_t prevScalar{};
+	struct cmp_eq_op {
+		JSONIFIER_INLINE static uint64_t impl(simd_array lhs, jsonifier_simd_int_t rhsBroadcast) noexcept {
+			uint64_t result = simd::opCmpEqBitMask(lhs.get_value<0>(), rhsBroadcast);
+			if constexpr (registersPerSixtyFourBits > 1) {
+				result |= static_cast<uint64_t>(simd::opCmpEqBitMask(lhs.get_value<1>(), rhsBroadcast)) << get_shift_amount(1);
+				if constexpr (registersPerSixtyFourBits > 2) {
+					result |= static_cast<uint64_t>(simd::opCmpEqBitMask(lhs.get_value<2>(), rhsBroadcast)) << get_shift_amount(2);
+					result |= static_cast<uint64_t>(simd::opCmpEqBitMask(lhs.get_value<3>(), rhsBroadcast)) << get_shift_amount(3);
+				}
+			}
+			return result;
+		}
 
-		JSONIFIER_INLINE uint64_t impl(uint64_t nonquoteScalar) noexcept {
-			const uint64_t shifted = (nonquoteScalar << 1) | prevScalar;
-			prevScalar			   = nonquoteScalar >> 63;
-			return shifted;
+		JSONIFIER_INLINE static uint64_t impl(simd_array lhs, simd_array rhs) noexcept {
+			uint64_t result = simd::opCmpEqBitMask(lhs.get_value<0>(), rhs.get_value<0>());
+			if constexpr (registersPerSixtyFourBits > 1) {
+				result |= static_cast<uint64_t>(simd::opCmpEqBitMask(lhs.get_value<1>(), rhs.get_value<1>())) << get_shift_amount(1);
+				if constexpr (registersPerSixtyFourBits > 2) {
+					result |= static_cast<uint64_t>(simd::opCmpEqBitMask(lhs.get_value<2>(), rhs.get_value<2>())) << get_shift_amount(2);
+					result |= static_cast<uint64_t>(simd::opCmpEqBitMask(lhs.get_value<3>(), rhs.get_value<3>())) << get_shift_amount(3);
+				}
+			}
+			return result;
 		}
 	};
 
-	template<typename derived_type> struct escape_scanner_op {
-		uint64_t nextIsEscaped{};
+	struct unescaped_collector {
+		JSONIFIER_INLINE static uint64_t impl(simd_array ltRhs) noexcept {
+			uint64_t result = static_cast<uint64_t>(opBitMask(ltRhs.get_value<0>()));
+			if constexpr (registersPerSixtyFourBits > 1) {
+				result |= static_cast<uint64_t>(opBitMask(ltRhs.get_value<1>())) << get_shift_amount(1);
+				if constexpr (registersPerSixtyFourBits > 2) {
+					result |= static_cast<uint64_t>(opBitMask(ltRhs.get_value<2>())) << get_shift_amount(2);
+					result |= static_cast<uint64_t>(opBitMask(ltRhs.get_value<3>())) << get_shift_amount(3);
+				}
+			}
+			return result;
+		}
+	};
 
-		JSONIFIER_INLINE uint64_t nextEscapeAndTerminalCode(uint64_t potentialEscape) noexcept {
+	template<typename rope_block> struct rope_detector {
+		uint64_t nextIsEscaped{};
+		uint64_t prevInString{};
+		uint64_t prevScalar{};
+
+		JSONIFIER_INLINE rope_block next(simd_array in_01, jsonifier_simd_int_t bsRegister, jsonifier_simd_int_t quoteRegister) noexcept {
+			const uint64_t backslash_local = simd::cmp_eq_op::impl(in_01, bsRegister);
+			const uint64_t quotes_local	   = simd::cmp_eq_op::impl(in_01, quoteRegister);
+			const uint64_t escaped		   = nextEscapeAndTerminalCode(backslash_local);
+			const uint64_t quotes		   = (quotes_local & ~escaped);
+			const uint64_t inString		   = simd::prefix_xor_op<rope_detector>::impl(quotes) ^ prevInString;
+			prevInString				   = static_cast<uint64_t>(static_cast<int64_t>(inString) >> 63);
+			return { escaped, quotes, inString };
+		}
+
+		JSONIFIER_INLINE uint64_t nextEscapeAndTerminalCodeImpl(uint64_t potentialEscape) noexcept {
 			static constexpr uint64_t oddBits{ 0xAAAAAAAAAAAAAAAAULL };
 			const uint64_t maybeEscaped				 = potentialEscape << 1;
 			const uint64_t maybeEscapedAndOddBits	 = maybeEscaped | oddBits;
@@ -70,42 +112,58 @@ namespace jsonifier {
 			return evenSeriesCodesAndOddBits ^ oddBits;
 		}
 
-		JSONIFIER_INLINE uint64_t impl(uint64_t backslash_local) noexcept {
+		JSONIFIER_INLINE uint64_t nextEscapeAndTerminalCode(uint64_t backslash_local) noexcept {
 			if (!backslash_local) {
 				const uint64_t escaped = nextIsEscaped;
 				nextIsEscaped		   = 0;
 				return escaped;
 			}
-			const uint64_t escapeAndTerminalCode = nextEscapeAndTerminalCode(backslash_local & ~nextIsEscaped);
+			const uint64_t escapeAndTerminalCode = nextEscapeAndTerminalCodeImpl(backslash_local & ~nextIsEscaped);
 			const uint64_t escaped				 = escapeAndTerminalCode ^ (backslash_local | nextIsEscaped);
 			nextIsEscaped						 = (escapeAndTerminalCode & backslash_local) >> 63;
 			return escaped;
 		}
+
+		JSONIFIER_INLINE uint64_t followsNonquoteScalar(uint64_t nonquoteScalar) noexcept {
+			const uint64_t shifted = (nonquoteScalar << 1) | prevScalar;
+			prevScalar			   = nonquoteScalar >> 63;
+			return shifted;
+		}
 	};
 
-	template<typename derived_type> struct mask_stitcher_op {
-		JSONIFIER_INLINE static uint64_t impl(const jsonifier_simd_int_t (&lhs)[registersPerSixtyFourBits], const jsonifier_simd_int_t& rhsBroadcast) noexcept {
-			uint64_t result = simd::opCmpEqBitMask(lhs[0], rhsBroadcast);
+	struct ws_collector {
+		JSONIFIER_INLINE static uint64_t impl(simd_array in_01, jsonifier_simd_int_t whitespaceTableLocal) noexcept {
+			simd_array wsShuffle;
+			wsShuffle.assign_value<0>(simd::opShuffle(whitespaceTableLocal, in_01.get_value<0>()));
 			if constexpr (registersPerSixtyFourBits > 1) {
-				result |= static_cast<uint64_t>(simd::opCmpEqBitMask(lhs[1], rhsBroadcast)) << get_shift_amount(1);
+				wsShuffle.assign_value<1>(simd::opShuffle(whitespaceTableLocal, in_01.get_value<1>()));
 				if constexpr (registersPerSixtyFourBits > 2) {
-					result |= static_cast<uint64_t>(simd::opCmpEqBitMask(lhs[2], rhsBroadcast)) << get_shift_amount(2);
-					result |= static_cast<uint64_t>(simd::opCmpEqBitMask(lhs[3], rhsBroadcast)) << get_shift_amount(3);
+					wsShuffle.assign_value<2>(simd::opShuffle(whitespaceTableLocal, in_01.get_value<2>()));
+					wsShuffle.assign_value<3>(simd::opShuffle(whitespaceTableLocal, in_01.get_value<3>()));
 				}
 			}
-			return result;
+			return cmp_eq_op::impl(in_01, wsShuffle);
 		}
+	};
 
-		JSONIFIER_INLINE static uint64_t impl(const jsonifier_simd_int_t (&lhs)[registersPerSixtyFourBits], const jsonifier_simd_int_t (&rhs)[registersPerSixtyFourBits]) noexcept {
-			uint64_t result = simd::opCmpEqBitMask(lhs[0], rhs[0]);
+	struct op_collector {
+		JSONIFIER_INLINE static uint64_t impl(simd_array in_01, jsonifier_simd_int_t opTable, jsonifier_simd_int_t spaceMask) noexcept {
+			simd_array orLhs;
+			simd_array shuffleRhs;
+
+			orLhs.assign_value<0>(simd::opOr(in_01.get_value<0>(), spaceMask));
+			shuffleRhs.assign_value<0>(simd::opShuffle(opTable, in_01.get_value<0>()));
 			if constexpr (registersPerSixtyFourBits > 1) {
-				result |= static_cast<uint64_t>(simd::opCmpEqBitMask(lhs[1], rhs[1])) << get_shift_amount(1);
+				orLhs.assign_value<1>(simd::opOr(in_01.get_value<1>(), spaceMask));
+				shuffleRhs.assign_value<1>(simd::opShuffle(opTable, in_01.get_value<1>()));
 				if constexpr (registersPerSixtyFourBits > 2) {
-					result |= static_cast<uint64_t>(simd::opCmpEqBitMask(lhs[2], rhs[2])) << get_shift_amount(2);
-					result |= static_cast<uint64_t>(simd::opCmpEqBitMask(lhs[3], rhs[3])) << get_shift_amount(3);
+					orLhs.assign_value<2>(simd::opOr(in_01.get_value<2>(), spaceMask));
+					shuffleRhs.assign_value<2>(simd::opShuffle(opTable, in_01.get_value<2>()));
+					orLhs.assign_value<3>(simd::opOr(in_01.get_value<3>(), spaceMask));
+					shuffleRhs.assign_value<3>(simd::opShuffle(opTable, in_01.get_value<3>()));
 				}
 			}
-			return result;
+			return cmp_eq_op::impl(orLhs, shuffleRhs);
 		}
 	};
 
@@ -122,6 +180,50 @@ namespace jsonifier {
 			return static_cast<uint64_t>(popcnt(bits));
 		}
 	};
+
+	template<uint64_t size> inline constexpr internal::array<uint8_t, size> generateEscapeableArray00() {
+		constexpr const uint8_t values[]{ 0x00u, 0x00u, '"', 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, '\\', 0x00u, 0x00u, 0x00u };
+		internal::array<uint8_t, size> returnValues{};
+		for (uint64_t x = 0; x < size; ++x) {
+			returnValues[x] = values[x % 16];
+		}
+		return returnValues;
+	};
+
+	template<uint64_t size> JSONIFIER_ALIGN(bytesPerStep) inline constexpr internal::array<uint8_t, size> escapeableArray00{ generateEscapeableArray00<size>() };
+
+	template<uint64_t size> inline constexpr internal::array<uint8_t, size> generateEscapeableArray01() {
+		constexpr const uint8_t values[]{ 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, '\b', 0x00u, 0x00u, 0x00u, 0x0Cu, '\r', 0x00u, 0x00u };
+		internal::array<uint8_t, size> returnValues{};
+		for (uint64_t x = 0; x < size; ++x) {
+			returnValues[x] = values[x % 16];
+		}
+		return returnValues;
+	};
+
+	template<uint64_t size> JSONIFIER_ALIGN(bytesPerStep) inline constexpr internal::array<uint8_t, size> escapeableArray01{ generateEscapeableArray01<size>() };
+
+	template<uint64_t size> inline constexpr internal::array<uint8_t, size> generateWhitespaceArray() {
+		constexpr const uint8_t values[]{ 0x20u, 0x64u, 0x64u, 0x64u, 0x11u, 0x64u, 0x71u, 0x02u, 0x64u, '\t', '\n', 0x70u, 0x64u, '\r', 0x64u, 0x64u };
+		internal::array<uint8_t, size> returnValues{};
+		for (uint64_t x = 0; x < size; ++x) {
+			returnValues[x] = values[x % 16];
+		}
+		return returnValues;
+	};
+
+	template<uint64_t size> JSONIFIER_ALIGN(bytesPerStep) inline constexpr internal::array<uint8_t, size> whitespaceArray{ generateWhitespaceArray<size>() };
+
+	template<uint64_t size> inline constexpr internal::array<uint8_t, size> generateOpArray() {
+		constexpr const uint8_t values[]{ 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, ':', '{', ',', '}', 0x00u, 0x00u };
+		internal::array<uint8_t, size> returnValues{};
+		for (uint64_t x = 0; x < size; ++x) {
+			returnValues[x] = values[x % 16];
+		}
+		return returnValues;
+	};
+
+	template<uint64_t size> JSONIFIER_ALIGN(bytesPerStep) inline constexpr internal::array<uint8_t, size> opArray{ generateOpArray<size>() };
 
 #endif
 

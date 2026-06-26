@@ -147,8 +147,8 @@ namespace jsonifier::internal {
 		using size_type = uint64_t;
 
 		template<uint64_t index> JSONIFIER_INLINE static void impl(size_type base, size_type& bits, uint32_t* tape) {
-			tape[index] = tape_writer_op<void>::extractIndex(base, bits);
-			bits		= tape_writer_op<void>::advance(bits);
+			tape[index] = simd::tape_writer_op<void>::extractIndex(base, bits);
+			bits		= simd::tape_writer_op<void>::advance(bits);
 		}
 	};
 
@@ -171,7 +171,8 @@ namespace jsonifier::internal {
 	template<typename derived_type, uint64_t... indices> struct add_tape_values<derived_type, integer_sequence<indices...>> {
 		using size_type = uint64_t;
 
-		template<uint64_t index> JSONIFIER_INLINE static void drainLane(const uint64_t* bitsArr, const uint64_t* cnts, uint32_t* tape, size_type strIdx) noexcept {
+		template<uint64_t index> JSONIFIER_INLINE static void drainLane(array<uint64_t, sixtyFourBitsPerStep> bitsArr, array<uint64_t, sixtyFourBitsPerStep> cnts,
+			uint32_t* tape, size_type strIdx) noexcept {
 			uint64_t bits = bitsArr[index];
 			if JSONIFIER_UNLIKELY (!bits) {
 				return;
@@ -182,13 +183,14 @@ namespace jsonifier::internal {
 			functor_runner<write_indices_stepped_functor, make_stepped_range_sequence<0, 24, 4>, 4>::impl(base, bits, tape, cnt);
 			if JSONIFIER_UNLIKELY (24 < cnt) {
 				for (uint64_t i = 24; i < cnt; ++i) {
-					tape[i] = tape_writer_op<void>::extractIndex(base, bits);
-					bits	= tape_writer_op<void>::advance(bits);
+					tape[i] = simd::tape_writer_op<void>::extractIndex(base, bits);
+					bits	= simd::tape_writer_op<void>::advance(bits);
 				}
 			}
 		}
 
-		JSONIFIER_INLINE static void impl(const uint64_t* bitsArr, const uint64_t* cnts, uint32_t* tape, size_type strIdx) noexcept {
+		JSONIFIER_INLINE static void impl(array<uint64_t, sixtyFourBitsPerStep> bitsArr, array<uint64_t, sixtyFourBitsPerStep> cnts, uint32_t* tape,
+			size_type strIdx) noexcept {
 			uint64_t offset = 0;
 			(((drainLane<indices>(bitsArr, cnts, tape + offset, strIdx)), offset += cnts[indices]), ...);
 		}
@@ -241,26 +243,6 @@ namespace jsonifier::internal {
 		}
 	};
 
-	struct rope_detector : escape_scanner_op<rope_detector>, scalar_follow_op<rope_detector> {
-		uint64_t prevInString{};
-
-		JSONIFIER_INLINE rope_block next(const jsonifier_simd_int_t (&in_01)[registersPerSixtyFourBits], const jsonifier_simd_int_t& bsRegister,
-			const jsonifier_simd_int_t& qutoeRegister) noexcept {
-			const uint64_t backslash_local = mask_stitcher_op<rope_detector>::impl(in_01, bsRegister);
-			const uint64_t quotes_local	   = mask_stitcher_op<rope_detector>::impl(in_01, qutoeRegister);
-
-			const uint64_t escaped	= escape_scanner_op<rope_detector>::impl(backslash_local);
-			const uint64_t quotes	= (quotes_local & ~escaped);
-			const uint64_t inString = prefix_xor_op<rope_detector>::impl(quotes) ^ prevInString;
-			prevInString			= static_cast<uint64_t>(static_cast<int64_t>(inString) >> 63);
-			return { escaped, quotes, inString };
-		}
-
-		JSONIFIER_INLINE uint64_t followsNonquoteScalar(uint64_t nonquoteScalar) noexcept {
-			return scalar_follow_op<rope_detector>::impl(nonquoteScalar);
-		}
-	};
-
 	template<uint64_t initialBufferSize> struct simd_string_reader : public string_block_reader,
 																	 public alloc_wrapper<uint32_t>,
 																	 public add_tape_values<simd_string_reader<initialBufferSize>, make_integer_sequence<sixtyFourBitsPerStep>> {
@@ -295,13 +277,13 @@ namespace jsonifier::internal {
 			uint64_t unescapedCharsError{};
 
 			if constexpr (minified) {
-				const jsonifier_simd_int_t qutoeRegister = simd::gatherValue<jsonifier_simd_int_t>('"');
+				const jsonifier_simd_int_t quoteRegister = simd::gatherValue<jsonifier_simd_int_t>('"');
 				const jsonifier_simd_int_t bsRegister	 = simd::gatherValue<jsonifier_simd_int_t>('\\');
 				const jsonifier_simd_int_t opTable		 = simd::gatherValues<jsonifier_simd_int_t>(simd::opArray<bytesPerStep>.data());
 				const jsonifier_simd_int_t spaceMask	 = simd::gatherValue<jsonifier_simd_int_t>(static_cast<char>(0x20));
 				while (string_block_reader::index + stepBytes <= string_block_reader::length) {
 					processBlocks(reinterpret_cast<const uint8_t*>(rootIter) + string_block_reader::index, string_block_reader::index, unescapedCharsError, bsRegister,
-						qutoeRegister, opTable, spaceMask);
+						quoteRegister, opTable, spaceMask);
 					string_block_reader::index += stepBytes;
 				}
 
@@ -310,7 +292,7 @@ namespace jsonifier::internal {
 					uint8_t remainder[stepBytes];
 					std::fill_n(remainder, stepBytes, static_cast<uint8_t>(0x20));
 					std::copy_n(reinterpret_cast<const uint8_t*>(rootIter) + string_block_reader::index, remaining, remainder);
-					processBlocks(remainder, string_block_reader::index, unescapedCharsError, bsRegister, qutoeRegister, opTable, spaceMask);
+					processBlocks(remainder, string_block_reader::index, unescapedCharsError, bsRegister, quoteRegister, opTable, spaceMask);
 
 					const uint64_t excess = stepBytes - remaining;
 					while (excess > 0 && tapeCount > 0 && tape[tapeCount - 1] >= string_block_reader::length) {
@@ -319,14 +301,14 @@ namespace jsonifier::internal {
 					string_block_reader::index += stepBytes;
 				}
 			} else {
-				const jsonifier_simd_int_t qutoeRegister		 = simd::gatherValue<jsonifier_simd_int_t>('"');
+				const jsonifier_simd_int_t quoteRegister		 = simd::gatherValue<jsonifier_simd_int_t>('"');
 				const jsonifier_simd_int_t bsRegister			 = simd::gatherValue<jsonifier_simd_int_t>('\\');
 				const jsonifier_simd_int_t opTable				 = simd::gatherValues<jsonifier_simd_int_t>(simd::opArray<bytesPerStep>.data());
 				const jsonifier_simd_int_t spaceMask			 = simd::gatherValue<jsonifier_simd_int_t>(static_cast<char>(0x20));
 				const jsonifier_simd_int_t whitespaceTable_local = simd::gatherValues<jsonifier_simd_int_t>(simd::whitespaceArray<bytesPerStep>.data());
 				while (string_block_reader::index + stepBytes <= string_block_reader::length) {
 					processBlocks(reinterpret_cast<const uint8_t*>(rootIter) + string_block_reader::index, string_block_reader::index, unescapedCharsError, bsRegister,
-						qutoeRegister, opTable, spaceMask, whitespaceTable_local);
+						quoteRegister, opTable, spaceMask, whitespaceTable_local);
 					string_block_reader::index += stepBytes;
 				}
 
@@ -335,7 +317,7 @@ namespace jsonifier::internal {
 					uint8_t remainder[stepBytes];
 					std::fill_n(remainder, stepBytes, static_cast<uint8_t>(0x20));
 					std::copy_n(reinterpret_cast<const uint8_t*>(rootIter) + string_block_reader::index, remaining, remainder);
-					processBlocks(remainder, string_block_reader::index, unescapedCharsError, bsRegister, qutoeRegister, opTable, spaceMask, whitespaceTable_local);
+					processBlocks(remainder, string_block_reader::index, unescapedCharsError, bsRegister, quoteRegister, opTable, spaceMask, whitespaceTable_local);
 
 					const uint64_t excess = stepBytes - remaining;
 					while (excess > 0 && tapeCount > 0 && tape[tapeCount - 1] >= string_block_reader::length) {
@@ -367,29 +349,13 @@ namespace jsonifier::internal {
 		}
 
 	  protected:
-		rope_detector scanner{};
+		simd::rope_detector<rope_block> scanner{};
 		uint64_t tapeCount{};
 		uint64_t capacity{};
 		uint32_t* tape{};
 
-		JSONIFIER_INLINE uint64_t getStructurals(const jsonifier_simd_int_t (&in_01)[registersPerSixtyFourBits], const rope_block& block_local, const jsonifier_simd_int_t& opTable,
-			const jsonifier_simd_int_t& spaceMask) noexcept {
-			jsonifier_simd_int_t orLhs[registersPerSixtyFourBits];
-			jsonifier_simd_int_t shuffleRhs[registersPerSixtyFourBits];
-			orLhs[0]	  = simd::opOr(in_01[0], spaceMask);
-			shuffleRhs[0] = simd::opShuffle(opTable, in_01[0]);
-			if constexpr (registersPerSixtyFourBits > 1) {
-				orLhs[1]	  = simd::opOr(in_01[1], spaceMask);
-				shuffleRhs[1] = simd::opShuffle(opTable, in_01[1]);
-				if constexpr (registersPerSixtyFourBits > 2) {
-					orLhs[2]	  = simd::opOr(in_01[2], spaceMask);
-					shuffleRhs[2] = simd::opShuffle(opTable, in_01[2]);
-					orLhs[3]	  = simd::opOr(in_01[3], spaceMask);
-					shuffleRhs[3] = simd::opShuffle(opTable, in_01[3]);
-				}
-			}
-			const uint64_t op = mask_stitcher_op<simd_string_reader>::impl(orLhs, shuffleRhs);
-
+		JSONIFIER_INLINE uint64_t getStructurals(simd_array in_01, const rope_block& block_local, jsonifier_simd_int_t opTable, jsonifier_simd_int_t spaceMask) noexcept {
+			const uint64_t op			  = simd::op_collector::impl(in_01, opTable, spaceMask);
 			const uint64_t scalar		  = ~(op | block_local.quotes);
 			const uint64_t nonquoteScalar = scalar & ~block_local.quotes;
 			const uint64_t follows		  = scanner.followsNonquoteScalar(nonquoteScalar);
@@ -397,30 +363,10 @@ namespace jsonifier::internal {
 			return op | block_local.quotes | scalarStart;
 		}
 
-		JSONIFIER_INLINE uint64_t getStructurals(const jsonifier_simd_int_t (&in_01)[registersPerSixtyFourBits], const rope_block& block_local, const jsonifier_simd_int_t& opTable,
-			const jsonifier_simd_int_t& spaceMask, const jsonifier_simd_int_t& whitespaceTableLocal) noexcept {
-			jsonifier_simd_int_t orLhs[registersPerSixtyFourBits];
-			jsonifier_simd_int_t shuffleRhs[registersPerSixtyFourBits];
-			jsonifier_simd_int_t wsShuffle[registersPerSixtyFourBits];
-			orLhs[0]	  = simd::opOr(in_01[0], spaceMask);
-			shuffleRhs[0] = simd::opShuffle(opTable, in_01[0]);
-			wsShuffle[0]  = simd::opShuffle(whitespaceTableLocal, in_01[0]);
-			if constexpr (registersPerSixtyFourBits > 1) {
-				orLhs[1]	  = simd::opOr(in_01[1], spaceMask);
-				shuffleRhs[1] = simd::opShuffle(opTable, in_01[1]);
-				wsShuffle[1]  = simd::opShuffle(whitespaceTableLocal, in_01[1]);
-				if constexpr (registersPerSixtyFourBits > 2) {
-					orLhs[2]	  = simd::opOr(in_01[2], spaceMask);
-					shuffleRhs[2] = simd::opShuffle(opTable, in_01[2]);
-					wsShuffle[2]  = simd::opShuffle(whitespaceTableLocal, in_01[2]);
-					orLhs[3]	  = simd::opOr(in_01[3], spaceMask);
-					shuffleRhs[3] = simd::opShuffle(opTable, in_01[3]);
-					wsShuffle[3]  = simd::opShuffle(whitespaceTableLocal, in_01[3]);
-				}
-			}
-			const uint64_t op		  = mask_stitcher_op<simd_string_reader>::impl(orLhs, shuffleRhs);
-			const uint64_t whitespace = mask_stitcher_op<simd_string_reader>::impl(in_01, wsShuffle);
-
+		JSONIFIER_INLINE uint64_t getStructurals(simd_array in_01, const rope_block& block_local, jsonifier_simd_int_t opTable, jsonifier_simd_int_t spaceMask,
+			jsonifier_simd_int_t whitespaceTableLocal) noexcept {
+			const uint64_t whitespace = simd::ws_collector::impl(in_01, whitespaceTableLocal);
+			const uint64_t op = simd::op_collector::impl(in_01, opTable, spaceMask);
 			const uint64_t scalar		  = ~(op | whitespace | block_local.quotes);
 			const uint64_t nonquoteScalar = scalar & ~block_local.quotes;
 			const uint64_t follows		  = scanner.followsNonquoteScalar(nonquoteScalar);
@@ -428,57 +374,51 @@ namespace jsonifier::internal {
 			return op | block_local.quotes | scalarStart;
 		}
 
-		template<uint64_t I, typename... jsonifier_simd_int_types> JSONIFIER_INLINE void processBlocksImpl(uint64_t (&bitsArr)[sixtyFourBitsPerStep],
-			uint64_t (&cntsArr)[sixtyFourBitsPerStep], const uint8_t* blockPtr, uint64_t& unescapedCharsError, const jsonifier_simd_int_t& bsRegister,
-			const jsonifier_simd_int_t& qutoeRegister, const jsonifier_simd_int_t& opTable, const jsonifier_simd_int_t& spaceMask,
-			const jsonifier_simd_int_types&... args) noexcept {
-			jsonifier_simd_int_t in_vals[registersPerSixtyFourBits];
-			in_vals[0] = simd::gatherValuesU<jsonifier_simd_int_t>(blockPtr + I * 64);
+		template<uint64_t I, typename... jsonifier_simd_int_types> JSONIFIER_INLINE void processBlocksImpl(array<uint64_t, sixtyFourBitsPerStep>& bitsArr,
+			array<uint64_t, sixtyFourBitsPerStep>& cntsArr, const uint8_t* blockPtr, uint64_t& unescapedCharsError, jsonifier_simd_int_t bsRegister,
+			jsonifier_simd_int_t quoteRegister,
+			jsonifier_simd_int_t opTable, jsonifier_simd_int_t spaceMask, const jsonifier_simd_int_types&... args) noexcept {
+			simd_array in_vals;
+			in_vals.assign_value<0>(simd::gatherValuesU<jsonifier_simd_int_t>(blockPtr + I * 64));
 			if constexpr (registersPerSixtyFourBits > 1) {
-				in_vals[1] = simd::gatherValuesU<jsonifier_simd_int_t>(blockPtr + I * 64 + bytesPerStep * 1);
+				in_vals.assign_value<1>(simd::gatherValuesU<jsonifier_simd_int_t>(blockPtr + I * 64 + bytesPerStep * 1));
 				if constexpr (registersPerSixtyFourBits > 2) {
-					in_vals[2] = simd::gatherValuesU<jsonifier_simd_int_t>(blockPtr + I * 64 + bytesPerStep * 2);
-					in_vals[3] = simd::gatherValuesU<jsonifier_simd_int_t>(blockPtr + I * 64 + bytesPerStep * 3);
+					in_vals.assign_value<2>(simd::gatherValuesU<jsonifier_simd_int_t>(blockPtr + I * 64 + bytesPerStep * 2));
+					in_vals.assign_value<3>(simd::gatherValuesU<jsonifier_simd_int_t>(blockPtr + I * 64 + bytesPerStep * 3));
 				}
 			}
-			const rope_block sb		   = scanner.next(in_vals, bsRegister, qutoeRegister);
+			const rope_block sb		   = scanner.next(in_vals, bsRegister, quoteRegister);
 			const uint64_t structurals = getStructurals(in_vals, sb, opTable, spaceMask, args...) & ~sb.stringTail();
 			bitsArr[I]				   = structurals;
-			cntsArr[I]				   = tape_writer_op<simd_string_reader>::correctedPopcount(structurals);
-
-			jsonifier_simd_int_t ltLhs[registersPerSixtyFourBits];
-			jsonifier_simd_int_t ltRhs[registersPerSixtyFourBits];
-			ltLhs[0] = in_vals[0];
-			ltRhs[0] = simd::opCmpLtRaw(in_vals[0], spaceMask);
+			cntsArr[I]				   = simd::tape_writer_op<simd_string_reader>::correctedPopcount(structurals);
+			simd_array ltRhs;
+			ltRhs.assign_value<0>(simd::opCmpLtRaw(in_vals.get_value<0>(), spaceMask));
 			if constexpr (registersPerSixtyFourBits > 1) {
-				ltLhs[1] = in_vals[1];
-				ltRhs[1] = simd::opCmpLtRaw(in_vals[1], spaceMask);
+				ltRhs.assign_value<1>(simd::opCmpLtRaw(in_vals.get_value<1>(), spaceMask));
 				if constexpr (registersPerSixtyFourBits > 2) {
-					ltLhs[2] = in_vals[2];
-					ltRhs[2] = simd::opCmpLtRaw(in_vals[2], spaceMask);
-					ltLhs[3] = in_vals[3];
-					ltRhs[3] = simd::opCmpLtRaw(in_vals[3], spaceMask);
+					ltRhs.assign_value<2>(simd::opCmpLtRaw(in_vals.get_value<2>(), spaceMask));
+					ltRhs.assign_value<3>(simd::opCmpLtRaw(in_vals.get_value<3>(), spaceMask));
 				}
 			}
-			const uint64_t unescaped = mask_stitcher_op<simd_string_reader>::impl(ltLhs, ltRhs);
+			const uint64_t unescaped = simd::unescaped_collector::impl(ltRhs);
 			unescapedCharsError |= sb.nonQuoteInsideString(unescaped);
 		}
 
 		template<typename... jsonifier_simd_int_types> JSONIFIER_INLINE void processBlocks(const uint8_t* blockPtr, uint64_t stepBaseIndex, uint64_t& unescapedCharsError,
-			const jsonifier_simd_int_t& bsRegister, const jsonifier_simd_int_t& qutoeRegister, const jsonifier_simd_int_t& opTable, const jsonifier_simd_int_t& spaceMask,
+			jsonifier_simd_int_t bsRegister, jsonifier_simd_int_t quoteRegister, jsonifier_simd_int_t opTable, jsonifier_simd_int_t spaceMask,
 			const jsonifier_simd_int_types&... args) noexcept {
-			uint64_t bitsArr[sixtyFourBitsPerStep]{};
-			uint64_t cntsArr[sixtyFourBitsPerStep]{};
-			processBlocksImpl<0>(bitsArr, cntsArr, blockPtr, unescapedCharsError, bsRegister, qutoeRegister, opTable, spaceMask, args...);
-			processBlocksImpl<1>(bitsArr, cntsArr, blockPtr, unescapedCharsError, bsRegister, qutoeRegister, opTable, spaceMask, args...);
+			array<uint64_t, sixtyFourBitsPerStep> bitsArr{};
+			array<uint64_t, sixtyFourBitsPerStep> cntsArr{};
+			processBlocksImpl<0>(bitsArr, cntsArr, blockPtr, unescapedCharsError, bsRegister, quoteRegister, opTable, spaceMask, args...);
+			processBlocksImpl<1>(bitsArr, cntsArr, blockPtr, unescapedCharsError, bsRegister, quoteRegister, opTable, spaceMask, args...);
 			if constexpr (sixtyFourBitsPerStep > 2) {
-				processBlocksImpl<2>(bitsArr, cntsArr, blockPtr, unescapedCharsError, bsRegister, qutoeRegister, opTable, spaceMask, args...);
-				processBlocksImpl<3>(bitsArr, cntsArr, blockPtr, unescapedCharsError, bsRegister, qutoeRegister, opTable, spaceMask, args...);
+				processBlocksImpl<2>(bitsArr, cntsArr, blockPtr, unescapedCharsError, bsRegister, quoteRegister, opTable, spaceMask, args...);
+				processBlocksImpl<3>(bitsArr, cntsArr, blockPtr, unescapedCharsError, bsRegister, quoteRegister, opTable, spaceMask, args...);
 				if constexpr (sixtyFourBitsPerStep > 4) {
-					processBlocksImpl<4>(bitsArr, cntsArr, blockPtr, unescapedCharsError, bsRegister, qutoeRegister, opTable, spaceMask, args...);
-					processBlocksImpl<5>(bitsArr, cntsArr, blockPtr, unescapedCharsError, bsRegister, qutoeRegister, opTable, spaceMask, args...);
-					processBlocksImpl<6>(bitsArr, cntsArr, blockPtr, unescapedCharsError, bsRegister, qutoeRegister, opTable, spaceMask, args...);
-					processBlocksImpl<7>(bitsArr, cntsArr, blockPtr, unescapedCharsError, bsRegister, qutoeRegister, opTable, spaceMask, args...);
+					processBlocksImpl<4>(bitsArr, cntsArr, blockPtr, unescapedCharsError, bsRegister, quoteRegister, opTable, spaceMask, args...);
+					processBlocksImpl<5>(bitsArr, cntsArr, blockPtr, unescapedCharsError, bsRegister, quoteRegister, opTable, spaceMask, args...);
+					processBlocksImpl<6>(bitsArr, cntsArr, blockPtr, unescapedCharsError, bsRegister, quoteRegister, opTable, spaceMask, args...);
+					processBlocksImpl<7>(bitsArr, cntsArr, blockPtr, unescapedCharsError, bsRegister, quoteRegister, opTable, spaceMask, args...);
 				}
 			}
 

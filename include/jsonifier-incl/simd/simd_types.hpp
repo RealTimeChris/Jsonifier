@@ -84,6 +84,53 @@ namespace jsonifier {
 	inline constexpr uint64_t stridesPerStep{ bitsPerStep / bytesPerStep };
 	inline constexpr uint64_t registersPerSixtyFourBits{ 64 / bytesPerStep };	
 
+	template<typename value_type>
+	concept simd_int_512_type = sizeof(value_type) == 64;
+	template<typename value_type>
+	concept simd_int_256_type = sizeof(value_type) == 32;
+	template<typename value_type>
+	concept simd_int_128_type = sizeof(value_type) == 16;
+	template<typename value_type>
+	concept simd_int_type = sizeof(value_type) == sizeof(jsonifier_simd_int_t);
+
+	struct simd_array {
+		using size_type = uint64_t;
+		jsonifier_simd_int_t values[registersPerSixtyFourBits]{};
+
+		template<uint64_t index> JSONIFIER_INLINE constexpr void assign_value(jsonifier_simd_int_t value) {
+			values[index % std::size(values)] = value;
+		}
+
+		template<uint64_t index> JSONIFIER_INLINE constexpr jsonifier_simd_int_t get_value() {
+			return values[index % std::size(values)];
+		}
+	};
+
+	using string_view_ptr	= const char*;
+	using structural_index	= string_view_ptr;
+	using string_buffer_ptr = char*;
+
+	[[maybe_unused]] JSONIFIER_INLINE static void jsonifierPrefetchImpl(const void* ptr) noexcept {
+#if JSONIFIER_PLATFORM_MAC && defined(__arm64__)
+		__builtin_prefetch(ptr, 0, 0);
+#elif JSONIFIER_COMPILER_MSVC || JSONIFIER_COMPILER_GCC || JSONIFIER_COMPILER_CLANG
+		_mm_prefetch(static_cast<string_view_ptr>(ptr), _MM_HINT_T0);
+#else
+	#error "Compiler or architecture not supported for prefetching"
+#endif
+	}
+
+	JSONIFIER_ALIGN(2) inline constexpr char backslash{ '\\' };
+	JSONIFIER_ALIGN(2) inline constexpr char newline{ '\n' };
+	JSONIFIER_ALIGN(2) inline constexpr char lBracket{ '[' };
+	JSONIFIER_ALIGN(2) inline constexpr char rBracket{ ']' };
+	JSONIFIER_ALIGN(2) inline constexpr char lBrace{ '{' };
+	JSONIFIER_ALIGN(2) inline constexpr char rBrace{ '}' };
+	JSONIFIER_ALIGN(2) inline constexpr char colon{ ':' };
+	JSONIFIER_ALIGN(2) inline constexpr char comma{ ',' };
+	JSONIFIER_ALIGN(2) inline constexpr char quote{ '"' };
+	JSONIFIER_ALIGN(2) inline constexpr char n{ 'n' };
+
 	inline static constexpr uint16_t packValues2(const char* values) {
 		return static_cast<uint16_t>(static_cast<uint16_t>(values[0]) | static_cast<uint16_t>(values[1]) << 8);
 	}
@@ -100,39 +147,5 @@ namespace jsonifier {
 	inline static constexpr uint64_t packValues5(const char* values) {
 		return static_cast<uint64_t>(static_cast<uint64_t>(values[0]) | static_cast<uint64_t>(values[1]) << 8 | static_cast<uint64_t>(values[2]) << 16 |
 			static_cast<uint64_t>(values[3]) << 24 | static_cast<uint64_t>(values[4]) << 32);
-	}
-
-	JSONIFIER_ALIGN(2) inline constexpr char backslash{ '\\' };
-	JSONIFIER_ALIGN(2) inline constexpr char newline{ '\n' };
-	JSONIFIER_ALIGN(2) inline constexpr char lBracket{ '[' };
-	JSONIFIER_ALIGN(2) inline constexpr char rBracket{ ']' };
-	JSONIFIER_ALIGN(2) inline constexpr char lBrace{ '{' };
-	JSONIFIER_ALIGN(2) inline constexpr char rBrace{ '}' };
-	JSONIFIER_ALIGN(2) inline constexpr char colon{ ':' };
-	JSONIFIER_ALIGN(2) inline constexpr char comma{ ',' };
-	JSONIFIER_ALIGN(2) inline constexpr char quote{ '"' };
-	JSONIFIER_ALIGN(2) inline constexpr char n{ 'n' };
-
-	using string_view_ptr	= const char*;
-	using structural_index	= string_view_ptr;
-	using string_buffer_ptr = char*;
-
-	template<typename value_type>
-	concept simd_int_512_type = sizeof(value_type) == 64;
-	template<typename value_type>
-	concept simd_int_256_type = sizeof(value_type) == 32;
-	template<typename value_type>
-	concept simd_int_128_type = sizeof(value_type) == 16;
-	template<typename value_type>
-	concept simd_int_type = sizeof(value_type) == sizeof(jsonifier_simd_int_t);
-
-	[[maybe_unused]] JSONIFIER_INLINE static void jsonifierPrefetchImpl(const void* ptr) noexcept {
-#if JSONIFIER_PLATFORM_MAC && defined(__arm64__)
-		__builtin_prefetch(ptr, 0, 0);
-#elif JSONIFIER_COMPILER_MSVC || JSONIFIER_COMPILER_GCC || JSONIFIER_COMPILER_CLANG
-		_mm_prefetch(static_cast<string_view_ptr>(ptr), _MM_HINT_T0);
-#else
-	#error "Compiler or architecture not supported for prefetching"
-#endif
 	}
 }
