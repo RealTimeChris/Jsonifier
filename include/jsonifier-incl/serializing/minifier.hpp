@@ -67,7 +67,7 @@ namespace jsonifier::internal {
 			rootIter = in.data();
 			endIter	 = rootIter + in.size();
 			derivedRef.section.template reset<false>(rootIter, in.size());
-			uint32_t* iter{ derivedRef.section.begin() };
+			structural_index_ptr iter{ derivedRef.section.begin() };
 			auto* endStructural = derivedRef.section.end();
 			jsonifier::internal::remove_cvref_t<string_type> newString{};
 			if (iter == endStructural) {
@@ -92,7 +92,7 @@ namespace jsonifier::internal {
 			rootIter = in.data();
 			endIter	 = rootIter + in.size();
 			derivedRef.section.template reset<false>(rootIter, in.size());
-			uint32_t* iter{ derivedRef.section.begin() };
+			structural_index_ptr iter{ derivedRef.section.begin() };
 			auto* endStructural = derivedRef.section.end();
 			if (iter == endStructural) {
 				getErrors().emplace_back(error::constructError<status_classes::Minifying, minify_status::No_Input>(0, static_cast<int64_t>(in.size()), rootIter));

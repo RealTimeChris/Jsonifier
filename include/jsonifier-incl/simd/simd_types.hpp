@@ -111,9 +111,9 @@ namespace jsonifier {
 		}
 	};
 
-	using string_view_ptr	= const char*;
-	using structural_index	= string_view_ptr;
-	using string_buffer_ptr = char*;
+	using string_view_ptr	   = const char*;
+	using structural_index_ptr = uint32_t*;
+	using string_buffer_ptr	   = char*;
 
 	[[maybe_unused]] JSONIFIER_INLINE static void jsonifierPrefetchImpl(const void* ptr) noexcept {
 #if JSONIFIER_PLATFORM_MAC && defined(__arm64__)
@@ -136,20 +136,20 @@ namespace jsonifier {
 	JSONIFIER_ALIGN(2) inline constexpr char quote{ '"' };
 	JSONIFIER_ALIGN(2) inline constexpr char n{ 'n' };
 
-	inline static constexpr uint16_t packValues2(const char* values) {
+	inline static constexpr uint16_t packValues2(string_view_ptr values) {
 		return static_cast<uint16_t>(static_cast<uint16_t>(values[0]) | static_cast<uint16_t>(values[1]) << 8);
 	}
 
-	inline static constexpr uint32_t packValues3(const char* values) {
+	inline static constexpr uint32_t packValues3(string_view_ptr values) {
 		return static_cast<uint32_t>(static_cast<uint32_t>(values[0]) | static_cast<uint32_t>(values[1]) << 8 | static_cast<uint32_t>(values[2]) << 16);
 	}
 
-	inline static constexpr uint32_t packValues4(const char* values) {
+	inline static constexpr uint32_t packValues4(string_view_ptr values) {
 		return static_cast<uint32_t>(
 			static_cast<uint32_t>(values[0]) | static_cast<uint32_t>(values[1]) << 8 | static_cast<uint32_t>(values[2]) << 16 | static_cast<uint32_t>(values[3]) << 24);
 	}
 
-	inline static constexpr uint64_t packValues5(const char* values) {
+	inline static constexpr uint64_t packValues5(string_view_ptr values) {
 		return static_cast<uint64_t>(static_cast<uint64_t>(values[0]) | static_cast<uint64_t>(values[1]) << 8 | static_cast<uint64_t>(values[2]) << 16 |
 			static_cast<uint64_t>(values[3]) << 24 | static_cast<uint64_t>(values[4]) << 32);
 	}

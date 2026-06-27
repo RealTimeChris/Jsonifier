@@ -128,7 +128,7 @@ namespace jsonifier::internal {
 		template<parse_options options = parse_options{}, typename value_type, typename buffer_type> inline bool parseJson(value_type&& object, buffer_type&& in) noexcept {
 			if constexpr (options.partialRead) {
 				static constexpr parse_options optionsNew{ options };
-				parse_context_partial<derived_type, uint32_t*> context{ constEval(parse_context_partial<derived_type, uint32_t*>{}) };
+				parse_context_partial<derived_type, structural_index_ptr> context{ constEval(parse_context_partial<derived_type, structural_index_ptr>{}) };
 				auto rootIter = getBeginIter(in);
 				auto endIter  = getEndIter(in);
 				derivedRef.section.template reset<options.minified>(rootIter, static_cast<uint64_t>(endIter - rootIter));
@@ -185,7 +185,7 @@ namespace jsonifier::internal {
 
 		template<typename value_type, parse_options options = parse_options{}, typename buffer_type> inline bool parseManyJson(value_type&& object, buffer_type&& in) noexcept {
 			static constexpr parse_options optionsNew{ options };
-			parse_context_partial<derived_type, uint32_t*> context{ constEval(parse_context_partial<derived_type, string_view_ptr*>{}) };
+			parse_context_partial<derived_type, structural_index_ptr> context{ constEval(parse_context_partial<derived_type, string_view_ptr*>{}) };
 			auto rootIter = getBeginIter(in);
 			auto endIter  = getEndIter(in);
 			derivedRef.section.template reset<options.minified>(rootIter, static_cast<uint64_t>(endIter - rootIter));

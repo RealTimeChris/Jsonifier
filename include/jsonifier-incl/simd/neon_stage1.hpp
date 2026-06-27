@@ -53,40 +53,6 @@ namespace jsonifier::simd {
 		}
 	};
 
-	template<typename derived_type> struct scalar_follow_op {
-		uint64_t prevScalar{};
-
-		JSONIFIER_INLINE uint64_t impl(uint64_t nonquoteScalar) noexcept {
-			const uint64_t shifted = (nonquoteScalar << 1) | prevScalar;
-			prevScalar			   = nonquoteScalar >> 63;
-			return shifted;
-		}
-	};
-
-	template<typename derived_type> struct escape_scanner_op {
-		uint64_t nextIsEscaped{};
-
-		JSONIFIER_INLINE uint64_t nextEscapeAndTerminalCode(uint64_t potentialEscape) noexcept {
-			static constexpr uint64_t oddBits{ 0xAAAAAAAAAAAAAAAAULL };
-			const uint64_t maybeEscaped				 = potentialEscape << 1;
-			const uint64_t maybeEscapedAndOddBits	 = maybeEscaped | oddBits;
-			const uint64_t evenSeriesCodesAndOddBits = maybeEscapedAndOddBits - potentialEscape;
-			return evenSeriesCodesAndOddBits ^ oddBits;
-		}
-
-		JSONIFIER_INLINE uint64_t impl(uint64_t backslash_local) noexcept {
-			if (!backslash_local) {
-				const uint64_t escaped = nextIsEscaped;
-				nextIsEscaped		   = 0;
-				return escaped;
-			}
-			const uint64_t escapeAndTerminalCode = nextEscapeAndTerminalCode(backslash_local & ~nextIsEscaped);
-			const uint64_t escaped				 = escapeAndTerminalCode ^ (backslash_local | nextIsEscaped);
-			nextIsEscaped						 = (escapeAndTerminalCode & backslash_local) >> 63;
-			return escaped;
-		}
-	};
-
 	struct unescaped_collector {
 		JSONIFIER_INLINE static uint64_t impl(simd_array in_01) noexcept {
 			static constexpr uint8x16_t bit_mask{ 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80 };
@@ -136,7 +102,7 @@ namespace jsonifier::simd {
 		}
 	};
 
-	template<typename rope_block> struct rope_detector {
+	template<typename rope_block> struct rope_detector : rope_block {
 		uint64_t nextIsEscaped{};
 		uint64_t prevInString{};
 		uint64_t prevScalar{};
@@ -149,17 +115,17 @@ namespace jsonifier::simd {
 			return vgetq_lane_u64(vreinterpretq_u64_u8(sum0), 0);
 		}
 
-		JSONIFIER_INLINE rope_block finishNextNoInString(uint64_t escaped, uint64_t quotes) noexcept {
-			return { escaped, quotes, prevInString };
+		JSONIFIER_INLINE void finishNextNoInString() noexcept {
+			rope_block::inString = prevInString;
 		}
 
-		JSONIFIER_INLINE rope_block finishNextInString(uint64_t escaped, uint64_t quotes) noexcept {
-			const uint64_t inString = simd::prefix_xor_op<rope_detector>::impl(quotes) ^ prevInString;
-			prevInString = static_cast<uint64_t>(static_cast<int64_t>(inString) >> 63);
-			return { escaped, quotes, inString };
+		JSONIFIER_INLINE void finishNextInString() noexcept {
+			const uint64_t inString = simd::prefix_xor_op<rope_detector>::impl(rope_block::quotes) ^ prevInString;
+			prevInString			= static_cast<uint64_t>(static_cast<int64_t>(inString) >> 63);
+			rope_block::inString	= inString;
 		}
 
-		JSONIFIER_INLINE rope_block next(simd_array in_01, jsonifier_simd_int_t bsRegister, jsonifier_simd_int_t quoteRegister) noexcept {
+		JSONIFIER_INLINE void next(simd_array in_01, jsonifier_simd_int_t bsRegister, jsonifier_simd_int_t quoteRegister) noexcept {
 			static constexpr uint8x16_t bit_mask{ 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80 };
 			const uint8x16_t d0 = in_01.get_value<0>();
 			const uint8x16_t d1 = in_01.get_value<1>();
@@ -169,7 +135,9 @@ namespace jsonifier::simd {
 			const uint64_t quotes_local = toBitmask(vceqq_u8(d0, quoteRegister), vceqq_u8(d1, quoteRegister), vceqq_u8(d2, quoteRegister), vceqq_u8(d3, quoteRegister), bit_mask);
 			const uint64_t escaped = nextEscapeAndTerminalCode(backslash_local);
 			const uint64_t quotes = (quotes_local & ~escaped);
-			return quotes ? finishNextInString(escaped, quotes) : finishNextNoInString(escaped, quotes);
+			rope_block::escaped = escaped;
+			rope_block::quotes	= quotes;
+			return quotes ? finishNextInString() : finishNextNoInString();
 		}
 
 		JSONIFIER_INLINE uint64_t nextEscapeAndTerminalCodeImpl(uint64_t potentialEscape) noexcept {

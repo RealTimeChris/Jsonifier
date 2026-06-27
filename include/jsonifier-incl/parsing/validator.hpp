@@ -43,8 +43,8 @@ namespace jsonifier::internal {
 			derivedRef.section.template reset<false>(in.data(), in.size());
 			rootIter = in.data();
 			endIter	 = in.data() + in.size();
-			uint32_t* iter{ derivedRef.section.begin() };
-			uint32_t* end{ derivedRef.section.end() };
+			structural_index_ptr iter{ derivedRef.section.begin() };
+			structural_index_ptr end{ derivedRef.section.end() };
 			if (iter == end) {
 				getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::No_Input>(0, 0, nullptr));
 				return false;

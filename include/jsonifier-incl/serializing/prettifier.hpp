@@ -53,7 +53,7 @@ namespace jsonifier::internal {
 			rootIter = dataPtr;
 			endIter	 = dataPtr + in.size();
 			derivedRef.section.template reset<true>(dataPtr, in.size());
-			uint32_t* iter{ derivedRef.section.begin() };
+			structural_index_ptr iter{ derivedRef.section.begin() };
 			auto* endStructural = derivedRef.section.end();
 			if JSONIFIER_UNLIKELY (iter == endStructural) {
 				getErrors().emplace_back(error::constructError<status_classes::Prettifying, prettify_status::No_Input>(0, in.size(), dataPtr));
@@ -81,7 +81,7 @@ namespace jsonifier::internal {
 			rootIter			= dataPtr;
 			endIter				= dataPtr + in.size();
 			derivedRef.section.template reset<true>(dataPtr, in.size());
-			uint32_t* iter{ derivedRef.section.begin() };
+			structural_index_ptr iter{ derivedRef.section.begin() };
 			auto* endStructural = derivedRef.section.end();
 			if JSONIFIER_UNLIKELY (iter == endStructural) {
 				getErrors().emplace_back(error::constructError<status_classes::Prettifying, prettify_status::No_Input>(0, static_cast<int64_t>(in.size()), dataPtr));

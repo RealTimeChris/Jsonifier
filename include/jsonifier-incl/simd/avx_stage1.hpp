@@ -90,25 +90,27 @@ namespace jsonifier::simd {
 		}
 	};
 
-	template<typename rope_block> struct rope_detector {
+	template<typename rope_block> struct rope_detector : rope_block {
 		uint64_t nextIsEscaped{};
 		uint64_t prevInString{};
 		uint64_t prevScalar{};
 
-		JSONIFIER_INLINE rope_block finishNextNoInString(uint64_t escaped, uint64_t quotes) noexcept {
-			return { escaped, quotes, prevInString };
+		JSONIFIER_INLINE void finishNextNoInString() noexcept {
+			rope_block::inString = prevInString;
 		}
 
-		JSONIFIER_INLINE rope_block finishNextInString(uint64_t escaped, uint64_t quotes) noexcept {
-			const uint64_t inString = simd::prefix_xor_op<rope_detector>::impl(quotes) ^ prevInString;
+		JSONIFIER_INLINE void finishNextInString() noexcept {
+			const uint64_t inString = simd::prefix_xor_op<rope_detector>::impl(rope_block::quotes) ^ prevInString;
 			prevInString			= static_cast<uint64_t>(static_cast<int64_t>(inString) >> 63);
-			return { escaped, quotes, inString };
+			rope_block::inString	= inString;
 		}
 
-		JSONIFIER_INLINE rope_block next(simd_array in_01, jsonifier_simd_int_t bsRegister, jsonifier_simd_int_t quoteRegister) noexcept {
+		JSONIFIER_INLINE void next(simd_array in_01, jsonifier_simd_int_t bsRegister, jsonifier_simd_int_t quoteRegister) noexcept {
 			const uint64_t escaped = nextEscapeAndTerminalCode(simd::cmp_eq_op::impl(in_01, bsRegister));
 			const uint64_t quotes  = (simd::cmp_eq_op::impl(in_01, quoteRegister) & ~escaped);
-			return quotes ? finishNextInString(escaped, quotes) : finishNextNoInString(escaped, quotes);
+			rope_block::escaped	   = escaped;
+			rope_block::quotes	   = quotes;
+			return quotes ? finishNextInString() : finishNextNoInString();
 		}
 
 		JSONIFIER_INLINE uint64_t nextEscapeAndTerminalCodeImpl(uint64_t potentialEscape) noexcept {
