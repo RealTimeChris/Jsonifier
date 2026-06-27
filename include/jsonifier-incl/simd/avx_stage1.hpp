@@ -19,6 +19,7 @@
 	OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 	DEALINGS IN THE SOFTWARE.
 */
+/// The code below drew heavy inspiration from Dr. Lemire's library, simdjson (https://github.com/simdjson/simdjson)
 /// https://github.com/RealTimeChris/jsonifier
 #pragma once
 
@@ -37,7 +38,7 @@ namespace jsonifier::simd {
 		return return_value;
 	}() };
 
-	inline static consteval uint64_t get_shift_amount(uint64_t index) {
+	inline static consteval uint64_t get_shift_amount(uint64_t index) noexcept {
 		return shift_amounts[index % shift_amounts.size()];
 	}
 
@@ -94,14 +95,20 @@ namespace jsonifier::simd {
 		uint64_t prevInString{};
 		uint64_t prevScalar{};
 
-		JSONIFIER_INLINE rope_block next(simd_array in_01, jsonifier_simd_int_t bsRegister, jsonifier_simd_int_t quoteRegister) noexcept {
-			const uint64_t backslash_local = simd::cmp_eq_op::impl(in_01, bsRegister);
-			const uint64_t quotes_local	   = simd::cmp_eq_op::impl(in_01, quoteRegister);
-			const uint64_t escaped		   = nextEscapeAndTerminalCode(backslash_local);
-			const uint64_t quotes		   = (quotes_local & ~escaped);
-			const uint64_t inString		   = simd::prefix_xor_op<rope_detector>::impl(quotes) ^ prevInString;
-			prevInString				   = static_cast<uint64_t>(static_cast<int64_t>(inString) >> 63);
+		JSONIFIER_INLINE rope_block finishNextNoInString(uint64_t escaped, uint64_t quotes) noexcept {
+			return { escaped, quotes, prevInString };
+		}
+
+		JSONIFIER_INLINE rope_block finishNextInString(uint64_t escaped, uint64_t quotes) noexcept {
+			const uint64_t inString = simd::prefix_xor_op<rope_detector>::impl(quotes) ^ prevInString;
+			prevInString			= static_cast<uint64_t>(static_cast<int64_t>(inString) >> 63);
 			return { escaped, quotes, inString };
+		}
+
+		JSONIFIER_INLINE rope_block next(simd_array in_01, jsonifier_simd_int_t bsRegister, jsonifier_simd_int_t quoteRegister) noexcept {
+			const uint64_t escaped = nextEscapeAndTerminalCode(simd::cmp_eq_op::impl(in_01, bsRegister));
+			const uint64_t quotes  = (simd::cmp_eq_op::impl(in_01, quoteRegister) & ~escaped);
+			return quotes ? finishNextInString(escaped, quotes) : finishNextNoInString(escaped, quotes);
 		}
 
 		JSONIFIER_INLINE uint64_t nextEscapeAndTerminalCodeImpl(uint64_t potentialEscape) noexcept {
@@ -181,7 +188,7 @@ namespace jsonifier::simd {
 		}
 	};
 
-	template<uint64_t size> inline constexpr internal::array<uint8_t, size> generateEscapeableArray00() {
+	template<uint64_t size> inline constexpr internal::array<uint8_t, size> generateEscapeableArray00() noexcept {
 		constexpr const uint8_t values[]{ 0x00u, 0x00u, '"', 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, '\\', 0x00u, 0x00u, 0x00u };
 		internal::array<uint8_t, size> returnValues{};
 		for (uint64_t x = 0; x < size; ++x) {
@@ -192,7 +199,7 @@ namespace jsonifier::simd {
 
 	template<uint64_t size> JSONIFIER_ALIGN(bytesPerStep) inline constexpr internal::array<uint8_t, size> escapeableArray00{ generateEscapeableArray00<size>() };
 
-	template<uint64_t size> inline constexpr internal::array<uint8_t, size> generateEscapeableArray01() {
+	template<uint64_t size> inline constexpr internal::array<uint8_t, size> generateEscapeableArray01() noexcept {
 		constexpr const uint8_t values[]{ 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, '\b', 0x00u, 0x00u, 0x00u, 0x0Cu, '\r', 0x00u, 0x00u };
 		internal::array<uint8_t, size> returnValues{};
 		for (uint64_t x = 0; x < size; ++x) {
@@ -203,7 +210,7 @@ namespace jsonifier::simd {
 
 	template<uint64_t size> JSONIFIER_ALIGN(bytesPerStep) inline constexpr internal::array<uint8_t, size> escapeableArray01{ generateEscapeableArray01<size>() };
 
-	template<uint64_t size> inline constexpr internal::array<uint8_t, size> generateWhitespaceArray() {
+	template<uint64_t size> inline constexpr internal::array<uint8_t, size> generateWhitespaceArray() noexcept {
 		constexpr const uint8_t values[]{ 0x20u, 0x64u, 0x64u, 0x64u, 0x11u, 0x64u, 0x71u, 0x02u, 0x64u, '\t', '\n', 0x70u, 0x64u, '\r', 0x64u, 0x64u };
 		internal::array<uint8_t, size> returnValues{};
 		for (uint64_t x = 0; x < size; ++x) {
@@ -214,7 +221,7 @@ namespace jsonifier::simd {
 
 	template<uint64_t size> JSONIFIER_ALIGN(bytesPerStep) inline constexpr internal::array<uint8_t, size> whitespaceArray{ generateWhitespaceArray<size>() };
 
-	template<uint64_t size> inline constexpr internal::array<uint8_t, size> generateOpArray() {
+	template<uint64_t size> inline constexpr internal::array<uint8_t, size> generateOpArray() noexcept {
 		constexpr const uint8_t values[]{ 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, ':', '{', ',', '}', 0x00u, 0x00u };
 		internal::array<uint8_t, size> returnValues{};
 		for (uint64_t x = 0; x < size; ++x) {

@@ -80,9 +80,14 @@ namespace jsonifier {
 #endif
 
 	inline constexpr uint64_t bytesPerStep{ bitsPerStep / 8 };
-	inline constexpr uint64_t sixtyFourBitsPerStep{ bitsPerStep / 64 };
 	inline constexpr uint64_t stridesPerStep{ bitsPerStep / bytesPerStep };
-	inline constexpr uint64_t registersPerSixtyFourBits{ 64 / bytesPerStep };	
+	inline constexpr uint64_t registersPerSixtyFourBits{ 64 / bytesPerStep };
+
+#if JSONIFIER_ARCH_ARM64
+	inline constexpr uint64_t sixtyFourBitsPerStep{ 4 };
+#else
+	inline constexpr uint64_t sixtyFourBitsPerStep{ bitsPerStep / 64 };
+#endif
 
 	template<typename value_type>
 	concept simd_int_512_type = sizeof(value_type) == 64;

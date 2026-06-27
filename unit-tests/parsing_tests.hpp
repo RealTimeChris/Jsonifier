@@ -65,9 +65,7 @@ namespace tests {
 	template<bool knownOrder> inline static void parsing_tests_impl() {
 		jsonifier::jsonifier_core<> parser{};
 		parsing_tests<test_types::parse_serialize, "Abc Partial Test (Minified)", abc_partial_test<abc_partial_test_struct>, false, true, knownOrder, true>(parser);
-		/*
 		parsing_tests<test_types::parse_serialize, "Abc Partial Test (Prettified)", abc_partial_test<abc_partial_test_struct>, true, true, knownOrder, true>(parser);
-
 		parsing_tests<test_types::parse_serialize, "Abc (Out of Order) Test (Minified)", abc_test<abc_test_struct>, false, false, knownOrder>(parser);
 		parsing_tests<test_types::parse_serialize, "Abc (Out of Order) Test (Prettified)", abc_test<abc_test_struct>, true, false, knownOrder>(parser);
 		parsing_tests<test_types::parse_serialize, "Apache Builds Test (Minified)", apache_builds_message, false, false, knownOrder>(parser);
@@ -96,7 +94,7 @@ namespace tests {
 		parsing_tests<test_types::parse_serialize, "Twitter Partial Test (Prettified)", twitter_partial_message, true, true, knownOrder, true>(parser);
 		parsing_tests<test_types::minify, "Minify Test", std::string, false, false, knownOrder>(parser);
 		parsing_tests<test_types::prettify, "Prettify Test", std::string, false, false, knownOrder>(parser);
-		parsing_tests<test_types::validate, "Validate Test", std::string, false, false, knownOrder>(parser);*/
+		parsing_tests<test_types::validate, "Validate Test", std::string, false, false, knownOrder>(parser);
 	}
 
 	inline static void parsing_tests() {
