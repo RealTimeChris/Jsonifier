@@ -62,7 +62,7 @@ namespace jsonifier::simd {
 		vst1q_u8(static_cast<uint8_t*>(storageLocation), value);
 	}
 
-	template<simd_int_128_type simd_int_type_new> [[maybe_unused]] JSONIFIER_INLINE static void storeU(const simd_int_type_new& value, void* storageLocation, void*) noexcept {
+	template<simd_int_128_type simd_int_type_new> [[maybe_unused]] JSONIFIER_INLINE static void storeU(const simd_int_type_new& value, void* storageLocation) noexcept {
 		vst1q_u8(static_cast<uint8_t*>(storageLocation), value);
 	}
 

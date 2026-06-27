@@ -84,9 +84,9 @@ namespace jsonifier {
 	inline constexpr uint64_t registersPerSixtyFourBits{ 64 / bytesPerStep };
 
 #if JSONIFIER_ARCH_ARM64
-	inline constexpr uint64_t sixtyFourBitsPerStep{ 4 };
+	inline constexpr uint64_t simdBlocksPerStep{ 4 };
 #else
-	inline constexpr uint64_t sixtyFourBitsPerStep{ bitsPerStep / 64 };
+	inline constexpr uint64_t simdBlocksPerStep{ bitsPerStep / 64 };
 #endif
 
 	template<typename value_type>
@@ -95,19 +95,19 @@ namespace jsonifier {
 	concept simd_int_256_type = sizeof(value_type) == 32;
 	template<typename value_type>
 	concept simd_int_128_type = sizeof(value_type) == 16;
-	template<typename value_type>
-	concept simd_int_type = sizeof(value_type) == sizeof(jsonifier_simd_int_t);
 
 	struct simd_array {
 		using size_type = uint64_t;
 		jsonifier_simd_int_t values[registersPerSixtyFourBits]{};
 
-		template<uint64_t index> JSONIFIER_INLINE constexpr void assign_value(jsonifier_simd_int_t value) {
-			values[index % std::size(values)] = value;
+		template<uint64_t index_new> JSONIFIER_INLINE constexpr void assign_value(jsonifier_simd_int_t value) noexcept {
+			static constexpr uint64_t index{ index_new % registersPerSixtyFourBits };
+			values[index] = value;
 		}
 
-		template<uint64_t index> JSONIFIER_INLINE constexpr jsonifier_simd_int_t get_value() {
-			return values[index % std::size(values)];
+		template<uint64_t index_new> JSONIFIER_INLINE constexpr jsonifier_simd_int_t get_value() const noexcept {
+			static constexpr uint64_t index{ index_new % registersPerSixtyFourBits };
+			return values[index];
 		}
 	};
 

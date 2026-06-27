@@ -172,7 +172,7 @@ namespace jsonifier::internal {
 	template<typename derived_type, uint64_t... indices> struct add_tape_values<derived_type, integer_sequence<indices...>> {
 		using size_type = uint64_t;
 
-		template<uint64_t index> JSONIFIER_INLINE static void drainLane(array<uint64_t, sixtyFourBitsPerStep> bitsArr, array<uint64_t, sixtyFourBitsPerStep> cnts, structural_index_ptr tape,
+		template<uint64_t index> JSONIFIER_INLINE static void drainLane(array<uint64_t, simdBlocksPerStep> bitsArr, array<uint64_t, simdBlocksPerStep> cnts, structural_index_ptr tape,
 			size_type strIdx) noexcept {
 			uint64_t bits = bitsArr[index];
 			if JSONIFIER_UNLIKELY (!bits) {
@@ -190,7 +190,7 @@ namespace jsonifier::internal {
 			}
 		}
 
-		JSONIFIER_INLINE static void impl(array<uint64_t, sixtyFourBitsPerStep> bitsArr, array<uint64_t, sixtyFourBitsPerStep> cnts, structural_index_ptr tape, size_type strIdx) noexcept {
+		JSONIFIER_INLINE static void impl(array<uint64_t, simdBlocksPerStep> bitsArr, array<uint64_t, simdBlocksPerStep> cnts, structural_index_ptr tape, size_type strIdx) noexcept {
 			uint64_t offset = 0;
 			(((drainLane<indices>(bitsArr, cnts, tape + offset, strIdx)), offset += cnts[indices]), ...);
 		}
@@ -246,8 +246,8 @@ namespace jsonifier::internal {
 	template<uint64_t initialBufferSize> struct simd_string_reader : simd::rope_detector<rope_block>,
 																	 string_block_reader,
 																	 alloc_wrapper<uint32_t>,
-																	 add_tape_values<simd_string_reader<initialBufferSize>, make_integer_sequence<sixtyFourBitsPerStep>> {
-		friend add_tape_values<simd_string_reader<initialBufferSize>, make_integer_sequence<sixtyFourBitsPerStep>>;
+																	 add_tape_values<simd_string_reader<initialBufferSize>, make_integer_sequence<simdBlocksPerStep>> {
+		friend add_tape_values<simd_string_reader<initialBufferSize>, make_integer_sequence<simdBlocksPerStep>>;
 		static constexpr uint64_t initialTapeSize{ initialBufferSize * 8 / 10 };
 		using allocator = alloc_wrapper<uint32_t>;
 
@@ -257,7 +257,7 @@ namespace jsonifier::internal {
 		}
 
 		template<bool minified> JSONIFIER_INLINE void reset(const char* rootIter, uint64_t stringLength) noexcept {
-			static constexpr uint64_t stepBytes = sixtyFourBitsPerStep * 64;
+			static constexpr uint64_t stepBytes = simdBlocksPerStep * 64;
 
 			const uint64_t neededCapacity = (stringLength * 8 / 10) + bitsPerStep;
 			if (neededCapacity > capacity) {
@@ -350,9 +350,9 @@ namespace jsonifier::internal {
 		}
 
 	  protected:
+		structural_index_ptr tape{};
 		uint64_t tapeCount{};
 		uint64_t capacity{};
-		structural_index_ptr tape{};
 
 		JSONIFIER_INLINE uint64_t getStructurals(simd_array in_01, jsonifier_simd_int_t opTable, jsonifier_simd_int_t spaceMask) noexcept {
 			const uint64_t op			  = simd::op_collector::impl(in_01, opTable, spaceMask);
@@ -374,8 +374,8 @@ namespace jsonifier::internal {
 			return op | simd::rope_detector<rope_block>::quotes | scalarStart;
 		}
 
-		template<uint64_t I, typename... jsonifier_simd_int_types> JSONIFIER_INLINE void processBlocksImpl(array<uint64_t, sixtyFourBitsPerStep>& bitsArr,
-			array<uint64_t, sixtyFourBitsPerStep>& cntsArr, const uint8_t* blockPtr, uint64_t& unescapedCharsError, jsonifier_simd_int_t bsRegister,
+		template<uint64_t I, typename... jsonifier_simd_int_types> JSONIFIER_INLINE void processBlocksImpl(array<uint64_t, simdBlocksPerStep>& bitsArr,
+			array<uint64_t, simdBlocksPerStep>& cntsArr, const uint8_t* blockPtr, uint64_t& unescapedCharsError, jsonifier_simd_int_t bsRegister,
 			jsonifier_simd_int_t quoteRegister, jsonifier_simd_int_t opTable, jsonifier_simd_int_t spaceMask, jsonifier_simd_int_types... args) noexcept {
 			simd_array in_vals;
 			in_vals.assign_value<0>(simd::gatherValuesU<jsonifier_simd_int_t>(blockPtr + I * 64));
@@ -406,15 +406,15 @@ namespace jsonifier::internal {
 		template<typename... jsonifier_simd_int_types> JSONIFIER_INLINE void processBlocks(const uint8_t* blockPtr, uint64_t stepBaseIndex, uint64_t& unescapedCharsError,
 			jsonifier_simd_int_t bsRegister, jsonifier_simd_int_t quoteRegister, jsonifier_simd_int_t opTable, jsonifier_simd_int_t spaceMask,
 			jsonifier_simd_int_types... args) noexcept {
-			array<uint64_t, sixtyFourBitsPerStep> bitsArr{};
-			array<uint64_t, sixtyFourBitsPerStep> cntsArr{};
+			array<uint64_t, simdBlocksPerStep> bitsArr{};
+			array<uint64_t, simdBlocksPerStep> cntsArr{};
 			processBlocksImpl<0>(bitsArr, cntsArr, blockPtr, unescapedCharsError, bsRegister, quoteRegister, opTable, spaceMask, args...);
-			if constexpr (sixtyFourBitsPerStep > 1) {
+			if constexpr (simdBlocksPerStep > 1) {
 				processBlocksImpl<1>(bitsArr, cntsArr, blockPtr, unescapedCharsError, bsRegister, quoteRegister, opTable, spaceMask, args...);
-				if constexpr (sixtyFourBitsPerStep > 2) {
+				if constexpr (simdBlocksPerStep > 2) {
 					processBlocksImpl<2>(bitsArr, cntsArr, blockPtr, unescapedCharsError, bsRegister, quoteRegister, opTable, spaceMask, args...);
 					processBlocksImpl<3>(bitsArr, cntsArr, blockPtr, unescapedCharsError, bsRegister, quoteRegister, opTable, spaceMask, args...);
-					if constexpr (sixtyFourBitsPerStep > 4) {
+					if constexpr (simdBlocksPerStep > 4) {
 						processBlocksImpl<4>(bitsArr, cntsArr, blockPtr, unescapedCharsError, bsRegister, quoteRegister, opTable, spaceMask, args...);
 						processBlocksImpl<5>(bitsArr, cntsArr, blockPtr, unescapedCharsError, bsRegister, quoteRegister, opTable, spaceMask, args...);
 						processBlocksImpl<6>(bitsArr, cntsArr, blockPtr, unescapedCharsError, bsRegister, quoteRegister, opTable, spaceMask, args...);
@@ -423,15 +423,15 @@ namespace jsonifier::internal {
 				}
 			}
 
-			add_tape_values<simd_string_reader<initialBufferSize>, make_integer_sequence<sixtyFourBitsPerStep>>::impl(bitsArr, cntsArr, tape + tapeCount, stepBaseIndex);
+			add_tape_values<simd_string_reader<initialBufferSize>, make_integer_sequence<simdBlocksPerStep>>::impl(bitsArr, cntsArr, tape + tapeCount, stepBaseIndex);
 
 			tapeCount += cntsArr[0];
-			if constexpr (sixtyFourBitsPerStep > 1) {
+			if constexpr (simdBlocksPerStep > 1) {
 				tapeCount += cntsArr[1];
-				if constexpr (sixtyFourBitsPerStep > 2) {
+				if constexpr (simdBlocksPerStep > 2) {
 					tapeCount += cntsArr[2];
 					tapeCount += cntsArr[3];
-					if constexpr (sixtyFourBitsPerStep > 4) {
+					if constexpr (simdBlocksPerStep > 4) {
 						tapeCount += cntsArr[4];
 						tapeCount += cntsArr[5];
 						tapeCount += cntsArr[6];
