@@ -36,7 +36,7 @@ namespace jsonifier::internal {
 
 	template<serialize_options options, typename value_type, typename integer_sequence> struct size_collection_lambda;
 
-	template<serialize_options options, typename value_type, uint64_t... indices> struct size_collection_lambda<options, value_type, std::integer_sequence<uint64_t, indices...>> {
+	template<serialize_options options, typename value_type, uint64_t... indices> struct size_collection_lambda<options, value_type, integer_sequence<indices...>> {
 		static constexpr uint64_t maxIndex{ core_tuple_size<value_type> };
 		template<uint64_t index> static constexpr void impl(uint64_t& pairNew) {
 			constexpr auto subTuple	 = get_because_other_lib_authors_resolve<index>(core_tuple_type<value_type>{});
@@ -62,7 +62,7 @@ namespace jsonifier::internal {
 			constexpr auto memberCount = core_tuple_size<value_type>;
 			constexpr uint64_t newSize{ [] {
 				uint64_t retVal{ 2 };
-				size_collection_lambda<options, value_type, std::make_integer_sequence<uint64_t, memberCount>>::impl(retVal);
+				size_collection_lambda<options, value_type, make_integer_sequence<memberCount>>::impl(retVal);
 				return retVal;
 			}() };
 			return newSize;

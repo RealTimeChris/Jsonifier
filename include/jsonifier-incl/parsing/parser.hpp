@@ -92,7 +92,7 @@ namespace jsonifier::internal {
 
 	template<concepts::has_data value_type> JSONIFIER_INLINE static string_view_ptr getBeginIter(value_type& value) noexcept {
 		return std::bit_cast<string_view_ptr>(value.data());
-	}	
+	}
 
 	//inline static time_tracker<"parse::impl"> parse_implTracker{};
 	//inline static time_tracker<"parse_partial_impl"> parse_partial_implTracker{};
@@ -132,10 +132,33 @@ namespace jsonifier::internal {
 				auto rootIter = getBeginIter(in);
 				auto endIter  = getEndIter(in);
 				derivedRef.section.template reset<options.minified>(rootIter, static_cast<uint64_t>(endIter - rootIter));
-				context.rootIter  = derivedRef.section.begin();
-				context.iter	  = derivedRef.section.begin();
-				context.endIter	  = derivedRef.section.end();
+				context.rootIter   = derivedRef.section.begin();
+				context.iter	   = derivedRef.section.begin();
+				context.endIter	   = derivedRef.section.end();
 				context.stringRoot = rootIter;
+				context.parserPtr  = this;
+				auto newSize	   = static_cast<uint64_t>((context.endIter - context.iter) / 2);
+				if (derivedRef.stringBuffer.size() < newSize) {
+					derivedRef.stringBuffer.resize(newSize);
+				}
+				if constexpr (options.validateJson) {
+					if (!derivedRef.validateJson(in)) {
+						return false;
+					}
+				}
+				derivedRef.errors.clear();
+				if JSONIFIER_UNLIKELY (!context.iter || context.iter == context.endIter) {
+					reportError<parse_status::No_Input>(context);
+					return false;
+				}
+				//parse<optionsNew, areWeInsideRepeated<value_type>()>::impl(object, context);
+				return derivedRef.errors.size() > 0 ? false : true;
+			} else {
+				static constexpr parse_options optionsNew{ options };
+				constexpr parse_context<derived_type, string_view_ptr> context{ constEval(parse_context<derived_type, string_view_ptr>{}) };
+				context.rootIter  = getBeginIter(in);
+				context.iter	  = context.rootIter;
+				context.endIter	  = getEndIter(in);
 				context.parserPtr = this;
 				auto newSize	  = static_cast<uint64_t>((context.endIter - context.iter) / 2);
 				if (derivedRef.stringBuffer.size() < newSize) {
@@ -151,7 +174,45 @@ namespace jsonifier::internal {
 					reportError<parse_status::No_Input>(context);
 					return false;
 				}
-				parse<optionsNew, areWeInsideRepeated<value_type>()>::impl(object, context);
+				parse<optionsNew, options.minified>::impl(object, context);
+				return (context.currentObjectDepth != 0) ? (reportError<parse_status::Missing_Object_End>(context), false)
+					: (context.currentArrayDepth != 0)	 ? (reportError<parse_status::Missing_Array_End>(context), false)
+					: (context.iter < context.endIter)	 ? (reportError<parse_status::Unfinished_Input>(context), false)
+					: derivedRef.errors.size() > 0		 ? false
+														 : true;
+			}
+		}
+
+		template<parse_options options = parse_options{}, typename comparison_type, typename buffer_type>
+		inline bool parseJsonForComparison(comparison_type& object, buffer_type&& in) noexcept {
+			if constexpr (options.partialRead) {
+				static constexpr parse_options optionsNew{ options };
+				parse_context_partial<derived_type, structural_index_ptr> context{ constEval(parse_context_partial<derived_type, structural_index_ptr>{}) };
+				auto rootIter = getBeginIter(in);
+				auto endIter  = getEndIter(in);
+				derivedRef.section.template reset<options.minified>(rootIter, static_cast<uint64_t>(endIter - rootIter));
+				object.indices.resize(derivedRef.section.getTapeCount());
+				std::copy_n(derivedRef.section.begin(), object.indices.size(), object.indices.data());
+				context.rootIter   = derivedRef.section.begin();
+				context.iter	   = derivedRef.section.begin();
+				context.endIter	   = derivedRef.section.end();
+				context.stringRoot = rootIter;
+				context.parserPtr  = this;
+				auto newSize	   = static_cast<uint64_t>((context.endIter - context.iter) / 2);
+				if (derivedRef.stringBuffer.size() < newSize) {
+					derivedRef.stringBuffer.resize(newSize);
+				}
+				if constexpr (options.validateJson) {
+					if (!derivedRef.validateJson(in)) {
+						return false;
+					}
+				}
+				derivedRef.errors.clear();
+				if JSONIFIER_UNLIKELY (!context.iter || context.iter == context.endIter) {
+					reportError<parse_status::No_Input>(context);
+					return false;
+				}
+				//parse<optionsNew, areWeInsideRepeated<value_type>()>::impl(object, context);
 				return derivedRef.errors.size() > 0 ? false : true;
 			} else {
 				static constexpr parse_options optionsNew{ options };
@@ -189,12 +250,12 @@ namespace jsonifier::internal {
 			auto rootIter = getBeginIter(in);
 			auto endIter  = getEndIter(in);
 			derivedRef.section.template reset<options.minified>(rootIter, static_cast<uint64_t>(endIter - rootIter));
-			context.rootIter  = derivedRef.section.begin();
-			context.iter	  = derivedRef.section.begin();
+			context.rootIter   = derivedRef.section.begin();
+			context.iter	   = derivedRef.section.begin();
 			context.endIter	   = derivedRef.section.end();
 			context.stringRoot = rootIter;
-			context.parserPtr = this;
-			auto newSize	  = static_cast<uint64_t>((endIter - rootIter) / 2);
+			context.parserPtr  = this;
+			auto newSize	   = static_cast<uint64_t>((endIter - rootIter) / 2);
 			if (derivedRef.stringBuffer.size() < newSize) {
 				derivedRef.stringBuffer.resize(newSize);
 			}
@@ -231,12 +292,12 @@ namespace jsonifier::internal {
 				auto rootIter = getBeginIter(in);
 				auto endIter  = getEndIter(in);
 				derivedRef.section.template reset<options.minified>(rootIter, static_cast<uint64_t>(endIter - rootIter));
-				context.rootIter  = derivedRef.section.begin();
-				context.iter	  = derivedRef.section.begin();
+				context.rootIter   = derivedRef.section.begin();
+				context.iter	   = derivedRef.section.begin();
 				context.endIter	   = derivedRef.section.end();
 				context.stringRoot = rootIter;
-				context.parserPtr = this;
-				auto newSize	  = static_cast<uint64_t>((context.endIter - context.iter) / 2);
+				context.parserPtr  = this;
+				auto newSize	   = static_cast<uint64_t>((context.endIter - context.iter) / 2);
 				if (derivedRef.stringBuffer.size() < newSize) {
 					derivedRef.stringBuffer.resize(newSize);
 				}
@@ -285,7 +346,8 @@ namespace jsonifier::internal {
 			}
 		}
 
-		template<auto parseError, typename context_type> void reportError(context_type& context, const std::source_location& sourceLocation = std::source_location::current()) noexcept {
+		template<auto parseError, typename context_type>
+		void reportError(context_type& context, const std::source_location& sourceLocation = std::source_location::current()) noexcept {
 			derivedRef.errors.emplace_back(error::constructError<status_classes::Parsing, parseError>(getUnderlyingPtr(context.iter) - getUnderlyingPtr(context.rootIter),
 				getUnderlyingPtr(context.endIter) - getUnderlyingPtr(context.rootIter), getUnderlyingPtr(context.rootIter), sourceLocation));
 		}

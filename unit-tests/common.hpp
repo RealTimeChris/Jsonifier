@@ -358,7 +358,7 @@ struct pass_test_runner {};
 
 template<typename value_type_out, typename value_type_in, const auto& pass_tests, const auto& pass_values, template<typename, typename, const auto&, const auto&> typename functor,
 	uint64_t... indices>
-struct pass_test_runner<value_type_out, value_type_in, pass_tests, pass_values, functor, std::integer_sequence<uint64_t, indices...>> {
+struct pass_test_runner<value_type_out, value_type_in, pass_tests, pass_values, functor, jsonifier::internal::integer_sequence<indices...>> {
 	static void impl() {
 		jsonifier::jsonifier_core<> parser{};
 		(functor<value_type_out, value_type_in, pass_tests, pass_values>::template impl<indices>(parser), ...);
@@ -368,7 +368,7 @@ struct pass_test_runner<value_type_out, value_type_in, pass_tests, pass_values, 
 template<typename value_type_in, const auto& fail_tests, template<typename, const auto&> typename functor, typename integer_sequence> struct fail_test_runner {};
 
 template<typename value_type_in, const auto& fail_tests, template<typename, const auto&> typename functor, uint64_t... indices>
-struct fail_test_runner<value_type_in, fail_tests, functor, std::integer_sequence<uint64_t, indices...>> {
+struct fail_test_runner<value_type_in, fail_tests, functor, jsonifier::internal::integer_sequence<indices...>> {
 	static void impl() {
 		jsonifier::jsonifier_core<> parser{};
 		(functor<value_type_in, fail_tests>::template impl<indices>(parser), ...);

@@ -42,9 +42,9 @@ namespace int_validation_tests {
 
 	inline static void intTests() {
 		std::cout << "Int Pass Tests: " << std::endl;
-		pass_test_runner<int64_t, int64_t, inputValues, outputValues, pass_tests_runner, std::make_integer_sequence<uint64_t, inputValues.size()>>::impl();
+		pass_test_runner<int64_t, int64_t, inputValues, outputValues, pass_tests_runner, jsonifier::internal::make_integer_sequence<inputValues.size()>>::impl();
 		std::cout << "Int Fail Tests: " << std::endl;
-		fail_test_runner<int64_t, failValues, fail_tests_runner, std::make_integer_sequence<uint64_t, failValues.size()>>::impl();
+		fail_test_runner<int64_t, failValues, fail_tests_runner, jsonifier::internal::make_integer_sequence<failValues.size()>>::impl();
 		return;
 	}
 }

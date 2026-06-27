@@ -87,7 +87,7 @@ namespace jsonifier::internal {
 
 	template<template<typename, typename, parse_options, bool> typename parsing_type, typename value_type, typename context_type, parse_options options, bool minified,
 		uint64_t... indices>
-	struct generateFoldStatement<parsing_type, value_type, context_type, options, minified, std::integer_sequence<uint64_t, indices...>> {
+	struct generateFoldStatement<parsing_type, value_type, context_type, options, minified, integer_sequence<indices...>> {
 		template<uint64_t index> JSONIFIER_INLINE static parse_result processIndex(value_type& value, context_type& context, uint64_t current_index) {
 			if (index == current_index) {
 				return parsing_type<value_type, context_type, options, minified>::template processIndex<index>(value, context);
@@ -109,7 +109,7 @@ namespace jsonifier::internal {
 
 	template<template<typename, typename, parse_options, bool> typename parsing_type, typename value_type, typename context_type, parse_options options, bool minified,
 		uint64_t... indices>
-	struct generateDispatchTable<parsing_type, value_type, context_type, options, minified, std::integer_sequence<uint64_t, indices...>> {
+	struct generateDispatchTable<parsing_type, value_type, context_type, options, minified, integer_sequence<indices...>> {
 		using fn_type = parse_result (*)(value_type&, context_type&);
 
 		static constexpr array<fn_type, sizeof...(indices)> table{ { &parsing_type<value_type, context_type, options, minified>::template processIndex<indices>... } };
@@ -234,14 +234,14 @@ namespace jsonifier::internal {
 						}
 						if JSONIFIER_LIKELY (auto indexNew = antiHashStates<memberCount, value_type>[json_entity_type::index]; indexNew < memberCount) {
 							if JSONIFIER_LIKELY (auto result = generateDispatchTable<parse_types_impl, value_type, context_type, options, false,
-													 std::make_integer_sequence<uint64_t, memberCount>>::impl(value, context, indexNew);
+													 make_integer_sequence<memberCount>>::impl(value, context, indexNew);
 								result == parse_result::active_member) {
 								return;
 							} else {
 								if JSONIFIER_LIKELY (auto indexNew2 = hash_map<value_type, remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
 									indexNew2 < memberCount) {
 									if JSONIFIER_LIKELY (auto result2 = generateDispatchTable<parse_types_impl, value_type, context_type, options, false,
-															 std::make_integer_sequence<uint64_t, memberCount>>::impl(value, context, indexNew2);
+															 make_integer_sequence<memberCount>>::impl(value, context, indexNew2);
 										result2 == parse_result::active_member) {
 										if constexpr (options.knownOrder) {
 											antiHashStates<memberCount, value_type>[json_entity_type::index] = indexNew2;
@@ -340,14 +340,14 @@ namespace jsonifier::internal {
 						++context.iter;
 						if JSONIFIER_LIKELY (auto indexNew = antiHashStates<memberCount, value_type>[json_entity_type::index]; indexNew < memberCount) {
 							if JSONIFIER_LIKELY (auto result = generateDispatchTable<parse_types_impl, value_type, context_type, options, true,
-													 std::make_integer_sequence<uint64_t, memberCount>>::impl(value, context, indexNew);
+													 make_integer_sequence<memberCount>>::impl(value, context, indexNew);
 								result == parse_result::active_member) {
 								return;
 							} else {
 								if JSONIFIER_LIKELY (auto indexNew2 = hash_map<value_type, remove_cvref_t<decltype(context.iter)>>::findIndex(context.iter, context.endIter);
 									indexNew2 < memberCount) {
 									if JSONIFIER_LIKELY (auto result2 = generateDispatchTable<parse_types_impl, value_type, context_type, options, true,
-															 std::make_integer_sequence<uint64_t, memberCount>>::impl(value, context, indexNew2);
+															 make_integer_sequence<memberCount>>::impl(value, context, indexNew2);
 										result2 == parse_result::active_member) {
 										if constexpr (options.knownOrder) {
 											antiHashStates<memberCount, value_type>[json_entity_type::index] = indexNew2;

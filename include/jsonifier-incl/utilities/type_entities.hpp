@@ -24,6 +24,7 @@
 #pragma once
 
 #include <jsonifier-incl/simd/simd_types.hpp>
+#include <jsonifier-incl/utilities/type_traits.hpp>
 #include <source_location>
 #include <type_traits>
 #include <functional>
@@ -51,8 +52,6 @@ namespace jsonifier::internal {
 	};
 
 	template<typename... rest_types> using first_t = typename first<rest_types...>::type;
-
-	template<auto index> using tag = std::integral_constant<uint64_t, index>;
 
 	template<typename value_type> JSONIFIER_INLINE constexpr jsonifier::internal::remove_reference_t<value_type>&& move(value_type&& value) noexcept {
 		return static_cast<jsonifier::internal::remove_reference_t<value_type>&&>(value);
@@ -127,18 +126,100 @@ namespace jsonifier::internal {
 	template<typename value_type> struct get_int_type {
 		using type = jsonifier::internal::conditional_t<std::is_unsigned_v<value_type>, uint8_t, int8_t>;
 	};
+	template<uint64_t... values> struct get_first_value;
 
-	template<auto function, uint64_t currentIndex = 0, typename variant_type, typename... arg_types>
-	JSONIFIER_INLINE static constexpr void visit(variant_type&& variant, arg_types&&... args) noexcept {
-		if constexpr (currentIndex < std::variant_size_v<jsonifier::internal::remove_cvref_t<variant_type>>) {
-			variant_type&& variantNew = internal::forward<variant_type>(variant);
-			if JSONIFIER_UNLIKELY (variantNew.index() == currentIndex) {
-				function(std::get<currentIndex>(internal::forward<variant_type>(variantNew)), internal::forward<arg_types>(args)...);
-				return;
-			}
-			visit<function, currentIndex + 1>(internal::forward<variant_type>(variantNew), internal::forward<arg_types>(args)...);
+	template<uint64_t value_new, uint64_t... values> struct get_first_value<value_new, values...> {
+		using type = std::remove_cvref_t<decltype(value_new)>;
+	};
+
+	template<uint64_t... values> using get_first_value_t = get_first_value<values...>::type;
+
+	template<uint64_t... integers> struct integer_sequence {
+		using value_type = get_first_value_t<integers...>;
+		static constexpr value_type size() noexcept {
+			return static_cast<value_type>(sizeof...(integers));
 		}
+	};
+
+	template<auto index> using tag = integral_constant<uint64_t, index>;
+
+	template<typename sequence_01, typename sequence_02> struct merge_and_shift;
+
+	template<uint64_t... indices_01, uint64_t... indices_02> struct merge_and_shift<integer_sequence<indices_01...>, integer_sequence<indices_02...>> {
+		using type = integer_sequence<static_cast<decltype(indices_01)>(indices_01)..., static_cast<decltype(indices_02)>(indices_02 + sizeof...(indices_01))...>;
+	};
+
+	template<uint64_t size> struct make_sequence_impl {
+		using type = typename merge_and_shift<typename make_sequence_impl<static_cast<decltype(size)>(size / 2ULL)>::type,
+			typename make_sequence_impl<static_cast<decltype(size)>(size - size / 2ULL)>::type>::type;
+	};
+
+	template<uint64_t size>
+		requires(size == 0ULL)
+	struct make_sequence_impl<size> {
+		using type = integer_sequence<>;
+	};
+
+	template<uint64_t size>
+		requires(size == 1ULL)
+	struct make_sequence_impl<size> {
+		using type = integer_sequence<static_cast<decltype(size)>(0)>;
+	};
+
+	template<typename value_type> JSONIFIER_INLINE constexpr value_type&& forward(remove_reference_t<value_type>& t JSONIFIER_LIFETIME_BOUND) noexcept {
+		return static_cast<value_type&&>(t);
 	}
+
+	template<typename value_type>
+		requires(std::is_rvalue_reference_v<value_type>)
+	JSONIFIER_INLINE constexpr value_type&& forward(remove_reference_t<value_type>&& t) noexcept {
+		static_assert(!std::is_lvalue_reference_v<value_type>, "value_type cannot be an lvalue reference (e.g., U&).");
+		return static_cast<value_type&&>(t);
+	}
+
+	template<uint64_t size> using make_integer_sequence = typename make_sequence_impl<size>::type;
+
+	template<typename integer_sequence, uint64_t offset> struct offset_sequence;
+
+	template<uint64_t... indices, uint64_t offset> struct offset_sequence<integer_sequence<indices...>, offset> {
+		using type = integer_sequence<static_cast<decltype(offset)>(indices + offset)...>;
+	};
+
+	template<typename integer_sequence, uint64_t step> struct step_sequence;
+
+	template<uint64_t... indices, uint64_t step_new> struct step_sequence<integer_sequence<indices...>, step_new> {
+		using type = integer_sequence<static_cast<decltype(step_new)>(indices* step_new)...>;
+	};
+
+	template<typename integer_sequence, uint64_t step> using step_sequence_t = typename step_sequence<integer_sequence, step>::type;
+
+	template<uint64_t start, uint64_t end, uint64_t step>
+		requires(end >= start && step > 0)
+	using make_stepped_range_sequence =
+		typename offset_sequence<step_sequence_t<make_integer_sequence<static_cast<decltype(end)>((end - start + step - 1) / step)>, step>, start>::type;
+
+	template<auto function, typename variant_type, typename... arg_types, uint64_t... indices>
+	JSONIFIER_INLINE static constexpr void visit_impl(integer_sequence<indices...>, variant_type&& variant, arg_types&&... args) noexcept {
+		const auto idx = variant.index();
+		static_cast<void>(((idx == indices ? (function(std::get<indices>(internal::forward<variant_type>(variant)), internal::forward<arg_types>(args)...), true) : false) || ...));
+	}
+
+	template<auto function, typename variant_type, typename... arg_types> JSONIFIER_INLINE static constexpr void visit(variant_type&& variant, arg_types&&... args) noexcept {
+		using seq_t = make_integer_sequence<std::variant_size_v<jsonifier::internal::remove_cvref_t<variant_type>>>;
+		visit_impl<function>(seq_t{}, internal::forward<variant_type>(variant), internal::forward<arg_types>(args)...);
+	}
+
+	template<template<auto...> typename functor_type, typename integer_sequence, auto...> struct functor_runner;
+
+	template<template<auto...> typename functor_type, uint64_t... indices, auto... values> struct functor_runner<functor_type, integer_sequence<indices...>, values...> {
+		template<typename... arg_types> JSONIFIER_INLINE static auto impl(arg_types&&... args) noexcept {
+			(functor_type<values...>::template impl<indices>(forward<arg_types>(args)...), ...);
+		}
+
+		template<typename... arg_types> JSONIFIER_INLINE static auto implAnd(arg_types&&... args) noexcept {
+			(functor_type<values...>::template impl<indices>(forward<arg_types>(args)...) && ...);
+		}
+	};
 
 }
 

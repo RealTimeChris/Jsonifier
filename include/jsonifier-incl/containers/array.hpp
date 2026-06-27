@@ -25,6 +25,7 @@
 
 #include <jsonifier-incl/core/config.hpp>
 #include <jsonifier-incl/containers/iterator.hpp>
+#include <algorithm>
 
 namespace jsonifier::internal {
 
