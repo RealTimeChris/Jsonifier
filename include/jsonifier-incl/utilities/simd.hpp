@@ -171,8 +171,8 @@ namespace jsonifier::internal {
 	template<typename derived_type, uint64_t... indices> struct add_tape_values<derived_type, integer_sequence<indices...>> {
 		using size_type = uint64_t;
 
-		template<uint64_t index> JSONIFIER_INLINE static void drainLane(array<uint64_t, sixtyFourBitsPerStep> bitsArr, array<uint64_t, sixtyFourBitsPerStep> cnts,
-			uint32_t* tape, size_type strIdx) noexcept {
+		template<uint64_t index> JSONIFIER_INLINE static void drainLane(array<uint64_t, sixtyFourBitsPerStep> bitsArr, array<uint64_t, sixtyFourBitsPerStep> cnts, uint32_t* tape,
+			size_type strIdx) noexcept {
 			uint64_t bits = bitsArr[index];
 			if JSONIFIER_UNLIKELY (!bits) {
 				return;
@@ -189,8 +189,7 @@ namespace jsonifier::internal {
 			}
 		}
 
-		JSONIFIER_INLINE static void impl(array<uint64_t, sixtyFourBitsPerStep> bitsArr, array<uint64_t, sixtyFourBitsPerStep> cnts, uint32_t* tape,
-			size_type strIdx) noexcept {
+		JSONIFIER_INLINE static void impl(array<uint64_t, sixtyFourBitsPerStep> bitsArr, array<uint64_t, sixtyFourBitsPerStep> cnts, uint32_t* tape, size_type strIdx) noexcept {
 			uint64_t offset = 0;
 			(((drainLane<indices>(bitsArr, cnts, tape + offset, strIdx)), offset += cnts[indices]), ...);
 		}
@@ -365,8 +364,8 @@ namespace jsonifier::internal {
 
 		JSONIFIER_INLINE uint64_t getStructurals(simd_array in_01, const rope_block& block_local, jsonifier_simd_int_t opTable, jsonifier_simd_int_t spaceMask,
 			jsonifier_simd_int_t whitespaceTableLocal) noexcept {
-			const uint64_t whitespace = simd::ws_collector::impl(in_01, whitespaceTableLocal);
-			const uint64_t op = simd::op_collector::impl(in_01, opTable, spaceMask);
+			const uint64_t whitespace	  = simd::ws_collector::impl(in_01, whitespaceTableLocal);
+			const uint64_t op			  = simd::op_collector::impl(in_01, opTable, spaceMask);
 			const uint64_t scalar		  = ~(op | whitespace | block_local.quotes);
 			const uint64_t nonquoteScalar = scalar & ~block_local.quotes;
 			const uint64_t follows		  = scanner.followsNonquoteScalar(nonquoteScalar);
@@ -376,8 +375,7 @@ namespace jsonifier::internal {
 
 		template<uint64_t I, typename... jsonifier_simd_int_types> JSONIFIER_INLINE void processBlocksImpl(array<uint64_t, sixtyFourBitsPerStep>& bitsArr,
 			array<uint64_t, sixtyFourBitsPerStep>& cntsArr, const uint8_t* blockPtr, uint64_t& unescapedCharsError, jsonifier_simd_int_t bsRegister,
-			jsonifier_simd_int_t quoteRegister,
-			jsonifier_simd_int_t opTable, jsonifier_simd_int_t spaceMask, const jsonifier_simd_int_types&... args) noexcept {
+			jsonifier_simd_int_t quoteRegister, jsonifier_simd_int_t opTable, jsonifier_simd_int_t spaceMask, const jsonifier_simd_int_types&... args) noexcept {
 			simd_array in_vals;
 			in_vals.assign_value<0>(simd::gatherValuesU<jsonifier_simd_int_t>(blockPtr + I * 64));
 			if constexpr (registersPerSixtyFourBits > 1) {
