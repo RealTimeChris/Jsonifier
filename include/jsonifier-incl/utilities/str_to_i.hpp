@@ -43,9 +43,9 @@ namespace jsonifier::internal {
 		}
 	}() };
 
-	template<typename v_type, bool negative> static constexpr std::array<std::make_unsigned_t<v_type>, 256> gen_raw_comp_vals() {
+	template<typename v_type, bool negative> static constexpr array<std::make_unsigned_t<v_type>, 256> gen_raw_comp_vals() {
 		constexpr auto max_value{ static_cast<std::make_unsigned_t<v_type>>(std::numeric_limits<std::remove_cvref_t<v_type>>::max()) + comp_val_addition<negative> };
-		std::array<std::make_unsigned_t<v_type>, 256> return_values_interna{};
+		array<std::make_unsigned_t<v_type>, 256> return_values_interna{};
 		return_values_interna['0'] = (max_value - 0) / 10;
 		return_values_interna['1'] = (max_value - 1) / 10;
 		return_values_interna['2'] = (max_value - 2) / 10;
@@ -60,7 +60,7 @@ namespace jsonifier::internal {
 	};
 
 	template<typename v_type, bool negative> JSONIFIER_ALIGN(64)
-	static constexpr std::array<std::make_unsigned_t<v_type>, 256> raw_comp_vals{ gen_raw_comp_vals<v_type, negative>() };
+	static constexpr array<std::make_unsigned_t<v_type>, 256> raw_comp_vals{ gen_raw_comp_vals<v_type, negative>() };
 
 	template<typename v_type, bool negative> JSONIFIER_ALIGN(64)
 	static constexpr const std::make_unsigned_t<v_type>* __restrict comp_vals{ raw_comp_vals<v_type, negative>.data() };

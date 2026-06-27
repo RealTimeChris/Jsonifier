@@ -25,7 +25,8 @@
 #pragma once
 
 #include <jsonifier-incl/simd/jsonifier_cpu_instructions.hpp>
-#include <jsonifier-incl/simd/c_time_simd_types.hpp>
+#include <jsonifier-incl/core/config.hpp>
+#include <cstdint>
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
 
@@ -101,12 +102,12 @@ namespace jsonifier {
 		jsonifier_simd_int_t values[registersPerSixtyFourBits]{};
 
 		template<uint64_t index_new> JSONIFIER_INLINE constexpr void assign_value(jsonifier_simd_int_t value) noexcept {
-			static constexpr uint64_t index{ index_new % registersPerSixtyFourBits };
+			constexpr uint64_t index{ index_new % registersPerSixtyFourBits };
 			values[index] = value;
 		}
 
 		template<uint64_t index_new> JSONIFIER_INLINE constexpr jsonifier_simd_int_t get_value() const noexcept {
-			static constexpr uint64_t index{ index_new % registersPerSixtyFourBits };
+			constexpr uint64_t index{ index_new % registersPerSixtyFourBits };
 			return values[index];
 		}
 	};
@@ -124,6 +125,32 @@ namespace jsonifier {
 	#error "Compiler or architecture not supported for prefetching"
 #endif
 	}
+
+#if JSONIFIER_COMPILER_CLANG
+	#if JSONIFIER_ARCH_ARM64
+	static constexpr uint64_t jsonifier_tape_max = 24;
+	static constexpr uint64_t jsonifier_tape_step = 4;
+	#else
+	static constexpr uint64_t jsonifier_tape_max  = 32;
+	static constexpr uint64_t jsonifier_tape_step = 4;
+	#endif
+#elif JSONIFIER_COMPILER_GCC
+	#if JSONIFIER_ARCH_ARM64
+	static constexpr uint64_t jsonifier_tape_max = 32;
+	static constexpr uint64_t jsonifier_tape_step = 2;
+	#else
+	static constexpr uint64_t jsonifier_tape_max  = 16;
+	static constexpr uint64_t jsonifier_tape_step = 8;
+	#endif
+#elif JSONIFIER_COMPILER_MSVC
+	static constexpr uint64_t jsonifier_tape_max = 24;
+	static constexpr uint64_t jsonifier_tape_step = 4;
+#else
+static constexpr uint64_t jsonifier_tape_max = 24;
+static constexpr uint64_t jsonifier_tape_step = 4;
+#endif
+
+	static_assert(jsonifier_tape_max % jsonifier_tape_step == 0, "jsonifier_tape_max must be a multiple of jsonifier_tape_step");
 
 	JSONIFIER_ALIGN(2) inline constexpr char backslash{ '\\' };
 	JSONIFIER_ALIGN(2) inline constexpr char newline{ '\n' };

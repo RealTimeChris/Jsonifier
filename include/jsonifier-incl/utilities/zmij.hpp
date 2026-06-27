@@ -186,7 +186,7 @@ namespace {
 			return lo;
 		}
 
-		template<uint64_t shift> [[maybe_unused]] JSONIFIER_INLINE constexpr auto operator>>(std::integral_constant<uint64_t, shift>) const noexcept -> uint128 {
+		template<uint64_t shift> [[maybe_unused]] JSONIFIER_INLINE constexpr auto operator>>(jsonifier::internal::integral_constant<uint64_t, shift>) const noexcept -> uint128 {
 			if constexpr (shift == 32) {
 				return { hi >> 32, (hi << 32) | (lo >> 32) };
 			} else {

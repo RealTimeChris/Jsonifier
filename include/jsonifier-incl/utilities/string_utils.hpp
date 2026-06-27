@@ -326,14 +326,6 @@ namespace jsonifier::internal {
 		return returnValues;
 	}() };
 
-	template<typename sequence, uint64_t start> struct invert_sequence;
-
-	template<uint64_t... indices, uint64_t start> struct invert_sequence<integer_sequence<indices...>, start> {
-		using type = integer_sequence<static_cast<decltype(start)>(start - indices)...>;
-	};
-
-	template<uint64_t start, uint64_t size> using make_descending_integer_sequence = typename invert_sequence<make_integer_sequence<size>, start>::type;
-
 	template<typename executor_type, typename integer_sequence> struct string_parse_executor;
 
 	template<typename executor_type, uint64_t... indices> struct string_parse_executor<executor_type, integer_sequence<indices...>> {

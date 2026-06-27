@@ -34,7 +34,7 @@ namespace int_validation_tests {
 		"9223372036854775807", "-9223372036854775808", "0.0", "1.5", "-1.5", "3.14159", "-2.71828", "123.456", "-789.012", "1e5", "-2e3", "3.14e10", "-4.2e-1", "5E2",
 		"10000000e-7" } };
 
-	constexpr std::array<int64_t, 24> outputValues{ { 0, 1, -1, 42, -42, 123456789, -123456789, 2147483647, -2147483648, 9223372036854775807LL, std::numeric_limits<int64_t>::min(),
+	constexpr jsonifier::internal::array<int64_t, 24> outputValues{ { 0, 1, -1, 42, -42, 123456789, -123456789, 2147483647, -2147483648, 9223372036854775807LL, std::numeric_limits<int64_t>::min(),
 		0, 1, -1, 3, -2, 123, -789, 100000, -2000, 31400000000LL, 0, 500, 1 } };
 
 	constexpr jsonifier::internal::array<std::string_view, 11> failValues{ { "9223372036854775808", "-9223372036854775809", "-", "1.2.3", "1e", "1e+", "1e-", "\"abc\"", "true",
@@ -42,9 +42,9 @@ namespace int_validation_tests {
 
 	inline static void intTests() {
 		std::cout << "Int Pass Tests: " << std::endl;
-		pass_test_runner<int64_t, int64_t, inputValues, outputValues, pass_tests_runner, std::make_integer_sequence<uint64_t, inputValues.size()>>::impl();
+		pass_test_runner<int64_t, int64_t, inputValues, outputValues, pass_tests_runner, jsonifier::internal::make_integer_sequence<inputValues.size()>>::impl();
 		std::cout << "Int Fail Tests: " << std::endl;
-		fail_test_runner<int64_t, failValues, fail_tests_runner, std::make_integer_sequence<uint64_t, failValues.size()>>::impl();
+		fail_test_runner<int64_t, failValues, fail_tests_runner, jsonifier::internal::make_integer_sequence<failValues.size()>>::impl();
 		return;
 	}
 }

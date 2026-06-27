@@ -108,9 +108,9 @@ namespace string_validation_tests {
 
 	inline static void stringTests() {
 		std::cout << "String Pass Tests: " << std::endl;
-		pass_test_runner<std::string_view, std::string, inputValues, outputValues, pass_tests_runner, std::make_integer_sequence<uint64_t, inputValues.size()>>::impl();
+		pass_test_runner<std::string_view, std::string, inputValues, outputValues, pass_tests_runner, jsonifier::internal::make_integer_sequence<inputValues.size()>>::impl();
 		std::cout << "String Fail Tests: " << std::endl;
-		fail_test_runner<std::string, failValues, fail_tests_runner, std::make_integer_sequence<uint64_t, failValues.size()>>::impl();
+		fail_test_runner<std::string, failValues, fail_tests_runner, jsonifier::internal::make_integer_sequence<failValues.size()>>::impl();
 	}
 
 }

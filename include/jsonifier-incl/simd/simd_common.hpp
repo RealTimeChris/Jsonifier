@@ -62,12 +62,12 @@ namespace jsonifier::simd {
 
 namespace jsonifier::internal {
 
-	inline constexpr array<bool, 256> whitespaceTable{ []() constexpr {
-		array<bool, 256> returnValues{};
-		returnValues['\t'] = true;
-		returnValues[' ']  = true;
-		returnValues['\n'] = true;
-		returnValues['\r'] = true;
+	inline constexpr array<bool, 256ULL> whitespaceTable{ []() constexpr {
+		array<bool, 256ULL> returnValues{};
+		returnValues[static_cast<uint64_t>('\t')] = true;
+		returnValues[static_cast<uint64_t>(' ')]  = true;
+		returnValues[static_cast<uint64_t>('\n')] = true;
+		returnValues[static_cast<uint64_t>('\r')] = true;
 		return returnValues;
 	}() };
 

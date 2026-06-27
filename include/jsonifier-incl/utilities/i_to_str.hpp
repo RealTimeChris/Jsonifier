@@ -49,8 +49,8 @@ namespace jsonifier::internal {
 
 	template<std::endian, uint64_t size = 0> struct int_tables_impl {};
 
-	template<std::endian endianness> static constexpr std::array<uint16_t, 100> gen_2() {
-		std::array<uint16_t, 100> t{};
+	template<std::endian endianness> static constexpr array<uint16_t, 100> gen_2() {
+		array<uint16_t, 100> t{};
 		for (uint32_t i = 0; i < 100; ++i) {
 			if constexpr (endianness == std::endian::little) {
 				t[i] |= static_cast<uint16_t>(zero + (i / 10));
@@ -63,8 +63,8 @@ namespace jsonifier::internal {
 		return t;
 	}
 
-	template<std::endian endianness> static constexpr std::array<std::array<char, 3>, 1000> gen_3() {
-		std::array<std::array<char, 3>, 1000> t{};
+	template<std::endian endianness> static constexpr array<array<char, 3>, 1000> gen_3() {
+		array<array<char, 3>, 1000> t{};
 		for (uint32_t i = 0; i < 1000; ++i) {
 			if constexpr (endianness == std::endian::little) {
 				t[i][0] = static_cast<char>(zero + (i / 100));
@@ -79,8 +79,8 @@ namespace jsonifier::internal {
 		return t;
 	}
 
-	template<std::endian endianness> static constexpr std::array<uint32_t, 10000> gen_4() {
-		std::array<uint32_t, 10000> t{};
+	template<std::endian endianness> static constexpr array<uint32_t, 10000> gen_4() {
+		array<uint32_t, 10000> t{};
 		for (uint32_t i = 0; i < 10000; ++i) {
 			if constexpr (endianness == std::endian::little) {
 				t[i] |= static_cast<uint32_t>(zero + (i / 1000));
@@ -98,17 +98,17 @@ namespace jsonifier::internal {
 	}
 
 	template<std::endian endianness> struct int_tables_impl<endianness, 2> {
-		JSONIFIER_ALIGN(64) static constexpr std::array<uint16_t, 100> table { gen_2<endianness>() };
+		JSONIFIER_ALIGN(64) static constexpr array<uint16_t, 100> table { gen_2<endianness>() };
 		JSONIFIER_ALIGN(64) static constexpr const uint16_t* __restrict values { table.data() };
 	};
 
 	template<std::endian endianness> struct int_tables_impl<endianness, 3> {
-		JSONIFIER_ALIGN(64) static constexpr std::array<std::array<char, 3>, 1000> table { gen_3<endianness>() };
-		JSONIFIER_ALIGN(64) static constexpr const std::array<char, 3>* __restrict values { table.data() };
+		JSONIFIER_ALIGN(64) static constexpr array<array<char, 3>, 1000> table { gen_3<endianness>() };
+		JSONIFIER_ALIGN(64) static constexpr const array<char, 3>* __restrict values { table.data() };
 	};
 
 	template<std::endian endianness> struct int_tables_impl<endianness, 4> {
-		JSONIFIER_ALIGN(64) static constexpr std::array<uint32_t, 10000> table { gen_4<endianness>() };
+		JSONIFIER_ALIGN(64) static constexpr array<uint32_t, 10000> table { gen_4<endianness>() };
 		JSONIFIER_ALIGN(64) static constexpr const uint32_t* __restrict values { table.data() };
 	};
 

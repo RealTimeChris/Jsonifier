@@ -190,7 +190,7 @@ namespace jsonifier::simd {
 		return returnValues;
 	};
 
-	template<uint64_t size> JSONIFIER_ALIGN(bytesPerStep) inline constexpr internal::array<uint8_t, size> escapeableArray00{ generateEscapeableArray00<size>() };
+	template<uint64_t size> JSONIFIER_ALIGN(64) inline constexpr internal::array<uint8_t, size> escapeableArray00{ generateEscapeableArray00<size>() };
 
 	template<uint64_t size> inline constexpr internal::array<uint8_t, size> generateEscapeableArray01() {
 		constexpr const uint8_t values[]{ 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, '\b', 0x00u, 0x00u, 0x00u, 0x0Cu, '\r', 0x00u, 0x00u };
@@ -201,7 +201,7 @@ namespace jsonifier::simd {
 		return returnValues;
 	};
 
-	template<uint64_t size> JSONIFIER_ALIGN(bytesPerStep) inline constexpr internal::array<uint8_t, size> escapeableArray01{ generateEscapeableArray01<size>() };	
+	template<uint64_t size> JSONIFIER_ALIGN(64) inline constexpr internal::array<uint8_t, size> escapeableArray01{ generateEscapeableArray01<size>() };	
 
 	template<uint64_t size> inline constexpr internal::array<uint8_t, size> generateWhitespaceArrayNeon() {
 		constexpr const uint8_t values[]{ 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0xFFu, 0xFFu, 0x00u, 0x00u, 0xFFu, 0x00u, 0x00u };
@@ -212,7 +212,7 @@ namespace jsonifier::simd {
 		return returnValues;
 	};
 
-	template<uint64_t size> JSONIFIER_ALIGN(bytesPerStep) inline constexpr internal::array<uint8_t, size> whitespaceArray{ generateWhitespaceArrayNeon<size>() };
+	template<uint64_t size> JSONIFIER_ALIGN(64) inline constexpr internal::array<uint8_t, size> whitespaceArray{ generateWhitespaceArrayNeon<size>() };
 
 	template<uint64_t size> inline constexpr internal::array<uint8_t, size> generateOpArrayNeon() {
 		constexpr const uint8_t values[]{ 0xFFu, 0x00u, ',', ':', 0x00u, '[', ']', '{', '}', 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u };
@@ -223,7 +223,7 @@ namespace jsonifier::simd {
 		return returnValues;
 	};
 
-	template<uint64_t size> JSONIFIER_ALIGN(bytesPerStep) inline constexpr internal::array<uint8_t, size> opArray{ generateOpArrayNeon<size>() };
+	template<uint64_t size> JSONIFIER_ALIGN(64) inline constexpr internal::array<uint8_t, size> opArray{ generateOpArrayNeon<size>() };
 
 #endif
 

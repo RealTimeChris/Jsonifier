@@ -24,6 +24,7 @@
 #pragma once
 
 #include <jsonifier-incl/simd/simd_types.hpp>
+#include <jsonifier-incl/utilities/type_entities.hpp>
 #include <memory_resource>
 #include <stdlib.h>
 
@@ -34,17 +35,6 @@
 #endif
 
 namespace jsonifier::internal {
-
-	template<typename value_type> JSONIFIER_INLINE constexpr value_type&& forward(remove_reference_t<value_type>& t JSONIFIER_LIFETIME_BOUND) noexcept {
-		return static_cast<value_type&&>(t);
-	}
-
-	template<typename value_type>
-		requires(std::is_rvalue_reference_v<value_type>)
-	JSONIFIER_INLINE constexpr value_type&& forward(remove_reference_t<value_type>&& t) noexcept {
-		static_assert(!std::is_lvalue_reference_v<value_type>, "value_type cannot be an lvalue reference (e.g., U&).");
-		return static_cast<value_type&&>(t);
-	}
 
 	template<auto multiple, typename value_type = decltype(multiple)> JSONIFIER_INLINE constexpr value_type roundUpToMultiple(value_type value) noexcept {
 		if constexpr ((multiple & (multiple - 1)) == 0) {

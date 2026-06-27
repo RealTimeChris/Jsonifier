@@ -125,9 +125,9 @@ namespace jsonifier::internal {
 	struct hash_map_construction_data {
 		using simd_type = map_simd_t<2048>;
 		array<uint16_t, 2048 / setSimdWidth(2048)> bucketSizes{};
-		JSONIFIER_ALIGN(bytesPerStep) array<uint8_t, 2049> controlBytes {};
-		array<uint8_t, 256> uniqueIndices{};
-		array<uint16_t, 2049> indices{};
+		JSONIFIER_ALIGN(64) array<uint8_t, 2049ULL> controlBytes {};
+		array<uint8_t, 256ULL> uniqueIndices{};
+		array<uint16_t, 2049ULL> indices{};
 		uint64_t bucketSize{ setSimdWidth(2048) };
 		uint64_t numGroups{ 2048 / bucketSize };
 		ct_key_hasher hasher{};
@@ -170,7 +170,7 @@ namespace jsonifier::internal {
 		inline static constexpr uint64_t storageSize{ 256 };
 		constexpr single_byte_data(const hash_map_construction_data& newData) noexcept
 			: uniqueIndices{ newData.uniqueIndices }, uniqueIndex{ newData.uniqueIndex }, type{ newData.type } {}
-		array<uint8_t, 256> uniqueIndices{};
+		array<uint8_t, 256ULL> uniqueIndices{};
 		uint64_t uniqueIndex{};
 		hash_map_type type{};
 	};
@@ -178,7 +178,7 @@ namespace jsonifier::internal {
 	struct first_byte_and_unique_index_data {
 		inline static constexpr uint64_t storageSize{ 256 };
 		constexpr first_byte_and_unique_index_data(const hash_map_construction_data& newData) noexcept : uniqueIndices{ newData.uniqueIndices }, type{ newData.type } {}
-		array<uint8_t, 256> uniqueIndices{};
+		array<uint8_t, 256ULL> uniqueIndices{};
 		hash_map_type type{};
 	};
 
@@ -186,7 +186,7 @@ namespace jsonifier::internal {
 		inline static constexpr uint64_t storageSize{ 2048 };
 		constexpr unique_byte_and_length_data(const hash_map_construction_data& newData) noexcept
 			: indices{ newData.indices }, uniqueIndex{ newData.uniqueIndex }, type{ newData.type } {}
-		array<uint16_t, 2049> indices{};
+		array<uint16_t, 2049ULL> indices{};
 		uint64_t uniqueIndex{};
 		hash_map_type type{};
 	};
@@ -194,7 +194,7 @@ namespace jsonifier::internal {
 	struct unique_per_length_data {
 		inline static constexpr uint64_t storageSize{ 256 };
 		constexpr unique_per_length_data(const hash_map_construction_data& newData) noexcept : uniqueIndices{ newData.uniqueIndices }, type{ newData.type } {}
-		array<uint8_t, 256> uniqueIndices{};
+		array<uint8_t, 256ULL> uniqueIndices{};
 		hash_map_type type{};
 	};
 
@@ -203,7 +203,7 @@ namespace jsonifier::internal {
 		constexpr simd_full_length_data(const hash_map_construction_data& newData) noexcept
 			: controlBytes{ newData.controlBytes }, bucketSize{ newData.bucketSize }, numGroups{ newData.numGroups }, indices{ newData.indices },
 			  uniqueIndex{ newData.uniqueIndex }, type{ newData.type }, seed{ newData.hasher.seed } {}
-		JSONIFIER_ALIGN(bytesPerStep) array<uint8_t, storageSize + 1> controlBytes {};
+		JSONIFIER_ALIGN(64) array<uint8_t, storageSize + 1ULL> controlBytes {};
 		char padding01[bytesPerStep - ((storageSize + 1) % 8)]{};
 		uint64_t bucketSize{ setSimdWidth(storageSize) };
 		uint64_t numGroups{ storageSize / bucketSize };
@@ -218,7 +218,7 @@ namespace jsonifier::internal {
 	};
 
 	inline static constexpr uint64_t countUniqueLengths(const tuple_references& tupleRefsRaw) {
-		array<uint64_t, 256> stringLengths{};
+		array<uint64_t, 256ULL> stringLengths{};
 		uint64_t returnValue{};
 		for (uint64_t x = 0; x < tupleRefsRaw.count; ++x) {
 			++stringLengths[tupleRefsRaw.rootPtr[x].key.size()];
@@ -257,7 +257,7 @@ namespace jsonifier::internal {
 	}
 
 	inline static constexpr uint64_t countFirstBytes(const tuple_references& tupleRefsRaw) {
-		array<bool, 256> stringLengths{};
+		array<bool, 256ULL> stringLengths{};
 		uint64_t returnValue = 0;
 		for (uint64_t x = 0; x < tupleRefsRaw.count; ++x) {
 			if (!tupleRefsRaw.rootPtr[x].key.empty()) {
@@ -276,7 +276,7 @@ namespace jsonifier::internal {
 	};
 
 	template<uint64_t firstByteCount> inline static constexpr array<first_bytes, firstByteCount> collectFirstBytes(const tuple_references& values) {
-		array<uint64_t, 256> lengths{};
+		array<uint64_t, 256ULL> lengths{};
 		array<first_bytes, firstByteCount> valuesNew{};
 		uint64_t currentIndex{};
 		for (uint64_t x = 0; x < values.count; ++x) {
@@ -626,8 +626,8 @@ namespace jsonifier::internal {
 	}
 
 	template<uint64_t keyMaxLength>
-	static constexpr std::array<uint8_t, (keyMaxLength + 1) * 256> generateMappingsForLengths(const tuple_references& keys, const array<uint8_t, 256>& uniqueIndices) noexcept {
-		std::array<uint8_t, (keyMaxLength + 1) * 256> mappings{};
+	static constexpr array<uint8_t, (keyMaxLength + 1) * 256> generateMappingsForLengths(const tuple_references& keys, const array<uint8_t, 256>& uniqueIndices) noexcept {
+		array<uint8_t, (keyMaxLength + 1) * 256> mappings{};
 		std::fill(mappings.data(), mappings.data() + mappings.size(), static_cast<uint8_t>(mappings.size() - 1));
 
 		for (uint64_t x = 0; x < keys.count; ++x) {

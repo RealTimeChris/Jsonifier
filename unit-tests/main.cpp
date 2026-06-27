@@ -102,10 +102,10 @@ template<> struct jsonifier::core<nested_struct> {
 
 struct Thing {
 	sub_thing thing{};
-	std::array<sub_thing2, 1> thing2array{};
+	jsonifier::internal::array<sub_thing2, 1> thing2array{};
 	V3 vec3{};
 	std::vector<int32_t> numbers{ 6, 7, 8, 2 };
-	std::array<std::string, 4> array{ { "as\"df\\ghjkl", "pie", "42", "foo" } };
+	jsonifier::internal::array<std::string, 4> array{ { "as\"df\\ghjkl", "pie", "42", "foo" } };
 	std::vector<V3> vector{ { 9.0, 6.7, 3.1 }, {} };
 	int32_t i{ 8 };
 	double d{ 2.0 };
@@ -200,7 +200,7 @@ template<> struct jsonifier::core<EnumHolder> {
 
 struct ContainerStruct {
 	std::vector<int32_t> vec{ 1, 2, 3 };
-	std::array<std::string, 2> arr{ { "Hello", "World" } };
+	jsonifier::internal::array<std::string, 2> arr{ { "Hello", "World" } };
 	std::tuple<int32_t, double, std::string> tup{ 42, 2.718, "pi?" };
 };
 
@@ -359,11 +359,12 @@ int main() {
 		auto test_partial_vector_of_structs = []() {
 			jsonifier::jsonifier_core<> parser{};
 			BasicStructVec original{};
+			std::cerr << "sizeof(BasicStruct)=" << sizeof(BasicStruct) << " sizeof(BasicStructVec)=" << sizeof(BasicStructVec) << std::endl;
 			original.items = { { { 1, 1.1, "a", { { 1, 2, 3 } } }, { 2, 2.2, "b", { { 4, 5, 6 } } }, { 3, 3.3, "c", { { 7, 8, 9 } } } } };
 			std::string json{};
 			parser.serializeJson(original, json);
 			BasicStructVec parsed{};
-			parser.parseJson<jsonifier::parse_options{ .partialRead = true }>(parsed, json);
+			parser.parseJson<jsonifier::parse_options{ .partialRead = false }>(parsed, json);
 			return std::make_tuple(parsed.items.size(), parsed.items[0].i, parsed.items[1].str, parsed.items[2].arr[2]);
 		};
 
@@ -680,10 +681,10 @@ int main() {
 
 		auto test_array_of_enums = []() {
 			jsonifier::jsonifier_core<> parser{};
-			std::array<Color, 3> arr{ Color::Red, Color::Green, Color::Blue };
+			jsonifier::internal::array<Color, 3> arr{ Color::Red, Color::Green, Color::Blue };
 			std::string json{};
 			parser.serializeJson(arr, json);
-			std::array<Color, 3> parsed{};
+			jsonifier::internal::array<Color, 3> parsed{};
 			parser.parseJson(parsed, json);
 			return std::make_tuple(parsed[0] == Color::Red, parsed[2] == Color::Blue);
 		};
@@ -1016,7 +1017,7 @@ int main() {
 
 		auto test_array_serialize = []() {
 			jsonifier::jsonifier_core<> parser{};
-			std::array<int32_t, 3> arr{ 1, 2, 3 };
+			jsonifier::internal::array<int32_t, 3> arr{ 1, 2, 3 };
 			std::string json{};
 			parser.serializeJson(arr, json);
 			return json.find("[") != std::string::npos && json.find("]") != std::string::npos;
@@ -1025,7 +1026,7 @@ int main() {
 		auto test_array_parse = []() {
 			jsonifier::jsonifier_core<> parser{};
 			std::string json = "[10,20,30]";
-			std::array<int32_t, 3> arr{};
+			jsonifier::internal::array<int32_t, 3> arr{};
 			parser.parseJson(arr, json);
 			return std::make_tuple(arr.size(), arr[0], arr[2]);
 		};
@@ -1066,7 +1067,7 @@ int main() {
 
 		auto test_enum_array = []() {
 			jsonifier::jsonifier_core<> parser{};
-			std::array<Color, 3> arr{};
+			jsonifier::internal::array<Color, 3> arr{};
 			std::string json = "[1,0,2]";
 			parser.parseJson(arr, json);
 			return std::make_tuple(arr[0] == Color::Green, arr[1] == Color::Red, arr[2] == Color::Blue);

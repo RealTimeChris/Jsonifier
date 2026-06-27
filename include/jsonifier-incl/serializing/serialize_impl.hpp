@@ -36,7 +36,7 @@ namespace jsonifier::internal {
 
 	template<serialize_options options, typename value_type, typename integer_sequence> struct size_collection_lambda;
 
-	template<serialize_options options, typename value_type, uint64_t... indices> struct size_collection_lambda<options, value_type, std::integer_sequence<uint64_t, indices...>> {
+	template<serialize_options options, typename value_type, uint64_t... indices> struct size_collection_lambda<options, value_type, integer_sequence<indices...>> {
 		static constexpr uint64_t maxIndex{ core_tuple_size<value_type> };
 		template<uint64_t index> static constexpr void impl(uint64_t& pairNew) {
 			constexpr auto subTuple	 = get_because_other_lib_authors_resolve<index>(core_tuple_type<value_type>{});
@@ -62,7 +62,7 @@ namespace jsonifier::internal {
 			constexpr auto memberCount = core_tuple_size<value_type>;
 			constexpr uint64_t newSize{ [] {
 				uint64_t retVal{ 2 };
-				size_collection_lambda<options, value_type, std::make_integer_sequence<uint64_t, memberCount>>::impl(retVal);
+				size_collection_lambda<options, value_type, make_integer_sequence<memberCount>>::impl(retVal);
 				return retVal;
 			}() };
 			return newSize;
@@ -153,11 +153,19 @@ namespace jsonifier::internal {
 		}
 	}
 
+	template<typename value_type> consteval uint64_t getValueSize(value_type value) {
+		if constexpr (internal::integral_types<value_type>) {
+			return sizeof(value_type);
+		} else {
+			return value.size();
+		}
+	}
+
 	template<string_literal string> struct char_blitter {
 		using int_type = convert_length_to_int_t<string.size()>;
 		static constexpr uint64_t lengthToAdvance{ string.size() };
-		static constexpr uint64_t lengthToCopy{ sizeof(int_type) };
-		static constexpr auto value{ packValues<string>() };
+		static constexpr uint64_t lengthToCopy{ getValueSize(pack_values<string>::value) };
+		static constexpr auto value{ pack_values<string>::value };
 	};
 
 	template<string_literal prefix, char indentChar, uint64_t indentSize, uint64_t depth> struct JSONIFIER_ALIGN(8) indent_blitter {
@@ -471,7 +479,7 @@ namespace jsonifier::internal {
 
 		JSONIFIER_ALIGN(8) static constexpr char_blitter<"[]"> emptyArray {};
 
-		template<template<typename, size_t> typename value_type_new, typename value_type_internal, size_t size>
+		template<template<typename, auto> typename value_type_new, typename value_type_internal, auto size>
 		inline static void impl(const value_type_new<value_type_internal, size>& value, context_type& context) noexcept {
 			static constexpr auto newSize = size;
 			static constexpr auto paddingSize{ getPaddingSize<options, typename value_type_new<value_type_internal, size>::value_type>() };

@@ -55,7 +55,7 @@ namespace float_validation_tests {
 
 	inline static void floatTests() {
 		std::cout << "Float Tests: " << std::endl;
-		pass_test_runner<double, double, inputValues, outputValues, pass_tests_runner, std::make_integer_sequence<uint64_t, inputValues.size()>>::impl();
+		pass_test_runner<double, double, inputValues, outputValues, pass_tests_runner, jsonifier::internal::make_integer_sequence<inputValues.size()>>::impl();
 		return ;
 	}
 

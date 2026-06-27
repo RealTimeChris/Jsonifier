@@ -71,78 +71,7 @@ namespace jsonifier::internal {
 		uint64_t lengthMinusStep{};
 		uint64_t length{};
 		uint64_t index{};
-	};
-
-	template<uint64_t... values> struct get_first_value;
-
-	template<uint64_t value_new, uint64_t... values> struct get_first_value<value_new, values...> {
-		using type = std::remove_cvref_t<decltype(value_new)>;
-	};
-
-	template<uint64_t... values> using get_first_value_t = get_first_value<values...>::type;
-
-	template<uint64_t... integers> struct integer_sequence {
-		using value_type = get_first_value_t<integers...>;
-		static constexpr value_type size() noexcept {
-			return static_cast<value_type>(sizeof...(integers));
-		}
-	};
-
-	template<typename sequence_01, typename sequence_02> struct merge_and_shift;
-
-	template<uint64_t... indices_01, uint64_t... indices_02> struct merge_and_shift<integer_sequence<indices_01...>, integer_sequence<indices_02...>> {
-		using type = integer_sequence<static_cast<decltype(indices_01)>(indices_01)..., static_cast<decltype(indices_02)>(indices_02 + sizeof...(indices_01))...>;
-	};
-
-	template<uint64_t size> struct make_sequence_impl {
-		using type = typename merge_and_shift<typename make_sequence_impl<static_cast<decltype(size)>(size / 2ULL)>::type,
-			typename make_sequence_impl<static_cast<decltype(size)>(size - size / 2ULL)>::type>::type;
-	};
-
-	template<uint64_t size>
-		requires(size == 0ULL)
-	struct make_sequence_impl<size> {
-		using type = integer_sequence<>;
-	};
-
-	template<uint64_t size>
-		requires(size == 1ULL)
-	struct make_sequence_impl<size> {
-		using type = integer_sequence<static_cast<decltype(size)>(0)>;
-	};
-
-	template<uint64_t size> using make_integer_sequence = typename make_sequence_impl<size>::type;
-
-	template<typename integer_sequence, uint64_t offset> struct offset_sequence;
-
-	template<uint64_t... indices, uint64_t offset> struct offset_sequence<integer_sequence<indices...>, offset> {
-		using type = integer_sequence<static_cast<decltype(offset)>(indices + offset)...>;
-	};
-
-	template<typename integer_sequence, uint64_t step> struct step_sequence;
-
-	template<uint64_t... indices, uint64_t step_new> struct step_sequence<integer_sequence<indices...>, step_new> {
-		using type = integer_sequence<static_cast<decltype(step_new)>(indices* step_new)...>;
-	};
-
-	template<typename integer_sequence, uint64_t step> using step_sequence_t = typename step_sequence<integer_sequence, step>::type;
-
-	template<uint64_t start, uint64_t end, uint64_t step>
-		requires(end >= start && step > 0)
-	using make_stepped_range_sequence =
-		typename offset_sequence<step_sequence_t<make_integer_sequence<static_cast<decltype(end)>((end - start + step - 1) / step)>, step>, start>::type;
-
-	template<template<auto...> typename functor_type, typename integer_sequence, auto...> struct functor_runner;
-
-	template<template<auto...> typename functor_type, uint64_t... indices, auto... values> struct functor_runner<functor_type, integer_sequence<indices...>, values...> {
-		template<typename... arg_types> JSONIFIER_INLINE static auto impl(arg_types&&... args) noexcept {
-			(functor_type<values...>::template impl<indices>(forward<arg_types>(args)...), ...);
-		}
-
-		template<typename... arg_types> JSONIFIER_INLINE static auto implAnd(arg_types&&... args) noexcept {
-			(functor_type<values...>::template impl<indices>(forward<arg_types>(args)...) && ...);
-		}
-	};
+	};	
 
 	template<auto...> struct write_indices_functor {
 		using size_type = uint64_t;
@@ -181,9 +110,10 @@ namespace jsonifier::internal {
 			const uint64_t cnt = cnts[index];
 			static constexpr size_type bitTotal{ index * 64ull };
 			const size_type base = bitTotal + strIdx;
-			functor_runner<write_indices_stepped_functor, make_stepped_range_sequence<0, 24, 4>, 4>::impl(base, bits, tape, cnt);
-			if JSONIFIER_UNLIKELY (24 < cnt) {
-				for (uint64_t i = 24; i < cnt; ++i) {
+			functor_runner<write_indices_stepped_functor, make_stepped_range_sequence<0, jsonifier_tape_max, jsonifier_tape_step>, jsonifier_tape_step>::impl(base, bits, tape,
+				cnt);
+			if JSONIFIER_UNLIKELY (jsonifier_tape_max < cnt) {
+				for (uint64_t i = jsonifier_tape_max; i < cnt; ++i) {
 					tape[i] = simd::tape_writer_op<void>::extractIndex(base, bits);
 					bits	= simd::tape_writer_op<void>::advance(bits);
 				}
