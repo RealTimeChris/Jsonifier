@@ -27,6 +27,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(cmake/get_version.cmake)
 
+set(JSONIFIER_TAPE_MAX "8" CACHE STRING "Max tape step size")
+set(JSONIFIER_TAPE_STEP "2" CACHE STRING "Tape step increment")
+set(JSONIFIER_BLOCKS_PER_STEP "2" CACHE STRING "Pipeline depth")
+
 project(Jsonifier
     VERSION ${CLEAN_VERSION}
     DESCRIPTION "A few classes for parsing and serializing json - very rapidly."
