@@ -858,10 +858,10 @@ namespace {
 #if ZMIJ_USE_NEON
 		uint8x16_t shuffle = vld1q_u8(static_data.shift_shuffle + (drop_leading_zero ? 1 : 0));
 		uint8x16_t shifted = vqtbl1q_u8(vreinterpretq_u8_u16(digits), shuffle);
-		vst1q_u8(reinterpret_cast<uint8_t*>(buffer), shifted);
+		vst1q_u8(std::bit_cast<uint8_t*>(buffer), shifted);
 #elif ZMIJ_USE_SSE4_1
-		__m128i shuffle = _mm_loadu_si128(reinterpret_cast<const __m128i*>(static_data.shift_shuffle + (drop_leading_zero ? 1 : 0)));
-		_mm_storeu_si128(reinterpret_cast<__m128i*>(buffer), _mm_shuffle_epi8(digits, shuffle));
+		__m128i shuffle = _mm_loadu_si128(std::bit_cast<const __m128i*>(static_data.shift_shuffle + (drop_leading_zero ? 1 : 0)));
+		_mm_storeu_si128(std::bit_cast<__m128i*>(buffer), _mm_shuffle_epi8(digits, shuffle));
 #endif
 	}
 
@@ -880,13 +880,13 @@ namespace {
 		__m128i src		= _mm_insert_epi64(ascii, static_cast<int64_t>(tail), 1);
 		__m128i shuffle = jsonifier::simd::gatherValues<jsonifier::jsonifier_simd_int_128>(entry.shuffle);
 		__m128i out		= _mm_shuffle_epi8(src, shuffle);
-		_mm_storeu_si128(reinterpret_cast<__m128i*>(buffer), out);
+		_mm_storeu_si128(std::bit_cast<__m128i*>(buffer), out);
 #elif ZMIJ_USE_NEON
 		uint8x16_t ascii   = vorrq_u8(dig.unshuffled, vdupq_n_u8(static_cast<uint8_t>('0')));
 		uint8x16_t src	   = vreinterpretq_u8_u64(vsetq_lane_u64(tail, vreinterpretq_u64_u8(ascii), 1));
 		uint8x16_t shuffle = vld1q_u8(entry.shuffle);
 		uint8x16_t out	   = vqtbl1q_u8(src, shuffle);
-		vst1q_u8(reinterpret_cast<uint8_t*>(buffer), out);
+		vst1q_u8(std::bit_cast<uint8_t*>(buffer), out);
 #endif
 		return buffer + entry.length;
 	}

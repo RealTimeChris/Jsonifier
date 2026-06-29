@@ -72,6 +72,7 @@ set(JSONIFIER_MSVC_COMPILER_OPTIONS
     /wd4710
     /wd5045
     /wd4711
+    /wd4686
     /Wall
     /W4
     /bigobj
