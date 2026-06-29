@@ -347,7 +347,7 @@ namespace jsonifier::internal {
 	template<gt_8 auto string> struct pack_values<string> {
 		using array_type = array<uint8_t, get_int_length_v<string.size()>>;
 		static constexpr array_type gen() {
-			JSONIFIER_ALIGN(64) array_type out{};
+			array_type out{};
 			for (uint64_t i = 0; i < string.size(); ++i)
 				out[i] = static_cast<uint8_t>(string[i]);
 			return out;
@@ -444,7 +444,7 @@ namespace jsonifier::internal {
 				jsonifier_simd_int_128 data1{};
 				std::memcpy(&data1, str, newCount);
 				const jsonifier_simd_int_128 data2{ simd::gatherValues<jsonifier_simd_int_128>(valuesNew.data()) };
-				return !simd::opTest(simd::opXor(data1, data2)) ? str + newCount : nullptr;
+				return simd::opTest(simd::opXor(data1, data2)) ? str + newCount : nullptr;
 			} else if constexpr (newCount == 8) {
 				static constexpr auto valuesNew{ pack_values<stringLiteral>::value };
 				uint64_t l;
@@ -494,7 +494,7 @@ namespace jsonifier::internal {
 			JSONIFIER_ALIGN(64) static constexpr auto valuesNew{ pack_values<newLiteral>::value };
 			const jsonifier_simd_int_128 data1{ simd::gatherValuesU<jsonifier_simd_int_128>(str) };
 			const jsonifier_simd_int_128 data2{ simd::gatherValues<jsonifier_simd_int_128>(valuesNew.data()) };
-			return !simd::opTest(simd::opXor(data1, data2)) ? str + 16 : nullptr;
+			return simd::opTest(simd::opXor(data1, data2)) ? str + 16 : nullptr;
 		}
 	};
 
@@ -506,7 +506,7 @@ namespace jsonifier::internal {
 			JSONIFIER_ALIGN(64) static constexpr auto valuesNew{ pack_values<newLiteral>::value };
 			const jsonifier_simd_int_256 data1{ simd::gatherValuesU<jsonifier_simd_int_256>(str) };
 			const jsonifier_simd_int_256 data2{ simd::gatherValues<jsonifier_simd_int_256>(valuesNew.data()) };
-			return !simd::opTest(simd::opXor(data1, data2)) ? str + 32 : nullptr;
+			return simd::opTest(simd::opXor(data1, data2)) ? str + 32 : nullptr;
 		}
 	};
 
@@ -519,7 +519,7 @@ namespace jsonifier::internal {
 			JSONIFIER_ALIGN(64) static constexpr auto valuesNew{ pack_values<newLiteral>::value };
 			const jsonifier_simd_int_512 data1{ simd::gatherValuesU<jsonifier_simd_int_512>(str) };
 			const jsonifier_simd_int_512 data2{ simd::gatherValues<jsonifier_simd_int_512>(valuesNew.data()) };
-			return !simd::opTest(simd::opXor(data1, data2)) ? str + 64 : nullptr;
+			return simd::opTest(simd::opXor(data1, data2)) ? str + 64 : nullptr;
 		}
 	};
 #endif

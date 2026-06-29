@@ -51,25 +51,25 @@ namespace jsonifier::simd {
 	};
 
 	struct cmp_eq_op {
-		JSONIFIER_INLINE static uint64_t impl(simd_array lhs, jsonifier_simd_int_t rhsBroadcast) noexcept {
-			uint64_t result = simd::opCmpEqBitMask(lhs.get_value<0>(), rhsBroadcast);
+		JSONIFIER_INLINE static uint64_t impl(simd_array<registersPerSixtyFourBits> lhs, jsonifier_simd_int_t rhsBroadcast) noexcept {
+			uint64_t result = simd::opCmpEqBitMask(lhs.getValue<0>(), rhsBroadcast);
 			if constexpr (registersPerSixtyFourBits > 1) {
-				result |= static_cast<uint64_t>(simd::opCmpEqBitMask(lhs.get_value<1>(), rhsBroadcast)) << get_shift_amount(1);
+				result |= static_cast<uint64_t>(simd::opCmpEqBitMask(lhs.getValue<1>(), rhsBroadcast)) << get_shift_amount(1);
 				if constexpr (registersPerSixtyFourBits > 2) {
-					result |= static_cast<uint64_t>(simd::opCmpEqBitMask(lhs.get_value<2>(), rhsBroadcast)) << get_shift_amount(2);
-					result |= static_cast<uint64_t>(simd::opCmpEqBitMask(lhs.get_value<3>(), rhsBroadcast)) << get_shift_amount(3);
+					result |= static_cast<uint64_t>(simd::opCmpEqBitMask(lhs.getValue<2>(), rhsBroadcast)) << get_shift_amount(2);
+					result |= static_cast<uint64_t>(simd::opCmpEqBitMask(lhs.getValue<3>(), rhsBroadcast)) << get_shift_amount(3);
 				}
 			}
 			return result;
 		}
 
-		JSONIFIER_INLINE static uint64_t impl(simd_array lhs, simd_array rhs) noexcept {
-			uint64_t result = simd::opCmpEqBitMask(lhs.get_value<0>(), rhs.get_value<0>());
+		JSONIFIER_INLINE static uint64_t impl(simd_array<registersPerSixtyFourBits> lhs, simd_array<registersPerSixtyFourBits> rhs) noexcept {
+			uint64_t result = simd::opCmpEqBitMask(lhs.getValue<0>(), rhs.getValue<0>());
 			if constexpr (registersPerSixtyFourBits > 1) {
-				result |= static_cast<uint64_t>(simd::opCmpEqBitMask(lhs.get_value<1>(), rhs.get_value<1>())) << get_shift_amount(1);
+				result |= static_cast<uint64_t>(simd::opCmpEqBitMask(lhs.getValue<1>(), rhs.getValue<1>())) << get_shift_amount(1);
 				if constexpr (registersPerSixtyFourBits > 2) {
-					result |= static_cast<uint64_t>(simd::opCmpEqBitMask(lhs.get_value<2>(), rhs.get_value<2>())) << get_shift_amount(2);
-					result |= static_cast<uint64_t>(simd::opCmpEqBitMask(lhs.get_value<3>(), rhs.get_value<3>())) << get_shift_amount(3);
+					result |= static_cast<uint64_t>(simd::opCmpEqBitMask(lhs.getValue<2>(), rhs.getValue<2>())) << get_shift_amount(2);
+					result |= static_cast<uint64_t>(simd::opCmpEqBitMask(lhs.getValue<3>(), rhs.getValue<3>())) << get_shift_amount(3);
 				}
 			}
 			return result;
@@ -77,13 +77,13 @@ namespace jsonifier::simd {
 	};
 
 	struct unescaped_collector {
-		JSONIFIER_INLINE static uint64_t impl(simd_array ltRhs) noexcept {
-			uint64_t result = static_cast<uint64_t>(opBitMask(ltRhs.get_value<0>()));
+		JSONIFIER_INLINE static uint64_t impl(simd_array<registersPerSixtyFourBits> ltRhs) noexcept {
+			uint64_t result = static_cast<uint64_t>(opBitMask(ltRhs.getValue<0>()));
 			if constexpr (registersPerSixtyFourBits > 1) {
-				result |= static_cast<uint64_t>(opBitMask(ltRhs.get_value<1>())) << get_shift_amount(1);
+				result |= static_cast<uint64_t>(opBitMask(ltRhs.getValue<1>())) << get_shift_amount(1);
 				if constexpr (registersPerSixtyFourBits > 2) {
-					result |= static_cast<uint64_t>(opBitMask(ltRhs.get_value<2>())) << get_shift_amount(2);
-					result |= static_cast<uint64_t>(opBitMask(ltRhs.get_value<3>())) << get_shift_amount(3);
+					result |= static_cast<uint64_t>(opBitMask(ltRhs.getValue<2>())) << get_shift_amount(2);
+					result |= static_cast<uint64_t>(opBitMask(ltRhs.getValue<3>())) << get_shift_amount(3);
 				}
 			}
 			return result;
@@ -105,7 +105,7 @@ namespace jsonifier::simd {
 			rope_block::inString	= inString;
 		}
 
-		JSONIFIER_INLINE void next(simd_array in_01, jsonifier_simd_int_t bsRegister, jsonifier_simd_int_t quoteRegister) noexcept {
+		JSONIFIER_INLINE void next(simd_array<registersPerSixtyFourBits> in_01, jsonifier_simd_int_t bsRegister, jsonifier_simd_int_t quoteRegister) noexcept {
 			const uint64_t escaped = nextEscapeAndTerminalCode(simd::cmp_eq_op::impl(in_01, bsRegister));
 			const uint64_t quotes  = (simd::cmp_eq_op::impl(in_01, quoteRegister) & ~escaped);
 			rope_block::escaped	   = escaped;
@@ -141,14 +141,14 @@ namespace jsonifier::simd {
 	};
 
 	struct ws_collector {
-		JSONIFIER_INLINE static uint64_t impl(simd_array in_01, jsonifier_simd_int_t whitespaceTableLocal) noexcept {
-			simd_array wsShuffle;
-			wsShuffle.assign_value<0>(simd::opShuffle(whitespaceTableLocal, in_01.get_value<0>()));
+		JSONIFIER_INLINE static uint64_t impl(simd_array<registersPerSixtyFourBits> in_01, jsonifier_simd_int_t whitespaceTableLocal) noexcept {
+			simd_array<registersPerSixtyFourBits> wsShuffle;
+			wsShuffle.assignValue<0>(simd::opShuffle(whitespaceTableLocal, in_01.getValue<0>()));
 			if constexpr (registersPerSixtyFourBits > 1) {
-				wsShuffle.assign_value<1>(simd::opShuffle(whitespaceTableLocal, in_01.get_value<1>()));
+				wsShuffle.assignValue<1>(simd::opShuffle(whitespaceTableLocal, in_01.getValue<1>()));
 				if constexpr (registersPerSixtyFourBits > 2) {
-					wsShuffle.assign_value<2>(simd::opShuffle(whitespaceTableLocal, in_01.get_value<2>()));
-					wsShuffle.assign_value<3>(simd::opShuffle(whitespaceTableLocal, in_01.get_value<3>()));
+					wsShuffle.assignValue<2>(simd::opShuffle(whitespaceTableLocal, in_01.getValue<2>()));
+					wsShuffle.assignValue<3>(simd::opShuffle(whitespaceTableLocal, in_01.getValue<3>()));
 				}
 			}
 			return cmp_eq_op::impl(in_01, wsShuffle);
@@ -156,20 +156,20 @@ namespace jsonifier::simd {
 	};
 
 	struct op_collector {
-		JSONIFIER_INLINE static uint64_t impl(simd_array in_01, jsonifier_simd_int_t opTable, jsonifier_simd_int_t spaceMask) noexcept {
-			simd_array orLhs;
-			simd_array shuffleRhs;
+		JSONIFIER_INLINE static uint64_t impl(simd_array<registersPerSixtyFourBits> in_01, jsonifier_simd_int_t opTable, jsonifier_simd_int_t spaceMask) noexcept {
+			simd_array<registersPerSixtyFourBits> orLhs;
+			simd_array<registersPerSixtyFourBits> shuffleRhs;
 
-			orLhs.assign_value<0>(simd::opOr(in_01.get_value<0>(), spaceMask));
-			shuffleRhs.assign_value<0>(simd::opShuffle(opTable, in_01.get_value<0>()));
+			orLhs.assignValue<0>(simd::opOr(in_01.getValue<0>(), spaceMask));
+			shuffleRhs.assignValue<0>(simd::opShuffle(opTable, in_01.getValue<0>()));
 			if constexpr (registersPerSixtyFourBits > 1) {
-				orLhs.assign_value<1>(simd::opOr(in_01.get_value<1>(), spaceMask));
-				shuffleRhs.assign_value<1>(simd::opShuffle(opTable, in_01.get_value<1>()));
+				orLhs.assignValue<1>(simd::opOr(in_01.getValue<1>(), spaceMask));
+				shuffleRhs.assignValue<1>(simd::opShuffle(opTable, in_01.getValue<1>()));
 				if constexpr (registersPerSixtyFourBits > 2) {
-					orLhs.assign_value<2>(simd::opOr(in_01.get_value<2>(), spaceMask));
-					shuffleRhs.assign_value<2>(simd::opShuffle(opTable, in_01.get_value<2>()));
-					orLhs.assign_value<3>(simd::opOr(in_01.get_value<3>(), spaceMask));
-					shuffleRhs.assign_value<3>(simd::opShuffle(opTable, in_01.get_value<3>()));
+					orLhs.assignValue<2>(simd::opOr(in_01.getValue<2>(), spaceMask));
+					shuffleRhs.assignValue<2>(simd::opShuffle(opTable, in_01.getValue<2>()));
+					orLhs.assignValue<3>(simd::opOr(in_01.getValue<3>(), spaceMask));
+					shuffleRhs.assignValue<3>(simd::opShuffle(opTable, in_01.getValue<3>()));
 				}
 			}
 			return cmp_eq_op::impl(orLhs, shuffleRhs);

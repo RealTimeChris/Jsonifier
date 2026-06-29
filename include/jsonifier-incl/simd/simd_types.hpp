@@ -81,14 +81,7 @@ namespace jsonifier {
 #endif
 
 	inline constexpr uint64_t bytesPerStep{ bitsPerStep / 8 };
-	inline constexpr uint64_t stridesPerStep{ bitsPerStep / bytesPerStep };
 	inline constexpr uint64_t registersPerSixtyFourBits{ 64 / bytesPerStep };
-
-#if JSONIFIER_ARCH_ARM64
-	inline constexpr uint64_t simdBlocksPerStep{ 4 };
-#else
-	inline constexpr uint64_t simdBlocksPerStep{ bitsPerStep / 64 };
-#endif
 
 	template<typename value_type>
 	concept simd_int_512_type = sizeof(value_type) == 64;
@@ -97,17 +90,17 @@ namespace jsonifier {
 	template<typename value_type>
 	concept simd_int_128_type = sizeof(value_type) == 16;
 
-	struct simd_array {
+	template<uint64_t size> struct simd_array {
 		using size_type = uint64_t;
-		jsonifier_simd_int_t values[registersPerSixtyFourBits]{};
+		jsonifier_simd_int_t values[size]{};
 
-		template<uint64_t index_new> JSONIFIER_INLINE constexpr void assign_value(jsonifier_simd_int_t value) noexcept {
-			constexpr uint64_t index{ index_new % registersPerSixtyFourBits };
+		template<uint64_t index_new> JSONIFIER_INLINE constexpr void assignValue(jsonifier_simd_int_t value) noexcept {
+			constexpr uint64_t index{ index_new % size };
 			values[index] = value;
 		}
 
-		template<uint64_t index_new> JSONIFIER_INLINE constexpr jsonifier_simd_int_t get_value() const noexcept {
-			constexpr uint64_t index{ index_new % registersPerSixtyFourBits };
+		template<uint64_t index_new> JSONIFIER_INLINE constexpr jsonifier_simd_int_t getValue() const noexcept {
+			constexpr uint64_t index{ index_new % size };
 			return values[index];
 		}
 	};
@@ -126,31 +119,77 @@ namespace jsonifier {
 #endif
 	}
 
-#if JSONIFIER_COMPILER_CLANG
+#if JSONIFIER_COMPILER_MSVC
+	static constexpr uint64_t chunksPerBlockAscii	  = 8;
+	static constexpr uint64_t blocksPerStepAscii	  = 4;
+	static constexpr uint64_t chunksPerBlockMixed	  = 8;
+	static constexpr uint64_t blocksPerStepMixed	  = 8;
+	static constexpr uint64_t chunksPerBlockMultibyte = 8;
+	static constexpr uint64_t blocksPerStepMultibyte  = 1;
+	static constexpr uint64_t jsonifierTapeMax		  = 8;
+	static constexpr uint64_t jsonifierTapeStep		  = 4;
+	static constexpr uint64_t jsonifierBlocksPerStep  = 8;
+#elif JSONIFIER_COMPILER_CLANG
+	static constexpr uint64_t chunksPerBlockAscii	  = 16;
+	static constexpr uint64_t blocksPerStepAscii	  = 2;
+	static constexpr uint64_t chunksPerBlockMixed	  = 4;
+	static constexpr uint64_t blocksPerStepMixed	  = 1;
+	static constexpr uint64_t chunksPerBlockMultibyte = 8;
+	static constexpr uint64_t blocksPerStepMultibyte  = 1;
 	#if JSONIFIER_ARCH_ARM64
-	static constexpr uint64_t jsonifier_tape_max = 24;
-	static constexpr uint64_t jsonifier_tape_step = 4;
+	static constexpr uint64_t jsonifierTapeMax		 = 16;
+	static constexpr uint64_t jsonifierTapeStep		 = 2;
+	static constexpr uint64_t jsonifierBlocksPerStep = 4;
 	#else
-	static constexpr uint64_t jsonifier_tape_max  = 32;
-	static constexpr uint64_t jsonifier_tape_step = 4;
+	static constexpr uint64_t jsonifierTapeMax		 = 8;
+	static constexpr uint64_t jsonifierTapeStep		 = 2;
+	static constexpr uint64_t jsonifierBlocksPerStep = 4;
 	#endif
 #elif JSONIFIER_COMPILER_GCC
+	static constexpr uint64_t chunksPerBlockAscii	  = 1;
+	static constexpr uint64_t blocksPerStepAscii	  = 4;
+	static constexpr uint64_t chunksPerBlockMixed	  = 1;
+	static constexpr uint64_t blocksPerStepMixed	  = 2;
+	static constexpr uint64_t chunksPerBlockMultibyte = 1;
+	static constexpr uint64_t blocksPerStepMultibyte  = 1;
 	#if JSONIFIER_ARCH_ARM64
-	static constexpr uint64_t jsonifier_tape_max = 32;
-	static constexpr uint64_t jsonifier_tape_step = 2;
+	static constexpr uint64_t jsonifierTapeMax		 = 32;
+	static constexpr uint64_t jsonifierTapeStep		 = 4;
+	static constexpr uint64_t jsonifierBlocksPerStep = 4;
 	#else
-	static constexpr uint64_t jsonifier_tape_max  = 16;
-	static constexpr uint64_t jsonifier_tape_step = 8;
+	static constexpr uint64_t jsonifierTapeMax		 = 4;
+	static constexpr uint64_t jsonifierTapeStep		 = 4;
+	static constexpr uint64_t jsonifierBlocksPerStep = 8;
 	#endif
-#elif JSONIFIER_COMPILER_MSVC
-	static constexpr uint64_t jsonifier_tape_max = 24;
-	static constexpr uint64_t jsonifier_tape_step = 4;
 #else
-static constexpr uint64_t jsonifier_tape_max = 24;
-static constexpr uint64_t jsonifier_tape_step = 4;
+	static constexpr uint64_t chunksPerBlockAscii	  = 8;
+	static constexpr uint64_t blocksPerStepAscii	  = 4;
+	static constexpr uint64_t chunksPerBlockMixed	  = 4;
+	static constexpr uint64_t blocksPerStepMixed	  = 1;
+	static constexpr uint64_t chunksPerBlockMultibyte = 4;
+	static constexpr uint64_t blocksPerStepMultibyte  = 1;
+	static constexpr uint64_t jsonifierTapeMax		  = 8;
+	static constexpr uint64_t jsonifierTapeStep		  = 4;
+	static constexpr uint64_t jsonifierBlocksPerStep  = 8;
 #endif
 
-	static_assert(jsonifier_tape_max % jsonifier_tape_step == 0, "jsonifier_tape_max must be a multiple of jsonifier_tape_step");
+	static constexpr uint64_t bytesPerChunk			 = 32;
+	static constexpr uint64_t bytesPerBlockAscii	 = bytesPerChunk * chunksPerBlockAscii;
+	static constexpr uint64_t bytesPerBlockMixed	 = bytesPerChunk * chunksPerBlockMixed;
+	static constexpr uint64_t bytesPerBlockMultibyte = bytesPerChunk * chunksPerBlockMultibyte;
+
+	static constexpr uint8_t tooShort	  = 1 << 0;
+	static constexpr uint8_t tooLong	  = 1 << 1;
+	static constexpr uint8_t overlong3	  = 1 << 2;
+	static constexpr uint8_t tooLarge	  = 1 << 3;
+	static constexpr uint8_t surrogate	  = 1 << 4;
+	static constexpr uint8_t overlong2	  = 1 << 5;
+	static constexpr uint8_t twoConts	  = 1 << 7;
+	static constexpr uint8_t tooLarge1000 = 1 << 6;
+	static constexpr uint8_t overlong4	  = 1 << 6;
+	static constexpr uint8_t carry		  = tooShort | tooLong | twoConts;
+
+	static_assert(jsonifierTapeMax % jsonifierTapeStep == 0, "jsonifierTapeMax must be a multiple of jsonifierTapeStep");
 
 	JSONIFIER_ALIGN(2) inline constexpr char backslash{ '\\' };
 	JSONIFIER_ALIGN(2) inline constexpr char newline{ '\n' };

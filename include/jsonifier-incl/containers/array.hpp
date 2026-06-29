@@ -209,6 +209,14 @@ namespace jsonifier::internal {
 			return const_iterator{};
 		}
 
+		JSONIFIER_INLINE constexpr reference operator[](size_type) noexcept {
+			return *data();
+		}
+
+		JSONIFIER_INLINE constexpr const_reference operator[](size_type) const noexcept {
+			return *data();
+		}
+
 		JSONIFIER_INLINE constexpr size_type size() const noexcept {
 			return 0;
 		}
@@ -224,6 +232,8 @@ namespace jsonifier::internal {
 		JSONIFIER_INLINE constexpr friend bool operator==(const array&, const array&) noexcept {
 			return true;
 		}
+
+		JSONIFIER_ALIGN(64) empty_array_element dataVal[1];
 	};
 
 }

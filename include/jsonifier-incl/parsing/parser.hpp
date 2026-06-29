@@ -24,6 +24,8 @@
 #pragma once
 
 #include <jsonifier-incl/utilities/json_entity.hpp>
+#include <jsonifier-incl/simd/avx_validation.hpp>
+#include <jsonifier-incl/simd/neon_validation.hpp>
 #include <jsonifier-incl/parsing/validator.hpp>
 #include <jsonifier-incl/utilities/hash_map.hpp>
 #include <jsonifier-incl/utilities/string.hpp>
@@ -125,6 +127,36 @@ namespace jsonifier::internal {
 		parser& operator=(const parser& other) = delete;
 		parser(const parser& other)			   = delete;
 
+		template<parse_options options = parse_options{}, typename comparison_type, typename buffer_type>
+		inline bool parseJsonForComparison(comparison_type&& object, buffer_type&& in) noexcept {
+			parse_context_partial<derived_type, structural_index_ptr> context{ constEval(parse_context_partial<derived_type, structural_index_ptr>{}) };
+			auto rootIter = getBeginIter(in);
+			auto endIter  = getEndIter(in);
+			derivedRef.section.template reset<options.minified>(rootIter, static_cast<uint64_t>(endIter - rootIter));
+			object.indices.resize(derivedRef.section.getTapeCount());
+			std::copy_n(derivedRef.section.begin(), object.indices.size(), object.indices.data());
+			context.rootIter   = derivedRef.section.begin();
+			context.iter	   = derivedRef.section.begin();
+			context.endIter	   = derivedRef.section.end();
+			context.stringRoot = rootIter;
+			context.parserPtr  = this;
+			auto newSize	   = static_cast<uint64_t>((context.endIter - context.iter) / 2);
+			if (derivedRef.stringBuffer.size() < newSize) {
+				derivedRef.stringBuffer.resize(newSize);
+			}
+			if constexpr (options.validateJson) {
+				if (!derivedRef.validateJson(in)) {
+					return false;
+				}
+			}
+			derivedRef.errors.clear();
+			if JSONIFIER_UNLIKELY (!context.iter || context.iter == context.endIter) {
+				reportError<parse_status::No_Input>(context);
+				return false;
+			}
+			return derivedRef.errors.size() > 0 ? false : true;
+		}
+
 		template<parse_options options = parse_options{}, typename value_type, typename buffer_type> inline bool parseJson(value_type&& object, buffer_type&& in) noexcept {
 			if constexpr (options.partialRead) {
 				static constexpr parse_options optionsNew{ options };
@@ -151,7 +183,7 @@ namespace jsonifier::internal {
 					reportError<parse_status::No_Input>(context);
 					return false;
 				}
-				parse<optionsNew, areWeInsideRepeated<value_type>()>::impl(object, context);
+				parse<optionsNew, options.minified>::impl(object, context);
 				return derivedRef.errors.size() > 0 ? false : true;
 			} else {
 				static constexpr parse_options optionsNew{ options };
@@ -251,7 +283,7 @@ namespace jsonifier::internal {
 					return jsonifier::internal::remove_cvref_t<value_type>{};
 				}
 				value_type object{};
-				parse<optionsNew, areWeInsideRepeated<value_type>()>::impl(object, context);
+				parse<optionsNew, options.minified>::impl(object, context);
 				return derivedRef.errors.size() > 0 ? jsonifier::internal::remove_cvref_t<value_type>{} : object;
 			} else {
 				static constexpr parse_options optionsNew{ options };

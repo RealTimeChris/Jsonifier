@@ -131,7 +131,7 @@ namespace jsonifier::simd {
 	}
 
 	template<simd_int_128_type simd_int_t01> [[maybe_unused]] JSONIFIER_INLINE static bool opTest(const simd_int_t01& value) noexcept {
-		return vmaxvq_u8(value) != 0;
+		return vmaxvq_u8(value) == 0;
 	}
 
 	template<simd_int_128_type simd_int_t01> [[maybe_unused]] JSONIFIER_INLINE static auto opNot(const simd_int_t01& value) noexcept {

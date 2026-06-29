@@ -116,6 +116,25 @@ namespace jsonifier::simd {
 	}
 
 	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02>
+	[[maybe_unused]] JSONIFIER_INLINE static auto opSubS(const simd_int_t01& value, const simd_int_t02& other) noexcept {
+		return _mm_subs_epu8(value, other);
+	}
+
+	template<int32_t permuteMask, simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02>
+	[[maybe_unused]] JSONIFIER_INLINE static auto opPermute(const simd_int_t01& value, const simd_int_t02&) noexcept {
+		return value;
+	}
+
+	template<int32_t alignment, simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02>
+	[[maybe_unused]] JSONIFIER_INLINE static auto opAlignR(const simd_int_t01& value, const simd_int_t02& other) noexcept {
+		return _mm_alignr_epi8(value, other, alignment);
+	}
+
+	template<int32_t alignment, simd_int_128_type simd_int_t01> [[maybe_unused]] JSONIFIER_INLINE static auto opSrLi(const simd_int_t01& value) noexcept {
+		return _mm_srli_epi16(value, alignment);
+	}
+
+	template<simd_int_128_type simd_int_t01, simd_int_128_type simd_int_t02>
 	[[maybe_unused]] JSONIFIER_INLINE static auto opAnd(const simd_int_t01& value, const simd_int_t02& other) noexcept {
 		return _mm_and_si128(value, other);
 	}
@@ -131,7 +150,7 @@ namespace jsonifier::simd {
 	}
 
 	template<simd_int_128_type simd_int_t01> [[maybe_unused]] JSONIFIER_INLINE static auto opTest(const simd_int_t01& value) noexcept {
-		return !_mm_testz_si128(value, value);
+		return _mm_testz_si128(value, value);
 	}
 
 	template<simd_int_128_type simd_int_t01> [[maybe_unused]] JSONIFIER_INLINE static auto opNot(const simd_int_t01& value) noexcept {
@@ -224,6 +243,26 @@ namespace jsonifier::simd {
 	}
 
 	template<simd_int_256_type simd_int_t01, simd_int_256_type simd_int_t02>
+	[[maybe_unused]] JSONIFIER_INLINE static auto opSubS(const simd_int_t01& value, const simd_int_t02& other) noexcept {
+		return _mm256_subs_epu8(value, other);
+	}
+
+	template<int32_t permuteMask, simd_int_256_type simd_int_t01, simd_int_256_type simd_int_t02>
+	[[maybe_unused]] JSONIFIER_INLINE static auto opPermute(const simd_int_t01& value, const simd_int_t02& other) noexcept {
+		return _mm256_permute2x128_si256(value, other, permuteMask);
+	}
+
+	template<int32_t alignment, simd_int_256_type simd_int_t01, simd_int_256_type simd_int_t02>
+	[[maybe_unused]] JSONIFIER_INLINE static auto opAlignR(const simd_int_t01& value, const simd_int_t02& other) noexcept {
+		return _mm256_alignr_epi8(value, other, alignment);
+	}
+
+	template<int32_t alignment, simd_int_256_type simd_int_t01>
+	[[maybe_unused]] JSONIFIER_INLINE static auto opSrLi(const simd_int_t01& value) noexcept {
+		return _mm256_srli_epi16(value, alignment);
+	}
+
+	template<simd_int_256_type simd_int_t01, simd_int_256_type simd_int_t02>
 	[[maybe_unused]] JSONIFIER_INLINE static auto opAnd(const simd_int_t01& value, const simd_int_t02& other) noexcept {
 		return _mm256_and_si256(value, other);
 	}
@@ -239,7 +278,7 @@ namespace jsonifier::simd {
 	}
 
 	template<simd_int_256_type simd_int_t01> [[maybe_unused]] JSONIFIER_INLINE static auto opTest(const simd_int_t01& value) noexcept {
-		return !_mm256_testz_si256(value, value);
+		return _mm256_testz_si256(value, value);
 	}
 
 	template<simd_int_256_type simd_int_t01> [[maybe_unused]] JSONIFIER_INLINE static auto opNot(const simd_int_t01& value) noexcept {
@@ -330,6 +369,25 @@ namespace jsonifier::simd {
 	}
 
 	template<simd_int_512_type simd_int_t01, simd_int_512_type simd_int_t02>
+	[[maybe_unused]] JSONIFIER_INLINE static auto opSubS(const simd_int_t01& value, const simd_int_t02& other) noexcept {
+		return _mm512_subs_epu8(value, other);
+	}
+
+	template<int32_t permuteMask, simd_int_512_type simd_int_t01, simd_int_512_type simd_int_t02>
+	[[maybe_unused]] JSONIFIER_INLINE static auto opPermute(const simd_int_t01& value, const simd_int_t02& other) noexcept {
+		return _mm512_shuffle_i64x2(value, other, permuteMask);
+	}
+
+	template<int32_t alignment, simd_int_512_type simd_int_t01, simd_int_512_type simd_int_t02>
+	[[maybe_unused]] JSONIFIER_INLINE static auto opAlignR(const simd_int_t01& value, const simd_int_t02& other) noexcept {
+		return _mm512_alignr_epi8(value, other, alignment);
+	}
+
+	template<int32_t alignment, simd_int_512_type simd_int_t01> [[maybe_unused]] JSONIFIER_INLINE static auto opSrLi(const simd_int_t01& value) noexcept {
+		return _mm512_srli_epi16(value, alignment);
+	}
+
+	template<simd_int_512_type simd_int_t01, simd_int_512_type simd_int_t02>
 	[[maybe_unused]] JSONIFIER_INLINE static auto opAnd(const simd_int_t01& value, const simd_int_t02& other) noexcept {
 		return _mm512_and_si512(value, other);
 	}
@@ -345,7 +403,7 @@ namespace jsonifier::simd {
 	}
 
 	template<simd_int_512_type simd_int_t01> [[maybe_unused]] JSONIFIER_INLINE static auto opTest(const simd_int_t01& value) noexcept {
-		return _mm512_test_epi64_mask(value, value) != 0;
+		return _mm512_test_epi64_mask(value, value) == 0;
 	}
 
 	template<simd_int_512_type simd_int_t01> [[maybe_unused]] JSONIFIER_INLINE static auto opNot(const simd_int_t01& value) noexcept {
