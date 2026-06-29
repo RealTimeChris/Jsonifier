@@ -65,7 +65,7 @@ namespace tests {
 		});
 	};
 
-	template<bool knownOrder, bool partialRead> inline static void parsing_tests_impl() {
+	template<bool knownOrder, bool partialRead> inline static void parsing_tests_impl(jsonifier::jsonifier_core<>& parser) {
 		static constexpr rt_ut::string_literal test_type_partial{ [] {
 			if constexpr (partialRead) {
 				return rt_ut::string_literal{ "Partial-Reading: Enabled" };
@@ -73,7 +73,6 @@ namespace tests {
 				return rt_ut::string_literal{ "Partial-Reading: Disabled" };
 			}
 		}() };
-		jsonifier::jsonifier_core<> parser{};
 		parsing_tests<test_types::parse_serialize, "Abc Partial Test (Minified)", test_type_partial, abc_partial_test<abc_partial_test_struct>, false, partialRead, knownOrder>(
 			parser);
 		parsing_tests<test_types::parse_serialize, "Abc Partial Test (Prettified)", test_type_partial, abc_partial_test<abc_partial_test_struct>, true, partialRead, knownOrder>(
@@ -105,16 +104,17 @@ namespace tests {
 		parsing_tests<test_types::parse_serialize, "Twitter Test (Prettified)", test_type_partial, twitter_message, true, partialRead, knownOrder>(parser);
 		parsing_tests<test_types::parse_serialize, "Twitter Partial Test (Minified)", test_type_partial, twitter_partial_message, false, partialRead, knownOrder>(parser);
 		parsing_tests<test_types::parse_serialize, "Twitter Partial Test (Prettified)", test_type_partial, twitter_partial_message, true, partialRead, knownOrder>(parser);
-		parsing_tests<test_types::minify, "Minify Test", test_type_partial, std::string, false, partialRead, knownOrder>(parser);
-		parsing_tests<test_types::prettify, "Prettify Test", test_type_partial, std::string, false, partialRead, knownOrder>(parser);
-		parsing_tests<test_types::validate, "Validate Test", test_type_partial, std::string, false, partialRead, knownOrder>(parser);
 	}
 
 	inline static void parsing_tests() {
-		parsing_tests_impl<true, true>();
-		parsing_tests_impl<false, true>();
-		parsing_tests_impl<true, false>();
-		parsing_tests_impl<false, false>();
+		jsonifier::jsonifier_core<> parser{};
+		parsing_tests_impl<true, true>(parser);
+		parsing_tests_impl<false, true>(parser);
+		parsing_tests_impl<true, false>(parser);
+		parsing_tests_impl<false, false>(parser);
+		parsing_tests<test_types::minify, "Minify Test", "", std::string, false, false, false>(parser);
+		parsing_tests<test_types::prettify, "Prettify Test", "", std::string, false, false, false>(parser);
+		parsing_tests<test_types::validate, "Validate Test", "", std::string, false, false, false>(parser);
 	}
 
 }
