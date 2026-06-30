@@ -24,65 +24,12 @@
 #pragma once
 
 #include <jsonifier-incl/utilities/type_entities.hpp>
+#include <jsonifier-incl/utilities/concepts.hpp>
 
 namespace jsonifier::simd {
 
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_LZCNT) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
-
-	[[maybe_unused]] JSONIFIER_INLINE static uint32_t lzcnt(const uint32_t value) noexcept {
-		return _lzcnt_u32(value);
+    template<typename value_type> JSONIFIER_INLINE constexpr value_type lzcnt(const value_type value) noexcept {
+		return static_cast<value_type>(std::countl_zero(value));
 	}
-
-	[[maybe_unused]] JSONIFIER_INLINE static uint64_t lzcnt(const uint64_t value) noexcept {
-		return _lzcnt_u64(value);
-	}
-
-#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
-
-	template<concepts::uns32_t value_type> [[maybe_unused]] JSONIFIER_INLINE static value_type lzcnt(const value_type value) noexcept {
-	#if defined(JSONIFIER_REGULAR_VISUAL_STUDIO)
-		uint64_t leading_zero = 0;
-		if (_BitScanReverse32(&leading_zero, value)) {
-			return 32 - leading_zero;
-		} else {
-			return 32;
-		}
-	#else
-		return __builtin_clz(value);
-	#endif
-	}
-
-	template<concepts::uns64_t value_type> [[maybe_unused]] JSONIFIER_INLINE static value_type lzcnt(const value_type value) noexcept {
-	#if defined(JSONIFIER_REGULAR_VISUAL_STUDIO)
-		uint64_t leading_zero = 0;
-		if (_BitScanReverse64(&leading_zero, value)) {
-			return 63 - leading_zero;
-		} else {
-			return 64;
-		}
-	#else
-		return static_cast<value_type>(__builtin_clzll(value));
-	#endif
-	}
-
-#else
-
-	template<concepts::unsigned_t value_type> [[maybe_unused]] JSONIFIER_INLINE static constexpr value_type lzcnt(const value_type value) noexcept {
-		if (value == 0) {
-			return sizeof(value_type) * 8;
-		}
-
-		value_type count{};
-		value_type mask{ static_cast<value_type>(1) << (std::numeric_limits<value_type>::digits - 1) };
-
-		while ((value & mask) == 0) {
-			++count;
-			mask >>= 1;
-		}
-
-		return count;
-	}
-
-#endif
 
 }

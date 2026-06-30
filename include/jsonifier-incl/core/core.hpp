@@ -39,26 +39,29 @@ namespace jsonifier::internal {
 		uint64_t count{};
 	};
 
+	// Idea for this interface sampled from Stephen Berry and his library, Glaze library: https://github.com/stephenberry/glaze
+	template<typename value_type> using core_tuple_type				 = decltype(core<jsonifier::internal::remove_cvref_t<value_type>>::parseValue);
+	template<typename value_type> constexpr uint64_t core_tuple_size = tuple_size_v<core_tuple_type<value_type>>;
+
 	template<typename value_type>
 	concept has_name = requires(jsonifier::internal::remove_cvref_t<value_type> value) { value.name; };
 
-	template<uint64_t maxIndex, uint64_t currentIndex = 0, typename tuple_type>
-	static constexpr array<tuple_reference, maxIndex> collectTupleRefsImpl(const tuple_type& tuple, array<tuple_reference, maxIndex>& tupleRefsRaw) {
-		if constexpr (currentIndex < maxIndex) {
-			auto potentialKey = internal::get_because_other_lib_authors_resolve<currentIndex>(tuple);
-			if constexpr (has_name<decltype(potentialKey)>) {
-				tupleRefsRaw[currentIndex].key = potentialKey.name.operator string_view();
-			}
-			tupleRefsRaw[currentIndex].oldIndex = currentIndex;
-			return collectTupleRefsImpl<maxIndex, currentIndex + 1>(tuple, tupleRefsRaw);
+	template<typename value_type, uint64_t currentIndex> static constexpr void collectTupleRef(tuple_reference& tupleRef) {
+		constexpr auto potentialKey = internal::get_because_other_lib_authors_resolve<currentIndex>(core<value_type>::parseValue);
+		if constexpr (has_name<decltype(potentialKey)>) {
+			tupleRef.key = string_view{ escapedKeyLiteral<potentialKey.name>.data(), escapedKeyLiteral<potentialKey.name>.size() };
 		}
+		tupleRef.oldIndex = currentIndex;
+	}
+
+	template<typename value_type, uint64_t... indices> static constexpr array<tuple_reference, sizeof...(indices)> collectTupleRefsImpl(index_sequence<indices...>) {
+		array<tuple_reference, sizeof...(indices)> tupleRefsRaw{};
+		(collectTupleRef<value_type, indices>(tupleRefsRaw[indices]), ...);
 		return tupleRefsRaw;
 	}
 
-	template<typename tuple_type> static constexpr auto collectTupleRefs(const tuple_type& tuple) {
-		constexpr auto tupleSize = tuple_size_v<tuple_type>;
-		array<tuple_reference, tupleSize> tupleRefsRaw{};
-		return collectTupleRefsImpl<tupleSize>(tuple, tupleRefsRaw);
+	template<typename value_type> static constexpr auto collectTupleRefs() {
+		return collectTupleRefsImpl<value_type>(make_index_sequence<core_tuple_size<value_type>>{});
 	}
 
 	template<uint64_t size> static constexpr array<tuple_reference, size> sortTupleRefsByFirstByte(const array<tuple_reference, size>& tupleRefsRaw) {
@@ -98,15 +101,11 @@ namespace jsonifier::internal {
 		return returnValues;
 	}
 
-	template<typename value_type> inline constexpr auto tupleRefs{ collectTupleRefs(core<value_type>::parseValue) };
+	template<typename value_type> inline constexpr auto tupleRefs{ collectTupleRefs<value_type>() };
 	template<typename value_type> inline constexpr auto tupleReferences{ consolidateTupleRefs(tupleRefs<value_type>) };
 	template<typename value_type> inline constexpr auto sortedTupleReferencesByLength{ sortTupleRefsByLength(tupleRefs<value_type>) };
 	template<typename value_type> inline constexpr auto tupleReferencesByLength{ consolidateTupleRefs(sortedTupleReferencesByLength<value_type>) };
 	template<typename value_type> inline constexpr auto sortedTupleReferencesByFirstByte{ sortTupleRefsByFirstByte(tupleRefs<value_type>) };
 	template<typename value_type> inline constexpr auto tupleReferencesByFirstByte{ consolidateTupleRefs(sortedTupleReferencesByFirstByte<value_type>) };
-
-	// Idea for this interface sampled from Stephen Berry and his library, Glaze library: https://github.com/stephenberry/glaze
-	template<typename value_type> using core_tuple_type				 = decltype(core<jsonifier::internal::remove_cvref_t<value_type>>::parseValue);
-	template<typename value_type> constexpr uint64_t core_tuple_size = tuple_size_v<core_tuple_type<value_type>>;
 
 }// namespace internal

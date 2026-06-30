@@ -59,8 +59,8 @@ namespace jsonifier::internal {
 
 	template<concepts::jsonifier_object_t value_type> struct json_comparator_impl<value_type> {
 		template<typename value_type_new> inline static bool impl(value_type_new&& lhs, value_type_new&& rhs) {
-			static constexpr auto memberCount{ core_tuple_size<value_type> };
-			if constexpr (memberCount > 0) {
+			static constexpr auto membercount{ core_tuple_size<value_type> };
+			if constexpr (membercount > 0) {
 				return compare_base_t<remove_cvref_t<value_type>>::iterateValues(lhs, rhs);
 			} else {
 				return true;

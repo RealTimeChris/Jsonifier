@@ -380,7 +380,7 @@ namespace jsonifier::internal {
 		return sl;
 	}
 
-	template<uint64_t split_mod, uint64_t size> static consteval uint64_t getSplitStringCount(const string_literal<size>&) noexcept {
+	template<uint64_t split_mod, uint64_t size> static consteval uint64_t getSplitStringcount(const string_literal<size>&) noexcept {
 		constexpr uint64_t split_count = (size + split_mod - 1ull) / split_mod;
 		return split_count == 0ull ? 1ull : split_count;
 	}
@@ -438,50 +438,50 @@ namespace jsonifier::internal {
 	template<gt_0_lt_16 sl_type, jsonifier::internal::remove_cvref_t<sl_type> stringNew> struct string_literal_comparitor<sl_type, stringNew, void> {
 		JSONIFIER_INLINE static string_view_ptr impl(string_view_ptr str) noexcept {
 			static constexpr auto stringLiteral{ stringNew };
-			static constexpr auto newCount{ stringLiteral.size() };
-			if constexpr (newCount > 8) {
+			static constexpr auto newcount{ stringLiteral.size() };
+			if constexpr (newcount > 8) {
 				JSONIFIER_ALIGN(64) static constexpr auto valuesNew{ pack_values<stringLiteral>::value };
 				jsonifier_simd_int_128 data1{};
-				std::memcpy(&data1, str, newCount);
+				std::memcpy(&data1, str, newcount);
 				const jsonifier_simd_int_128 data2{ simd::gatherValues<jsonifier_simd_int_128>(valuesNew.data()) };
-				return simd::opTest(simd::opXor(data1, data2)) ? str + newCount : nullptr;
-			} else if constexpr (newCount == 8) {
+				return simd::opTest(simd::opXor(data1, data2)) ? str + newcount : nullptr;
+			} else if constexpr (newcount == 8) {
 				static constexpr auto valuesNew{ pack_values<stringLiteral>::value };
 				uint64_t l;
 				std::memcpy(&l, str, 8);
-				return !(l ^ valuesNew) ? str + newCount : nullptr;
-			} else if constexpr (newCount == 7) {
+				return !(l ^ valuesNew) ? str + newcount : nullptr;
+			} else if constexpr (newcount == 7) {
 				static constexpr auto valuesNew{ pack_values<stringLiteral>::value };
 				uint64_t l{};
 				std::memcpy(&l, str, 7);
-				return !(l ^ valuesNew) ? str + newCount : nullptr;
-			} else if constexpr (newCount == 6) {
+				return !(l ^ valuesNew) ? str + newcount : nullptr;
+			} else if constexpr (newcount == 6) {
 				static constexpr auto valuesNew{ pack_values<stringLiteral>::value };
 				uint64_t l{};
 				std::memcpy(&l, str, 6);
-				return !(l ^ valuesNew) ? str + newCount : nullptr;
-			} else if constexpr (newCount == 5) {
+				return !(l ^ valuesNew) ? str + newcount : nullptr;
+			} else if constexpr (newcount == 5) {
 				static constexpr auto valuesNew{ static_cast<uint32_t>(pack_values<stringLiteral>::value) };
 				uint32_t l;
 				std::memcpy(&l, str, 4);
-				return (!(l ^ valuesNew) && (str[4] == stringLiteral[4])) ? str + newCount : nullptr;
-			} else if constexpr (newCount == 4) {
+				return (!(l ^ valuesNew) && (str[4] == stringLiteral[4])) ? str + newcount : nullptr;
+			} else if constexpr (newcount == 4) {
 				static constexpr auto valuesNew{ pack_values<stringLiteral>::value };
 				uint32_t l;
 				std::memcpy(&l, str, 4);
-				return !(l ^ valuesNew) ? str + newCount : nullptr;
-			} else if constexpr (newCount == 3) {
+				return !(l ^ valuesNew) ? str + newcount : nullptr;
+			} else if constexpr (newcount == 3) {
 				static constexpr auto valuesNew{ static_cast<uint16_t>(pack_values<stringLiteral>::value) };
 				uint16_t l;
 				std::memcpy(&l, str, 2);
-				return (!(l ^ valuesNew) && (str[2] == stringLiteral[2])) ? str + newCount : nullptr;
-			} else if constexpr (newCount == 2) {
+				return (!(l ^ valuesNew) && (str[2] == stringLiteral[2])) ? str + newcount : nullptr;
+			} else if constexpr (newcount == 2) {
 				static constexpr auto valuesNew{ pack_values<stringLiteral>::value };
 				uint16_t l;
 				std::memcpy(&l, str, 2);
-				return !(l ^ valuesNew) ? str + newCount : nullptr;
-			} else if constexpr (newCount == 1) {
-				return (*str == stringLiteral[0]) ? str + newCount : nullptr;
+				return !(l ^ valuesNew) ? str + newcount : nullptr;
+			} else if constexpr (newcount == 1) {
+				return (*str == stringLiteral[0]) ? str + newcount : nullptr;
 			} else {
 				return str;
 			}
@@ -526,7 +526,7 @@ namespace jsonifier::internal {
 
 	template<gt_16 sl_type, jsonifier::internal::remove_cvref_t<sl_type> stringNew> struct string_literal_comparitor<sl_type, stringNew, void> {
 		static constexpr uint64_t split_mod{ getOffsetIntoLiteralSize(stringNew.size()) };
-		static constexpr auto string_count{ getSplitStringCount<split_mod>(stringNew) };
+		static constexpr auto string_count{ getSplitStringcount<split_mod>(stringNew) };
 
 		JSONIFIER_INLINE static string_view_ptr impl(string_view_ptr str) noexcept {
 			return string_literal_splitter<make_integer_sequence<string_count>, stringNew, split_mod>::impl(str);

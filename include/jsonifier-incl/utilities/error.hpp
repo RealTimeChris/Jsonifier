@@ -24,6 +24,7 @@
 #pragma once
 
 #include <jsonifier-incl/utilities/string_view.hpp>
+#include <jsonifier-incl/utilities/json_iterator.hpp>
 #include <jsonifier-incl/utilities/simd.hpp>
 #include <source_location>
 #include <unordered_map>
@@ -34,89 +35,65 @@
 namespace jsonifier::internal {
 
 	enum class status_classes : uint8_t {
-		Unset		= 0,
-		Parsing		= 1,
-		Serializing = 2,
-		Minifying	= 3,
-		Prettifying = 4,
-		Validating	= 5,
+		Unset,
+		Parsing,
+		Serializing,
+		Minifying,
+		Prettifying,
+		Validating,
 	};
 
-	enum class parse_status : uint32_t {
-		Success					  = 0,
-		Missing_Object_Start	  = 1,
-		Missing_Object_End		  = 2,
-		Missing_Array_Start		  = 3,
-		Missing_Array_End		  = 4,
-		Missing_String_Start	  = 5,
-		Missing_Colon			  = 6,
-		Missing_Comma			  = 7,
-		Invalid_Number_Value	  = 8,
-		Invalid_Null_Value		  = 9,
-		Invalid_Bool_Value		  = 10,
-		Invalid_String_Characters = 11,
-		No_Input				  = 12,
-		Unfinished_Input		  = 13,
-		Unexpected_String_End	  = 14,
-		Count					  = 15,
+	enum class serialize_status : uint8_t {
+		success,
+		count,
 	};
 
-	enum class serialize_status : uint32_t {
-		Success = 0,
-		Count	= 1,
+	enum class minify_status : uint8_t {
+		success,
+		no_input,
+		Invalid_String_Length,
+		invalid_number_value,
+		Incorrect_Structural_Index,
+		count,
 	};
 
-	enum class minify_status : uint32_t {
-		Success					   = 0,
-		No_Input				   = 1,
-		Invalid_String_Length	   = 2,
-		Invalid_Number_Value	   = 3,
-		Incorrect_Structural_Index = 4,
-		Count					   = 5,
+	enum class prettify_status : uint8_t {
+		success,
+		no_input,
+		Exceeded_Max_Depth,
+		Incorrect_Structural_Index,
+		count,
 	};
 
-	enum class prettify_status : uint32_t {
-		Success					   = 0,
-		No_Input				   = 1,
-		Exceeded_Max_Depth		   = 2,
-		Incorrect_Structural_Index = 3,
-		Count					   = 4,
+	enum class validate_status : uint8_t {
+		success,
+		missing_object_start,
+		missing_object_end,
+		missing_array_start,
+		missing_array_end,
+		invalid_string_characters,
+		missing_colon,
+		missing_comma,
+		invalid_number_value,
+		invalid_null_value,
+		invalid_bool_value,
+		invalid_escape_characters,
+		missing_comma_Or_Closing_Brace,
+		no_input,
+		count,
 	};
 
-	enum class validate_status : uint32_t {
-		Success						   = 0,
-		Missing_Object_Start		   = 1,
-		Missing_Object_End			   = 2,
-		Missing_Array_Start			   = 3,
-		Missing_Array_End			   = 4,
-		Missing_String_Start		   = 5,
-		Missing_Colon				   = 6,
-		Missing_Comma				   = 7,
-		Invalid_Number_Value		   = 8,
-		Invalid_Null_Value			   = 9,
-		Invalid_Bool_Value			   = 10,
-		Invalid_String_Characters	   = 11,
-		Invalid_Escape_Characters	   = 12,
-		Missing_Comma_Or_Closing_Brace = 13,
-		No_Input					   = 14,
-		Count						   = 15,
-	};
+	static constexpr array<const char*, static_cast<size_t>(serialize_status::count)> serializeErrorNames{ { "success" } };
 
-	static constexpr array<const char*, static_cast<size_t>(parse_status::Count)> parseStatusNames{ { "Success", "Missing_Object_Start", "Missing_Object_End",
-		"Missing_Array_Start", "Missing_Array_End", "Missing_String_Start", "Missing_Colon", "Missing_Comma", "Invalid_Number_Value", "Invalid_Null_Value", "Invalid_Bool_Value",
-		"Invalid_String_Characters", "No_Input", "Unfinished_Input", "Unexpected_String_End" } };
-
-	static constexpr array<const char*, static_cast<size_t>(serialize_status::Count)> serializeErrorNames{ { "Success" } };
-
-	static constexpr array<const char*, static_cast<size_t>(minify_status::Count)> minifyErrorNames{ { "Success", "No_Input", "Invalid_String_Length", "Invalid_Number_Value",
+	static constexpr array<const char*, static_cast<size_t>(minify_status::count)> minifyErrorNames{ { "success", "no_input", "Invalid_String_Length", "invalid_number_value",
 		"Incorrect_Structural_Index" } };
 
-	static constexpr array<const char*, static_cast<size_t>(prettify_status::Count)> prettifyErrorNames{ { "Success", "No_Input", "Exceeded_Max_Depth",
+	static constexpr array<const char*, static_cast<size_t>(prettify_status::count)> prettifyErrorNames{ { "success", "no_input", "Exceeded_Max_Depth",
 		"Incorrect_Structural_Index" } };
 
-	static constexpr array<const char*, static_cast<size_t>(validate_status::Count)> validateErrorNames{ { "Success", "Missing_Object_Start", "Missing_Object_End",
-		"Missing_Array_Start", "Missing_Array_End", "Missing_String_Start", "Missing_Colon", "Missing_Comma", "Invalid_Number_Value", "Invalid_Null_Value", "Invalid_Bool_Value",
-		"Invalid_String_Characters", "Invalid_Escape_Characters", "Missing_Comma_Or_Closing_Brace", "No_Input" } };
+	static constexpr array<const char*, static_cast<size_t>(validate_status::count)> validateErrorNames{ { "success", "missing_object_start", "missing_object_end",
+		"missing_array_start", "missing_array_end", "invalid_string_characters", "missing_colon", "missing_comma", "invalid_number_value", "invalid_null_value",
+		"invalid_bool_value", "invalid_escape_characters", "missing_comma_Or_Closing_Brace", "no_input" } };
 
 	template<typename error_type> constexpr const char* errorName(status_classes cls, error_type code_new) noexcept {
 		uint64_t code{ static_cast<uint64_t>(code_new) };
@@ -136,11 +113,6 @@ namespace jsonifier::internal {
 			default:
 				return "Unset";
 		}
-	}
-
-	inline static std::ostream& operator<<(std::ostream& os, parse_status error) {
-		os << errorName(status_classes::Parsing, error);
-		return os;
 	}
 
 	inline static std::ostream& operator<<(std::ostream& os, serialize_status error) {
@@ -231,6 +203,11 @@ namespace jsonifier::internal {
 			}
 		}
 
+		template<status_classes errorClassNew> static error constructError(auto typeNew, int64_t errorIndexNew, int64_t stringLengthNew, string_view_ptr stringViewNew,
+			const std::source_location& sourceLocation = std::source_location::current()) noexcept {
+			return { sourceLocation, errorClassNew, errorIndexNew, stringLengthNew, stringViewNew, static_cast<uint64_t>(typeNew) };
+		}
+
 		template<status_classes errorClassNew, auto typeNew> static error constructError(int64_t errorIndexNew, int64_t stringLengthNew, string_view_ptr stringViewNew,
 			const std::source_location& sourceLocation = std::source_location::current()) noexcept {
 			return { sourceLocation, errorClassNew, errorIndexNew, stringLengthNew, stringViewNew, static_cast<uint64_t>(typeNew) };
@@ -240,8 +217,8 @@ namespace jsonifier::internal {
 			return errorType;
 		}
 
-		operator parse_status() const noexcept {
-			return static_cast<parse_status>(errorType);
+		operator parse_statuses() const noexcept {
+			return static_cast<parse_statuses>(errorType);
 		}
 
 		operator bool() const noexcept {

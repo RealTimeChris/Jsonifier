@@ -59,10 +59,10 @@ namespace jsonifier::internal {
 
 	template<serialize_options options, typename value_type> static constexpr uint64_t getPaddingSize() noexcept {
 		if constexpr (concepts::jsonifier_object_t<value_type>) {
-			constexpr auto memberCount = core_tuple_size<value_type>;
+			constexpr auto membercount = core_tuple_size<value_type>;
 			constexpr uint64_t newSize{ [] {
 				uint64_t retVal{ 2 };
-				size_collection_lambda<options, value_type, make_integer_sequence<memberCount>>::impl(retVal);
+				size_collection_lambda<options, value_type, make_integer_sequence<membercount>>::impl(retVal);
 				return retVal;
 			}() };
 			return newSize;
@@ -154,7 +154,7 @@ namespace jsonifier::internal {
 	}
 
 	template<typename value_type> consteval uint64_t getValueSize(value_type value) {
-		if constexpr (internal::integral_types<value_type>) {
+		if constexpr (concepts::integral_types<value_type>) {
 			return sizeof(value_type);
 		} else {
 			return value.size();
@@ -254,13 +254,13 @@ namespace jsonifier::internal {
 	template<serialize_options options, string_literal key, typename context_type> JSONIFIER_INLINE static void writeObjectEntry(context_type& context) {
 		static constexpr auto unQuotedKey = string_literal{ "\"" } + key;
 		if constexpr (options.prettify) {
-			static constexpr auto quotedKey	   = unQuotedKey + string_literal{ "\": " };
+			static constexpr auto quotedKey	   = escapedKeyLiteral<unQuotedKey> + string_literal{ "\": " };
 			static constexpr auto size		   = quotedKey.size();
 			static constexpr auto quotedKeyPtr = quotedKey.data();
 			std::memcpy(context.bufferPtr, quotedKeyPtr, size);
 			context.bufferPtr += size;
 		} else {
-			static constexpr auto quotedKey	   = unQuotedKey + string_literal{ "\":" };
+			static constexpr auto quotedKey	   = escapedKeyLiteral<unQuotedKey> + string_literal{ "\":" };
 			static constexpr auto size		   = quotedKey.size();
 			static constexpr auto quotedKeyPtr = quotedKey.data();
 			std::memcpy(context.bufferPtr, quotedKeyPtr, size);
@@ -325,12 +325,12 @@ namespace jsonifier::internal {
 		JSONIFIER_ALIGN(8) static constexpr char_blitter<"{}"> emptyObject {};
 
 		template<typename value_type_new> inline static void impl(value_type_new&& value, context_type& context) noexcept {
-			static constexpr auto memberCount{ core_tuple_size<value_type> };
+			static constexpr auto membercount{ core_tuple_size<value_type> };
 			static constexpr auto paddingSize{ getPaddingSize<options, value_type>() * 4 };
 
-			if constexpr (memberCount > 0) {
+			if constexpr (membercount > 0) {
 				if constexpr (options.prettify) {
-					const auto additionalSize = (paddingSize + (memberCount * context.indent * 4));
+					const auto additionalSize = (paddingSize + (membercount * context.indent * 4));
 					ensureCapacity<options>(context, additionalSize);
 					context.indent += options.indentSize;
 					open_indent::blitWithOverflow(context.bufferPtr, context.indent);

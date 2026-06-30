@@ -56,3 +56,39 @@
 #if !defined JSONIFIER_ALIGN
 	#define JSONIFIER_ALIGN(b) alignas(b)
 #endif
+
+namespace jsonifier::internal {
+
+	enum class json_structural_characters : char {
+		post_primitive_state = 0,
+		l_crl_bracket		 = '{',
+		r_crl_bracket		 = '}',
+		l_sqr_bracket		 = '[',
+		r_sqr_bracket		 = ']',
+		colon				 = ':',
+		comma				 = ',',
+		key_start			 = '"',
+	};	
+
+	enum class parse_statuses : uint8_t {
+		success,
+		missing_object_start,
+		missing_object_end,
+		missing_array_start,
+		missing_array_end,
+		invalid_string_characters,
+		missing_colon,
+		missing_comma,
+		invalid_number_value,
+		invalid_null_value,
+		invalid_bool_value,
+		no_input,
+		unfinished_input,
+		unexpected_string_end,
+		unexpected_end_of_input,
+		unexpected_token,
+		illegal_control_character,
+		count,
+	};
+
+}

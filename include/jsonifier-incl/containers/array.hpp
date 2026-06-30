@@ -115,7 +115,7 @@ namespace jsonifier::internal {
 			return false;
 		}
 
-		template<indexable_types<size_type> index_type> JSONIFIER_INLINE constexpr reference at(index_type position) noexcept JSONIFIER_LIFETIME_BOUND {
+		template<concepts::indexable_types<size_type> index_type> JSONIFIER_INLINE constexpr reference at(index_type position) noexcept JSONIFIER_LIFETIME_BOUND {
 			if (sizeNew <= position) {
 				std::runtime_error{ "invalid array<T, N> subscript" };
 			}
@@ -123,7 +123,7 @@ namespace jsonifier::internal {
 			return dataVal[position];
 		}
 
-		template<indexable_types<size_type> index_type> JSONIFIER_INLINE constexpr const_reference at(index_type position) const noexcept JSONIFIER_LIFETIME_BOUND {
+		template<concepts::indexable_types<size_type> index_type> JSONIFIER_INLINE constexpr const_reference at(index_type position) const noexcept JSONIFIER_LIFETIME_BOUND {
 			if (sizeNew <= position) {
 				std::runtime_error{ "invalid array<T, N> subscript" };
 			}
@@ -131,19 +131,19 @@ namespace jsonifier::internal {
 			return dataVal[position];
 		}
 
-		template<indexable_types<size_type> index_type> JSONIFIER_INLINE constexpr const_r_reference operator[](index_type position) const&& noexcept {
+		template<concepts::indexable_types<size_type> index_type> JSONIFIER_INLINE constexpr const_r_reference operator[](index_type position) const&& noexcept {
 			return static_cast<const_r_reference>(dataVal[static_cast<uint64_t>(position)]);
 		}
 
-		template<indexable_types<size_type> index_type> JSONIFIER_INLINE constexpr const_reference operator[](index_type position) const& noexcept {
+		template<concepts::indexable_types<size_type> index_type> JSONIFIER_INLINE constexpr const_reference operator[](index_type position) const& noexcept {
 			return static_cast<const_reference>(dataVal[static_cast<uint64_t>(position)]);
 		}
 
-		template<indexable_types<size_type> index_type> JSONIFIER_INLINE constexpr r_reference operator[](index_type position) && noexcept {
+		template<concepts::indexable_types<size_type> index_type> JSONIFIER_INLINE constexpr r_reference operator[](index_type position) && noexcept {
 			return static_cast<r_reference>(dataVal[static_cast<uint64_t>(position)]);
 		}
 
-		template<indexable_types<size_type> index_type> JSONIFIER_INLINE constexpr reference operator[](index_type position) & noexcept {
+		template<concepts::indexable_types<size_type> index_type> JSONIFIER_INLINE constexpr reference operator[](index_type position) & noexcept {
 			return static_cast<reference>(dataVal[static_cast<uint64_t>(position)]);
 		}
 

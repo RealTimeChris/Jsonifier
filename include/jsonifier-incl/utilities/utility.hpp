@@ -30,7 +30,7 @@ namespace jsonifier::internal {
 
 	template<template<auto> typename functor_type, typename integer_sequence> struct functor_executor;
 
-	template<template<auto> typename functor_type, uint64_types auto... indices> struct functor_executor<functor_type, integer_sequence<indices...>> {
+	template<template<auto> typename functor_type, concepts::uint64_types auto... indices> struct functor_executor<functor_type, integer_sequence<indices...>> {
 		template<typename container_type, typename... arg_types> JSONIFIER_INLINE static constexpr decltype(auto) impl(container_type& container, arg_types&&... args) noexcept {
 			return ((functor_type<indices>::impl(container, forward<arg_types>(args)), ...));
 		}
@@ -39,8 +39,8 @@ namespace jsonifier::internal {
 			return ((functor_type<indices>::impl(container, forward<arg_types>(args)), ...));
 		}
 
-		template<typename container_type_01> JSONIFIER_INLINE static constexpr decltype(auto) impl(container_type_01& container_01, container_type_01& container_02) noexcept {
-			return (functor_type<indices>::impl(container_01, container_02), ...);
+		template<typename... arg_types> JSONIFIER_INLINE static constexpr decltype(auto) impl(arg_types&&... args) noexcept {
+			return ((functor_type<indices>::impl(forward<arg_types>(args)), ...));
 		}
 
 		template<typename container_type_01> JSONIFIER_INLINE static constexpr decltype(auto) impl_and(container_type_01& container_01, container_type_01& container_02) noexcept {
@@ -50,16 +50,27 @@ namespace jsonifier::internal {
 
 	static constexpr array<bool, 256> numberTerminators = [] {
 		array<bool, 256> table{};
-		table[',']						  = true;
-		table['}']						  = true;
-		table[']']						  = true;
-		table[' ']						  = true;
-		table['\t']						  = true;
-		table['\n']						  = true;
-		table['\r']						  = true;
-		table[static_cast<uint8_t>('\0')] = true;
+		table[',']	= true;
+		table['}']	= true;
+		table[']']	= true;
+		table[' ']	= true;
+		table['\t'] = true;
+		table['\n'] = true;
+		table['\r'] = true;
 		return table;
 	}();
 
+	static constexpr array<parse_statuses, 256> failed_iterator_statuses{ [] {
+		array<parse_statuses, 256> return_values{};
+		return_values[static_cast<uint8_t>('\0')]									   = parse_statuses::unexpected_string_end;
+		return_values[static_cast<uint8_t>(json_structural_characters::key_start)]	   = parse_statuses::invalid_string_characters;
+		return_values[static_cast<uint8_t>(json_structural_characters::colon)]		   = parse_statuses::missing_colon;
+		return_values[static_cast<uint8_t>(json_structural_characters::comma)]		   = parse_statuses::missing_comma;
+		return_values[static_cast<uint8_t>(json_structural_characters::l_crl_bracket)] = parse_statuses::missing_object_start;
+		return_values[static_cast<uint8_t>(json_structural_characters::r_crl_bracket)] = parse_statuses::missing_object_end;
+		return_values[static_cast<uint8_t>(json_structural_characters::l_sqr_bracket)] = parse_statuses::missing_array_start;
+		return_values[static_cast<uint8_t>(json_structural_characters::r_sqr_bracket)] = parse_statuses::missing_array_end;
+		return return_values;
+	}() };
 
 }

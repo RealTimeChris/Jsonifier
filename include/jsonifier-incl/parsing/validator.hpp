@@ -46,12 +46,12 @@ namespace jsonifier::internal {
 			structural_index_ptr iter{ derivedRef.section.begin() };
 			structural_index_ptr end{ derivedRef.section.end() };
 			if (iter == end) {
-				getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::No_Input>(0, 0, nullptr));
+				getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::no_input>(0, 0, nullptr));
 				return false;
 			}
 			auto result = impl(iter, end, *this);
 			if ((iter < end && static_cast<uint64_t>(*iter) < in.size()) || derivedRef.errors.size() > 0ull) {
-				getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::No_Input>((iter < end ? *iter : 0), endIter - rootIter, rootIter));
+				getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::no_input>((iter < end ? *iter : 0), endIter - rootIter, rootIter));
 				result = false;
 			}
 			return result;

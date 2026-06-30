@@ -231,9 +231,9 @@ namespace jsonifier::internal {
 		return returnValue;
 	}
 
-	template<uint64_t stringLengthCount> inline static constexpr array<string_lengths, stringLengthCount> collectLengths(const tuple_references& values) {
+	template<uint64_t stringLengthcount> inline static constexpr array<string_lengths, stringLengthcount> collectLengths(const tuple_references& values) {
 		array<uint64_t, 256> lengths{};
-		array<string_lengths, stringLengthCount> valuesNew{};
+		array<string_lengths, stringLengthcount> valuesNew{};
 		uint64_t currentIndex{};
 		for (uint64_t x = 0; x < values.count; ++x) {
 			auto& newRef = values.rootPtr[x];
@@ -275,9 +275,9 @@ namespace jsonifier::internal {
 		char value{};
 	};
 
-	template<uint64_t firstByteCount> inline static constexpr array<first_bytes, firstByteCount> collectFirstBytes(const tuple_references& values) {
+	template<uint64_t firstBytecount> inline static constexpr array<first_bytes, firstBytecount> collectFirstBytes(const tuple_references& values) {
 		array<uint64_t, 256ULL> lengths{};
-		array<first_bytes, firstByteCount> valuesNew{};
+		array<first_bytes, firstBytecount> valuesNew{};
 		uint64_t currentIndex{};
 		for (uint64_t x = 0; x < values.count; ++x) {
 			if (lengths[static_cast<uint8_t>(values.rootPtr[x].key[0])] == 0) {
@@ -378,12 +378,12 @@ namespace jsonifier::internal {
 	}
 
 	template<typename value_type> inline static constexpr void collectUniquePerLengthHashMapData(hash_map_construction_data& returnValues, const tuple_references& pairsNew) {
-		constexpr auto uniqueLengthCount = countUniqueLengths(tupleReferences<value_type>);
-		constexpr auto results			 = collectLengths<uniqueLengthCount>(tupleReferences<value_type>);
+		constexpr auto uniqueLengthcount = countUniqueLengths(tupleReferences<value_type>);
+		constexpr auto results			 = collectLengths<uniqueLengthcount>(tupleReferences<value_type>);
 		constexpr auto keyStatsValNew	 = keyStats(results);
 		returnValues.uniqueIndices.fill(static_cast<uint8_t>(returnValues.uniqueIndices.size() - 1));
 		bool fallback = false;
-		for (uint64_t x = 0; x < uniqueLengthCount; ++x) {
+		for (uint64_t x = 0; x < uniqueLengthcount; ++x) {
 			auto uniqueIndex = findUniqueColumnIndex(results[x], keyStatsValNew[x].minLength);
 			if (uniqueIndex == std::numeric_limits<uint64_t>::max()) {
 				fallback = true;
@@ -429,14 +429,14 @@ namespace jsonifier::internal {
 
 	template<typename value_type> inline static constexpr bool canUseFirstByteAndUniqueIndex() noexcept {
 		constexpr auto& refs = tupleReferences<value_type>;
-		array<uint64_t, 256> bucketCounts{};
+		array<uint64_t, 256> bucketcounts{};
 		for (uint64_t x = 0; x < refs.count; ++x) {
 			if (refs.rootPtr[x].key.empty())
 				return false;
-			++bucketCounts[static_cast<uint8_t>(refs.rootPtr[x].key[0])];
+			++bucketcounts[static_cast<uint8_t>(refs.rootPtr[x].key[0])];
 		}
 		for (uint64_t fb = 0; fb < 256; ++fb) {
-			if (bucketCounts[fb] == 0)
+			if (bucketcounts[fb] == 0)
 				continue;
 			uint64_t bucketKeys[64]{};
 			uint64_t bIdx	  = 0;
@@ -475,13 +475,13 @@ namespace jsonifier::internal {
 	inline static constexpr void collectFirstByteAndUniqueIndexHashMapData(hash_map_construction_data& returnValues, const tuple_references& pairsNew) {
 		if constexpr (canUseFirstByteAndUniqueIndex<value_type>()) {
 			constexpr auto keyStatsValNewer		= keyStatsImpl(tupleReferencesByFirstByte<value_type>);
-			constexpr auto uniqueFirstByteCount = countFirstBytes(tupleReferencesByFirstByte<value_type>);
-			constexpr auto results				= collectFirstBytes<uniqueFirstByteCount>(tupleReferencesByFirstByte<value_type>);
+			constexpr auto uniqueFirstBytecount = countFirstBytes(tupleReferencesByFirstByte<value_type>);
+			constexpr auto results				= collectFirstBytes<uniqueFirstBytecount>(tupleReferencesByFirstByte<value_type>);
 			constexpr auto keyStatsValNew		= keyStats(results);
 			returnValues.uniqueIndices.fill(static_cast<uint8_t>(returnValues.uniqueIndices.size() - 1));
 			bool fallback = false;
 			if (keyStatsValNewer.maxLength < 256) {
-				for (uint64_t x = 0; x < uniqueFirstByteCount; ++x) {
+				for (uint64_t x = 0; x < uniqueFirstBytecount; ++x) {
 					auto uniqueIndex = findUniqueColumnIndex(results[x], keyStatsValNew[x].minLength);
 					if (uniqueIndex == std::numeric_limits<uint64_t>::max()) {
 						fallback = true;
@@ -645,9 +645,9 @@ namespace jsonifier::internal {
 		return mappings;
 	}
 
-	template<uint64_t firstCharCount> constexpr char getMaxFirstByte(const array<first_bytes, firstCharCount>& keys) noexcept {
+	template<uint64_t firstCharcount> constexpr char getMaxFirstByte(const array<first_bytes, firstCharcount>& keys) noexcept {
 		char returnValue{};
-		for (uint64_t x = 0; x < firstCharCount; ++x) {
+		for (uint64_t x = 0; x < firstCharcount; ++x) {
 			if (keys[x].value > returnValue) {
 				returnValue = keys[x].value;
 			}
@@ -681,12 +681,12 @@ namespace jsonifier::internal {
 		}
 
 		for (uint64_t fb = 0; fb < 256; ++fb) {
-			const uint64_t bucketCount = bucketIndices[fb];
-			if (bucketCount == 0)
+			const uint64_t bucketcount = bucketIndices[fb];
+			if (bucketcount == 0)
 				continue;
 
 			uint64_t minLenInBucket = (std::numeric_limits<uint64_t>::max)();
-			for (uint64_t b = 0; b < bucketCount; ++b) {
+			for (uint64_t b = 0; b < bucketcount; ++b) {
 				const uint64_t len = refs.rootPtr[keysByFirstByte[fb][b]].key.size();
 				if (len < minLenInBucket)
 					minLenInBucket = len;
@@ -696,7 +696,7 @@ namespace jsonifier::internal {
 			for (uint64_t col = 0; col < minLenInBucket; ++col) {
 				array<bool, 256> seen{};
 				bool allDifferent = true;
-				for (uint64_t b = 0; b < bucketCount; ++b) {
+				for (uint64_t b = 0; b < bucketcount; ++b) {
 					const auto& key = refs.rootPtr[keysByFirstByte[fb][b]].key;
 					const uint8_t c = static_cast<uint8_t>(key[col]);
 					if (seen[c]) {
@@ -716,7 +716,7 @@ namespace jsonifier::internal {
 			}
 
 			result.uniqueIndexByFirstByte[fb] = static_cast<uint8_t>(chosenColumn);
-			for (uint64_t b = 0; b < bucketCount; ++b) {
+			for (uint64_t b = 0; b < bucketcount; ++b) {
 				const auto& ref								  = refs.rootPtr[keysByFirstByte[fb][b]];
 				const uint8_t c								  = static_cast<uint8_t>(ref.key[chosenColumn]);
 				result.indexByFirstByteAndChar[(fb << 8) | c] = static_cast<uint8_t>(ref.oldIndex);

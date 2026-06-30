@@ -184,4 +184,32 @@ namespace jsonifier::internal {
 		}
 	};
 
+	template<string_literal literal> constexpr uint64_t escapedKeyLength() noexcept {
+		uint64_t newLength{};
+		for (uint64_t x = 0; x < literal.size(); ++x) {
+			const char c = literal[x];
+			newLength += (c == '"' || c == '\\') ? 2 : 1;
+		}
+		return newLength;
+	}
+
+	template<string_literal literal> constexpr string_literal<escapedKeyLength<literal>() + 1> escapeKeyLiteral() noexcept {
+		constexpr uint64_t newLength{ escapedKeyLength<literal>() };
+		string_literal<newLength + 1> returnValues{};
+		uint64_t outIndex{};
+		for (uint64_t x = 0; x < literal.size(); ++x) {
+			const char c = literal[x];
+			if (c == '"' || c == '\\') {
+				returnValues[outIndex] = '\\';
+				++outIndex;
+			}
+			returnValues[outIndex] = c;
+			++outIndex;
+		}
+		returnValues[newLength] = '\0';
+		return returnValues;
+	}
+
+	template<string_literal literal> inline constexpr auto escapedKeyLiteral{ escapeKeyLiteral<literal>() };
+
 }

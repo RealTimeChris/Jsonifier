@@ -71,7 +71,7 @@ namespace jsonifier::internal {
 			auto* endStructural = derivedRef.section.end();
 			jsonifier::internal::remove_cvref_t<string_type> newString{};
 			if (iter == endStructural) {
-				getErrors().emplace_back(error::constructError<status_classes::Minifying, minify_status::No_Input>(0, in.size(), rootIter));
+				getErrors().emplace_back(error::constructError<status_classes::Minifying, minify_status::no_input>(0, in.size(), rootIter));
 				return newString;
 			}
 			auto index = impl(iter, endStructural, derivedRef.stringBuffer);
@@ -95,7 +95,7 @@ namespace jsonifier::internal {
 			structural_index_ptr iter{ derivedRef.section.begin() };
 			auto* endStructural = derivedRef.section.end();
 			if (iter == endStructural) {
-				getErrors().emplace_back(error::constructError<status_classes::Minifying, minify_status::No_Input>(0, static_cast<int64_t>(in.size()), rootIter));
+				getErrors().emplace_back(error::constructError<status_classes::Minifying, minify_status::no_input>(0, static_cast<int64_t>(in.size()), rootIter));
 				return false;
 			}
 			auto index = impl(iter, endStructural, derivedRef.stringBuffer);
@@ -163,7 +163,7 @@ namespace jsonifier::internal {
 							std::memcpy(&out[index], previousPtr, static_cast<uint64_t>(currentDistance));
 							index += static_cast<uint64_t>(currentDistance);
 						} else {
-							this->getErrors().emplace_back(error::constructError<status_classes::Minifying, minify_status::Invalid_Number_Value>(static_cast<int64_t>(*iter),
+							this->getErrors().emplace_back(error::constructError<status_classes::Minifying, minify_status::invalid_number_value>(static_cast<int64_t>(*iter),
 								static_cast<int64_t>(this->endIter - this->rootIter), this->rootIter));
 							return std::numeric_limits<uint32_t>::max();
 						}

@@ -35,16 +35,16 @@ namespace jsonifier::internal {
 
 	JSONIFIER_ALIGN(64) inline constexpr uint8_t zero{ static_cast<uint8_t>('0') };
 
-	static constexpr uint8_t digitCounts[]{ 19, 19, 19, 19, 18, 18, 18, 17, 17, 17, 16, 16, 16, 16, 15, 15, 15, 14, 14, 14, 13, 13, 13, 13, 12, 12, 12, 11, 11, 11, 10, 10,
+	static constexpr uint8_t digitcounts[]{ 19, 19, 19, 19, 18, 18, 18, 17, 17, 17, 16, 16, 16, 16, 15, 15, 15, 14, 14, 14, 13, 13, 13, 13, 12, 12, 12, 11, 11, 11, 10, 10,
 		10, 10, 9, 9, 9, 8, 8, 8, 7, 7, 7, 7, 6, 6, 6, 5, 5, 5, 4, 4, 4, 4, 3, 3, 3, 2, 2, 2, 1, 1, 1, 1, 1 };
 
-	static constexpr uint64_t digitCountThresholds[]{ 0ULL, 9ULL, 99ULL, 999ULL, 9999ULL, 99999ULL, 999999ULL, 9999999ULL, 99999999ULL, 999999999ULL, 9999999999ULL,
+	static constexpr uint64_t digitcountThresholds[]{ 0ULL, 9ULL, 99ULL, 999ULL, 9999ULL, 99999ULL, 999999ULL, 9999999ULL, 99999999ULL, 999999999ULL, 9999999999ULL,
 		99999999999ULL, 999999999999ULL, 9999999999999ULL, 99999999999999ULL, 999999999999999ULL, 9999999999999999ULL, 99999999999999999ULL, 999999999999999999ULL,
 		9999999999999999999ULL };
 
-	inline static uint64_t fastDigitCount(const uint64_t inputValue) {
-		const uint64_t originalDigitCount{ digitCounts[std::countl_zero(inputValue)] };
-		return originalDigitCount + static_cast<uint64_t>(inputValue > digitCountThresholds[originalDigitCount]);
+	inline static uint64_t fastDigitcount(const uint64_t inputValue) {
+		const uint64_t originalDigitcount{ digitcounts[std::countl_zero(inputValue)] };
+		return originalDigitcount + static_cast<uint64_t>(inputValue > digitcountThresholds[originalDigitcount]);
 	}
 
 	template<std::endian, uint64_t size = 0> struct int_tables_impl {};

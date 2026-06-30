@@ -182,7 +182,7 @@ namespace jsonifier::internal {
 				capacity = neededCapacity;
 			}
 
-			tapeCount							 = 0;
+			tapecount							 = 0;
 			string_block_reader::inString		 = std::bit_cast<string_view_ptr>(rootIter);
 			string_block_reader::length			 = stringLength;
 			string_block_reader::lengthMinusStep = stringLength < stepBytes ? 0 : stringLength - stepBytes;
@@ -212,8 +212,8 @@ namespace jsonifier::internal {
 					processBlocks(remainder, string_block_reader::index, unescapedCharsError, bsRegister, quoteRegister, opTable, spaceMask);
 
 					const uint64_t excess = stepBytes - remaining;
-					while (excess > 0 && tapeCount > 0 && tape[tapeCount - 1] >= string_block_reader::length) {
-						--tapeCount;
+					while (excess > 0 && tapecount > 0 && tape[tapecount - 1] >= string_block_reader::length) {
+						--tapecount;
 					}
 					string_block_reader::index += stepBytes;
 				}
@@ -237,8 +237,8 @@ namespace jsonifier::internal {
 					processBlocks(remainder, string_block_reader::index, unescapedCharsError, bsRegister, quoteRegister, opTable, spaceMask, whitespaceTable_local);
 
 					const uint64_t excess = stepBytes - remaining;
-					while (excess > 0 && tapeCount > 0 && tape[tapeCount - 1] >= string_block_reader::length) {
-						--tapeCount;
+					while (excess > 0 && tapecount > 0 && tape[tapecount - 1] >= string_block_reader::length) {
+						--tapecount;
 					}
 					string_block_reader::index += stepBytes;
 				}
@@ -246,16 +246,16 @@ namespace jsonifier::internal {
 		}
 
 		JSONIFIER_INLINE auto end() noexcept {
-			return tape + tapeCount;
+			return tape + tapecount;
 		}
 
 		JSONIFIER_INLINE auto begin() noexcept {
-			tape[tapeCount] = static_cast<uint32_t>(string_block_reader::length);
+			tape[tapecount] = static_cast<uint32_t>(string_block_reader::length);
 			return tape;
 		}
 
-		JSONIFIER_INLINE uint64_t getTapeCount() noexcept {
-			return tapeCount;
+		JSONIFIER_INLINE uint64_t getTapecount() noexcept {
+			return tapecount;
 		}
 
 		JSONIFIER_INLINE ~simd_string_reader() noexcept {
@@ -267,7 +267,7 @@ namespace jsonifier::internal {
 
 	  protected:
 		structural_index_ptr tape{};
-		uint64_t tapeCount{};
+		uint64_t tapecount{};
 		uint64_t capacity{};
 
 		JSONIFIER_INLINE uint64_t getStructurals(simd_array<registersPerSixtyFourBits> in_01, jsonifier_simd_int_t opTable, jsonifier_simd_int_t spaceMask) noexcept {
@@ -339,19 +339,19 @@ namespace jsonifier::internal {
 				}
 			}
 
-			add_tape_values<simd_string_reader<initialBufferSize>, make_integer_sequence<jsonifierBlocksPerStep>>::impl(bitsArr, cntsArr, tape + tapeCount, stepBaseIndex);
+			add_tape_values<simd_string_reader<initialBufferSize>, make_integer_sequence<jsonifierBlocksPerStep>>::impl(bitsArr, cntsArr, tape + tapecount, stepBaseIndex);
 
-			tapeCount += cntsArr[0];
+			tapecount += cntsArr[0];
 			if constexpr (jsonifierBlocksPerStep > 1) {
-				tapeCount += cntsArr[1];
+				tapecount += cntsArr[1];
 				if constexpr (jsonifierBlocksPerStep > 2) {
-					tapeCount += cntsArr[2];
-					tapeCount += cntsArr[3];
+					tapecount += cntsArr[2];
+					tapecount += cntsArr[3];
 					if constexpr (jsonifierBlocksPerStep > 4) {
-						tapeCount += cntsArr[4];
-						tapeCount += cntsArr[5];
-						tapeCount += cntsArr[6];
-						tapeCount += cntsArr[7];
+						tapecount += cntsArr[4];
+						tapecount += cntsArr[5];
+						tapecount += cntsArr[6];
+						tapecount += cntsArr[7];
 					}
 				}
 			}

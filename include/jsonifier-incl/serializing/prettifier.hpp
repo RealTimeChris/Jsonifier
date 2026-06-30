@@ -56,7 +56,7 @@ namespace jsonifier::internal {
 			structural_index_ptr iter{ derivedRef.section.begin() };
 			auto* endStructural = derivedRef.section.end();
 			if JSONIFIER_UNLIKELY (iter == endStructural) {
-				getErrors().emplace_back(error::constructError<status_classes::Prettifying, prettify_status::No_Input>(0, in.size(), dataPtr));
+				getErrors().emplace_back(error::constructError<status_classes::Prettifying, prettify_status::no_input>(0, in.size(), dataPtr));
 				return jsonifier::internal::remove_cvref_t<string_type>{};
 			}
 			jsonifier::internal::remove_cvref_t<string_type> newString{};
@@ -84,7 +84,7 @@ namespace jsonifier::internal {
 			structural_index_ptr iter{ derivedRef.section.begin() };
 			auto* endStructural = derivedRef.section.end();
 			if JSONIFIER_UNLIKELY (iter == endStructural) {
-				getErrors().emplace_back(error::constructError<status_classes::Prettifying, prettify_status::No_Input>(0, static_cast<int64_t>(in.size()), dataPtr));
+				getErrors().emplace_back(error::constructError<status_classes::Prettifying, prettify_status::no_input>(0, static_cast<int64_t>(in.size()), dataPtr));
 				return false;
 			}
 			auto index = impl<optionsFinal>(iter, endStructural, dataPtr, derivedRef.stringBuffer);

@@ -28,7 +28,7 @@
 
 namespace jsonifier::internal {
 
-	template<typename value_type_new, integral_types auto size> struct sized_iterator {
+	template<typename value_type_new, concepts::integral_types auto size> struct sized_iterator {
 		using iterator_concept	= std::contiguous_iterator_tag;
 		using iterator_category = std::random_access_iterator_tag;
 		using element_type		= value_type_new;

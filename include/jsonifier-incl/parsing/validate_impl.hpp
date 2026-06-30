@@ -50,7 +50,7 @@ namespace jsonifier::internal {
 										++iter;
 										return true;
 									} else {
-										validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::Missing_Comma_Or_Closing_Brace>(
+										validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::missing_comma_Or_Closing_Brace>(
 											(iter < end ? *iter : 0), validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 										return false;
 									}
@@ -59,7 +59,7 @@ namespace jsonifier::internal {
 								return false;
 							}
 						} else {
-							validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::Missing_Colon>((iter < end ? *iter : 0),
+							validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::missing_colon>((iter < end ? *iter : 0),
 								validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 							return false;
 						}
@@ -69,7 +69,7 @@ namespace jsonifier::internal {
 				}
 				return false;
 			} else {
-				validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::Missing_Object_Start>((iter < end ? *iter : 0),
+				validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::missing_object_start>((iter < end ? *iter : 0),
 					validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 				return false;
 			}
@@ -93,7 +93,7 @@ namespace jsonifier::internal {
 								++iter;
 								return true;
 							} else {
-								validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::Missing_Comma_Or_Closing_Brace>(
+								validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::missing_comma_Or_Closing_Brace>(
 									(iter < end ? *iter : 0), validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 								return false;
 							}
@@ -104,7 +104,7 @@ namespace jsonifier::internal {
 				}
 				return false;
 			} else {
-				validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::Missing_Array_Start>((iter < end ? *iter : 0),
+				validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::missing_array_start>((iter < end ? *iter : 0),
 					validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 				return false;
 			}
@@ -123,13 +123,13 @@ namespace jsonifier::internal {
 					return true;
 				}
 				JSONIFIER_ELSE_UNLIKELY(else) {
-					validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::Invalid_String_Characters>((iter < end ? *iter : 0),
+					validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::invalid_string_characters>((iter < end ? *iter : 0),
 						validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 					return false;
 				}
 			}
 			JSONIFIER_ELSE_UNLIKELY(else) {
-				validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::Invalid_String_Characters>((iter < end ? *iter : 0),
+				validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::invalid_string_characters>((iter < end ? *iter : 0),
 					validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 				return false;
 			}
@@ -169,7 +169,7 @@ namespace jsonifier::internal {
 				consumeDigits(newPtr);
 				if (consumeChar(0x2Eu, newPtr)) {
 					if (iter >= end || !consumeDigits(newPtr)) {
-						validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::Invalid_Number_Value>((iter < end ? *iter : 0),
+						validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::invalid_number_value>((iter < end ? *iter : 0),
 							validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 						return false;
 					}
@@ -179,7 +179,7 @@ namespace jsonifier::internal {
 				}
 				return true;
 			} else {
-				validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::Invalid_Number_Value>((iter < end ? *iter : 0),
+				validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::invalid_number_value>((iter < end ? *iter : 0),
 					validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 				return false;
 			}
@@ -192,7 +192,7 @@ namespace jsonifier::internal {
 				++iter;
 				return true;
 			} else {
-				validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::Invalid_Bool_Value>((iter < end ? *iter : 0),
+				validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::invalid_bool_value>((iter < end ? *iter : 0),
 					validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 				return false;
 			}
@@ -205,7 +205,7 @@ namespace jsonifier::internal {
 				++iter;
 				return true;
 			} else {
-				validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::Invalid_Null_Value>((iter < end ? *iter : 0),
+				validatorRef.getErrors().emplace_back(error::constructError<status_classes::Validating, validate_status::invalid_null_value>((iter < end ? *iter : 0),
 					validatorRef.endIter - validatorRef.rootIter, validatorRef.rootIter));
 				return false;
 			}

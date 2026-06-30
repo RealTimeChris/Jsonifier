@@ -27,72 +27,44 @@
 
 namespace jsonifier::simd {
 
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_BMI) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
-
-	#define blsr(value) _blsr_u64(value)
-
-	template<concepts::uns16_t value_type> JSONIFIER_INLINE static value_type tzcnt(const value_type value) noexcept {
-	#if JSONIFIER_PLATFORM_LINUX
-		return __tzcnt_u16(value);
-	#else
-		return _tzcnt_u16(value);
-	#endif
+	template<typename value_type> JSONIFIER_INLINE constexpr value_type blsr_constexpr(value_type value) noexcept {
+		return value & (value - 1);
 	}
 
-	template<concepts::uns32_t value_type> JSONIFIER_INLINE static value_type tzcnt(const value_type value) noexcept {
-		return _tzcnt_u32(value);
+	template<concepts::uint8_types value_type> JSONIFIER_INLINE constexpr value_type blsr(const value_type value) noexcept {
+		return blsr_constexpr(value);
 	}
 
-	template<concepts::uns64_t value_type> JSONIFIER_INLINE static value_type tzcnt(const value_type value) noexcept {
-		return _tzcnt_u64(value);
-	}
-
-#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
-
-	#define blsr(value) (value & (value - 1))
-
-	template<concepts::uns16_t value_type> JSONIFIER_INLINE static value_type tzcnt(const value_type value) noexcept {
-		if (value != 0) {
-			return static_cast<value_type>(__builtin_ctz(value));
-		} else {
-			return sizeof(value_type) * 8;
+	template<concepts::uint16_types value_type> JSONIFIER_INLINE constexpr value_type blsr(const value_type value) noexcept {
+		if (std::is_constant_evaluated()) {
+			return blsr_constexpr(value);
 		}
+		return static_cast<value_type>(value & (value - 1));
 	}
 
-	template<concepts::uns32_t value_type> JSONIFIER_INLINE static value_type tzcnt(const value_type value) noexcept {
-		if (value != 0) {
-			return static_cast<value_type>(__builtin_ctz(value));
-		} else {
-			return sizeof(value_type) * 8;
+	template<concepts::uint32_types value_type> JSONIFIER_INLINE constexpr value_type blsr(const value_type value) noexcept {
+		if (std::is_constant_evaluated()) {
+			return blsr_constexpr(value);
 		}
-	}
-
-	template<concepts::uns64_t value_type> JSONIFIER_INLINE static value_type tzcnt(const value_type value) noexcept {
-		if (value != 0) {
-			return static_cast<value_type>(__builtin_ctzll(value));
-		} else {
-			return sizeof(value_type) * 8;
-		}
-	}
-
+#if (JSONIFIER_COMPILER_MSVC || JSONIFIER_COMPILER_CLANG || JSONIFIER_COMPILER_GCC) && !JSONIFIER_ARCH_ARM64
+		return static_cast<value_type>(_blsr_u32(static_cast<unsigned int>(value)));
 #else
-
-	#define blsr(value) (value & (value - 1))
-
-	template<concepts::unsigned_t value_type> JSONIFIER_INLINE static value_type tzcnt(value_type value) noexcept {
-		if (value == 0) {
-			return sizeof(value_type) * 8;
+		return blsr_constexpr(value);
+#endif
+	}
+	template<concepts::uint64_types value_type> JSONIFIER_INLINE constexpr value_type blsr(const value_type value) noexcept {
+		if (std::is_constant_evaluated()) {
+			return blsr_constexpr(value);
 		}
-
-		value_type count{};
-		while ((value & 1) == 0) {
-			value >>= 1;
-			++count;
-		}
-
-		return count;
+#if (JSONIFIER_COMPILER_MSVC || JSONIFIER_COMPILER_CLANG || JSONIFIER_COMPILER_GCC) && !JSONIFIER_ARCH_ARM64
+		return static_cast<value_type>(_blsr_u64(static_cast<uint64_t>(value)));
+#else
+		return blsr_constexpr(value);
+#endif
 	}
 
-#endif
+	template<typename value_type> JSONIFIER_INLINE constexpr value_type tzcnt(const value_type value) noexcept {
+		return static_cast<value_type>(std::countr_zero(value));
+	}
 
 }

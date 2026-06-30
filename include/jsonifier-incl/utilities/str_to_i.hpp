@@ -59,8 +59,7 @@ namespace jsonifier::internal {
 		return return_values_interna;
 	};
 
-	template<typename v_type, bool negative> JSONIFIER_ALIGN(64)
-	static constexpr array<std::make_unsigned_t<v_type>, 256> raw_comp_vals{ gen_raw_comp_vals<v_type, negative>() };
+	template<typename v_type, bool negative> JSONIFIER_ALIGN(64) static constexpr array<std::make_unsigned_t<v_type>, 256> raw_comp_vals{ gen_raw_comp_vals<v_type, negative>() };
 
 	template<typename v_type, bool negative> JSONIFIER_ALIGN(64)
 	static constexpr const std::make_unsigned_t<v_type>* __restrict comp_vals{ raw_comp_vals<v_type, negative>.data() };
@@ -641,38 +640,31 @@ namespace jsonifier::internal {
 			return iter;
 		}
 
-		JSONIFIER_INLINE static bool parseInt(value_type& value, string_view_ptr& iter, string_view_ptr end) noexcept {
+		JSONIFIER_INLINE static string_view_ptr parseInt(value_type& value, string_view_ptr iter, string_view_ptr end) noexcept {
 			if JSONIFIER_LIKELY (iter < end) {
 				if (*iter == minus) {
 					++iter;
 					const uint8_t* resultPtr = parseInteger<true>(value, std::bit_cast<const uint8_t*>(iter));
 					if JSONIFIER_LIKELY (resultPtr) {
 						iter += resultPtr - std::bit_cast<const uint8_t*>(iter);
-						if JSONIFIER_LIKELY (iter >= end || numberTerminators[static_cast<uint8_t>(*iter)]) {
-							return true;
-						}
-						value = 0;
-						return false;
+						return iter;
 					} else {
 						value = 0;
-						return false;
+						return nullptr;
 					}
 				} else {
 					const uint8_t* resultPtr = parseInteger<false>(value, std::bit_cast<const uint8_t*>(iter));
 					if JSONIFIER_LIKELY (resultPtr) {
 						iter += resultPtr - std::bit_cast<const uint8_t*>(iter);
-						if JSONIFIER_LIKELY (iter >= end || numberTerminators[static_cast<uint8_t>(*iter)]) {
-							return true;
-						}
-						value = 0;
-						return false;
+						return iter;
 					} else {
 						value = 0;
-						return false;
+						return nullptr;
 					}
 				}
 			} else {
-				return false;
+				value = 0;
+				return nullptr;
 			}
 		}
 	};
@@ -1097,25 +1089,19 @@ namespace jsonifier::internal {
 			return nullptr;
 		}
 
-		JSONIFIER_INLINE static bool parseInt(value_type& value, string_view_ptr& iter, string_view_ptr end) noexcept {
+		JSONIFIER_INLINE static string_view_ptr parseInt(value_type& value, string_view_ptr iter, string_view_ptr end) noexcept {
 			if JSONIFIER_LIKELY (iter < end) {
 				const uint8_t* resultPtr = parseInteger(value, std::bit_cast<const uint8_t*>(iter));
 				if JSONIFIER_LIKELY (resultPtr) {
 					iter += resultPtr - std::bit_cast<const uint8_t*>(iter);
-					if JSONIFIER_LIKELY (iter >= end) {
-						return true;
-					}
-					if JSONIFIER_UNLIKELY (!numberTerminators[static_cast<uint8_t>(*iter)]) {
-						value = 0;
-						return false;
-					}
-					return true;
+					return iter;
 				} else {
 					value = 0;
-					return false;
+					return nullptr;
 				}
 			} else {
-				return false;
+				value = 0;
+				return nullptr;
 			}
 		}
 	};

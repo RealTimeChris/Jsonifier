@@ -29,7 +29,6 @@
 #include <jsonifier-incl/utilities/d_to_str.hpp>
 #include <jsonifier-incl/utilities/str_to_d.hpp>
 #include <jsonifier-incl/utilities/str_to_i.hpp>
-#include <jsonifier-incl/parsing/parser.hpp>
 
 namespace jsonifier {
 
@@ -116,7 +115,7 @@ namespace jsonifier {
 
 namespace jsonifier::internal {
 
-	template<typename value_type_new, typename iterator> JSONIFIER_INLINE static bool parseNumber(value_type_new& value, iterator&& iter, iterator&& end) noexcept {
+	template<typename value_type_new, typename iterator> JSONIFIER_INLINE static string_view_ptr parseNumber(value_type_new& value, iterator&& iter, iterator&& end) noexcept {
 		using value_type = value_type_new;
 
 		if constexpr (concepts::integer_t<value_type>) {
@@ -125,14 +124,14 @@ namespace jsonifier::internal {
 					return integer_parser<value_type>::parseInt(value, iter, end);
 				} else {
 					uint64_t i;
-					return integer_parser<uint64_t>::parseInt(i, iter, end) ? (value = static_cast<value_type>(i), true) : false;
+					return (iter = integer_parser<uint64_t>::parseInt(i, iter, end)) ? (value = static_cast<value_type>(i), iter) : nullptr;
 				}
 			} else {
 				if constexpr (concepts::sig64_t<value_type>) {
 					return integer_parser<value_type>::parseInt(value, iter, end);
 				} else {
 					int64_t i;
-					return integer_parser<int64_t>::parseInt(i, iter, end) ? (value = static_cast<value_type>(i), true) : false;
+					return (iter = integer_parser<int64_t>::parseInt(i, iter, end)) ? (value = static_cast<value_type>(i), iter) : nullptr;
 				}
 			}
 		} else {

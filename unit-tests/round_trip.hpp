@@ -55,10 +55,11 @@ template<> struct jsonifier::core<round_trip_tests::Obj3> {
 
 namespace round_trip_tests {
 
-	template<rt_ut::string_literal testName, typename test_type> inline static void runRoundTripTest(const std::string& dataToParse, jsonifier::jsonifier_core<>& parser) {
+	template<rt_ut::string_literal testNameNew, typename test_type, bool partial, bool knownOrder> inline static void runRoundTripTest(const std::string& dataToParse, jsonifier::jsonifier_core<>& parser) {
 		test_type valueNew{};
 		std::string newString{};
-		parser.parseJson<jsonifier::parse_options{ .knownOrder = true }>(valueNew, dataToParse);
+		static constexpr rt_ut::string_literal testName{ testNameNew };
+		parser.parseJson<jsonifier::parse_options{ .partialRead = partial, .knownOrder = knownOrder }>(valueNew, dataToParse);
 		for (auto& value: parser.getErrors()) {
 			std::cout << "Jsonifier Error: " << value << std::endl;
 		}
@@ -72,38 +73,45 @@ namespace round_trip_tests {
 		return;
 	}
 
-	inline static bool roundTripTests() {
+	template<bool partial, bool knownOrder> inline static void roundTripTestsImpl() {
 		jsonifier::jsonifier_core<> parser{};
 		std::unordered_map<std::string, test_base> jsonTests{};
 		processFilesInFolder(jsonTests, "/round_trip");
-		std::cout << "round_trip Tests: " << std::endl;
-		runRoundTripTest<"roundtrip01.json", std::vector<int32_t*>>(jsonTests["roundtrip01.json"].fileContents, parser);
-		runRoundTripTest<"roundtrip02.json", std::vector<bool>>(jsonTests["roundtrip02.json"].fileContents, parser);
-		runRoundTripTest<"roundtrip03.json", std::vector<bool>>(jsonTests["roundtrip03.json"].fileContents, parser);
-		runRoundTripTest<"roundtrip04.json", std::vector<int32_t>>(jsonTests["roundtrip04.json"].fileContents, parser);
-		runRoundTripTest<"roundtrip05.json", std::vector<std::string>>(jsonTests["roundtrip05.json"].fileContents, parser);
-		runRoundTripTest<"roundtrip06.json", std::vector<int32_t>>(jsonTests["roundtrip06.json"].fileContents, parser);
-		runRoundTripTest<"roundtrip07.json", std::unordered_map<std::string, std::string>>(jsonTests["roundtrip07.json"].fileContents, parser);
-		runRoundTripTest<"roundtrip08.json", std::vector<int32_t>>(jsonTests["roundtrip08.json"].fileContents, parser);
-		runRoundTripTest<"roundtrip09.json", Obj2>(jsonTests["roundtrip09.json"].fileContents, parser);
-		runRoundTripTest<"roundtrip10.json", Obj3>(jsonTests["roundtrip10.json"].fileContents, parser);
-		runRoundTripTest<"roundtrip11.json", std::vector<int32_t>>(jsonTests["roundtrip11.json"].fileContents, parser);
-		runRoundTripTest<"roundtrip12.json", std::vector<int32_t>>(jsonTests["roundtrip12.json"].fileContents, parser);
-		runRoundTripTest<"roundtrip13.json", std::vector<int64_t>>(jsonTests["roundtrip13.json"].fileContents, parser);
-		runRoundTripTest<"roundtrip14.json", std::vector<int64_t>>(jsonTests["roundtrip14.json"].fileContents, parser);
-		runRoundTripTest<"roundtrip15.json", std::vector<int32_t>>(jsonTests["roundtrip15.json"].fileContents, parser);
-		runRoundTripTest<"roundtrip16.json", std::vector<int32_t>>(jsonTests["roundtrip16.json"].fileContents, parser);
-		runRoundTripTest<"roundtrip17.json", std::vector<int64_t>>(jsonTests["roundtrip17.json"].fileContents, parser);
-		runRoundTripTest<"roundtrip18.json", std::vector<int64_t>>(jsonTests["roundtrip18.json"].fileContents, parser);
-		runRoundTripTest<"roundtrip19.json", std::vector<int64_t>>(jsonTests["roundtrip19.json"].fileContents, parser);
-		runRoundTripTest<"roundtrip20.json", std::vector<double>>(jsonTests["roundtrip20.json"].fileContents, parser);
-		runRoundTripTest<"roundtrip21.json", std::vector<double>>(jsonTests["roundtrip21.json"].fileContents, parser);
-		runRoundTripTest<"roundtrip22.json", std::vector<double>>(jsonTests["roundtrip22.json"].fileContents, parser);
-		runRoundTripTest<"roundtrip23.json", std::vector<double>>(jsonTests["roundtrip23.json"].fileContents, parser);
-		runRoundTripTest<"roundtrip24.json", std::vector<double>>(jsonTests["roundtrip24.json"].fileContents, parser);
-		runRoundTripTest<"roundtrip25.json", std::vector<double>>(jsonTests["roundtrip25.json"].fileContents, parser);
-		runRoundTripTest<"roundtrip26.json", std::vector<double>>(jsonTests["roundtrip26.json"].fileContents, parser);
-		runRoundTripTest<"roundtrip27.json", std::vector<double>>(jsonTests["roundtrip27.json"].fileContents, parser);
-		return true;
+		std::cout << "Round Trip Tests, " << testTypePartial<partial> << testTypeKnownOrder<knownOrder> << ": " << std::endl;
+		runRoundTripTest<"roundtrip01.json", std::vector<int32_t*>, partial, knownOrder>(jsonTests["roundtrip01.json"].fileContents, parser);
+		runRoundTripTest<"roundtrip02.json", std::vector<bool>, partial, knownOrder>(jsonTests["roundtrip02.json"].fileContents, parser);
+		runRoundTripTest<"roundtrip03.json", std::vector<bool>, partial, knownOrder>(jsonTests["roundtrip03.json"].fileContents, parser);
+		runRoundTripTest<"roundtrip04.json", std::vector<int32_t>, partial, knownOrder>(jsonTests["roundtrip04.json"].fileContents, parser);
+		runRoundTripTest<"roundtrip05.json", std::vector<std::string>, partial, knownOrder>(jsonTests["roundtrip05.json"].fileContents, parser);
+		runRoundTripTest<"roundtrip06.json", std::vector<int32_t>, partial, knownOrder>(jsonTests["roundtrip06.json"].fileContents, parser);
+		runRoundTripTest<"roundtrip07.json", std::unordered_map<std::string, std::string>, partial, knownOrder>(jsonTests["roundtrip07.json"].fileContents, parser);
+		runRoundTripTest<"roundtrip08.json", std::vector<int32_t>, partial, knownOrder>(jsonTests["roundtrip08.json"].fileContents, parser);
+		runRoundTripTest<"roundtrip09.json", Obj2, partial, knownOrder>(jsonTests["roundtrip09.json"].fileContents, parser);
+		runRoundTripTest<"roundtrip10.json", Obj3, partial, knownOrder>(jsonTests["roundtrip10.json"].fileContents, parser);
+		runRoundTripTest<"roundtrip11.json", std::vector<int32_t>, partial, knownOrder>(jsonTests["roundtrip11.json"].fileContents, parser);
+		runRoundTripTest<"roundtrip12.json", std::vector<int32_t>, partial, knownOrder>(jsonTests["roundtrip12.json"].fileContents, parser);
+		runRoundTripTest<"roundtrip13.json", std::vector<int64_t>, partial, knownOrder>(jsonTests["roundtrip13.json"].fileContents, parser);
+		runRoundTripTest<"roundtrip14.json", std::vector<int64_t>, partial, knownOrder>(jsonTests["roundtrip14.json"].fileContents, parser);
+		runRoundTripTest<"roundtrip15.json", std::vector<int32_t>, partial, knownOrder>(jsonTests["roundtrip15.json"].fileContents, parser);
+		runRoundTripTest<"roundtrip16.json", std::vector<int32_t>, partial, knownOrder>(jsonTests["roundtrip16.json"].fileContents, parser);
+		runRoundTripTest<"roundtrip17.json", std::vector<int64_t>, partial, knownOrder>(jsonTests["roundtrip17.json"].fileContents, parser);
+		runRoundTripTest<"roundtrip18.json", std::vector<int64_t>, partial, knownOrder>(jsonTests["roundtrip18.json"].fileContents, parser);
+		runRoundTripTest<"roundtrip19.json", std::vector<int64_t>, partial, knownOrder>(jsonTests["roundtrip19.json"].fileContents, parser);
+		runRoundTripTest<"roundtrip20.json", std::vector<double>, partial, knownOrder>(jsonTests["roundtrip20.json"].fileContents, parser);
+		runRoundTripTest<"roundtrip21.json", std::vector<double>, partial, knownOrder>(jsonTests["roundtrip21.json"].fileContents, parser);
+		runRoundTripTest<"roundtrip22.json", std::vector<double>, partial, knownOrder>(jsonTests["roundtrip22.json"].fileContents, parser);
+		runRoundTripTest<"roundtrip23.json", std::vector<double>, partial, knownOrder>(jsonTests["roundtrip23.json"].fileContents, parser);
+		runRoundTripTest<"roundtrip24.json", std::vector<double>, partial, knownOrder>(jsonTests["roundtrip24.json"].fileContents, parser);
+		runRoundTripTest<"roundtrip25.json", std::vector<double>, partial, knownOrder>(jsonTests["roundtrip25.json"].fileContents, parser);
+		runRoundTripTest<"roundtrip26.json", std::vector<double>, partial, knownOrder>(jsonTests["roundtrip26.json"].fileContents, parser);
+		runRoundTripTest<"roundtrip27.json", std::vector<double>, partial, knownOrder>(jsonTests["roundtrip27.json"].fileContents, parser);
+		return;
+	}
+
+	inline static void roundTripTests() {
+		roundTripTestsImpl<false, false>();
+		roundTripTestsImpl<false, true>();
+		roundTripTestsImpl<true, false>();
+		roundTripTestsImpl<true, true>();
 	}
 }

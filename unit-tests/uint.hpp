@@ -24,10 +24,6 @@
 
 #include "common.hpp"
 
-#include <jsonifier>
-#include <filesystem>
-#include <fstream>
-
 namespace uint_validation_tests {
 
 	constexpr jsonifier::internal::array<std::string_view, 16> inputValues{ { "0", "1", "42", "123456789", "2147483647", "18446744073709551615", "0.0", "1.5", "3.14159", "123.456",
@@ -39,12 +35,20 @@ namespace uint_validation_tests {
 	constexpr jsonifier::internal::array<std::string_view, 11> failValues{ { "18446744073709551616", "-9223372036854775809", "-", "1.2.3", "1e", "1e+", "1e-", "\"abc\"", "true",
 		"null", "{}" } };
 
-	inline static void uintTests() {
-		std::cout << "Uint Pass Tests: " << std::endl;
-		pass_test_runner<uint64_t, uint64_t, inputValues, outputValues, pass_tests_runner, jsonifier::internal::make_integer_sequence<inputValues.size()>>::impl();
-		std::cout << "Uint Fail Tests: " << std::endl;
-		fail_test_runner<uint64_t, failValues, fail_tests_runner, jsonifier::internal::make_integer_sequence<failValues.size()>>::impl();
+	template<bool partial, bool knownOrder> inline static void uintTestsImpl() {
+		std::cout << "Uint Pass Tests, " << testTypePartial<partial> << testTypeKnownOrder<knownOrder> << ": " << std::endl;
+		pass_test_runner<uint64_t, uint64_t, inputValues, outputValues, partial, knownOrder, pass_tests_runner,
+			jsonifier::internal::make_integer_sequence<inputValues.size()>>::impl();
+		std::cout << "Uint Fail Tests, " << testTypePartial<partial> << testTypeKnownOrder<knownOrder> << ": " << std::endl;
+		fail_test_runner<uint64_t, failValues, partial, knownOrder, fail_tests_runner, jsonifier::internal::make_integer_sequence<failValues.size()>>::impl();
 		return;
+	}
+
+	inline static void uintTests() {
+		uintTestsImpl<false, false>();
+		uintTestsImpl<false, true>();
+		uintTestsImpl<true, false>();
+		uintTestsImpl<true, true>();
 	}
 
 }

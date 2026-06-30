@@ -18,7 +18,7 @@ set(JSONIFIER_COMPILE_DEFINITIONS
     JSONIFIER_UBSAN=$<IF:$<BOOL:${JSONIFIER_UBSAN_EFFECTIVE}>,1,0>
     JSONIFIER_DEV=$<IF:$<BOOL:${JSONIFIER_DEV}>,1,0>
     "JSONIFIER_DISPATCH_TABLE_COUNT=$<IF:$<PLATFORM_ID:Darwin>,6,12>"
-    "JSONIFIER_INLINE=$<IF:$<CONFIG:Release>,$<IF:$<CXX_COMPILER_ID:MSVC>,[[msvc::forceinline]] inline,inline __attribute__((always_inline))>,$<IF:$<CXX_COMPILER_ID:MSVC>,[[msvc::noinline]],__attribute__((noinline))>>"
+    "JSONIFIER_INLINE=$<IF:$<CONFIG:Release>,$<IF:$<CXX_COMPILER_ID:MSVC>,[[msvc::forceinline]] inline,inline __attribute__((always_inline))>,$<IF:$<CXX_COMPILER_ID:MSVC>,inline,inline>>"
     "JSONIFIER_CLANG_INLINE=$<IF:$<CONFIG:Release>,$<IF:$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>>,inline __attribute__((always_inline)),$<IF:$<CXX_COMPILER_ID:MSVC>,inline,inline>>,$<IF:$<CXX_COMPILER_ID:MSVC>,[[msvc::noinline]],__attribute__((noinline))>>"
     "JSONIFIER_LIFETIME_BOUND=$<IF:$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>>,[[clang::lifetimebound]],$<IF:$<CXX_COMPILER_ID:MSVC>,[[msvc::lifetimebound]],>>"
     $<$<CXX_COMPILER_ID:MSVC>:NOMINMAX;WIN32_LEAN_AND_MEAN>

@@ -24,10 +24,6 @@
 
 #include "common.hpp"
 
-#include <jsonifier>
-#include <filesystem>
-#include <fstream>
-
 namespace float_validation_tests {
 
 	constexpr jsonifier::internal::array<std::string_view, 64> inputValues{ { "0.0", "-0.0", "1.0", "-1.0", "1.5", "-1.5", "3.1416", "1E10", "1e10", "1E+10", "1E-10", "-1E10",
@@ -53,10 +49,17 @@ namespace float_validation_tests {
 		10141204801825834086073718800384.0, 10141204801825835211973625643008.0, 5708990770823838890407843763683279797179383808.0, 5708990770823839524233143877797980545530986496.0,
 		5708990770823839524233143877797980545530986496.0, 5708990770823838890407843763683279797179383808.0, 5708990770823839524233143877797980545530986496.0 } };
 
+	template<bool partial, bool knownOrder> inline static void floatTestsImpl() {
+		std::cout << "Float Tests, " << testTypePartial<partial> << testTypeKnownOrder<knownOrder> << ": " << std::endl;
+		pass_test_runner<double, double, inputValues, outputValues, partial, knownOrder, pass_tests_runner, jsonifier::internal::make_integer_sequence<inputValues.size()>>::impl();
+		return;
+	}
+
 	inline static void floatTests() {
-		std::cout << "Float Tests: " << std::endl;
-		pass_test_runner<double, double, inputValues, outputValues, pass_tests_runner, jsonifier::internal::make_integer_sequence<inputValues.size()>>::impl();
-		return ;
+		floatTestsImpl<false, false>();
+		floatTestsImpl<false, true>();
+		floatTestsImpl<true, false>();
+		floatTestsImpl<true, true>();
 	}
 
 }

@@ -1504,7 +1504,7 @@ namespace jsonifier_fast_float {
 		}
 		return false;
 	}
-	template<typename char_t> JSONIFIER_INLINE static constexpr bool is_truncated(span<const char_t> s) noexcept {
+	template<typename char_t> JSONIFIER_INLINE static constexpr bool is_truncated(span<char_t> s) noexcept {
 		return is_truncated(s.ptr, s.end);
 	}
 
@@ -1536,7 +1536,7 @@ namespace jsonifier_fast_float {
 
 	// parse the significant digits into a big integer
 	template<uint64_t max_digits_new, typename char_t>
-	JSONIFIER_INLINE static constexpr void parse_mantissa(bigint& result, span<const char_t>& integer, span<const char_t>& fraction, uint64_t& digits) noexcept {
+	JSONIFIER_INLINE static constexpr void parse_mantissa(bigint& result, span<char_t>& integer, span<char_t>& fraction, uint64_t& digits) noexcept {
 		constexpr uint64_t max_digits{ max_digits_new };
 		// try to minimize the number of big integer and scalar multiplication.
 		// therefore, try to parse 8 digits at a time, and multiply by the largest
@@ -1690,7 +1690,7 @@ namespace jsonifier_fast_float {
 	// `b` as a big-integer type, scaled to the same binary exponent as
 	// the actual digits. we then compare the big integer representations
 	// of both, and use that to direct rounding.
-	template<typename value_type, typename char_t> JSONIFIER_INLINE static constexpr adjusted_mantissa digit_comp(span<const char_t>& integer, span<const char_t>& fraction,
+	template<typename value_type, typename char_t> JSONIFIER_INLINE static constexpr adjusted_mantissa digit_comp(span<char_t>& integer, span<char_t>& fraction,
 		uint64_t mantissa, int64_t exponent, adjusted_mantissa am) noexcept {
 		// remove the invalid exponent bias
 		am.power2 -= invalid_am_bias;

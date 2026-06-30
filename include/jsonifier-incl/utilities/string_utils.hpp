@@ -105,10 +105,6 @@ namespace jsonifier::internal {
 	} \
 	JSONIFIER_SKIP_WS()
 
-	JSONIFIER_INLINE static string_view_ptr getUnderlyingPtr(string_view_ptr ptr) noexcept {
-		return ptr;
-	}
-
 	template<typename = void> struct digit_tables {
 		static constexpr uint32_t digitToVal32[]{ 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
 			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
@@ -214,15 +210,21 @@ namespace jsonifier::internal {
 
 	/// Sampled from Simdjson library: https://github.com/simdjson/simdjson
 	template<typename basic_iterator01, typename basic_iterator02>
-	JSONIFIER_INLINE static bool handleUnicodeCodePoint(basic_iterator01& srcPtr, basic_iterator02& dstPtr) noexcept {
+	JSONIFIER_INLINE static bool handleUnicodeCodePoint(basic_iterator01& srcPtr, basic_iterator02& dstPtr, basic_iterator01 srcEnd) noexcept {
 		static constexpr uint8_t bs{ '\\' };
 		static constexpr uint8_t u{ 'u' };
 
+		if JSONIFIER_UNLIKELY ((srcPtr + 6) > srcEnd) {
+			return false;
+		}
+
 		uint32_t codePoint = hexToU32NoCheck(srcPtr + 2);
 		srcPtr += 6;
-
 		if (codePoint >= 0xD800 && codePoint <= 0xDFFF) {
 			if (codePoint >= 0xDC00) {
+				return false;
+			}
+			if JSONIFIER_UNLIKELY ((srcPtr + 6) > srcEnd) {
 				return false;
 			}
 			if (((srcPtr[0] << 8) | srcPtr[1]) != ((bs << 8) | u)) {
@@ -236,7 +238,6 @@ namespace jsonifier::internal {
 			codePoint = (((codePoint - 0xD800) << 10) | lowBit) + 0x10000;
 			srcPtr += 6;
 		}
-
 		const uint64_t offset = codePointToUtf8(codePoint, dstPtr);
 		dstPtr += offset;
 		return offset > 0;
@@ -384,7 +385,7 @@ namespace jsonifier::internal {
 							if (escapeChar == 0x75u) {
 								string1Start += nextBackslashOrQuote;
 								string2 += nextBackslashOrQuote;
-								if (!handleUnicodeCodePoint(string1Start, string2)) {
+								if (!handleUnicodeCodePoint(string1Start, string2, string1End)) {
 									result = static_cast<basic_iterator02>(nullptr);
 									return static_cast<basic_iterator01>(nullptr);
 								}
@@ -425,7 +426,7 @@ namespace jsonifier::internal {
 				} else if (escapeChar == '\\') {
 					escapeChar = string1Start[1];
 					if (escapeChar == 'u') {
-						if (!handleUnicodeCodePoint(string1Start, string2)) {
+						if (!handleUnicodeCodePoint(string1Start, string2, string1End)) {
 							return nullptr;
 						}
 						continue;
@@ -568,49 +569,22 @@ namespace jsonifier::internal {
 		return !static_cast<bool>(sourceVal ^ stringInt);
 	}
 
-	template<jsonifier::concepts::bool_t bool_type> JSONIFIER_INLINE static bool parseBool(bool_type& value, string_view_ptr& context) noexcept {
-		if (compareStringAsInt<"true">(context)) {
+	template<jsonifier::concepts::bool_t bool_type> JSONIFIER_INLINE static string_view_ptr parseBool(bool_type& value, string_view_ptr iter, string_view_ptr endIter) noexcept {
+		if (endIter - iter >= 4 && compareStringAsInt<"true">(iter)) {
 			value = true;
-			context += 4;
-			return numberTerminators[static_cast<uint8_t>(*context)];
-		} else if (compareStringAsInt<"fals">(context) && context[4] == 'e') {
+			return iter + 4;
+		} else if (endIter - iter >= 5 && compareStringAsInt<"fals">(iter) && iter[4] == 'e') {
 			value = false;
-			context += 5;
-			return numberTerminators[static_cast<uint8_t>(*context)];
+			return iter + 5;
 		}
-		return false;
+		return nullptr;
 	}
 
-	template<typename context_type, jsonifier::concepts::bool_t bool_type> JSONIFIER_INLINE static bool parseBool(bool_type& value, context_type& context) noexcept {
-		if (compareStringAsInt<"true">(&context.stringRoot[*context.iter])) {
-			value			 = true;
-			const bool valid = numberTerminators[static_cast<uint8_t>(context.stringRoot[(*context.iter) + 4])];
-			++context.iter;
-			return valid;
-		} else if (compareStringAsInt<"fals">(&context.stringRoot[*context.iter]) && context.stringRoot[(*context.iter) + 4] == 'e') {
-			value			 = false;
-			const bool valid = numberTerminators[static_cast<uint8_t>(context.stringRoot[(*context.iter) + 5])];
-			++context.iter;
-			return valid;
-		}
-		return false;
-	}
-
-	template<typename context_type> JSONIFIER_INLINE static bool parseNull(context_type& context) noexcept {
-		if JSONIFIER_LIKELY (compareStringAsInt<"null">(&context.stringRoot[*context.iter])) {
-			++context.iter;
-			return true;
+	JSONIFIER_INLINE static string_view_ptr parseNull(string_view_ptr iter, string_view_ptr endIter) noexcept {
+		if JSONIFIER_LIKELY (endIter - iter >= 4 && compareStringAsInt<"null">(iter)) {
+			return iter + 4;
 		} else {
-			return false;
-		}
-	}
-
-	JSONIFIER_INLINE static bool parseNull(string_view_ptr& context) noexcept {
-		if JSONIFIER_LIKELY (compareStringAsInt<"null">(context)) {
-			context += 4;
-			return true;
-		} else {
-			return false;
+			return nullptr;
 		}
 	}
 
@@ -651,60 +625,57 @@ namespace jsonifier::internal {
 		return returnValues;
 	}();
 
-	template<const auto options, typename context_type> struct derailleur {
-		template<typename value_type> JSONIFIER_INLINE static bool parseString(value_type& value, context_type& context) noexcept {
-			if constexpr (options.partialRead) {
-				if JSONIFIER_LIKELY ((context.iter < context.endIter) && context.stringRoot[*context.iter] == '"') {
-					auto newerPtr	  = (&context.stringRoot[(*context.iter)]) + 1;
-					const auto newPtr = string_parser<options, decltype(newerPtr), decltype(context.parserPtr->getStringBuffer().data())>::impl(newerPtr,
-						context.parserPtr->getStringBuffer().data(), static_cast<uint64_t>(*context.endIter - *context.iter));
-					if JSONIFIER_LIKELY (newPtr) {
-						const auto newSize = static_cast<uint64_t>(newPtr - context.parserPtr->getStringBuffer().data());
-						if constexpr (concepts::has_resize<value_type>) {
-							if JSONIFIER_UNLIKELY (value.size() != newSize) {
-								value.resize(newSize);
-							}
-						}
-						std::memcpy(value.data(), context.parserPtr->getStringBuffer().data(), newSize);
-						++context.iter;
+	template<auto options, typename value_type, typename context_type> JSONIFIER_INLINE static string_view_ptr parseString(value_type& value, context_type& context) noexcept {
+		if (context.currentChar() == '"') {
+			++context.iter;
+			const auto newPtr = string_parser<options, decltype(context.iter), decltype(context.parserPtr->getStringBuffer().data())>::impl(context.iter,
+				context.parserPtr->getStringBuffer().data(), static_cast<uint64_t>(context.endIter - context.iter));
+			if JSONIFIER_LIKELY (newPtr) {
+				const auto newSize = static_cast<uint64_t>(newPtr - context.parserPtr->getStringBuffer().data());
+				if constexpr (concepts::has_resize<value_type>) {
+					if JSONIFIER_UNLIKELY (value.size() != newSize) {
+						value.resize(newSize);
 					}
-					JSONIFIER_ELSE_UNLIKELY(else) {
-						context.parserPtr->template reportError<parse_status::Invalid_String_Characters>(context);
-						return false;
-					}
-					return true;
 				}
-				JSONIFIER_ELSE_UNLIKELY(else) {
-					context.parserPtr->template reportError<parse_status::Missing_String_Start>(context);
-					return false;
-				}
-			} else {
-				if JSONIFIER_LIKELY ((context.iter < context.endIter) && *context.iter == '"') {
-					++context.iter;
-					const auto newPtr = string_parser<options, decltype(context.iter), decltype(context.parserPtr->getStringBuffer().data())>::impl(context.iter,
-						context.parserPtr->getStringBuffer().data(), static_cast<uint64_t>(context.endIter - context.iter));
-					if JSONIFIER_LIKELY (newPtr) {
-						const auto newSize = static_cast<uint64_t>(newPtr - context.parserPtr->getStringBuffer().data());
-						if constexpr (concepts::has_resize<value_type>) {
-							if JSONIFIER_UNLIKELY (value.size() != newSize) {
-								value.resize(newSize);
-							}
-						}
-						std::memcpy(value.data(), context.parserPtr->getStringBuffer().data(), newSize);
-						++context.iter;
-					}
-					JSONIFIER_ELSE_UNLIKELY(else) {
-						context.parserPtr->template reportError<parse_status::Invalid_String_Characters>(context);
-						return false;
-					}
-					return true;
-				}
-				JSONIFIER_ELSE_UNLIKELY(else) {
-					context.parserPtr->template reportError<parse_status::Missing_String_Start>(context);
-					return false;
-				}
+				std::memcpy(value.data(), context.parserPtr->getStringBuffer().data(), newSize);
+				++context.iter;
+				return context.iter;
 			}
+			JSONIFIER_ELSE_UNLIKELY(else) {
+				return nullptr;
+			}
+		} else {
+			return nullptr;
 		}
+	}
+
+	template<auto options, typename value_type, typename context_type>
+	JSONIFIER_INLINE static string_view_ptr parseStringPartial(value_type& value, context_type& context) noexcept {
+		if (context.currentChar() == '"') {
+			const char* rawStart = &context.stringRoot[*context.iter] + 1;
+			const char* rawEnd	 = &context.stringRoot[*context.endIter];
+			const auto newPtr	 = string_parser<options, decltype(rawStart), decltype(context.parserPtr->getStringBuffer().data())>::impl(rawStart,
+				   context.parserPtr->getStringBuffer().data(), static_cast<uint64_t>(rawEnd - rawStart));
+			if JSONIFIER_LIKELY (newPtr) {
+				const auto newSize = static_cast<uint64_t>(newPtr - context.parserPtr->getStringBuffer().data());
+				if constexpr (concepts::has_resize<value_type>) {
+					if JSONIFIER_UNLIKELY (value.size() != newSize) {
+						value.resize(newSize);
+					}
+				}
+				std::memcpy(value.data(), context.parserPtr->getStringBuffer().data(), newSize);
+				++context.iter;
+				return rawStart;
+			}
+			JSONIFIER_ELSE_UNLIKELY(else) {
+				return nullptr;
+			}
+		} else {
+			return nullptr;
+		}
+	}
+
+	template<const auto options, typename context_type> struct derailleur {
 
 		JSONIFIER_INLINE static void skipString(context_type& context) noexcept {
 			if constexpr (options.partialRead) {

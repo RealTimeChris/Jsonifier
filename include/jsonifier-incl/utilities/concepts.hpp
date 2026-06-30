@@ -26,15 +26,15 @@
 #include <cstdint>
 #include <vector>
 
-namespace jsonifier::internal {
+namespace jsonifier::concepts {
 
 	template<typename, typename> inline constexpr bool is_same_v						  = false;
 	template<typename value_type> inline constexpr bool is_same_v<value_type, value_type> = true;
 
-	template<typename value_type> using base_t = remove_cvref_t<value_type>;
+	template<typename value_type> using base_t = internal::remove_cvref_t<value_type>;
 
 	template<typename value_type_01, typename value_type_02>
-		concept same_as_types = is_same_v<remove_reference_t<value_type_01>, remove_reference_t<value_type_02>>;
+	concept same_as_types = is_same_v<internal::remove_reference_t<value_type_01>, internal::remove_reference_t<value_type_02>>;
 
 	template<typename value_type>
 	concept enum_types = std::is_enum_v<base_t<value_type>> && std::is_unsigned_v<std::underlying_type_t<base_t<value_type>>>;
@@ -49,16 +49,16 @@ namespace jsonifier::internal {
 	concept uint_types = std::is_unsigned_v<base_t<value_type>> && integral_types<value_type>;
 
 	template<typename value_type>
-	concept uint8_types = uint_types<value_type> && sizeof(remove_cvref_t<value_type>) == 1;
+	concept uint8_types = uint_types<value_type> && sizeof(internal::remove_cvref_t<value_type>) == 1;
 
 	template<typename value_type>
-	concept uint16_types = uint_types<value_type> && sizeof(remove_cvref_t<value_type>) == 2;
+	concept uint16_types = uint_types<value_type> && sizeof(internal::remove_cvref_t<value_type>) == 2;
 
 	template<typename value_type>
-	concept uint32_types = uint_types<value_type> && sizeof(remove_cvref_t<value_type>) == 4;
+	concept uint32_types = uint_types<value_type> && sizeof(internal::remove_cvref_t<value_type>) == 4;
 
 	template<typename value_type>
-	concept uint64_types = uint_types<value_type> && sizeof(remove_cvref_t<value_type>) == 8;
+	concept uint64_types = uint_types<value_type> && sizeof(internal::remove_cvref_t<value_type>) == 8;
 
 	template<typename value_type>
 	concept uintegral_or_enum_types = uint_types<value_type> || enum_types<value_type>;
