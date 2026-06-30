@@ -24,6 +24,7 @@
 #pragma once
 
 #include <jsonifier-incl/utilities/fast_float.hpp>
+#include <jsonifier-incl/utilities/utility.hpp>
 
 namespace jsonifier::internal {
 
@@ -57,6 +58,10 @@ namespace jsonifier::internal {
 	static constexpr char minus{ '-' };
 	static constexpr char plus{ '+' };
 	static constexpr char nine{ '9' };
+
+	template<typename iter_type> JSONIFIER_INLINE bool validTerminator (iter_type iter, iter_type end) noexcept {
+		return iter >= end || numberTerminators[static_cast<uint8_t>(*iter)];
+	};
 
 	template<typename value_type, typename char_t> JSONIFIER_INLINE static bool parseFloat(value_type& value, char_t const*& iter, char_t const* end = nullptr) noexcept {
 		using namespace jsonifier_fast_float;
@@ -193,21 +198,21 @@ namespace jsonifier::internal {
 					if (negative) {
 						value = -value;
 					}
-					return true;
+					return validTerminator(iter, end);
 				}
 			} else {
 				if (exponent >= 0 && mantissa <= binary_format<value_type>::max_mantissa_fast_path(exponent)) {
 #if defined(__clang__) || defined(JSONIFIER_FASTFLOAT_32BIT)
 					if (mantissa == 0) {
 						value = negative ? static_cast<value_type>(-0.) : static_cast<value_type>(0.);
-						return true;
+						return validTerminator(iter, end);
 					}
 #endif
 					value = static_cast<value_type>(mantissa) * binary_format<value_type>::exact_power_of_ten(exponent);
 					if (negative) {
 						value = -value;
 					}
-					return true;
+					return validTerminator(iter, end);
 				}
 			}
 		}
@@ -226,6 +231,6 @@ namespace jsonifier::internal {
 		}
 
 		to_float(negative, am, value);
-		return true;
+		return validTerminator(iter, end);
 	}
 }

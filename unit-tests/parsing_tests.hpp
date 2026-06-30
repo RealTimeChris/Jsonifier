@@ -73,44 +73,44 @@ namespace tests {
 	};
 
 	template<bool knownOrder, bool partialRead> inline static void parsing_tests_impl(jsonifier::jsonifier_core<>& parser) {
-		static constexpr rt_ut::string_literal test_type_partial{ [] {
+		static constexpr rt_ut::string_literal testTypePartial{ [] {
 			if constexpr (partialRead) {
 				return rt_ut::string_literal{ "Partial-Reading: Enabled" };
 			} else {
 				return rt_ut::string_literal{ "Partial-Reading: Disabled" };
 			}
 		}() };
-		parsing_tests<test_types::parse_serialize, "Abc Partial Test (Minified)", test_type_partial, abc_partial_test<abc_partial_test_struct>, false, partialRead, knownOrder>(
+		parsing_tests<test_types::parse_serialize, "Abc Partial Test (Minified)", testTypePartial, abc_partial_test<abc_partial_test_struct>, false, partialRead, knownOrder>(
 			parser);
-		parsing_tests<test_types::parse_serialize, "Abc Partial Test (Prettified)", test_type_partial, abc_partial_test<abc_partial_test_struct>, true, partialRead, knownOrder>(
+		parsing_tests<test_types::parse_serialize, "Abc Partial Test (Prettified)", testTypePartial, abc_partial_test<abc_partial_test_struct>, true, partialRead, knownOrder>(
 			parser);
-		parsing_tests<test_types::parse_serialize, "Abc (Out of Order) Test (Minified)", test_type_partial, abc_test<abc_test_struct>, false, partialRead, knownOrder>(parser);
-		parsing_tests<test_types::parse_serialize, "Abc (Out of Order) Test (Prettified)", test_type_partial, abc_test<abc_test_struct>, true, partialRead, knownOrder>(parser);
-		parsing_tests<test_types::parse_serialize, "Apache Builds Test (Minified)", test_type_partial, apache_builds_message, false, partialRead, knownOrder>(parser);
-		parsing_tests<test_types::parse_serialize, "Apache Builds Test (Prettified)", test_type_partial, apache_builds_message, true, partialRead, knownOrder>(parser);
-		parsing_tests<test_types::parse_serialize, "Discord Test (Minified)", test_type_partial, discord_message, false, partialRead, knownOrder>(parser);
-		parsing_tests<test_types::parse_serialize, "Discord Test (Prettified)", test_type_partial, discord_message, true, partialRead, knownOrder>(parser);
-		parsing_tests<test_types::parse_serialize, "Github Events Test (Minified)", test_type_partial, github_events_message, false, partialRead, knownOrder>(parser);
-		parsing_tests<test_types::parse_serialize, "Github Events Test (Prettified)", test_type_partial, github_events_message, true, partialRead, knownOrder>(parser);
-		parsing_tests<test_types::parse_serialize, "Google Maps Response Test (Minified)", test_type_partial, google_maps_response_message, false, partialRead, knownOrder>(parser);
-		parsing_tests<test_types::parse_serialize, "Google Maps Response Test (Prettified)", test_type_partial, google_maps_response_message, true, partialRead, knownOrder>(
+		parsing_tests<test_types::parse_serialize, "Abc (Out of Order) Test (Minified)", testTypePartial, abc_test<abc_test_struct>, false, partialRead, knownOrder>(parser);
+		parsing_tests<test_types::parse_serialize, "Abc (Out of Order) Test (Prettified)", testTypePartial, abc_test<abc_test_struct>, true, partialRead, knownOrder>(parser);
+		parsing_tests<test_types::parse_serialize, "Apache Builds Test (Minified)", testTypePartial, apache_builds_message, false, partialRead, knownOrder>(parser);
+		parsing_tests<test_types::parse_serialize, "Apache Builds Test (Prettified)", testTypePartial, apache_builds_message, true, partialRead, knownOrder>(parser);
+		parsing_tests<test_types::parse_serialize, "Discord Test (Minified)", testTypePartial, discord_message, false, partialRead, knownOrder>(parser);
+		parsing_tests<test_types::parse_serialize, "Discord Test (Prettified)", testTypePartial, discord_message, true, partialRead, knownOrder>(parser);
+		parsing_tests<test_types::parse_serialize, "Github Events Test (Minified)", testTypePartial, github_events_message, false, partialRead, knownOrder>(parser);
+		parsing_tests<test_types::parse_serialize, "Github Events Test (Prettified)", testTypePartial, github_events_message, true, partialRead, knownOrder>(parser);
+		parsing_tests<test_types::parse_serialize, "Google Maps Response Test (Minified)", testTypePartial, google_maps_response_message, false, partialRead, knownOrder>(parser);
+		parsing_tests<test_types::parse_serialize, "Google Maps Response Test (Prettified)", testTypePartial, google_maps_response_message, true, partialRead, knownOrder>(
 			parser);
-		parsing_tests<test_types::parse_serialize, "Canada Test (Minified)", test_type_partial, canada_message, false, partialRead, knownOrder>(parser);
-		parsing_tests<test_types::parse_serialize, "Canada Test (Prettified)", test_type_partial, canada_message, true, partialRead, knownOrder>(parser);
-		parsing_tests<test_types::parse_serialize, "CitmCatalog Test (Minified)", test_type_partial, citm_catalog_message, false, partialRead, knownOrder>(parser);
-		parsing_tests<test_types::parse_serialize, "CitmCatalog Test (Prettified)", test_type_partial, citm_catalog_message, true, partialRead, knownOrder>(parser);
-		parsing_tests<test_types::parse_serialize, "Instruments Test (Minified)", test_type_partial, instruments_message, false, partialRead, knownOrder>(parser);
-		parsing_tests<test_types::parse_serialize, "Instruments Test (Prettified)", test_type_partial, instruments_message, true, partialRead, knownOrder>(parser);
-		parsing_tests<test_types::parse_serialize, "Marine IK Test (Minified)", test_type_partial, marine_ik, false, partialRead, knownOrder>(parser);
-		parsing_tests<test_types::parse_serialize, "Marine IK Test (Prettified)", test_type_partial, marine_ik, true, partialRead, knownOrder>(parser);
-		parsing_tests<test_types::parse_serialize, "Mesh Test (Minified)", test_type_partial, mesh_message, false, partialRead, knownOrder>(parser);
-		parsing_tests<test_types::parse_serialize, "Mesh Test (Prettified)", test_type_partial, mesh_message, true, partialRead, knownOrder>(parser);
-		parsing_tests<test_types::parse_serialize, "Random Test (Minified)", test_type_partial, random_message, false, partialRead, knownOrder>(parser);
-		parsing_tests<test_types::parse_serialize, "Random Test (Prettified)", test_type_partial, random_message, true, partialRead, knownOrder>(parser);
-		parsing_tests<test_types::parse_serialize, "Twitter Test (Minified)", test_type_partial, twitter_message, false, partialRead, knownOrder>(parser);
-		parsing_tests<test_types::parse_serialize, "Twitter Test (Prettified)", test_type_partial, twitter_message, true, partialRead, knownOrder>(parser);
-		parsing_tests<test_types::parse_serialize, "Twitter Partial Test (Minified)", test_type_partial, twitter_partial_message, false, partialRead, knownOrder>(parser);
-		parsing_tests<test_types::parse_serialize, "Twitter Partial Test (Prettified)", test_type_partial, twitter_partial_message, true, partialRead, knownOrder>(parser);
+		parsing_tests<test_types::parse_serialize, "Canada Test (Minified)", testTypePartial, canada_message, false, partialRead, knownOrder>(parser);
+		parsing_tests<test_types::parse_serialize, "Canada Test (Prettified)", testTypePartial, canada_message, true, partialRead, knownOrder>(parser);
+		parsing_tests<test_types::parse_serialize, "CitmCatalog Test (Minified)", testTypePartial, citm_catalog_message, false, partialRead, knownOrder>(parser);
+		parsing_tests<test_types::parse_serialize, "CitmCatalog Test (Prettified)", testTypePartial, citm_catalog_message, true, partialRead, knownOrder>(parser);
+		parsing_tests<test_types::parse_serialize, "Instruments Test (Minified)", testTypePartial, instruments_message, false, partialRead, knownOrder>(parser);
+		parsing_tests<test_types::parse_serialize, "Instruments Test (Prettified)", testTypePartial, instruments_message, true, partialRead, knownOrder>(parser);
+		parsing_tests<test_types::parse_serialize, "Marine IK Test (Minified)", testTypePartial, marine_ik, false, partialRead, knownOrder>(parser);
+		parsing_tests<test_types::parse_serialize, "Marine IK Test (Prettified)", testTypePartial, marine_ik, true, partialRead, knownOrder>(parser);
+		parsing_tests<test_types::parse_serialize, "Mesh Test (Minified)", testTypePartial, mesh_message, false, partialRead, knownOrder>(parser);
+		parsing_tests<test_types::parse_serialize, "Mesh Test (Prettified)", testTypePartial, mesh_message, true, partialRead, knownOrder>(parser);
+		parsing_tests<test_types::parse_serialize, "Random Test (Minified)", testTypePartial, random_message, false, partialRead, knownOrder>(parser);
+		parsing_tests<test_types::parse_serialize, "Random Test (Prettified)", testTypePartial, random_message, true, partialRead, knownOrder>(parser);
+		parsing_tests<test_types::parse_serialize, "Twitter Test (Minified)", testTypePartial, twitter_message, false, partialRead, knownOrder>(parser);
+		parsing_tests<test_types::parse_serialize, "Twitter Test (Prettified)", testTypePartial, twitter_message, true, partialRead, knownOrder>(parser);
+		parsing_tests<test_types::parse_serialize, "Twitter Partial Test (Minified)", testTypePartial, twitter_partial_message, false, partialRead, knownOrder>(parser);
+		parsing_tests<test_types::parse_serialize, "Twitter Partial Test (Prettified)", testTypePartial, twitter_partial_message, true, partialRead, knownOrder>(parser);
 	}
 
 	inline static void parsing_tests() {

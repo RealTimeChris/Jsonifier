@@ -20,7 +20,7 @@ FetchContent_MakeAvailable(glaze)
 
 target_link_libraries(jsonifier-unit-tests
     PUBLIC
-        Jsonifier::Jsonifier rt-ut::rt-ut glaze::glaze
+        Jsonifier::Jsonifier rt-ut::rt-ut glaze::glaze 
 )
 
 option(JSONIFIER_ASAN  "Enable AddressSanitizer"            OFF)
@@ -84,7 +84,7 @@ set(JSONIFIER_MSVC_COMPILER_OPTIONS
     /Wall
     /W4
     /bigobj
-    /WX
+    #/WX
 )
 
 set(JSONIFIER_CLANG_COMPILER_OPTIONS

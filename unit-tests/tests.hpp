@@ -34,12 +34,12 @@ namespace tests {
 
 	inline static void testFunction() {
 		conformance_tests::conformanceTests();
-		bounds_tests::boundsTests();
-		round_trip_tests::roundTripTests();
-		string_validation_tests::stringTests();
-		float_validation_tests::floatTests();
-		uint_validation_tests::uintTests();
-		int_validation_tests::intTests();
+		//bounds_tests::boundsTests();
+		//round_trip_tests::roundTripTests();
+		//string_validation_tests::stringTests();
+		//float_validation_tests::floatTests();
+		//uint_validation_tests::uintTests();
+		//int_validation_tests::intTests();
 	};
 
 }

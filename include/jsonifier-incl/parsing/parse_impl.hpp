@@ -1743,7 +1743,6 @@ namespace jsonifier::internal {
 
 	template<concepts::vector_t value_type, typename context_type, parse_options options, bool minified> struct parse_partial_impl<value_type, context_type, options, minified> {
 		using base = derailleur<options, context_type>;
-
 		JSONIFIER_INLINE static void impl(value_type& value, context_type& context) noexcept {
 			if JSONIFIER_LIKELY (context.iter + 1 < context.endIter) {
 				if JSONIFIER_LIKELY ((context.iter < context.endIter) && context.stringRoot[*context.iter] == lBracket) {
@@ -1752,36 +1751,68 @@ namespace jsonifier::internal {
 					if JSONIFIER_LIKELY ((context.iter < context.endIter) && context.stringRoot[*context.iter] != rBracket) {
 						if JSONIFIER_LIKELY (const uint64_t size = value.size(); size > 0) {
 							auto iterNew = value.begin();
-
 							for (uint64_t i = 0; i < size; ++i, ++iterNew) {
 								parse<options, minified>::impl(*(iterNew), context);
-
-								if JSONIFIER_LIKELY (context.stringRoot[*context.iter] == rBracket) {
-									++context.iter;
-									return (value.size() == (i) + 1) ? noop() : value.resize((i) + 1);
-								} else {
-									++context.iter;
+								if JSONIFIER_LIKELY (context.iter < context.endIter) {
+									if JSONIFIER_LIKELY (context.stringRoot[*context.iter] == rBracket) {
+										++context.iter;
+										--context.currentArrayDepth;
+										return (value.size() == (i) + 1) ? noop() : value.resize((i) + 1);
+									} else if JSONIFIER_LIKELY (context.stringRoot[*context.iter] == comma) {
+										if JSONIFIER_UNLIKELY (context.iter + 1 < context.endIter && context.stringRoot[*(context.iter + 1)] == rBracket) {
+											context.parserPtr->template reportError<parse_status::Missing_Array_End>(context);
+											base::skipToNextValue(context);
+											return;
+										}
+										++context.iter;
+									} else {
+										context.parserPtr->template reportError<parse_status::Missing_Array_End>(context);
+										base::skipToNextValue(context);
+										return;
+									}
+								}
+								JSONIFIER_ELSE_UNLIKELY(else) {
+									context.parserPtr->template reportError<parse_status::Missing_Array_End>(context);
+									base::skipToNextValue(context);
+									return;
 								}
 							}
 						}
-
 						while (context.iter < context.endIter) {
 							parse<options, minified>::impl(value.emplace_back(), context);
-							if JSONIFIER_LIKELY (context.stringRoot[*context.iter] == rBracket) {
-								++context.iter;
-								--context.currentArrayDepth;
+							if JSONIFIER_LIKELY (context.iter < context.endIter) {
+								if JSONIFIER_LIKELY (context.stringRoot[*context.iter] == rBracket) {
+									++context.iter;
+									--context.currentArrayDepth;
+									return;
+								} else if JSONIFIER_LIKELY (context.stringRoot[*context.iter] == comma) {
+									if JSONIFIER_UNLIKELY (context.iter + 1 < context.endIter && context.stringRoot[*(context.iter + 1)] == rBracket) {
+										context.parserPtr->template reportError<parse_status::Missing_Array_End>(context);
+										base::skipToNextValue(context);
+										return;
+									}
+									++context.iter;
+								} else {
+									context.parserPtr->template reportError<parse_status::Missing_Array_End>(context);
+									base::skipToNextValue(context);
+									return;
+								}
+							}
+							JSONIFIER_ELSE_UNLIKELY(else) {
+								context.parserPtr->template reportError<parse_status::Missing_Array_End>(context);
+								base::skipToNextValue(context);
 								return;
-							} else {
-								++context.iter;
 							}
 						}
+						context.parserPtr->template reportError<parse_status::Missing_Array_End>(context);
+						base::skipToNextValue(context);
 					} else {
 						++context.iter;
 						--context.currentArrayDepth;
 					}
 				}
 				JSONIFIER_ELSE_UNLIKELY(else) {
-					context.parserPtr->template reportError<parse_status::Missing_Array_Start>(context);
+					context.parserPtr->template reportError<parse_status::Missing_Array_End>(context);
 					base::skipToNextValue(context);
 				}
 			}
@@ -1923,7 +1954,9 @@ namespace jsonifier::internal {
 		using base = derailleur<options, context_type>;
 
 		JSONIFIER_INLINE static void impl(value_type& value, context_type& context) noexcept {
-			if JSONIFIER_LIKELY (parseNumber(value, &context.stringRoot[*context.iter], &context.stringRoot[*context.endIter])) {
+			const char* numStart = &context.stringRoot[*context.iter];
+			const char* numEnd	 = &context.stringRoot[*context.endIter];
+			if JSONIFIER_LIKELY (parseNumber(value, numStart, numEnd)) {
 				++context.iter;
 				return;
 			}
@@ -2143,9 +2176,9 @@ namespace jsonifier::internal {
 		using base = derailleur<options, context_type>;
 
 		JSONIFIER_INLINE static void impl(value_type& value, context_type& context) noexcept {
-			auto newPtr = *context.iter;
+			auto newPtr = &context.stringRoot[*context.iter];
 			base::skipToNextValue(context);
-			int64_t newSize = *context.iter - newPtr;
+			int64_t newSize = *context.iter;
 			if JSONIFIER_LIKELY (newSize > 0) {
 				string newString{};
 				newString.resize(static_cast<uint64_t>(newSize));

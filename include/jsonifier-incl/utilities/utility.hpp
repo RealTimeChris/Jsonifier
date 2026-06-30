@@ -48,5 +48,18 @@ namespace jsonifier::internal {
 		}
 	};
 
+	static constexpr array<bool, 256> numberTerminators = [] {
+		array<bool, 256> table{};
+		table[',']						  = true;
+		table['}']						  = true;
+		table[']']						  = true;
+		table[' ']						  = true;
+		table['\t']						  = true;
+		table['\n']						  = true;
+		table['\r']						  = true;
+		table[static_cast<uint8_t>('\0')] = true;
+		return table;
+	}();
+
 
 }

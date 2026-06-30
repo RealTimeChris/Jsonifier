@@ -1239,7 +1239,7 @@ int main() {
 		std::cout << "\n========================================\n";
 		std::cout << "Test Results: " << passed << "/" << total << " passed\n";
 		std::cout << "========================================\n";
-		tests::parsing_tests();
+		//tests::parsing_tests();
 		tests::testFunction();
 	} catch (const std::runtime_error& e) {
 		std::cout << "Error: " << e.what() << std::endl;

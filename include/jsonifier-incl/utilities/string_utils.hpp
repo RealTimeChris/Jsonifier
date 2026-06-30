@@ -572,24 +572,26 @@ namespace jsonifier::internal {
 		if (compareStringAsInt<"true">(context)) {
 			value = true;
 			context += 4;
-			return true;
+			return numberTerminators[static_cast<uint8_t>(*context)];
 		} else if (compareStringAsInt<"fals">(context) && context[4] == 'e') {
 			value = false;
 			context += 5;
-			return true;
+			return numberTerminators[static_cast<uint8_t>(*context)];
 		}
 		return false;
 	}
 
 	template<typename context_type, jsonifier::concepts::bool_t bool_type> JSONIFIER_INLINE static bool parseBool(bool_type& value, context_type& context) noexcept {
 		if (compareStringAsInt<"true">(&context.stringRoot[*context.iter])) {
-			value = true;
+			value			 = true;
+			const bool valid = numberTerminators[static_cast<uint8_t>(context.stringRoot[(*context.iter) + 4])];
 			++context.iter;
-			return true;
+			return valid;
 		} else if (compareStringAsInt<"fals">(&context.stringRoot[*context.iter]) && context.stringRoot[(*context.iter) + 4] == 'e') {
-			value = false;
+			value			 = false;
+			const bool valid = numberTerminators[static_cast<uint8_t>(context.stringRoot[(*context.iter) + 5])];
 			++context.iter;
-			return true;
+			return valid;
 		}
 		return false;
 	}

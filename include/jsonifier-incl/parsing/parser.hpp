@@ -107,10 +107,6 @@ namespace jsonifier::internal {
 			using value_type = remove_cvref_t<value_type_new>;
 			if constexpr (options.partialRead) {
 				parse_partial_impl<value_type, context_type, options, minified>::impl(value, context);
-				if (!context.getState()) {
-					context.iter = context.endIter;
-					return;
-				}
 			} else {
 				parse_impl<value_type, context_type, options, options.minified>::impl(value, context);
 			}
@@ -164,12 +160,21 @@ namespace jsonifier::internal {
 				auto rootIter = getBeginIter(in);
 				auto endIter  = getEndIter(in);
 				derivedRef.section.template reset<options.minified>(rootIter, static_cast<uint64_t>(endIter - rootIter));
+				derivedRef.section.template reset<options.minified>(rootIter, static_cast<uint64_t>(endIter - rootIter));
+				std::cout << "endIter - rootIter dist: " << (context.endIter - context.rootIter) << std::endl;
+				// ADD:
+				std::cout << "tapeCount: " << derivedRef.section.getTapeCount() << std::endl;
+				auto* t = derivedRef.section.begin();
+				for (uint64_t i = 0; i < derivedRef.section.getTapeCount(); ++i) {
+					std::cout << "tape[" << i << "] = " << t[i] << " char: " << rootIter[t[i]] << std::endl;
+				}
 				context.rootIter  = derivedRef.section.begin();
 				context.iter	  = derivedRef.section.begin();
 				context.endIter	  = derivedRef.section.end();
 				context.stringRoot = rootIter;
 				context.parserPtr = this;
-				auto newSize	  = static_cast<uint64_t>((context.endIter - context.iter) / 2);
+				auto newSize	   = static_cast<uint64_t>((context.endIter - context.iter) / 2);
+				std::cout << "endIter - iter: " << (context.endIter - context.iter) << std::endl;
 				if (derivedRef.stringBuffer.size() < newSize) {
 					derivedRef.stringBuffer.resize(newSize);
 				}
@@ -184,7 +189,24 @@ namespace jsonifier::internal {
 					return false;
 				}
 				parse<optionsNew, options.minified>::impl(object, context);
-				return derivedRef.errors.size() > 0 ? false : true;
+
+				// ADD HERE:
+				std::cout << "iter < endIter: " << (context.iter < context.endIter) << std::endl;
+				std::cout << "iter dist: " << (context.endIter - context.iter) << std::endl;
+				std::cout << "currentArrayDepth: " << context.currentArrayDepth << std::endl;
+				std::cout << "currentObjectDepth: " << context.currentObjectDepth << std::endl;
+				if (context.iter < context.endIter) {
+					std::cout << "char at iter: " << context.stringRoot[*context.iter] << std::endl;
+				}
+
+				if JSONIFIER_UNLIKELY (context.iter < context.endIter) {
+					reportError<parse_status::Unfinished_Input>(context);
+				}
+				return (context.currentObjectDepth != 0) ? (reportError<parse_status::Missing_Object_End>(context), false)
+					: (context.currentArrayDepth != 0)	 ? (reportError<parse_status::Missing_Array_End>(context), false)
+					: (context.iter < context.endIter)	 ? (reportError<parse_status::Unfinished_Input>(context), false)
+					: derivedRef.errors.size() > 0		 ? false
+														 : true;
 			} else {
 				static constexpr parse_options optionsNew{ options };
 				constexpr parse_context<derived_type, string_view_ptr> context{ constEval(parse_context<derived_type, string_view_ptr>{}) };
