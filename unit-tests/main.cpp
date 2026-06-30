@@ -359,7 +359,6 @@ int main() {
 		auto test_partial_vector_of_structs = []() {
 			jsonifier::jsonifier_core<> parser{};
 			BasicStructVec original{};
-			std::cerr << "sizeof(BasicStruct)=" << sizeof(BasicStruct) << " sizeof(BasicStructVec)=" << sizeof(BasicStructVec) << std::endl;
 			original.items = { { { 1, 1.1, "a", { { 1, 2, 3 } } }, { 2, 2.2, "b", { { 4, 5, 6 } } }, { 3, 3.3, "c", { { 7, 8, 9 } } } } };
 			std::string json{};
 			parser.serializeJson(original, json);

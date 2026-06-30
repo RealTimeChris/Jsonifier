@@ -123,6 +123,52 @@ struct instruments_message {
 	int64_t version{};
 };
 
+template<> struct glz::meta<node> {
+	using value_type			= node;
+	static constexpr auto value = object(&value_type::tick, &value_type::value);
+};
+
+template<> struct glz::meta<envelope> {
+	using value_type = envelope;
+	static constexpr auto value =
+		object(&value_type::loop_end, &value_type::loop_start, &value_type::nodes, &value_type::release_node, &value_type::sustain_end, &value_type::sustain_start);
+};
+
+template<> struct glz::meta<instrument_data> {
+	using value_type			= instrument_data;
+	static constexpr auto value = object(&value_type::default_filter_cutoff, &value_type::default_filter_cutoff_enabled, &value_type::default_filter_mode,
+		&value_type::default_filter_resonance, &value_type::default_filter_resonance_enabled, &value_type::default_pan, &value_type::duplicate_check_type,
+		&value_type::duplicate_note_action, &value_type::fadeout, &value_type::global_volume, &value_type::graph_insert, &value_type::legacy_filename, &value_type::midi_bank,
+		&value_type::midi_channel, &value_type::midi_drum_set, &value_type::midi_program, &value_type::name, &value_type::new_note_action, &value_type::note_map,
+		&value_type::panning_envelope, &value_type::pitch_envelope, &value_type::pitch_pan_center, &value_type::pitch_pan_separation, &value_type::pitch_to_tempo_lock,
+		&value_type::random_cutoff_weight, &value_type::random_pan_weight, &value_type::random_resonance_weight, &value_type::random_volume_weight, &value_type::sample_map,
+		&value_type::tuning, &value_type::volume_envelope, &value_type::volume_ramp_down, &value_type::volume_ramp_up);
+};
+
+template<> struct glz::meta<datum> {
+	using value_type = datum;
+	static constexpr auto value =
+		object(&value_type::channel, &value_type::fxcmd, &value_type::fxparam, &value_type::instr, &value_type::note, &value_type::row, &value_type::volcmd, &value_type::volval);
+};
+
+template<> struct glz::meta<pattern> {
+	using value_type			= pattern;
+	static constexpr auto value = object(&value_type::data, &value_type::name, &value_type::rows, &value_type::rows_per_beat, &value_type::rows_per_measure);
+};
+
+template<> struct glz::meta<sample_data> {
+	using value_type			= sample_data;
+	static constexpr auto value = object(&value_type::c5_samplerate, &value_type::global_volume, &value_type::legacy_filename, &value_type::length, &value_type::loop_end,
+		&value_type::loop_start, &value_type::name, &value_type::pan, &value_type::sustain_end, &value_type::sustain_start, &value_type::vibrato_depth, &value_type::vibrato_rate,
+		&value_type::vibrato_sweep, &value_type::vibrato_type, &value_type::volume);
+};
+
+template<> struct glz::meta<instruments_message> {
+	using value_type			= instruments_message;
+	static constexpr auto value = object(&value_type::graphstate, &value_type::instruments, &value_type::message, &value_type::name, &value_type::orderlist, &value_type::patterns,
+		&value_type::pluginstate, &value_type::samples, &value_type::version);
+};
+
 template<> struct jsonifier::core<node> {
 	using value_type				 = node;
 	static constexpr auto parseValue = createValue<&value_type::tick, &value_type::value>();

@@ -23,6 +23,7 @@
 #pragma once
 
 #include "unicode_emoji.hpp"
+#include <glaze/glaze.hpp>
 #include <filesystem>
 #include <jsonifier>
 #include <fstream>

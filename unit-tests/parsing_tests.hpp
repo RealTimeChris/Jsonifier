@@ -23,6 +23,7 @@
 #pragma once
 
 #include "all_tests.hpp"
+#include <glaze/glaze.hpp>
 
 namespace tests {
 
@@ -38,19 +39,25 @@ namespace tests {
 	inline static void parsing_tests(jsonifier::jsonifier_core<>& parser) {
 		static constexpr rt_ut::string_literal testName{ testNameNew };
 		static constexpr rt_ut::string_literal testNameRtUt{ testNameNew + ", " + testTypePartialNew };
+		value_type glz_value;
 		auto dataToParse = file_handle::get(basePath.operator std::string() + "/json/" + testName.operator std::string() + ".json");
-		value_type value;
+		[[maybe_unused]] auto result = glz::read<glz::opts{ .error_on_unknown_keys = false, .minified = !prettified }>(glz_value, dataToParse);
+		std::string serializedJson{};
+		value_type jsonifier_value;
 		rt_ut::unit_test<testNameRtUt, true>::run([&]() {
 			if constexpr (test_type == test_types::parse_serialize) {
-				parser.parseJson<jsonifier::parse_options{ .partialRead = partial, .knownOrder = knownOder, .minified = !prettified }>(value, dataToParse);
-				[[maybe_unused]] auto result = parser.template serializeJson<jsonifier::serialize_options{ .prettify = prettified }, value_type>(value);
+				parser.parseJson<jsonifier::parse_options{ .partialRead = partial, .knownOrder = knownOder, .minified = !prettified }>(jsonifier_value, dataToParse);
+				//if (!parser.compareJson(glz_value, jsonifier_value)) {
+				//return false;
+				//}
+				parser.template serializeJson<jsonifier::serialize_options{ .prettify = prettified }>(jsonifier_value, serializedJson);
 				if constexpr (printSerialization) {
-					std::cout << result << std::endl;
+					std::cout << serializedJson << std::endl;
 				}
 			} else if constexpr (test_type == test_types::minify) {
-				parser.minifyJson(dataToParse, value);
+				parser.minifyJson(dataToParse, jsonifier_value);
 			} else if constexpr (test_type == test_types::prettify) {
-				parser.prettifyJson(dataToParse, value);
+				parser.prettifyJson(dataToParse, jsonifier_value);
 			} else if constexpr (test_type == test_types::validate) {
 				parser.validateJson(dataToParse);
 			}

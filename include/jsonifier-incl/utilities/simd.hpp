@@ -71,28 +71,15 @@ namespace jsonifier::internal {
 		uint64_t lengthMinusStep{};
 		uint64_t length{};
 		uint64_t index{};
-	};	
+	};
 
 	template<auto...> struct write_indices_functor {
 		using size_type = uint64_t;
 
-		template<uint64_t index> JSONIFIER_INLINE static void impl(size_type base, size_type& bits, structural_index_ptr tape) noexcept {
+		template<uint64_t index> JSONIFIER_INLINE static void impl(size_type base, size_type& bits, structural_index_ptr tape, uint64_t) noexcept {
 			tape[index] = simd::tape_writer_op<void>::extractIndex(base, bits);
 			bits		= simd::tape_writer_op<void>::advance(bits);
-		}
-	};
-
-	template<uint64_t step> struct write_indices_stepped_functor {
-		using size_type = uint64_t;
-
-		template<uint64_t index> JSONIFIER_INLINE static bool impl(size_type base, size_type& bits, structural_index_ptr tape, uint64_t cnt) noexcept {
-			if constexpr (index > 0) {
-				if JSONIFIER_UNLIKELY (!((index) < cnt)) {
-					return false;
-				}
-			}
-			functor_runner<write_indices_functor, make_integer_sequence<step>>::impl(base, bits, tape + index);
-			return true;
+			return;
 		}
 	};
 
@@ -110,8 +97,7 @@ namespace jsonifier::internal {
 			const uint64_t cnt = cnts[index];
 			static constexpr size_type bitTotal{ index * 64ull };
 			const size_type base = bitTotal + strIdx;
-			functor_runner<write_indices_stepped_functor, make_stepped_range_sequence<0, jsonifierTapeMax, jsonifierTapeStep>, jsonifierTapeStep>::impl(base, bits, tape,
-				cnt);
+			functor_runner<write_indices_functor, make_integer_sequence<jsonifierTapeMax>>::impl(base, bits, tape, cnt);
 			if JSONIFIER_UNLIKELY (jsonifierTapeMax < cnt) {
 				for (uint64_t i = jsonifierTapeMax; i < cnt; ++i) {
 					tape[i] = simd::tape_writer_op<void>::extractIndex(base, bits);
@@ -178,7 +164,7 @@ namespace jsonifier::internal {
 																	 alloc_wrapper<uint32_t>,
 																	 add_tape_values<simd_string_reader<initialBufferSize>, make_integer_sequence<jsonifierBlocksPerStep>> {
 		friend add_tape_values<simd_string_reader<initialBufferSize>, make_integer_sequence<jsonifierBlocksPerStep>>;
-		static constexpr uint64_t initialTapeSize{ initialBufferSize * 8 / 10 };
+		static constexpr uint64_t initialTapeSize{ initialBufferSize * 8 / 10 + jsonifierTapeMax };
 		using allocator = alloc_wrapper<uint32_t>;
 
 		JSONIFIER_INLINE simd_string_reader() noexcept {
@@ -189,7 +175,7 @@ namespace jsonifier::internal {
 		template<bool minified> JSONIFIER_INLINE void reset(const char* rootIter, uint64_t stringLength) noexcept {
 			static constexpr uint64_t stepBytes = jsonifierBlocksPerStep * 64;
 
-			const uint64_t neededCapacity = (stringLength * 8 / 10) + bitsPerStep;
+			const uint64_t neededCapacity = (stringLength * 8 / 10) + bitsPerStep + jsonifierTapeMax;
 			if (neededCapacity > capacity) {
 				allocator::deallocate(tape, capacity);
 				tape	 = allocator::allocate(neededCapacity);
