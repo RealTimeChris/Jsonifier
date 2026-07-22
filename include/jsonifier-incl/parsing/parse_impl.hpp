@@ -195,16 +195,22 @@ namespace jsonifier::internal {
 					}
 				}
 			} else {
-				if (context.objectMaybeEnd()) {
-					return false;
-				}
 				if constexpr (json_entity_type::index > 0) {
-					if JSONIFIER_UNLIKELY (!context.collectObjectComma()) {
+					switch (static_cast<uint64_t>(context.collectObjectSeparator())) {
+						case static_cast<uint64_t>(sep_result::cont): {
+							break;
+						}
+						default: {
+							return false;
+						}
+					}
+				} else {
+					if (context.objectMaybeEnd()) {
 						return false;
 					}
-				}
-				if constexpr (!options.minified && !structural_context<context_type>) {
-					context.skipWhitespace();
+					if constexpr (!options.minified && !structural_context<context_type>) {
+						context.skipWhitespace();
+					}
 				}
 				if constexpr (options.knownOrder) {
 					if (auto result = tryKnownOrder(value, context); result != parse_result::inactive_member) {
@@ -220,12 +226,12 @@ namespace jsonifier::internal {
 					}
 				} else {
 					if JSONIFIER_LIKELY (auto indexNew = antiHashStatesNew<memberCount, value_type>[json_entity_type::index]; indexNew < memberCount) {
-						if (auto result = generateDispatchTableNew<parse_types_impl, value_type, context_type, options, make_integer_sequence<memberCount>>::impl(value,
-								context, indexNew);
+						if (auto result =
+								generateDispatchTableNew<parse_types_impl, value_type, context_type, options, make_integer_sequence<memberCount>>::impl(value, context, indexNew);
 							result != parse_result::inactive_member) {
 							return result == parse_result::active_member;
 						}
-						const auto stringEnd  = context.endPtr();
+						const auto stringEnd = context.endPtr();
 						if JSONIFIER_LIKELY (auto indexNew2 = hash_map<value_type, string_view_ptr>::findIndex(context.currentPtr() + 1, stringEnd); indexNew2 < memberCount) {
 							if (auto result2 = generateDispatchTableNew<parse_types_impl, value_type, context_type, options, make_integer_sequence<memberCount>>::impl(value,
 									context, indexNew2);
@@ -252,14 +258,13 @@ namespace jsonifier::internal {
 				if JSONIFIER_UNLIKELY (!context.skipValue()) {
 					return false;
 				}
-				if (context.objectMaybeEnd()) {
-					return false;
-				}
-				if JSONIFIER_UNLIKELY (!context.collectObjectComma()) {
-					return false;
-				}
-				if constexpr (!options.minified && !structural_context<context_type>) {
-					context.skipWhitespace();
+				switch (static_cast<uint64_t>(context.collectObjectSeparator())) {
+					case static_cast<uint64_t>(sep_result::cont): {
+						break;
+					}
+					default: {
+						return false;
+					}
 				}
 			}
 		}
@@ -341,11 +346,16 @@ namespace jsonifier::internal {
 					if JSONIFIER_UNLIKELY (!parse<options>::impl(value[getKeyNew<typename value_type::key_type>()], context)) {
 						return false;
 					}
-					if (context.objectMaybeEnd()) {
-						return true;
-					}
-					if JSONIFIER_UNLIKELY (!context.collectObjectComma()) {
-						return false;
+					switch (static_cast<uint64_t>(context.collectObjectSeparator())) {
+						case static_cast<uint64_t>(sep_result::cont): {
+							continue;
+						}
+						case static_cast<uint64_t>(sep_result::ended): {
+							return true;
+						}
+						default: {
+							return false;
+						}
 					}
 				}
 			} else {
@@ -380,13 +390,18 @@ namespace jsonifier::internal {
 					for (uint64_t x = 0; x < oldSize; ++x) {
 						if JSONIFIER_LIKELY (parse<options>::impl(beginIter[static_cast<int64_t>(x)], context)) {
 							++newSize;
-							if JSONIFIER_UNLIKELY (context.arrayMaybeEnd()) {
-								value.resize(newSize);
-								std::move(beginIter, beginIter + static_cast<int64_t>(newSize), getBeginIterVec(value));
-								return true;
-							}
-							if JSONIFIER_UNLIKELY (!context.collectArrayComma()) {
-								return false;
+							switch (static_cast<uint64_t>(context.collectArraySeparator())) {
+								case static_cast<uint64_t>(sep_result::cont): {
+									continue;
+								}
+								case static_cast<uint64_t>(sep_result::ended): {
+									value.resize(newSize);
+									std::move(beginIter, beginIter + static_cast<int64_t>(newSize), getBeginIterVec(value));
+									return true;
+								}
+								default: {
+									return false;
+								}
 							}
 						} else {
 							return false;
@@ -396,15 +411,20 @@ namespace jsonifier::internal {
 				while (context.notAtEndPre()) {
 					if JSONIFIER_LIKELY (parse<options>::impl(valueTemp.emplace_back(), context)) {
 						++newSize;
-						if JSONIFIER_UNLIKELY (context.arrayMaybeEnd()) {
-							value.resize(newSize);
-							auto beginIter = getBeginIterVec(valueTemp);
-							auto endIter   = getEndIterVec(valueTemp);
-							std::move(beginIter, endIter, getBeginIterVec(value));
-							return true;
-						}
-						if JSONIFIER_UNLIKELY (!context.collectArrayComma()) {
-							return false;
+						switch (static_cast<uint64_t>(context.collectArraySeparator())) {
+							case static_cast<uint64_t>(sep_result::cont): {
+								continue;
+							}
+							case static_cast<uint64_t>(sep_result::ended): {
+								value.resize(newSize);
+								auto beginIter = getBeginIterVec(valueTemp);
+								auto endIter   = getEndIterVec(valueTemp);
+								std::move(beginIter, endIter, getBeginIterVec(value));
+								return true;
+							}
+							default: {
+								return false;
+							}
 						}
 					} else {
 						return false;
@@ -624,8 +644,6 @@ namespace jsonifier::internal {
 					return parse<options>::impl(variant.template emplace<element_type>(element_type{}), context);
 				} else if constexpr (concepts::always_null_t<element_type> && type == json_type::null) {
 					return parse<options>::impl(variant.template emplace<element_type>(element_type{}), context);
-				} else if constexpr (concepts::accessor_t<element_type> && type == json_type::accessor) {
-					return parse<options>::impl(variant.template emplace<element_type>(element_type{}), context);
 				} else {
 					return iterateVariantTypes<type, variant_type, currentIndex + 1>(variant, context);
 				}
@@ -681,7 +699,7 @@ namespace jsonifier::internal {
 						return iterateVariantTypes<json_type::null>(value, context);
 					}
 					default: {
-						return iterateVariantTypes<json_type::accessor>(value, context);
+						return true;
 					}
 				}
 			} else {

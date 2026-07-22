@@ -106,7 +106,7 @@ namespace jsonifier::internal {
 				derivedRef.section.template reset<parseOpts.minified>(rootIter, static_cast<uint64_t>(endIter - rootIter));
 				json_iterator<parseOpts, structural_index_ptr, remove_reference_t<decltype(getStringBuffer())>> context{ &getStringBuffer(), &getErrors(),
 					derivedRef.section.begin(), derivedRef.section.end(), derivedRef.section.begin(), rootIter, endIter };
-				auto newSize = static_cast<uint64_t>(*endIter) / 2;
+				auto newSize = static_cast<uint64_t>(*endIter);
 				if (getStringBuffer().size() < newSize) {
 					getStringBuffer().resize(newSize);
 				}
@@ -123,7 +123,7 @@ namespace jsonifier::internal {
 				auto iter	 = getBeginIter(in);
 				auto endIter = getEndIter(in);
 				json_iterator<parseOpts, string_view_ptr, remove_reference_t<decltype(getStringBuffer())>> context{ &getStringBuffer(), &getErrors(), iter, endIter };
-				auto newSize = static_cast<uint64_t>(endIter - iter) / 2;
+				auto newSize = static_cast<uint64_t>(endIter - iter);
 				if (getStringBuffer().size() < newSize) {
 					getStringBuffer().resize(newSize);
 				}

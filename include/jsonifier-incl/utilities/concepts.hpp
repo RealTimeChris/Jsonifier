@@ -27,15 +27,13 @@
 namespace jsonifier {
 
 	enum class json_type {
-		object	 = 0,
-		array	 = 1,
-		string	 = 2,
-		number	 = 3,
-		boolean	 = 4,
-		null	 = 5,
-		accessor = 6,
-		custom	 = 7,
-		unset	 = 8,
+		object	= 0,
+		array	= 1,
+		string	= 2,
+		number	= 3,
+		boolean = 4,
+		null	= 5,
+		unset	= 8,
 	};
 
 	template<typename value_type> class string_view_base;
@@ -361,10 +359,16 @@ namespace jsonifier::concepts {
 
 	template<typename value_type>
 	concept force_inlineable_type = json_number_t<value_type> || json_bool_t<value_type> || json_string_t<value_type> || json_accessor_t<value_type> || json_null_t<value_type>;
-}
 
-namespace jsonifier::internal {
+	template<typename value_type>
+	concept count_types = requires { base_t<value_type>::count; } && static_cast<uint64_t>(base_t<value_type>::count) < 128;
 
-	template<concepts::uint_types auto valueNew> struct integral_constant;
+	template<typename value_type>
+	concept printable_enum_types = enum_types<value_type> && count_types<value_type>;
 
+	template<typename value_type>
+	concept integral_constant_types = requires {
+		{ base_t<value_type>::value } -> std::convertible_to<uint64_t>;
+	};
+	
 }

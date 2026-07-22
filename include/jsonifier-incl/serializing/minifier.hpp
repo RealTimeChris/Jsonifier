@@ -67,7 +67,7 @@ namespace jsonifier::internal {
 			endIter	 = rootIter + in.size();
 			derivedRef.section.template reset<false>(rootIter, in.size());
 			structural_index_ptr iter{ derivedRef.section.begin() };
-			auto* endStructural = derivedRef.section.end();
+			structural_index_ptr endStructural = derivedRef.section.end();
 			jsonifier::internal::remove_cvref_t<string_type> newString{};
 			if (iter == endStructural) {
 				getErrors().emplace_back(error::constructError<status_classes::minifying, minify_statuses::no_input>(rootIter, &rootIter[*iter], endIter));
@@ -92,7 +92,7 @@ namespace jsonifier::internal {
 			endIter	 = rootIter + in.size();
 			derivedRef.section.template reset<false>(rootIter, in.size());
 			structural_index_ptr iter{ derivedRef.section.begin() };
-			auto* endStructural = derivedRef.section.end();
+			structural_index_ptr endStructural = derivedRef.section.end();
 			if (iter == endStructural) {
 				getErrors().emplace_back(error::constructError<status_classes::minifying, minify_statuses::no_input>(rootIter, &rootIter[*iter], endIter));
 				return false;
@@ -129,7 +129,7 @@ namespace jsonifier::internal {
 			++currentDistance;
 		}
 
-		template<concepts::string_t string_type, typename iterator> inline uint64_t impl(iterator& iter, iterator endStructural, string_type&& out) noexcept {
+		template<concepts::string_t string_type, typename iterator, typename iterator_end> inline uint64_t impl(iterator& iter, iterator_end endStructural, string_type&& out) noexcept {
 			auto previousPtr = rootIter + *iter;
 			int64_t currentDistance{};
 			uint64_t index{};

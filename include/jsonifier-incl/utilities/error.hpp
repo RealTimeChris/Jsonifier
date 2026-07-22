@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <jsonifier-incl/utilities/string_view.hpp>
+#include <jsonifier-incl/utilities/get_enum_name.hpp>
 #include <jsonifier-incl/utilities/simd.hpp>
 
 namespace jsonifier::internal {
@@ -35,6 +35,7 @@ namespace jsonifier::internal {
 		minifying,
 		prettifying,
 		validating,
+		count,
 	};
 
 	enum class parse_statuses : uint8_t {
@@ -60,7 +61,7 @@ namespace jsonifier::internal {
 		count,
 	};
 
-	enum class serialize_status : uint8_t {
+	enum class serialize_statuses : uint8_t {
 		success,
 		count,
 	};
@@ -100,22 +101,28 @@ namespace jsonifier::internal {
 		count,
 	};
 
-	static constexpr array<string_view_ptr, static_cast<size_t>(serialize_status::count)> serializeErrorNames{ { "success" } };
-
-	static constexpr array<string_view_ptr, static_cast<size_t>(minify_statuses::count)> minifyErrorNames{ { "success", "no_input", "invalid_string_length", "invalid_number_value",
-		"incorrect_structural_index" } };
-
-	static constexpr array<string_view_ptr, static_cast<size_t>(prettify_statuses::count)> prettifyErrorNames{ { "success", "no_input", "exceeded_max_depth",
-		"incorrect_structural_index" } };
-
-	static constexpr array<string_view_ptr, static_cast<size_t>(validate_statuses::count)> validateErrorNames{ { "success", "missing_object_start", "missing_object_end",
-		"missing_array_start", "missing_array_end", "invalid_string_characters", "missing_colon", "missing_comma", "invalid_number_value", "invalid_null_value",
-		"invalid_bool_value", "invalid_escape_characters", "missing_comma_or_closing_brace", "no_input" } };
-
-	static constexpr array<string_view_ptr, static_cast<size_t>(parse_statuses::count)> parseStatusNames{ { "success", "missing_key_start", "missing_object_start",
-		"missing_object_end", "missing_array_start", "missing_array_end", "invalid_string_characters", "missing_colon", "missing_comma", "invalid_number_value",
-		"invalid_null_value", "invalid_bool_value", "no_input", "unfinished_input", "unexpected_string_end", "unexpected_end_of_input", "exceeded_max_depth", "unexpected_token",
-		"illegal_control_character" } };
+	JSONIFIER_INLINE string_view getErrorTypeName(status_classes errorClassNew, uint64_t errorTypeNew) noexcept {
+		switch (static_cast<uint64_t>(errorClassNew)) {
+			case static_cast<uint64_t>(status_classes::parsing): {
+				return getName(static_cast<parse_statuses>(errorTypeNew));
+			}
+			case static_cast<uint64_t>(status_classes::serializing): {
+				return getName(static_cast<serialize_statuses>(errorTypeNew));
+			}
+			case static_cast<uint64_t>(status_classes::prettifying): {
+				return getName(static_cast<prettify_statuses>(errorTypeNew));
+			}
+			case static_cast<uint64_t>(status_classes::minifying): {
+				return getName(static_cast<minify_statuses>(errorTypeNew));
+			}
+			case static_cast<uint64_t>(status_classes::validating): {
+				return getName(static_cast<validate_statuses>(errorTypeNew));
+			}
+			default: {
+				return "Unknown Type.";
+			}
+		}
+	}
 
 	JSONIFIER_INLINE std::string printBytes(char b) {
 		switch (b) {
@@ -163,51 +170,6 @@ namespace jsonifier::internal {
 		}
 	}
 
-	template<typename error_type> constexpr string_view_ptr errorName(status_classes cls, error_type codeNew) noexcept {
-		uint64_t code{ static_cast<uint64_t>(codeNew) };
-		switch (static_cast<uint64_t>(cls)) {
-			case static_cast<uint64_t>(status_classes::parsing):
-				return code < parseStatusNames.size() ? parseStatusNames[code] : "Unknown_Parse_Status";
-			case static_cast<uint64_t>(status_classes::serializing):
-				return code < serializeErrorNames.size() ? serializeErrorNames[code] : "Unknown_Serialize_Status";
-			case static_cast<uint64_t>(status_classes::minifying):
-				return code < minifyErrorNames.size() ? minifyErrorNames[code] : "Unknown_Minify_Status";
-			case static_cast<uint64_t>(status_classes::prettifying):
-				return code < prettifyErrorNames.size() ? prettifyErrorNames[code] : "Unknown_Prettify_Status";
-			case static_cast<uint64_t>(status_classes::validating):
-				return code < validateErrorNames.size() ? validateErrorNames[code] : "Unknown_Validate_Status";
-			case static_cast<uint64_t>(status_classes::unset):
-				[[fallthrough]];
-			default:
-				return "unset";
-		}
-	}
-
-	inline static std::ostream& operator<<(std::ostream& os, serialize_status error) {
-		os << errorName(status_classes::serializing, error);
-		return os;
-	}
-
-	inline static std::ostream& operator<<(std::ostream& os, validate_statuses error) {
-		os << errorName(status_classes::validating, error);
-		return os;
-	}
-
-	inline static std::ostream& operator<<(std::ostream& os, minify_statuses error) {
-		os << errorName(status_classes::minifying, error);
-		return os;
-	}
-
-	inline static std::ostream& operator<<(std::ostream& os, prettify_statuses error) {
-		os << errorName(status_classes::prettifying, error);
-		return os;
-	}
-
-	inline static std::ostream& operator<<(std::ostream& os, parse_statuses error) {
-		os << errorName(status_classes::parsing, error);
-		return os;
-	}
-
 	enum class json_structural_type : int8_t {
 		unset		 = 0,
 		string		 = '"',
@@ -224,20 +186,6 @@ namespace jsonifier::internal {
 		type_count	 = 12
 	};
 
-	inline static string convertChar(char value) {
-		switch (value) {
-			[[unlikely]] case '\b': { return R"(\b)"; }
-			[[unlikely]] case '\t': { return R"(\t)"; }
-			[[unlikely]] case '\n': { return R"(\n)"; }
-			[[unlikely]] case '\f': { return R"(\f)"; }
-			[[unlikely]] case '\r': { return R"(\r)"; }
-			[[unlikely]] case '"': { return R"(\")"; }
-			[[unlikely]] case '\\': { return R"(\\)"; }
-			[[unlikely]] case '\0': { return R"(\0)"; }
-			[[likely]] default: { return string{ value }; }
-		}
-	}
-
 	static constexpr array<bool, 256> boolTable{ []() constexpr {
 		array<bool, 256> returnValues{};
 		returnValues['t'] = true;
@@ -248,41 +196,50 @@ namespace jsonifier::internal {
 	class error {
 	  public:
 		template<parse_options parseOpts, typename iterator_type, typename string_buffer_type> friend struct json_iterator;
+
 		error() noexcept = default;
 
 		error(std::source_location sourceLocation, status_classes errorClassNew, string_view_ptr rootIter, string_view_ptr errorPos, string_view_ptr endIter,
 			uint64_t typeNew) noexcept {
-			location   = sourceLocation;
-			errorClass = errorClassNew;
-			errorIndex = static_cast<uint64_t>(errorPos - rootIter);
-			errorType  = typeNew;
+			errorType			= typeNew;
+			errorClass			= errorClassNew;
+			uint64_t errorIndex = static_cast<uint64_t>(errorPos - rootIter);
 
-			if (!errorPos || !endIter || errorPos >= endIter) {
-				return;
-			}
+			uint64_t line{ 0 };
+			uint64_t localIndex{ 0 };
+			string context{};
 
-			errorLength = std::min(static_cast<uint64_t>(16ULL), static_cast<uint64_t>(endIter - errorPos));
-
-			int64_t reportIndex = static_cast<int64_t>(errorIndex);
-			if (static_cast<uint64_t>(reportIndex) >= errorLength) {
-				reportIndex = static_cast<int64_t>(errorLength) - 1;
-			}
-
-			string_view view{ errorPos, errorLength };
-			using V				   = std::decay_t<decltype(view[0])>;
-			const auto start	   = std::begin(view) + reportIndex;
-			line				   = uint64_t(std::count(std::begin(view), start, static_cast<V>('\n')) + 1);
-			const auto rstart	   = std::rbegin(view) + static_cast<int64_t>(view.size()) - reportIndex - 1ll;
-			const auto prevNewLine = std::find(( std::min )(rstart + 1, std::rend(view)), std::rend(view), static_cast<V>('\n'));
-			localIndex			   = static_cast<uint64_t>(std::distance(rstart, prevNewLine) - 1ll);
-
-			auto endIndex{ std::end(view) - start >= 64 ? 64 : std::end(view) - start };
-			context = string{ start, static_cast<uint64_t>(endIndex) };
-			for (auto& c: context) {
-				if (c == '\t') {
-					c = ' ';
+			if (errorPos && endIter && errorPos < endIter) {
+				uint64_t errorLength = std::min(static_cast<uint64_t>(16ULL), static_cast<uint64_t>(endIter - errorPos));
+				int64_t reportIndex	 = static_cast<int64_t>(errorIndex);
+				if (static_cast<uint64_t>(reportIndex) >= errorLength) {
+					reportIndex = static_cast<int64_t>(errorLength) - 1;
+				}
+				string_view view{ errorPos, errorLength };
+				using V				   = std::decay_t<decltype(view[0])>;
+				const auto start	   = std::begin(view) + reportIndex;
+				line				   = uint64_t(std::count(std::begin(view), start, static_cast<V>('\n')) + 1);
+				const auto rstart	   = std::rbegin(view) + static_cast<int64_t>(view.size()) - reportIndex - 1ll;
+				const auto prevNewLine = std::find((std::min)(rstart + 1, std::rend(view)), std::rend(view), static_cast<V>('\n'));
+				localIndex			   = static_cast<uint64_t>(std::distance(rstart, prevNewLine) - 1ll);
+				auto endIndex{ std::end(view) - start >= 64 ? 64 : std::end(view) - start };
+				context = string{ start, static_cast<uint64_t>(endIndex) };
+				for (auto& c: context) {
+					if (c == '\t') {
+						c = ' ';
+					}
 				}
 			}
+
+			std::stringstream stream{};
+			stream << "Error of Class: " << getName(errorClass) << ", of Type: " << getErrorTypeName(errorClass, errorType) << ", at global index: " << std::to_string(errorIndex)
+				   << ", on line: " << std::to_string(line) << ", at local index: " << std::to_string(localIndex);
+			if (!context.empty()) {
+				stream << "\nHere's some of the string's values: " << collectValues(context) << string{ "\nThe Values: " } + context;
+			}
+			stream << string{ "\nIn file: " } << sourceLocation.file_name() << ", at: " << std::to_string(sourceLocation.line()) << ":" << std::to_string(sourceLocation.column())
+				   << ", in function: " << sourceLocation.function_name() << "().\n";
+			finalMessage = stream.str();
 		}
 
 		template<status_classes errorClassNew> static error constructError(auto typeNew, string_view_ptr rootIter, string_view_ptr errorPos, string_view_ptr endIter,
@@ -295,12 +252,8 @@ namespace jsonifier::internal {
 			return { sourceLocation, errorClassNew, rootIter, errorPos, endIter, static_cast<uint64_t>(typeNew) };
 		}
 
-		operator uint64_t() const noexcept {
-			return errorType;
-		}
-
-		operator parse_statuses() const noexcept {
-			return static_cast<parse_statuses>(errorType);
+		template<typename error_class> operator error_class() const noexcept {
+			return static_cast<error_class>(errorType);
 		}
 
 		operator bool() const noexcept {
@@ -308,30 +261,19 @@ namespace jsonifier::internal {
 		}
 
 		bool operator==(const error& rhs) const noexcept {
-			return errorType == rhs.errorType && errorIndex == rhs.errorIndex;
+			return errorType == rhs.errorType && errorClass == rhs.errorClass && finalMessage == rhs.finalMessage;
 		}
 
-		string reportError() const noexcept {
-			string returnValue{ string{ "Error of Type: " } + errorName(errorClass, errorType) + ", at global index: " + std::to_string(errorIndex) +
-				", on line: " + std::to_string(line) + ", at local index: " + std::to_string(localIndex) };
-			if (!context.empty()) {
-				returnValue += "\nHere's some of the string's values: " + collectValues(context) + string{ "\nThe Values: " } + context;
-			}
-			returnValue += string{ "\nIn file: " } + location.file_name() + ", at: " + std::to_string(location.line()) + ":" + std::to_string(location.column()) +
-				", in function: " + location.function_name() + "().\n";
-			return returnValue;
+		const string& reportError() const noexcept {
+			return finalMessage;
 		}
 
 	  protected:
-		std::source_location location{};
 		status_classes errorClass{};
-		uint64_t errorLength{};
-		uint64_t errorIndex{};
-		uint64_t localIndex{};
+		string finalMessage{};
 		uint64_t errorType{};
-		string context{};
-		uint64_t line{};
-		string collectValues(const string& inputValues) const {
+
+		static string collectValues(const string& inputValues) {
 			string output{};
 			for (uint64_t i = 0; i < 32 && i < inputValues.size(); ++i) {
 				output += string{ "'" } + printBytes(inputValues[i]) + string{ "' " };

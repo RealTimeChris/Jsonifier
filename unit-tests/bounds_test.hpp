@@ -35,9 +35,9 @@ namespace bounds_tests {
 		static constexpr size_t tenKb = 10 * 1024;
 
 		if (size > tenKb) {
-			input.resize(input.size() * 9 / 10);
-		} else if (size >= 2000) {
 			input.resize(input.size() / 2);
+		} else if (size >= 2000) {
+			input.resize(input.size() * 9 / 10);
 		} else {
 			input.pop_back();
 		}
@@ -99,6 +99,8 @@ namespace bounds_tests {
 		boundsTestsImpl<"Marine IK Test (Prettified)", marine_ik, true, partial, knownOrder>();
 		boundsTestsImpl<"Mesh Test (Minified)", mesh_message, false, partial, knownOrder>();
 		boundsTestsImpl<"Mesh Test (Prettified)", mesh_message, true, partial, knownOrder>();
+		boundsTestsImpl<"Semanticscholar Corpus Test (Minified)", semantic_scholar_message, false, partial, knownOrder>();
+		boundsTestsImpl<"Semanticscholar Corpus Test (Prettified)", semantic_scholar_message, true, partial, knownOrder>();
 		boundsTestsImpl<"Random Test (Minified)", random_message, false, partial, knownOrder>();
 		boundsTestsImpl<"Random Test (Prettified)", random_message, true, partial, knownOrder>();
 		boundsTestsImpl<"Twitter Partial Test (Minified)", twitter_partial_message, false, partial, knownOrder>();

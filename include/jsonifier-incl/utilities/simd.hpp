@@ -155,11 +155,11 @@ namespace jsonifier::internal {
 			}
 		}
 
-		JSONIFIER_INLINE auto end() noexcept {
+		JSONIFIER_INLINE structural_index_ptr end() noexcept {
 			return tape + tapeCount;
 		}
 
-		JSONIFIER_INLINE auto begin() noexcept {
+		JSONIFIER_INLINE structural_index_ptr begin() noexcept {
 			tape[tapeCount] = static_cast<uint32_t>(string_block_reader::length);
 			return tape;
 		}

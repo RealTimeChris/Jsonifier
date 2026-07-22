@@ -819,6 +819,17 @@ namespace jsonifier::internal {
 	// doing `8 * sizeof(limb)`.
 	typedef uint64_t limb;
 	constexpr uint64_t limb_bits = 64;
+	constexpr uint64_t limb_bits_sub_1 = limb_bits - 1;
+
+	template<concepts::uint_types auto n> JSONIFIER_INLINE static consteval auto getPowerOfTwo() {
+		static_assert(n > 0, "Value must be greater than zero.");
+		static_assert((n & (n - 1)) == 0, "Value must be a power of two.");
+
+		using value_type = decltype(n);
+		return static_cast<uint64_t>(std::countr_zero(static_cast<std::make_unsigned_t<value_type>>(n)));
+	}
+
+	constexpr uint64_t limb_bits_pow_2 = getPowerOfTwo<limb_bits>();
 
 	typedef span<limb> limb_span;
 
@@ -1263,8 +1274,8 @@ namespace jsonifier::internal {
 
 		// move the limbs left by `num` bits.
 		JSONIFIER_INLINE constexpr bool shl(uint64_t num) noexcept {
-			uint64_t rem = num % limb_bits;
-			uint64_t div = num / limb_bits;
+			uint64_t rem = num & limb_bits_sub_1;
+			uint64_t div = num >> limb_bits_pow_2;
 			if (rem != 0) {
 				JSONIFIER_FASTFLOAT_TRY(shl_bits(rem))
 			}

@@ -42,7 +42,7 @@ namespace jsonifier::internal {
 		using const_reference		 = const value_type&;
 		using const_r_reference		 = const value_type&&;
 		using iterator				 = sized_iterator<value_type, sizeNew>;
-		using const_iterator		 = const sized_iterator<value_type, sizeNew>;
+		using const_iterator		 = sized_iterator<const value_type, sizeNew>;
 		using reverse_iterator		 = std::reverse_iterator<iterator>;
 		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
@@ -55,19 +55,19 @@ namespace jsonifier::internal {
 		}
 
 		JSONIFIER_INLINE constexpr iterator begin() noexcept JSONIFIER_LIFETIME_BOUND {
-			return iterator(dataVal);
+			return iterator{ dataVal };
 		}
 
 		JSONIFIER_INLINE constexpr iterator end() noexcept JSONIFIER_LIFETIME_BOUND {
-			return const_iterator(dataVal + sizeNew);
+			return iterator{ dataVal + sizeNew };
 		}
 
 		JSONIFIER_INLINE constexpr const_iterator begin() const noexcept JSONIFIER_LIFETIME_BOUND {
-			return const_iterator(dataVal);
+			return const_iterator{ dataVal };
 		}
 
 		JSONIFIER_INLINE constexpr const_iterator end() const noexcept JSONIFIER_LIFETIME_BOUND {
-			return const_iterator(dataVal + sizeNew);
+			return const_iterator{ dataVal + sizeNew };
 		}
 
 		JSONIFIER_INLINE constexpr size_type size() const noexcept {
@@ -82,17 +82,18 @@ namespace jsonifier::internal {
 			return false;
 		}
 
-		template<concepts::indexable_types<size_type> index_type> JSONIFIER_INLINE constexpr reference at(index_type position) noexcept JSONIFIER_LIFETIME_BOUND {
+		template<concepts::indexable_types<size_type> index_type> JSONIFIER_INLINE constexpr reference at(index_type position) noexcept(false) JSONIFIER_LIFETIME_BOUND {
 			if (sizeNew <= position) {
-				std::runtime_error{ "invalid array<T, N> subscript" };
+				throw std::runtime_error{ "invalid array<T, N> subscript" };
 			}
 
 			return dataVal[position];
 		}
 
-		template<concepts::indexable_types<size_type> index_type> JSONIFIER_INLINE constexpr const_reference at(index_type position) const noexcept JSONIFIER_LIFETIME_BOUND {
+		template<concepts::indexable_types<size_type> index_type> JSONIFIER_INLINE constexpr const_reference at(index_type position) const
+			noexcept(false) JSONIFIER_LIFETIME_BOUND {
 			if (sizeNew <= position) {
-				std::runtime_error{ "invalid array<T, N> subscript" };
+				throw std::runtime_error{ "invalid array<T, N> subscript" };
 			}
 
 			return dataVal[position];
@@ -114,19 +115,23 @@ namespace jsonifier::internal {
 			return static_cast<reference>(dataVal[static_cast<uint64_t>(position)]);
 		}
 
-		template<typename tag_type> JSONIFIER_INLINE constexpr const_r_reference operator[](tag_type position) const&& noexcept {
+		template<concepts::integral_constant_types tag_type> JSONIFIER_INLINE constexpr const_r_reference operator[](tag_type position) const&& noexcept {
+			static_assert(static_cast<uint64_t>(position) < sizeNew, "Sorry, but that index is out of bounds!");
 			return static_cast<const_r_reference>(dataVal[static_cast<uint64_t>(position)]);
 		}
 
-		template<typename tag_type> JSONIFIER_INLINE constexpr const_reference operator[](tag_type position) const& noexcept {
+		template<concepts::integral_constant_types tag_type> JSONIFIER_INLINE constexpr const_reference operator[](tag_type position) const& noexcept {
+			static_assert(static_cast<uint64_t>(position) < sizeNew, "Sorry, but that index is out of bounds!");
 			return static_cast<const_reference>(dataVal[static_cast<uint64_t>(position)]);
 		}
 
-		template<typename tag_type> JSONIFIER_INLINE constexpr r_reference operator[](tag_type position) && noexcept {
+		template<concepts::integral_constant_types tag_type> JSONIFIER_INLINE constexpr r_reference operator[](tag_type position) && noexcept {
+			static_assert(static_cast<uint64_t>(position) < sizeNew, "Sorry, but that index is out of bounds!");
 			return static_cast<r_reference>(dataVal[static_cast<uint64_t>(position)]);
 		}
 
-		template<typename tag_type> JSONIFIER_INLINE constexpr reference operator[](tag_type position) & noexcept {
+		template<concepts::integral_constant_types tag_type> JSONIFIER_INLINE constexpr reference operator[](tag_type position) & noexcept {
+			static_assert(static_cast<uint64_t>(position) < sizeNew, "Sorry, but that index is out of bounds!");
 			return static_cast<reference>(dataVal[static_cast<uint64_t>(position)]);
 		}
 
@@ -153,6 +158,10 @@ namespace jsonifier::internal {
 
 		JSONIFIER_ALIGN(64) value_type dataVal[sizeNew];
 	};
+
+	template<typename first, typename... rest> array(first, rest...) -> array<concepts::base_t<first>, 1 + sizeof...(rest)>;
+
+	template<typename first, uint64_t size> array(array<first, size>) -> array<concepts::base_t<first>, size>;
 
 	struct empty_array_element {};
 
@@ -190,14 +199,6 @@ namespace jsonifier::internal {
 
 		JSONIFIER_INLINE constexpr const_iterator end() const noexcept {
 			return const_iterator{};
-		}
-
-		JSONIFIER_INLINE constexpr reference operator[](size_type) noexcept {
-			return *data();
-		}
-
-		JSONIFIER_INLINE constexpr const_reference operator[](size_type) const noexcept {
-			return *data();
 		}
 
 		JSONIFIER_INLINE constexpr size_type size() const noexcept {

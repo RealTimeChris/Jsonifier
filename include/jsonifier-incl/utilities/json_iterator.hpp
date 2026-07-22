@@ -36,6 +36,12 @@ namespace jsonifier::internal {
 
 	template<parse_options parseOpts, typename iterator_type, typename string_buffer_type> struct json_iterator;
 
+	enum class sep_result : uint8_t {
+		cont,
+		ended,
+		error,
+	};
+
 	template<parse_options parseOpts, typename string_buffer_type> struct json_iterator<parseOpts, string_view_ptr, string_buffer_type> {
 	  protected:
 		string_buffer_type* stringBuffer{};
@@ -472,6 +478,66 @@ namespace jsonifier::internal {
 				return reject<parse_statuses::invalid_string_characters>();
 			}
 		}
+
+		JSONIFIER_INLINE sep_result collectObjectSeparator() noexcept {
+			if constexpr (parseOpts.nullTerminated) {
+				const char c = *iter;
+				if JSONIFIER_LIKELY (c == ',') {
+					++iter;
+					return sep_result::cont;
+				}
+				if (c == '}') {
+					--currentObjectDepth;
+					++iter;
+					return sep_result::ended;
+				}
+			} else {
+				if JSONIFIER_LIKELY (notAtEndPre()) {
+					const char c = *iter;
+					if JSONIFIER_LIKELY (c == ',') {
+						++iter;
+						return sep_result::cont;
+					}
+					if (c == '}') {
+						--currentObjectDepth;
+						++iter;
+						return sep_result::ended;
+					}
+				}
+			}
+			static_cast<void>(reject<parse_statuses::missing_comma>());
+			return sep_result::error;
+		}
+
+		JSONIFIER_INLINE sep_result collectArraySeparator() noexcept {
+			if constexpr (parseOpts.nullTerminated) {
+				const char c = *iter;
+				if JSONIFIER_LIKELY (c == ',') {
+					++iter;
+					return sep_result::cont;
+				}
+				if (c == ']') {
+					--currentArrayDepth;
+					++iter;
+					return sep_result::ended;
+				}
+			} else {
+				if JSONIFIER_LIKELY (notAtEndPre()) {
+					const char c = *iter;
+					if JSONIFIER_LIKELY (c == ',') {
+						++iter;
+						return sep_result::cont;
+					}
+					if (c == ']') {
+						--currentArrayDepth;
+						++iter;
+						return sep_result::ended;
+					}
+				}
+			}
+			static_cast<void>(reject<parse_statuses::missing_comma>());
+			return sep_result::error;
+		}
 	};
 
 	template<parse_options parseOpts, typename string_buffer_type>
@@ -485,67 +551,7 @@ namespace jsonifier::internal {
 		std::vector<error>* errors{};
 		string_view_ptr rootIter{};
 		string_view_ptr endIter{};
-		string_view_ptr wsStart{};
 		string_view_ptr iter{};
-		uint64_t lastIndent{};
-		uint64_t wsLength{};
-
-		JSONIFIER_INLINE static uint64_t readU64(string_view_ptr ptr) noexcept {
-			uint64_t value;
-			std::memcpy(&value, ptr, sizeof(value));
-			return value;
-		}
-
-		JSONIFIER_INLINE static void skipMatchingWs(string_view_ptr ws, string_view_ptr& it, uint64_t length) noexcept {
-			if (length > 7) {
-				uint64_t v0, v1;
-				while (length > 8) {
-					std::memcpy(&v0, ws, 8);
-					std::memcpy(&v1, it, 8);
-					if (const uint64_t diff = v0 ^ v1; diff) {
-						it += std::countr_zero(diff) >> 3;
-						return;
-					}
-					length -= 8;
-					ws += 8;
-					it += 8;
-				}
-				const auto shift = 8 - length;
-				ws -= shift;
-				it -= shift;
-				std::memcpy(&v0, ws, 8);
-				std::memcpy(&v1, it, 8);
-				if (const uint64_t diff = v0 ^ v1; diff) {
-					const uint64_t matched = static_cast<uint64_t>(std::countr_zero(diff)) >> 3;
-					it += matched > shift ? matched : shift;
-					return;
-				}
-				it += 8;
-				return;
-			}
-			if (length >= 4) {
-				uint32_t v0, v1;
-				std::memcpy(&v0, ws, 4);
-				std::memcpy(&v1, it, 4);
-				if (const uint32_t diff = v0 ^ v1; diff) {
-					it += std::countr_zero(diff) >> 3;
-					return;
-				}
-				length -= 4;
-				ws += 4;
-				it += 4;
-			}
-			if (length >= 2) {
-				uint16_t v0, v1;
-				std::memcpy(&v0, ws, 2);
-				std::memcpy(&v1, it, 2);
-				if (const uint16_t diff = static_cast<uint16_t>(v0 ^ v1); diff) {
-					it += std::countr_zero(diff) >> 3;
-					return;
-				}
-				it += 2;
-			}
-		}
 
 	  public:
 		JSONIFIER_INLINE json_iterator() noexcept = default;
@@ -559,46 +565,119 @@ namespace jsonifier::internal {
 
 		JSONIFIER_INLINE void skipWhitespace() noexcept {
 			if constexpr (parseOpts.nullTerminated) {
-				if JSONIFIER_LIKELY (!whitespaceTable[static_cast<uint8_t>(*iter)]) {
-					return;
-				}
-				if (*iter == ' ' && !whitespaceTable[static_cast<uint8_t>(iter[1])]) {
-					++iter;
-					return;
-				}
-			} else {
-				if JSONIFIER_LIKELY (iter < endIter && !whitespaceTable[static_cast<uint8_t>(*iter)]) {
-					return;
-				}
-				if (iter < endIter && *iter == ' ' && iter + 1 < endIter && !whitespaceTable[static_cast<uint8_t>(iter[1])]) {
-					++iter;
-					return;
-				}
-			}
-			string_view_ptr runStart = iter;
-			if JSONIFIER_LIKELY (wsLength && wsLength <= static_cast<uint64_t>(endIter - iter)) {
-				skipMatchingWs(wsStart, iter, wsLength);
-				if constexpr (parseOpts.nullTerminated) {
+				while (true) {
 					if JSONIFIER_LIKELY (!whitespaceTable[static_cast<uint8_t>(*iter)]) {
 						return;
 					}
-				} else {
+					++iter;
+					if (*iter != ' ') {
+						continue;
+					}
+					uint64_t v;
+					while (iter + 8 <= endIter) {
+						std::memcpy(&v, iter, 8);
+						if (const uint64_t diff = v ^ allSpacesMask; diff) {
+							iter += std::countr_zero(diff) >> 3;
+							break;
+						}
+						iter += 8;
+					}
+					while (*iter == ' ') {
+						++iter;
+					}
+				}
+			} else {
+				while (true) {
 					if JSONIFIER_LIKELY (iter < endIter && !whitespaceTable[static_cast<uint8_t>(*iter)]) {
 						return;
 					}
+					if (iter >= endIter) {
+						return;
+					}
+					++iter;
+					if (iter >= endIter || *iter != ' ') {
+						continue;
+					}
+					uint64_t v;
+					while (iter + 8 <= endIter) {
+						std::memcpy(&v, iter, 8);
+						if (const uint64_t diff = v ^ allSpacesMask; diff) {
+							iter += std::countr_zero(diff) >> 3;
+							break;
+						}
+						iter += 8;
+					}
+					while (iter < endIter && *iter == ' ') {
+						++iter;
+					}
 				}
 			}
+		}
+
+		JSONIFIER_INLINE sep_result collectObjectSeparator() noexcept {
+			skipWhitespace();
 			if constexpr (parseOpts.nullTerminated) {
-				while (whitespaceTable[static_cast<uint8_t>(*iter)]) {
+				const char c = *iter;
+				if JSONIFIER_LIKELY (c == ',') {
 					++iter;
+					skipWhitespace();
+					return sep_result::cont;
+				}
+				if (c == '}') {
+					--currentObjectDepth;
+					++iter;
+					return sep_result::ended;
 				}
 			} else {
-				while (iter < endIter && whitespaceTable[static_cast<uint8_t>(*iter)]) {
-					++iter;
+				if JSONIFIER_LIKELY (iter < endIter) {
+					const char c = *iter;
+					if JSONIFIER_LIKELY (c == ',') {
+						++iter;
+						skipWhitespace();
+						return sep_result::cont;
+					}
+					if (c == '}') {
+						--currentObjectDepth;
+						++iter;
+						return sep_result::ended;
+					}
 				}
 			}
-			wsStart	 = runStart;
-			wsLength = static_cast<uint64_t>(iter - runStart);
+			static_cast<void>(reject<parse_statuses::missing_comma>());
+			return sep_result::error;
+		}
+
+		JSONIFIER_INLINE sep_result collectArraySeparator() noexcept {
+			skipWhitespace();
+			if constexpr (parseOpts.nullTerminated) {
+				const char c = *iter;
+				if JSONIFIER_LIKELY (c == ',') {
+					++iter;
+					skipWhitespace();
+					return sep_result::cont;
+				}
+				if (c == ']') {
+					--currentArrayDepth;
+					++iter;
+					return sep_result::ended;
+				}
+			} else {
+				if JSONIFIER_LIKELY (iter < endIter) {
+					const char c = *iter;
+					if JSONIFIER_LIKELY (c == ',') {
+						++iter;
+						skipWhitespace();
+						return sep_result::cont;
+					}
+					if (c == ']') {
+						--currentArrayDepth;
+						++iter;
+						return sep_result::ended;
+					}
+				}
+			}
+			static_cast<void>(reject<parse_statuses::missing_comma>());
+			return sep_result::error;
 		}
 
 		template<char charToCheck> JSONIFIER_INLINE bool incrementIfEquals() noexcept {
@@ -686,8 +765,6 @@ namespace jsonifier::internal {
 			return false;
 		}
 
-
-
 		JSONIFIER_INLINE bool skipString() noexcept {
 			++iter;
 			skipStringImpl(iter, static_cast<uint64_t>(endIter - iter));
@@ -706,9 +783,7 @@ namespace jsonifier::internal {
 		}
 
 		JSONIFIER_INLINE bool skipValue() noexcept {
-			if constexpr (!parseOpts.minified) {
-				skipWhitespace();
-			}
+			skipWhitespace();
 			if constexpr (parseOpts.nullTerminated) {
 				if JSONIFIER_UNLIKELY (*iter == '\0') {
 					return reject<parse_statuses::unexpected_end_of_input>();
@@ -735,6 +810,10 @@ namespace jsonifier::internal {
 								}
 								continue;
 							}
+							if (whitespaceTable[static_cast<uint8_t>(c)]) {
+								skipWhitespace();
+								continue;
+							}
 							++iter;
 							if (c == '{' || c == '[') {
 								++depth;
@@ -751,6 +830,10 @@ namespace jsonifier::internal {
 								if JSONIFIER_UNLIKELY (!skipString()) {
 									return false;
 								}
+								continue;
+							}
+							if (whitespaceTable[static_cast<uint8_t>(c)]) {
+								skipWhitespace();
 								continue;
 							}
 							++iter;
@@ -790,9 +873,7 @@ namespace jsonifier::internal {
 
 		JSONIFIER_INLINE bool skipRemainingObject() noexcept {
 			while (true) {
-				if constexpr (!parseOpts.minified) {
-					skipWhitespace();
-				}
+				skipWhitespace();
 				if constexpr (parseOpts.nullTerminated) {
 					if JSONIFIER_UNLIKELY (*iter != '"') {
 						return reject<parse_statuses::missing_key_start>();
@@ -811,20 +892,23 @@ namespace jsonifier::internal {
 				if JSONIFIER_UNLIKELY (!skipValue()) {
 					return false;
 				}
-				if (objectMaybeEnd()) {
-					return true;
-				}
-				if JSONIFIER_UNLIKELY (!collectObjectComma()) {
-					return false;
+				switch (static_cast<uint64_t>(collectObjectSeparator())) {
+					case static_cast<uint64_t>(sep_result::cont): {
+						continue;
+					}
+					case static_cast<uint64_t>(sep_result::ended): {
+						return true;
+					}
+					default: {
+						return false;
+					}
 				}
 			}
 		}
 
 		template<jsonifier::concepts::num_t number_type> JSONIFIER_INLINE bool iterateNumber(number_type& value) noexcept {
 			using value_type = number_type;
-			if constexpr (!parseOpts.minified) {
-				skipWhitespace();
-			}
+			skipWhitespace();
 			if constexpr (concepts::integer_t<value_type>) {
 				if constexpr (concepts::uint_types<value_type>) {
 					if constexpr (concepts::uint64_types<value_type>) {
@@ -989,9 +1073,7 @@ namespace jsonifier::internal {
 		}
 
 		template<jsonifier::concepts::bool_t bool_type> JSONIFIER_INLINE bool iterateBool(bool_type& value) noexcept {
-			if constexpr (!parseOpts.minified) {
-				skipWhitespace();
-			}
+			skipWhitespace();
 			if (endIter - iter >= 4 && compareStringAsInt<"true">(iter)) {
 				value = true;
 				iter += 4;
@@ -1005,9 +1087,7 @@ namespace jsonifier::internal {
 		}
 
 		JSONIFIER_INLINE bool iterateNull() noexcept {
-			if constexpr (!parseOpts.minified) {
-				skipWhitespace();
-			}
+			skipWhitespace();
 			if JSONIFIER_LIKELY (endIter - iter >= 4 && compareStringAsInt<"null">(iter)) {
 				iter += 4;
 				return true;
@@ -1438,6 +1518,40 @@ namespace jsonifier::internal {
 				return reject<parse_statuses::invalid_string_characters>();
 			}
 		}
+
+		JSONIFIER_INLINE sep_result collectObjectSeparator() noexcept {
+			if JSONIFIER_LIKELY (notAtEndPre()) {
+				const char c = static_cast<char>(*currentPtr());
+				if JSONIFIER_LIKELY (c == ',') {
+					++iter;
+					return sep_result::cont;
+				}
+				if (c == '}') {
+					--currentObjectDepth;
+					++iter;
+					return sep_result::ended;
+				}
+			}
+			static_cast<void>(reject<parse_statuses::missing_comma>());
+			return sep_result::error;
+		}
+
+		JSONIFIER_INLINE sep_result collectArraySeparator() noexcept {
+			if JSONIFIER_LIKELY (notAtEndPre()) {
+				const char c = static_cast<char>(*currentPtr());
+				if JSONIFIER_LIKELY (c == ',') {
+					++iter;
+					return sep_result::cont;
+				}
+				if (c == ']') {
+					--currentArrayDepth;
+					++iter;
+					return sep_result::ended;
+				}
+			}
+			static_cast<void>(reject<parse_statuses::missing_comma>());
+			return sep_result::error;
+		}
 	};
 
 	template<parse_options parseOpts, typename string_buffer_type>
@@ -1842,6 +1956,40 @@ namespace jsonifier::internal {
 			JSONIFIER_ELSE_UNLIKELY(else) {
 				return reject<parse_statuses::invalid_string_characters>();
 			}
+		}
+
+		JSONIFIER_INLINE sep_result collectObjectSeparator() noexcept {
+			if JSONIFIER_LIKELY (notAtEndPre()) {
+				const char c = static_cast<char>(*currentPtr());
+				if JSONIFIER_LIKELY (c == ',') {
+					++iter;
+					return sep_result::cont;
+				}
+				if (c == '}') {
+					--currentObjectDepth;
+					++iter;
+					return sep_result::ended;
+				}
+			}
+			static_cast<void>(reject<parse_statuses::missing_comma>());
+			return sep_result::error;
+		}
+
+		JSONIFIER_INLINE sep_result collectArraySeparator() noexcept {
+			if JSONIFIER_LIKELY (notAtEndPre()) {
+				const char c = static_cast<char>(*currentPtr());
+				if JSONIFIER_LIKELY (c == ',') {
+					++iter;
+					return sep_result::cont;
+				}
+				if (c == ']') {
+					--currentArrayDepth;
+					++iter;
+					return sep_result::ended;
+				}
+			}
+			static_cast<void>(reject<parse_statuses::missing_comma>());
+			return sep_result::error;
 		}
 	};
 

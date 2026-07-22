@@ -165,82 +165,27 @@ namespace jsonifier::internal {
 		static constexpr auto value{ pack_values<string>::value };
 	};
 
-	template<string_literal prefix, char indentChar, uint64_t indentSize, uint64_t depth> struct JSONIFIER_ALIGN(8) indent_blitter {
-		static constexpr uint64_t prefixLen{ prefix.size() };
-		static constexpr uint64_t indentLen{ depth * indentSize };
-		static constexpr uint64_t totalLen{ prefixLen + indentLen };
+	template<string_literal prefix, char indentChar, uint64_t indentSize> struct indent_table {
+		static constexpr uint64_t maxDepth{ 8 };
+		static constexpr uint64_t maxIndentBytes{ maxDepth * indentSize };
+		static constexpr uint64_t totalLen{ prefix.size() + maxIndentBytes };
 		static constexpr uint64_t paddedLen{ (totalLen + 7) & ~uint64_t{ 7 } };
-
-		static constexpr auto build() noexcept {
+		static constexpr array<char, paddedLen> data{ []() -> array<char, paddedLen> {
 			array<char, paddedLen> arr{};
-			for (uint64_t i = 0; i < prefixLen; ++i) {
+			for (uint64_t i = 0; i < prefix.size(); ++i)
 				arr[i] = prefix.values[i];
-			}
-			for (uint64_t i = 0; i < indentLen; ++i) {
-				arr[prefixLen + i] = indentChar;
-			}
-			return arr;
-		}
-
-		static constexpr auto value{ build() };
-		static constexpr uint64_t lengthToAdvance{ totalLen };
-		static constexpr uint64_t lengthToCopy{ paddedLen };
-	};
-
-	template<string_literal prefix, char indentChar, uint64_t indentSize, uint64_t... depths> struct indent_table_impl {
-		static constexpr auto table = array{ indent_blitter<prefix, indentChar, indentSize, depths>{}... };
-	};
-
-	template<string_literal prefix, char indentChar, uint64_t indentSize, uint64_t maxDepth> struct indent_table {
-		static constexpr uint64_t entries		 = maxDepth + 1;
-		static constexpr uint64_t maxIndentBytes = maxDepth * indentSize;
-
-		static constexpr uint64_t computeTotal() noexcept {
-			uint64_t total = 0;
-			for (uint64_t d = 0; d <= maxDepth; ++d)
-				total += prefix.size() + d * indentSize;
-			return total;
-		}
-		static constexpr uint64_t totalLen = computeTotal();
-
-		static constexpr void buildOffsets(array<uint16_t, entries>& arr) noexcept {
-			uint16_t pos = 0;
-			for (uint16_t d = 0; d <= maxDepth; ++d) {
-				arr[d] = static_cast<uint16_t>(pos);
-				pos += static_cast<uint16_t>(prefix.size() + d * indentSize);
-			}
-			return;
-		}
-
-		static constexpr void buildFlat(array<char, totalLen>& arr) noexcept {
-			uint64_t pos = 0;
-			for (uint64_t d = 0; d <= maxDepth; ++d) {
-				for (uint64_t i = 0; i < prefix.size(); ++i)
-					arr[pos++] = prefix.values[i];
-				for (uint64_t i = 0; i < d * indentSize; ++i)
-					arr[pos++] = indentChar;
-			}
-		}
-
-		static constexpr array<char, totalLen> data{ []() -> array<char, totalLen> {
-			array<char, totalLen> arr{};
-			buildFlat(arr);
-			return arr;
-		}() };
-
-		static constexpr array<uint16_t, entries> offsets{ []() -> array<uint16_t, entries> {
-			array<uint16_t, entries> arr{};
-			buildOffsets(arr);
+			for (uint64_t i = 0; i < maxIndentBytes; ++i)
+				arr[prefix.size() + i] = indentChar;
 			return arr;
 		}() };
 
 		JSONIFIER_INLINE static void blitWithOverflow(char*& bufferPtr, uint64_t totalIndent) noexcept {
-			const uint64_t cappedDepth = (totalIndent / indentSize) < entries ? (totalIndent / indentSize) : maxDepth;
-			const uint64_t advance	   = prefix.size() + cappedDepth * indentSize;
-			std::memcpy(bufferPtr, data.data() + offsets[cappedDepth], advance);
+			const uint64_t capped  = totalIndent < maxIndentBytes ? totalIndent : maxIndentBytes;
+			const uint64_t advance = prefix.size() + capped;
+			const uint64_t copyLen = (advance + 7) & ~uint64_t{ 7 };
+			std::memcpy(bufferPtr, data.data(), copyLen);
 			bufferPtr += advance;
-
-			const uint64_t remaining = totalIndent > maxIndentBytes ? totalIndent - maxIndentBytes : 0;
+			const uint64_t remaining = totalIndent - capped;
 			if (remaining) [[unlikely]] {
 				std::memset(bufferPtr, indentChar, remaining);
 				bufferPtr += remaining;
@@ -268,8 +213,8 @@ namespace jsonifier::internal {
 	template<serialize_options options, bool isItLast, typename context_type> JSONIFIER_INLINE static void writeObjectExit(context_type& context) {
 		if constexpr (!isItLast) {
 			if constexpr (options.prettify) {
-				static constexpr uint64_t maxIndentDepth = 8;
-				using comma_indent						 = indent_table<",\n", options.indentChar, options.indentSize, maxIndentDepth>;
+				
+				using comma_indent						 = indent_table<",\n", options.indentChar, options.indentSize>;
 				comma_indent::blitWithOverflow(context.bufferPtr, context.indent);
 			} else {
 				*context.bufferPtr = ',';
@@ -315,9 +260,8 @@ namespace jsonifier::internal {
 		typename get_serialize_base<options, value_type, context_type, make_integer_sequence<coreTupleSize<value_type>>>::type;
 
 	template<concepts::jsonifier_object_t value_type, typename context_type, serialize_options options> struct serialize_impl<value_type, context_type, options> {
-		static constexpr uint64_t maxIndentDepth = 8;
-		using open_indent						 = indent_table<"{\n", options.indentChar, options.indentSize, maxIndentDepth>;
-		using close_indent						 = indent_table<"\n", options.indentChar, options.indentSize, maxIndentDepth>;
+		using open_indent						 = indent_table<"{\n", options.indentChar, options.indentSize>;
+		using close_indent						 = indent_table<"\n", options.indentChar, options.indentSize>;
 
 		JSONIFIER_ALIGN(8) static constexpr char_blitter<"{}"> emptyObject {};
 
@@ -353,11 +297,10 @@ namespace jsonifier::internal {
 		}
 	};
 
-	template<concepts::map_t value_type, typename context_type, serialize_options options> struct serialize_impl<value_type, context_type, options> {
-		static constexpr uint64_t maxIndentDepth = 8;
-		using open_indent						 = indent_table<"{\n", options.indentChar, options.indentSize, maxIndentDepth>;
-		using comma_indent						 = indent_table<",\n", options.indentChar, options.indentSize, maxIndentDepth>;
-		using close_indent						 = indent_table<"\n", options.indentChar, options.indentSize, maxIndentDepth>;
+	template<concepts::map_t value_type, typename context_type, serialize_options options> struct serialize_impl<value_type, context_type, options> {		
+		using open_indent						 = indent_table<"{\n", options.indentChar, options.indentSize>;
+		using comma_indent						 = indent_table<",\n", options.indentChar, options.indentSize>;
+		using close_indent						 = indent_table<"\n", options.indentChar, options.indentSize>;
 
 		JSONIFIER_ALIGN(8) static constexpr char_blitter<": "> colonSpace {};
 		JSONIFIER_ALIGN(8) static constexpr char_blitter<"{}"> emptyObject {};
@@ -421,11 +364,10 @@ namespace jsonifier::internal {
 		}
 	};
 
-	template<concepts::vector_t value_type, typename context_type, serialize_options options> struct serialize_impl<value_type, context_type, options> {
-		static constexpr uint64_t maxIndentDepth = 8;
-		using open_indent						 = indent_table<"[\n", options.indentChar, options.indentSize, maxIndentDepth>;
-		using comma_indent						 = indent_table<",\n", options.indentChar, options.indentSize, maxIndentDepth>;
-		using close_indent						 = indent_table<"\n", options.indentChar, options.indentSize, maxIndentDepth>;
+	template<concepts::vector_t value_type, typename context_type, serialize_options options> struct serialize_impl<value_type, context_type, options> {		
+		using open_indent						 = indent_table<"[\n", options.indentChar, options.indentSize>;
+		using comma_indent						 = indent_table<",\n", options.indentChar, options.indentSize>;
+		using close_indent						 = indent_table<"\n", options.indentChar, options.indentSize>;
 
 		JSONIFIER_ALIGN(8) static constexpr char_blitter<"[]"> emptyArray {};
 
@@ -468,11 +410,10 @@ namespace jsonifier::internal {
 		}
 	};
 
-	template<concepts::raw_array_t value_type, typename context_type, serialize_options options> struct serialize_impl<value_type, context_type, options> {
-		static constexpr uint64_t maxIndentDepth = 8;
-		using open_indent						 = indent_table<"[\n", options.indentChar, options.indentSize, maxIndentDepth>;
-		using comma_indent						 = indent_table<",\n", options.indentChar, options.indentSize, maxIndentDepth>;
-		using close_indent						 = indent_table<"\n", options.indentChar, options.indentSize, maxIndentDepth>;
+	template<concepts::raw_array_t value_type, typename context_type, serialize_options options> struct serialize_impl<value_type, context_type, options> {		
+		using open_indent						 = indent_table<"[\n", options.indentChar, options.indentSize>;
+		using comma_indent						 = indent_table<",\n", options.indentChar, options.indentSize>;
+		using close_indent						 = indent_table<"\n", options.indentChar, options.indentSize>;
 
 		JSONIFIER_ALIGN(8) static constexpr char_blitter<"[]"> emptyArray {};
 
@@ -520,11 +461,10 @@ namespace jsonifier::internal {
 		}
 	};
 
-	template<concepts::tuple_t value_type, typename context_type, serialize_options options> struct serialize_impl<value_type, context_type, options> {
-		static constexpr uint64_t maxIndentDepth = 8;
-		using open_indent						 = indent_table<"[\n", options.indentChar, options.indentSize, maxIndentDepth>;
-		using comma_indent						 = indent_table<",\n", options.indentChar, options.indentSize, maxIndentDepth>;
-		using close_indent						 = indent_table<"\n", options.indentChar, options.indentSize, maxIndentDepth>;
+	template<concepts::tuple_t value_type, typename context_type, serialize_options options> struct serialize_impl<value_type, context_type, options> {		
+		using open_indent						 = indent_table<"[\n", options.indentChar, options.indentSize>;
+		using comma_indent						 = indent_table<",\n", options.indentChar, options.indentSize>;
+		using close_indent						 = indent_table<"\n", options.indentChar, options.indentSize>;
 		JSONIFIER_ALIGN(8) static constexpr char_blitter<"[]"> emptyArray {};
 		static constexpr auto memberCount = tuple_size_v<value_type>;
 		template<auto... values> struct tuple_member_serializer {

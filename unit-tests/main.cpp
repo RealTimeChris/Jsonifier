@@ -24,7 +24,6 @@
 
 int main() {
 	try {
-		[[maybe_unused]] static constexpr jsonifier::string_base test{ "test" };
 		std::cout << "Current active CPU backend: " << jsonifier::cpu_arch_name << std::endl;
 		tests::testFunction();
 	} catch (const std::runtime_error& e) {

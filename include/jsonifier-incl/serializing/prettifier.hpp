@@ -116,8 +116,8 @@ namespace jsonifier::internal {
 			return derivedRef.errors;
 		}
 
-		template<prettify_options options, concepts::string_t string_type, typename iterator>
-		inline uint64_t impl(iterator& iter, iterator endStructural, string_view_ptr stringRootIter, string_type&& out) noexcept {
+		template<prettify_options options, concepts::string_t string_type, typename iterator, typename iterator_end>
+		inline uint64_t impl(iterator& iter, iterator_end endStructural, string_view_ptr stringRootIter, string_type&& out) noexcept {
 			string_view_ptr newPtr{};
 			uint64_t newSize{};
 			int64_t indent{};

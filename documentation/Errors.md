@@ -54,7 +54,7 @@ for (auto& err : parser.getErrors()) {
 ```
 
 - **`operator uint64_t`** — the raw status code as an integer
-- **`operator parse_statuses`** — cast directly to the parse-status enum (useful for switching on parse errors)
+- **`operator parse_statuses`** — static_cast directly to the parse-status enum (useful for switching on parse errors)
 - **`operator bool`** — `true` if this is a real error (non-success)
 - **`operator==`** — compares two errors by type and index
 
@@ -67,7 +67,7 @@ Every error belongs to one of five status classes, corresponding to the operatio
 | Class | Operation | Status Enum |
 |-------|-----------|-------------|
 | `parsing` | `parseJson` | `parse_statuses` |
-| `serializing` | `serializeJson` | `serialize_status` |
+| `serializing` | `serializeJson` | `serialize_statuses` |
 | `minifying` | `minifyJson` | `minify_statuses` |
 | `prettifying` | `prettifyJson` | `prettify_statuses` |
 | `validating` | `validateJson` | `validate_statuses` |
@@ -148,7 +148,7 @@ Produced by `serializeJson`. Only one value:
 |--------|---------|
 | `success` | No error |
 
-Serialization can't fail on input — it consumes a valid C++ object and produces valid JSON. The `serialize_status` enum exists for consistency with the other operations, but you won't see errors in `getErrors()` after a `serializeJson` call.
+Serialization can't fail on input — it consumes a valid C++ object and produces valid JSON. The `serialize_statuses` enum exists for consistency with the other operations, but you won't see errors in `getErrors()` after a `serializeJson` call.
 
 ## Multiple Errors Per Call
 

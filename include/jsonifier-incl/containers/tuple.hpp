@@ -118,25 +118,25 @@ namespace jsonifier::internal {
 	template<uint64_t index, typename tuple_type> using tuple_element_t = type_list_element_t<index, tuple_type>;
 
 	template<typename value_type_01, typename value_type_02>
-	concept eq_comparable_types = requires() { std::declval<value_type_01>() == std::declval<value_type_02>(); };
+	concept eq_comparable_types = requires { std::declval<value_type_01>() == std::declval<value_type_02>(); };
 
 	template<typename value_type_01, typename value_type_02>
-	concept neq_comparable_types = requires() { std::declval<value_type_01>() != std::declval<value_type_02>(); };
+	concept neq_comparable_types = requires { std::declval<value_type_01>() != std::declval<value_type_02>(); };
 
 	template<typename value_type_01, typename value_type_02>
-	concept lt_comparable_types = requires() { std::declval<value_type_01>() < std::declval<value_type_02>(); };
+	concept lt_comparable_types = requires { std::declval<value_type_01>() < std::declval<value_type_02>(); };
 
 	template<typename value_type_01, typename value_type_02>
-	concept lte_comparable_types = requires() { std::declval<value_type_01>() <= std::declval<value_type_02>(); };
+	concept lte_comparable_types = requires { std::declval<value_type_01>() <= std::declval<value_type_02>(); };
 
 	template<typename value_type_01, typename value_type_02>
-	concept gt_comparable_types = requires() { std::declval<value_type_01>() > std::declval<value_type_02>(); };
+	concept gt_comparable_types = requires { std::declval<value_type_01>() > std::declval<value_type_02>(); };
 
 	template<typename value_type_01, typename value_type_02>
-	concept gte_comparable_types = requires() { std::declval<value_type_01>() >= std::declval<value_type_02>(); };
+	concept gte_comparable_types = requires { std::declval<value_type_01>() >= std::declval<value_type_02>(); };
 
 	template<typename value_type_01, typename value_type_02>
-	concept ss_comparable_types = requires() { std::declval<value_type_01>() <=> std::declval<value_type_02>(); };
+	concept ss_comparable_types = requires { std::declval<value_type_01>() <=> std::declval<value_type_02>(); };
 
 	struct eq_op {
 		template<typename value_type_01, eq_comparable_types<value_type_01> value_type_02>

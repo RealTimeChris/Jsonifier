@@ -32,6 +32,7 @@
 #include "marine_ik.hpp"
 #include "mesh.hpp"
 #include "random.hpp"
+#include "semanticscholar.hpp"
 #include "twitter.hpp"
 
 namespace parsing_tests {
@@ -104,6 +105,8 @@ namespace parsing_tests {
 		parsingTests<test_types::parse_serialize, "Mesh Test (Prettified)", mesh_message, true, partial, knownOrder>(parser);
 		parsingTests<test_types::parse_serialize, "Random Test (Minified)", random_message, false, partial, knownOrder>(parser);
 		parsingTests<test_types::parse_serialize, "Random Test (Prettified)", random_message, true, partial, knownOrder>(parser);
+		parsingTests<test_types::parse_serialize, "Semanticscholar Corpus Test (Minified)", semantic_scholar_message, false, partial, knownOrder>(parser);
+		parsingTests<test_types::parse_serialize, "Semanticscholar Corpus Test (Prettified)", semantic_scholar_message, true, partial, knownOrder>(parser);
 		parsingTests<test_types::parse_serialize, "Twitter Partial Test (Minified)", twitter_partial_message, false, partial, knownOrder, true>(parser);
 		parsingTests<test_types::parse_serialize, "Twitter Partial Test (Prettified)", twitter_partial_message, true, partial, knownOrder, true>(parser);
 		parsingTests<test_types::parse_serialize, "Twitter Test (Minified)", twitter_message, false, partial, knownOrder>(parser);
