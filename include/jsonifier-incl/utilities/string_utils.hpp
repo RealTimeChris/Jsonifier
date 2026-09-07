@@ -356,163 +356,162 @@ namespace jsonifier::internal {
 		requires(options.validateUtf8)
 	struct string_scanner<options> {
 		struct scan_result {
+			uint64_t outLength{ std::numeric_limits<uint64_t>::max() };
 			uint64_t rawLength{};
-			uint64_t firstEscape{};
-			bool valid{};
-		};
-
-		struct string_parse_step {
-			template<uint64_t index, typename basic_iterator01, typename basic_iterator02>
-			JSONIFIER_INLINE static auto* impl(basic_iterator01& string1Start, const basic_iterator01 string1End, basic_iterator02& string2) noexcept {
-				using simd_list_local					 = type_list_element_t<index, simd::avx_integer_list>;
-				using integer_type						 = typename simd_list_local::integer_type;
-				using simd_type							 = typename simd_list_local::type::type;
-				static constexpr uint64_t bytesProcessed = simd_list_local::bytesProcessed;
-				static constexpr integer_type mask		 = simd_list_local::mask;
-
-				simd_type simdValue;
-				uint64_t nextSize;
-				uint8_t nextChar;
-				integer_type nextEscapeable;
-				string_view_ptr escapeChar;
-				const auto stringEndNew = string1End - bytesProcessed;
-
-				const simd_type simdValues01 = simd::gatherValue<simd_type>('"');
-				const simd_type simdValues02 = simd::gatherValue<simd_type>('\\');
-				const simd_type simdValues03 = simd::gatherValue<simd_type>(static_cast<char>(32));
-				while (string1Start < stringEndNew) {
-					simdValue = simd::gatherValuesU<simd_type>(string1Start);
-					simd::storeU(simdValue, string2);
-					nextEscapeable = findSerialize<simd_type, integer_type>(simdValue, simdValues01, simdValues02, simdValues03);
-					if (nextEscapeable != mask) [[likely]] {
-						nextChar   = static_cast<uint8_t>(string1Start[nextEscapeable]);
-						nextSize   = escapeTableSizes[nextChar];
-						escapeChar = escapeTable[nextChar];
-						string2 += nextEscapeable;
-						string1Start += nextEscapeable;
-						std::memcpy(string2, escapeChar, nextSize);
-						string2 += nextSize;
-						++string1Start;
-					} else {
-						string2 += bytesProcessed;
-						string1Start += bytesProcessed;
-					}
-				}
-				return string1Start;
-			}
 		};
 
 		static constexpr uint64_t npos{ std::numeric_limits<uint64_t>::max() };
 
-		template<typename basic_iterator01> JSONIFIER_INLINE static scan_result impl(basic_iterator01 string1Start, const basic_iterator01 string1End) noexcept {
-			using simd_list_local					 = type_list_element_t<list_size - 1, simd::avx_integer_list>;
-			using integer_type						 = typename simd_list_local::integer_type;
-			static constexpr auto simd_type			 = simd_list_local::type::simd_type;
-			using simd_type_local					 = typename simd_type_wrapper<simd_type>::type;
-			static constexpr uint64_t bytesProcessed = simd_list_local::bytesProcessed;
-			static constexpr integer_type mask		 = simd_list_local::mask;
-
-			const auto stringStart	= string1Start;
-			const auto stringEndNew = string1End - bytesProcessed;
-			uint64_t firstEscape{ npos };
-			char escapeChar;
-			simd_type_local simdValue;
-			integer_type nextBackslashOrQuote;
-
-			utf8_validation_state state;
-			state.reset();
-			utf8_register_validator<simd_type_wrapper<simd_type>> validator{ state };
-
-			auto validateFrom = string1Start;
-
-			const simd_type_local simdValues00 = simd::gatherValue<simd_type_local>('\\');
-			const simd_type_local simdValues01 = simd::gatherValue<simd_type_local>('"');
-
-			while (string1Start < stringEndNew) {
-				simdValue			 = simd::gatherValuesU<simd_type_local>(string1Start);
-				nextBackslashOrQuote = findParse<mask, simd_type_local, integer_type>(simdValue, simdValues00, simdValues01);
-				if (nextBackslashOrQuote != mask) [[likely]] {
-					escapeChar = string1Start[nextBackslashOrQuote];
-					if (escapeChar == '"') {
-						validateSpan(validator, validateFrom, string1Start + nextBackslashOrQuote);
-						if (validator.errors()) [[unlikely]] {
-							return {};
-						}
-						return { static_cast<uint64_t>(string1Start - stringStart) + nextBackslashOrQuote, firstEscape, true };
-					}
-					if (firstEscape == npos) {
-						firstEscape = static_cast<uint64_t>(string1Start - stringStart) + nextBackslashOrQuote;
-					}
-					string1Start += nextBackslashOrQuote + 2ull;
-				} else if (hasByteLessThanValue<32>(simdValue)) [[unlikely]] {
-					return {};
-				} else {
-					if (validateFrom == string1Start) {
-						validator.checkRegister(simdValue);
-						validateFrom = string1Start + bytesProcessed;
-					}
-					string1Start += bytesProcessed;
-				}
-			}
-			return shortImpl(stringStart, string1Start, string1End, validator, validateFrom, firstEscape);
-		}
-
-		template<typename validator_type, typename basic_iterator01>
-		JSONIFIER_INLINE static void validateSpan(validator_type& validator, basic_iterator01& cursor, const basic_iterator01 spanEnd) noexcept {
-			while (static_cast<uint64_t>(spanEnd - cursor) >= validator_type::bytesProcessed) {
-				validator.checkRegister(simd::gatherValuesU<typename validator_type::simd_type_alias>(cursor));
-				cursor += validator_type::bytesProcessed;
-			}
-			if (cursor < spanEnd) {
-				validator.checkPartial(cursor, static_cast<uint64_t>(spanEnd - cursor));
-				cursor = spanEnd;
-			}
-		}
-
-		template<typename validator_type, typename basic_iterator01>
-		JSONIFIER_INLINE static void validateSpanShort(validator_type& validator, basic_iterator01& cursor, const basic_iterator01 spanEnd) noexcept {
-			while (static_cast<uint64_t>(spanEnd - cursor) >= validator_type::bytesProcessed) {
-				validator.checkRegister(simd::gatherValuesU<typename validator_type::simd_type_alias>(cursor));
-				cursor += validator_type::bytesProcessed;
-			}
-			if (cursor < spanEnd) {
-				validator.checkPartial(cursor, static_cast<uint64_t>(spanEnd - cursor));
-				cursor = spanEnd;
-			}
-		}
-
-		template<typename validator_type, typename basic_iterator01> JSONIFIER_INLINE static scan_result shortImpl(const basic_iterator01 stringStart,
-			basic_iterator01 string1Start, const basic_iterator01 string1End, validator_type& validator, basic_iterator01 validateFrom, uint64_t firstEscape) noexcept {
-			char escapeChar;
-			while (string1Start < string1End) {
-				escapeChar = *string1Start;
-				if (escapeChar == '"') {
-					validateSpanShort(validator, validateFrom, string1Start);
-					if (validator.errors()) [[unlikely]] {
-						return {};
-					}
-					return { static_cast<uint64_t>(string1Start - stringStart), firstEscape, true };
-				}
-				if (escapeChar == '\\') {
-					if (firstEscape == npos) {
-						firstEscape = static_cast<uint64_t>(string1Start - stringStart);
-					}
-					string1Start += 2;
-					continue;
-				}
-				if (static_cast<uint8_t>(escapeChar) < 32) [[unlikely]] {
-					return {};
-				}
-				++string1Start;
-			}
-			return {};
-		}
+		struct scan_state {
+			utf8_validation_state validationState{};
+			uint64_t rawLength{};
+			uint64_t outLength{};
+			bool complete{};
+		};
 
 		template<typename basic_iterator01, typename basic_iterator02>
-		JSONIFIER_INLINE static basic_iterator02 impl(basic_iterator01 string1Start, basic_iterator02 string2, uint64_t lengthNew) noexcept {
-			const basic_iterator01 string1End = string1Start + lengthNew;
-			string_parse_executor<string_parse_step, make_ascending_range<start_index, list_size>>::impl(string1Start, string1End, string2);
-			return shortImpl(string1Start, string1End, string2);
+		JSONIFIER_INLINE static bool handleEscape(basic_iterator01& srcPtr, const basic_iterator01 srcEnd, basic_iterator02& dstPtr) noexcept {
+			const uint8_t escapeChar = static_cast<uint8_t>(srcPtr[1]);
+			if (escapeChar == 'u') {
+				return handleUnicodeCodePoint(srcPtr, dstPtr, srcEnd);
+			}
+			const uint8_t decoded = static_cast<uint8_t>(escapeMap[escapeChar]);
+			if (decoded == 0u) [[unlikely]] {
+				return false;
+			}
+			*dstPtr = static_cast<char>(decoded);
+			++dstPtr;
+			srcPtr += 2;
+			return true;
+		}
+
+		struct string_scan_step {
+			template<uint64_t index, typename basic_iterator01, typename basic_iterator02> JSONIFIER_INLINE static basic_iterator01 impl(basic_iterator01& string1Start,
+				const basic_iterator01 string1End, basic_iterator02& string2, const basic_iterator01 stringStart, const basic_iterator02 outStart, scan_state& scanState) noexcept {
+				using simd_list_local					 = type_list_element_t<index, simd::avx_integer_list>;
+				using integer_type						 = typename simd_list_local::integer_type;
+				static constexpr auto simd_type			 = simd_list_local::type::simd_type;
+				using simd_type_local					 = typename simd_type_wrapper<simd_type>::type;
+				static constexpr uint64_t bytesProcessed = simd_list_local::bytesProcessed;
+				if (scanState.complete || scanState.outLength == std::numeric_limits<uint64_t>::max()) {
+					return nullptr;
+				}
+				utf8_register_validator<simd_type_wrapper<simd_type>> validator{ scanState.validationState };
+				const simd_type_local simdValues00 = simd::gatherValue<simd_type_local>('\\');
+				const simd_type_local simdValues01 = simd::gatherValue<simd_type_local>('"');
+				const simd_type_local simdValues02 = simd::gatherValue<simd_type_local>(static_cast<char>(32));
+				const auto stringEndNew			   = string1End - bytesProcessed;
+				while (string1Start < stringEndNew) {
+					const auto registerStart		= string1Start;
+					const simd_type_local simdValue = simd::gatherValuesU<simd_type_local>(string1Start);
+					simd::storeU(simdValue, string2);
+					const integer_type delimiters = static_cast<integer_type>(simd::opBitMask(
+						simd::opOr(simd::opOr(simd::opCmpEqRaw(simdValue, simdValues00), simd::opCmpEqRaw(simdValue, simdValues01)), simd::opCmpLtRaw(simdValue, simdValues02))));
+					if (delimiters == static_cast<integer_type>(0)) {
+						validator.checkRegister(simdValue);
+						string1Start += bytesProcessed;
+						string2 += bytesProcessed;
+						continue;
+					}
+					const uint64_t offset	= static_cast<uint64_t>(simd::countrZero(delimiters));
+					const uint8_t foundChar = static_cast<uint8_t>(string1Start[offset]);
+					if (foundChar < 32) [[unlikely]] {
+						scanState.outLength = std::numeric_limits<uint64_t>::max();
+						scanState.complete = true;
+						return nullptr;
+					}
+					validator.checkPartial(registerStart, offset);
+					string1Start += offset;
+					string2 += offset;
+					if (validator.errors()) [[unlikely]] {
+						scanState.outLength = std::numeric_limits<uint64_t>::max();
+						scanState.complete = true;
+						return nullptr;
+					}
+					if (foundChar == '"') {
+						scanState.rawLength = static_cast<uint64_t>(string1Start - stringStart);
+						scanState.outLength = static_cast<uint64_t>(string2 - outStart);
+						scanState.complete	= true;
+						return nullptr;
+					}
+					if (string1Start + 1 >= string1End) [[unlikely]] {
+						scanState.outLength = std::numeric_limits<uint64_t>::max();
+						scanState.complete = true;
+						return nullptr;
+					}
+					if (!handleEscape(string1Start, string1End, string2)) [[unlikely]] {
+						scanState.outLength = std::numeric_limits<uint64_t>::max();
+						scanState.complete = true;
+						return nullptr;
+					}
+					validator.reset();
+				}
+				validator.flush();
+
+				if constexpr (index == 2) {
+					auto validateFrom = string1Start;
+
+					while (string1Start < string1End) {
+						const uint8_t currentChar = static_cast<uint8_t>(*string1Start);
+
+						if (currentChar == '"') {
+							validator.checkPartial(validateFrom, static_cast<uint64_t>(string1Start - validateFrom));
+							if (validator.errors()) [[unlikely]] {
+								break;
+							}
+							validator.flush();
+							scanState.rawLength = static_cast<uint64_t>(string1Start - stringStart);
+							scanState.outLength = static_cast<uint64_t>(string2 - outStart);
+							scanState.complete	= true;
+							return nullptr;
+						}
+
+						if (currentChar == '\\') {
+							validator.checkPartial(validateFrom, static_cast<uint64_t>(string1Start - validateFrom));
+							if (validator.errors()) [[unlikely]] {
+								break;
+							}
+							if (string1Start + 1 >= string1End) [[unlikely]] {
+								break;
+							}
+							if (!handleEscape(string1Start, string1End, string2)) [[unlikely]] {
+								break;
+							}
+							validator.reset();
+							validateFrom = string1Start;
+							continue;
+						}
+
+						if (currentChar < 32) [[unlikely]] {
+							break;
+						}
+
+						*string2 = static_cast<char>(currentChar);
+						++string2;
+						++string1Start;
+					}
+
+					validator.flush();
+					scanState.outLength = std::numeric_limits<uint64_t>::max();
+					scanState.complete = true;
+				}
+
+				return string1Start;
+			}
+		};
+
+		template<typename basic_iterator01, typename basic_iterator02>
+		JSONIFIER_INLINE static scan_result impl(basic_iterator01 string1Start, const basic_iterator01 string1End, basic_iterator02 string2) noexcept {
+			const auto stringStart = string1Start;
+			const auto outStart	   = string2;
+			scan_state scanState{};
+
+			string_parse_executor<string_scan_step, make_ascending_range<start_index, list_size>>::impl(string1Start, string1End, string2, stringStart, outStart, scanState);
+
+			if (scanState.outLength == std::numeric_limits<uint64_t>::max()) [[unlikely]] {
+				return {};
+			}
+			return { scanState.outLength, scanState.rawLength };
 		}
 	};
 

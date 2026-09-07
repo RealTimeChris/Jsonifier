@@ -93,14 +93,12 @@ namespace jsonifier::internal {
 				++context.currentIterPtr();
 				auto endPtr		   = context.notAtEndPre() ? context.currentPtr() : (newPtr + (context.endIterPtr() - context.currentIterPtr()));
 				using scanner_type = string_scanner<optionsVal>;
-				const auto res	   = scanner_type::impl(newPtr, endPtr);
-				if (!res.valid) [[unlikely]] {
-					return false;
+				auto& scratch	   = context.getStringBuffer();
+				const auto needed  = static_cast<uint64_t>(endPtr - newPtr) + simdBytesPerStep;
+				if (scratch.size() < needed) [[unlikely]] {
+					scratch.resize(needed);
 				}
-				if (res.firstEscape == scanner_type::npos) [[likely]] {
-					return true;
-				}
-				return jsonifier::internal::unescapeImpl(newPtr + res.firstEscape, newPtr + res.rawLength, context.getStringBuffer().data()) != nullptr;
+				return scanner_type::impl(newPtr, endPtr, scratch.data()).outLength != std::numeric_limits<uint64_t>::max();
 			} else [[unlikely]] {
 				return false;
 			}

@@ -284,6 +284,17 @@ namespace jsonifier::internal {
 		JSONIFIER_INLINE bool errors() noexcept {
 			return state.error || !simd::opTest(simd::opOr(error, incompleteRegister));
 		}
+
+		JSONIFIER_INLINE bool hardErrors() noexcept {
+			return state.error || !simd::opTest(error);
+		}
+
+		JSONIFIER_INLINE void reset() noexcept {
+			state.reset();
+			prevInput		   = simd_type{};
+			incompleteRegister = simd_type{};
+			error			   = simd_type{};
+		}
 	};
 
 }

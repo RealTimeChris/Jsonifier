@@ -392,14 +392,14 @@ namespace jsonifier {
 							std::uninitialized_move(dataVal, dataVal + sizeVal, newPtr);
 						}
 						allocator::deallocate(dataVal, capacityVal + 1);
+						capacityVal = capacityNew;
+						dataVal		= newPtr;
+						allocator::construct(&dataVal[sizeVal], value_type{});
 					}
 				} catch (...) {
 					allocator::deallocate(newPtr, capacityNew + 1);
 					throw;
 				}
-				capacityVal = capacityNew;
-				dataVal		= newPtr;
-				allocator::construct(&dataVal[sizeVal], value_type{});
 			}
 		}
 
@@ -864,9 +864,6 @@ namespace jsonifier {
 				sizeVal			 = newSize;
 				dataVal[sizeVal] = value_type{};
 			}
-		}
-
-		JSONIFIER_INLINE constexpr void reserve(size_type) noexcept {
 		}
 
 		JSONIFIER_INLINE constexpr size_type capacity() const noexcept {

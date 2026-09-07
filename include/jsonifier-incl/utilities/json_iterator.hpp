@@ -439,30 +439,23 @@ namespace jsonifier::internal {
 			if (iter >= endIter) [[unlikely]] {
 				return reject<parse_statuses::unexpected_end_of_input>();
 			}
-			auto iterStart = iter;
-			const auto res = string_scanner<parseOpts>::impl(iter, endIter);
-			if (!res.valid) [[unlikely]] {
+			const auto iterStart = iter;
+			auto& scratch		 = getStringBuffer();
+			const auto needed	 = static_cast<uint64_t>(endIter - iter) + simdBytesPerStep;
+			if (scratch.size() < needed) [[unlikely]] {
+				scratch.resize(needed);
+			}
+			const auto res = string_scanner<parseOpts>::impl(iter, endIter, scratch.data());
+			if (res.outLength == std::numeric_limits<uint64_t>::max()) [[unlikely]] {
 				iter = iterStart;
 				return reject<parse_statuses::invalid_string_characters>();
 			}
 			if constexpr (has_resize<string_type>) {
-				if (value.size() != res.rawLength) [[unlikely]] {
-					value.resize(res.rawLength);
+				if (value.size() != res.outLength) [[unlikely]] {
+					value.resize(res.outLength);
 				}
 			}
-			if (res.firstEscape == string_scanner<parseOpts>::npos) [[likely]] {
-				std::memcpy(value.data(), iter, res.rawLength);
-			} else [[unlikely]] {
-				std::memcpy(value.data(), iter, res.firstEscape);
-				const auto finalPtr = jsonifier::internal::unescapeImpl(iter + res.firstEscape, iter + res.rawLength, value.data() + res.firstEscape);
-				if (!finalPtr) [[unlikely]] {
-					iter = iterStart;
-					return reject<parse_statuses::invalid_string_characters>();
-				}
-				if constexpr (has_resize<string_type>) {
-					value.resize(static_cast<uint64_t>(finalPtr - value.data()));
-				}
-			}
+			std::memcpy(value.data(), scratch.data(), res.outLength);
 			iter += res.rawLength + 1;
 			if (iter > endIter) [[unlikely]] {
 				return reject<parse_statuses::unexpected_end_of_input>();
@@ -676,7 +669,7 @@ namespace jsonifier::internal {
 			return checkChar<charToCheck>() ? (static_cast<void>(++iter), true) : false;
 		}
 
-		template<char charToCheck> JSONIFIER_INLINE bool incrementIfEqualsNoWs() noexcept {			
+		template<char charToCheck> JSONIFIER_INLINE bool incrementIfEqualsNoWs() noexcept {
 			return checkChar<charToCheck>() ? (static_cast<void>(++iter), true) : false;
 		}
 
@@ -1096,30 +1089,23 @@ namespace jsonifier::internal {
 			if (iter >= endIter) [[unlikely]] {
 				return reject<parse_statuses::unexpected_end_of_input>();
 			}
-			auto iterStart = iter;
-			const auto res = string_scanner<parseOpts>::impl(iter, endIter);
-			if (!res.valid) [[unlikely]] {
+			const auto iterStart = iter;
+			auto& scratch		 = getStringBuffer();
+			const auto needed	 = static_cast<uint64_t>(endIter - iter) + simdBytesPerStep;
+			if (scratch.size() < needed) [[unlikely]] {
+				scratch.resize(needed);
+			}
+			const auto res = string_scanner<parseOpts>::impl(iter, endIter, scratch.data());
+			if (res.outLength == std::numeric_limits<uint64_t>::max()) [[unlikely]] {
 				iter = iterStart;
 				return reject<parse_statuses::invalid_string_characters>();
 			}
 			if constexpr (has_resize<string_type>) {
-				if (value.size() != res.rawLength) [[unlikely]] {
-					value.resize(res.rawLength);
+				if (value.size() != res.outLength) [[unlikely]] {
+					value.resize(res.outLength);
 				}
 			}
-			if (res.firstEscape == string_scanner<parseOpts>::npos) [[likely]] {
-				std::memcpy(value.data(), iter, res.rawLength);
-			} else [[unlikely]] {
-				std::memcpy(value.data(), iter, res.firstEscape);
-				const auto finalPtr = jsonifier::internal::unescapeImpl(iter + res.firstEscape, iter + res.rawLength, value.data() + res.firstEscape);
-				if (!finalPtr) [[unlikely]] {
-					iter = iterStart;
-					return reject<parse_statuses::invalid_string_characters>();
-				}
-				if constexpr (has_resize<string_type>) {
-					value.resize(static_cast<uint64_t>(finalPtr - value.data()));
-				}
-			}
+			std::memcpy(value.data(), scratch.data(), res.outLength);
 			iter += res.rawLength + 1;
 			if (iter > endIter) [[unlikely]] {
 				return reject<parse_statuses::unexpected_end_of_input>();
@@ -1509,27 +1495,21 @@ namespace jsonifier::internal {
 			if (strPtr >= stringEndIter) [[unlikely]] {
 				return reject<parse_statuses::unexpected_end_of_input>();
 			}
-			const auto res = string_scanner<parseOpts>::impl(strPtr, stringEndIter);
-			if (!res.valid) [[unlikely]] {
+			auto& scratch	  = getStringBuffer();
+			const auto needed = static_cast<uint64_t>(stringEndIter - strPtr) + simdBytesPerStep;
+			if (scratch.size() < needed) [[unlikely]] {
+				scratch.resize(needed);
+			}
+			const auto res = string_scanner<parseOpts>::impl(strPtr, stringEndIter, scratch.data());
+			if (res.outLength == std::numeric_limits<uint64_t>::max()) [[unlikely]] {
 				return reject<parse_statuses::invalid_string_characters>();
 			}
 			if constexpr (has_resize<string_type>) {
-				if (value.size() != res.rawLength) [[unlikely]] {
-					value.resize(res.rawLength);
+				if (value.size() != res.outLength) [[unlikely]] {
+					value.resize(res.outLength);
 				}
 			}
-			if (res.firstEscape == string_scanner<parseOpts>::npos) [[likely]] {
-				std::memcpy(value.data(), strPtr, res.rawLength);
-			} else [[unlikely]] {
-				std::memcpy(value.data(), strPtr, res.firstEscape);
-				const auto finalPtr = jsonifier::internal::unescapeImpl(strPtr + res.firstEscape, strPtr + res.rawLength, value.data() + res.firstEscape);
-				if (!finalPtr) [[unlikely]] {
-					return reject<parse_statuses::invalid_string_characters>();
-				}
-				if constexpr (has_resize<string_type>) {
-					value.resize(static_cast<uint64_t>(finalPtr - value.data()));
-				}
-			}
+			std::memcpy(value.data(), scratch.data(), res.outLength);
 			++iter;
 			return true;
 		}
@@ -1959,27 +1939,21 @@ namespace jsonifier::internal {
 			if (strPtr >= stringEndIter) [[unlikely]] {
 				return reject<parse_statuses::unexpected_end_of_input>();
 			}
-			const auto res = string_scanner<parseOpts>::impl(strPtr, stringEndIter);
-			if (!res.valid) [[unlikely]] {
+			auto& scratch	  = getStringBuffer();
+			const auto needed = static_cast<uint64_t>(stringEndIter - strPtr) + simdBytesPerStep;
+			if (scratch.size() < needed) [[unlikely]] {
+				scratch.resize(needed);
+			}
+			const auto res = string_scanner<parseOpts>::impl(strPtr, stringEndIter, scratch.data());
+			if (res.outLength == std::numeric_limits<uint64_t>::max()) [[unlikely]] {
 				return reject<parse_statuses::invalid_string_characters>();
 			}
 			if constexpr (has_resize<string_type>) {
-				if (value.size() != res.rawLength) [[unlikely]] {
-					value.resize(res.rawLength);
+				if (value.size() != res.outLength) [[unlikely]] {
+					value.resize(res.outLength);
 				}
 			}
-			if (res.firstEscape == string_scanner<parseOpts>::npos) [[likely]] {
-				std::memcpy(value.data(), strPtr, res.rawLength);
-			} else [[unlikely]] {
-				std::memcpy(value.data(), strPtr, res.firstEscape);
-				const auto finalPtr = jsonifier::internal::unescapeImpl(strPtr + res.firstEscape, strPtr + res.rawLength, value.data() + res.firstEscape);
-				if (!finalPtr) [[unlikely]] {
-					return reject<parse_statuses::invalid_string_characters>();
-				}
-				if constexpr (has_resize<string_type>) {
-					value.resize(static_cast<uint64_t>(finalPtr - value.data()));
-				}
-			}
+			std::memcpy(value.data(), scratch.data(), res.outLength);
 			++iter;
 			return true;
 		}

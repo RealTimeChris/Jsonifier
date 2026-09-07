@@ -56,7 +56,7 @@ namespace jsonifier::internal {
 		uint64_t index{};
 	};
 
-	inline static void printBitsAligned(uint64_t bits, string_view_ptr label, string_view_ptr str = nullptr, uint64_t len = 0) noexcept {
+	inline static void printBitsAligned(uint64_t bits, string_view_ptr label, string_view_ptr __restrict  str = nullptr, uint64_t len = 0) noexcept {
 		out << label << ":" << endl;
 		if (str && len > 0) {
 			out << "STR:  ";

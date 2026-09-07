@@ -124,16 +124,8 @@ namespace utf8_validation_tests {
 		jsonifier::string_view_ptr string1Start = std::bit_cast<jsonifier::string_view_ptr>(sourceScratch.data());
 		jsonifier::string_buffer_ptr string2	= destScratch.data();
 		using scanner_type						= jsonifier::internal::string_scanner<utf8ValidatedOpts>;
-		const auto res							= scanner_type::impl(string1Start, string1Start + sourceScratch.size());
-		if (!res.valid) {
-			return false;
-		}
-		if (res.firstEscape == scanner_type::npos) {
-			std::memcpy(string2, string1Start, res.rawLength);
-			return true;
-		}
-		std::memcpy(string2, string1Start, res.firstEscape);
-		return jsonifier::internal::unescapeImpl(string1Start + res.firstEscape, string1Start + res.rawLength, string2 + res.firstEscape) != nullptr;
+		const auto res							= scanner_type::impl(string1Start, string1Start + sourceScratch.size(), string2);
+		return res.outLength != std::numeric_limits<uint64_t>::max();
 	}
 
 	inline static bool runValidatedStringParse(const std::vector<uint8_t>& contentBytes) {

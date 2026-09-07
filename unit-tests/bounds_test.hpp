@@ -96,6 +96,7 @@ namespace bounds_tests {
 					jsonifier::parse_options{ .partialRead = partial, .knownOrder = knownOrder, .minified = !prettified, .validateUtf8 = true, .nullTerminated = nullTerminated }>(
 					jsonifierValue, s);
 				if (parser.getErrors().size()) {
+					std::cout << "FULL PARSE FAILURE: " << parser.getErrors()[0] << std::endl;
 					return false;
 				}
 				random_die randomDie{};

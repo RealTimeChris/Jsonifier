@@ -82,6 +82,21 @@ namespace jsonifier::internal {
 		return returnValue;
 	}() };
 
+	template<typename value_type> JSONIFIER_INLINE constexpr value_type&& forward(remove_reference_t<value_type>& t JSONIFIER_LIFETIME_BOUND) noexcept {
+		return static_cast<value_type&&>(t);
+	}
+
+	template<typename value_type>
+		requires(std::is_rvalue_reference_v<value_type>)
+	JSONIFIER_INLINE constexpr value_type&& forward(remove_reference_t<value_type>&& t) noexcept {
+		static_assert(!std::is_lvalue_reference_v<value_type>, "value_type cannot be an lvalue reference (e.g., U&).");
+		return static_cast<value_type&&>(t);
+	}
+
+	template<typename value_type> JSONIFIER_INLINE constexpr jsonifier::internal::remove_reference_t<value_type>&& move(value_type&& value) noexcept {
+		return static_cast<jsonifier::internal::remove_reference_t<value_type>&&>(value);
+	}
+
 	template<uint_types value_type> constexpr value_type byteswap(value_type value) noexcept {
 		if constexpr (sizeof(value_type) == 1) {
 			return value;
@@ -98,6 +113,17 @@ namespace jsonifier::internal {
 		}
 	}
 
+	template<uint64_t bytesProcessedNew, typename simd_type, typename integer_type_new, integer_type_new maskNew> struct type_holder {
+		static constexpr uint64_t bytesProcessed{ bytesProcessedNew };
+		static constexpr integer_type_new mask{ maskNew };
+		using type		   = simd_type;
+		using integer_type = integer_type_new;
+	};
+
+	template<typename value_type> struct get_int_type {
+		using type = jsonifier::internal::conditional_t<std::is_unsigned_v<value_type>, uint8_t, int8_t>;
+	};
+
 	template<uint_types auto valueNew> struct integral_constant {
 		using value_type				  = decltype(valueNew);
 		static constexpr value_type value = valueNew;
@@ -112,21 +138,6 @@ namespace jsonifier::internal {
 	};
 
 	template<uint_types auto index> using tag = integral_constant<index>;
-
-	template<typename value_type> JSONIFIER_INLINE constexpr jsonifier::internal::remove_reference_t<value_type>&& move(value_type&& value) noexcept {
-		return static_cast<jsonifier::internal::remove_reference_t<value_type>&&>(value);
-	}
-
-	template<uint64_t bytesProcessedNew, typename simd_type, typename integer_type_new, integer_type_new maskNew> struct type_holder {
-		static constexpr uint64_t bytesProcessed{ bytesProcessedNew };
-		static constexpr integer_type_new mask{ maskNew };
-		using type		   = simd_type;
-		using integer_type = integer_type_new;
-	};
-
-	template<typename value_type> struct get_int_type {
-		using type = jsonifier::internal::conditional_t<std::is_unsigned_v<value_type>, uint8_t, int8_t>;
-	};
 
 	template<uint64_t... indices> struct integer_sequence {};
 
@@ -171,28 +182,6 @@ namespace jsonifier::internal {
 	using make_stepped_range_sequence =
 		typename offset_sequence<step_sequence_t<make_integer_sequence<static_cast<decltype(end)>((end - start + step - 1) / step)>, step>, start>::type;
 
-	template<typename value_type> JSONIFIER_INLINE constexpr value_type&& forward(remove_reference_t<value_type>& t JSONIFIER_LIFETIME_BOUND) noexcept {
-		return static_cast<value_type&&>(t);
-	}
-
-	template<typename value_type>
-		requires(std::is_rvalue_reference_v<value_type>)
-	JSONIFIER_INLINE constexpr value_type&& forward(remove_reference_t<value_type>&& t) noexcept {
-		static_assert(!std::is_lvalue_reference_v<value_type>, "value_type cannot be an lvalue reference (e.g., U&).");
-		return static_cast<value_type&&>(t);
-	}
-
-	template<auto function, typename variant_type, typename... arg_types, uint64_t... indices>
-	JSONIFIER_INLINE static constexpr void visitImpl(integer_sequence<indices...>, variant_type&& variant, arg_types&&... args) noexcept {
-		const auto idx = variant.index();
-		static_cast<void>(((idx == indices ? (function(std::get<indices>(internal::forward<variant_type>(variant)), internal::forward<arg_types>(args)...), true) : false) || ...));
-	}
-
-	template<auto function, typename variant_type, typename... arg_types> JSONIFIER_INLINE static constexpr void visit(variant_type&& variant, arg_types&&... args) noexcept {
-		using seq_t = make_integer_sequence<std::variant_size_v<base_t<variant_type>>>;
-		visitImpl<function>(seq_t{}, internal::forward<variant_type>(variant), internal::forward<arg_types>(args)...);
-	}
-
 	template<template<auto...> typename functor_type, typename integer_sequence, auto...> struct functor_runner;
 
 	template<template<auto...> typename functor_type, uint64_t... indices, auto... values> struct functor_runner<functor_type, integer_sequence<indices...>, values...> {
@@ -214,6 +203,17 @@ namespace jsonifier::internal {
 			return (functor_type<values...>::template impl<indices + offsetVal>(internal::forward<arg_types>(args)...) && ...);
 		}
 	};
+
+	template<auto function, typename variant_type, typename... arg_types, uint64_t... indices>
+	JSONIFIER_INLINE static constexpr void visitImpl(integer_sequence<indices...>, variant_type&& variant, arg_types&&... args) noexcept {
+		const auto idx = variant.index();
+		static_cast<void>(((idx == indices ? (function(std::get<indices>(internal::forward<variant_type>(variant)), internal::forward<arg_types>(args)...), true) : false) || ...));
+	}
+
+	template<auto function, typename variant_type, typename... arg_types> JSONIFIER_INLINE static constexpr void visit(variant_type&& variant, arg_types&&... args) noexcept {
+		using seq_t = make_integer_sequence<std::variant_size_v<base_t<variant_type>>>;
+		visitImpl<function>(seq_t{}, internal::forward<variant_type>(variant), internal::forward<arg_types>(args)...);
+	}
 
 	template<integral_types value_type01, integral_types value_type02>
 	JSONIFIER_INLINE constexpr value_type01 max(value_type01 value1, value_type02 value2) noexcept {

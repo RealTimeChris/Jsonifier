@@ -781,7 +781,7 @@ namespace jsonifier::internal {
 				}
 			}() };
 			const uint64_t state = falseVInt - (value * trueVInt);
-			std::memcpy(context.bufferPtr, &state, 5);
+			std::memcpy(context.bufferPtr, &state, 8);
 			context.bufferPtr += 5 - value;
 		}
 	};
