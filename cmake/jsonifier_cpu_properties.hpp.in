@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2026 Nihilai Collective Corp
  * https://github.com/nihilai-collective/jsonifier
- * cmake/jsonifier_cpu_properties.hpp.in
+ * include/jsonifier-incl/simd/jsonifier_cpu_properties.hpp.in
  */
 #pragma once
 
@@ -11,13 +11,6 @@
 
 namespace jsonifier::internal {
 
-	struct alignas(64) uint64_aligner {
-		alignas(64) uint64_t value{};
-		consteval operator const uint64_t&() const {
-			return value;
-		}
-	};
-
 	enum class cpu_property_types : uint64_t {
 		alignment,
 		arg_alignment,
@@ -25,10 +18,10 @@ namespace jsonifier::internal {
 
 	struct cpu_properties {
 	  public:
-		static constexpr uint64_aligner values[]{ { @JSONIFIER_CPU_ALIGNMENT@ULL }, { 64ULL } };
+		static constexpr uint64_t values[]{ @JSONIFIER_CPU_ALIGNMENT@ULL, 64ULL };
 
 		static consteval const uint64_t& get_value(cpu_property_types index) {
-			return values[static_cast<uint64_t>(index)].value;
+			return values[static_cast<uint64_t>(index)];
 		}
 	};
 

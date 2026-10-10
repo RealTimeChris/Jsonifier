@@ -4,14 +4,15 @@
  * https://github.com/nihilai-collective/jsonifier
  * include/jsonifier-incl/simd/neon_stage1.hpp
  */
-// The code below drew heavy inspiration from Dr. Lemire's library, simdjson (https://github.com/simdjson/simdjson)
-#pragma once
+// Sampled from Dr. Lemire's library, simdjson: https://github.com/simdjson/simdjson
+#if !defined(JSONIFIER_PASS_GUARD_NEON_STAGE1)
+	#define JSONIFIER_PASS_GUARD_NEON_STAGE1
 
-#include <jsonifier-incl/simd/neon.hpp>
+	#include <jsonifier-incl/simd/neon.hpp>
 
-namespace jsonifier::internal::simd {
+namespace JSONIFIER_INTERNAL_NAMESPACE::simd {
 
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
+	#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 
 	static constexpr internal::array<uint64_t, simdRegistersPerBlock> shiftAmounts{ [] {
 		internal::array<uint64_t, simdRegistersPerBlock> returnValue{};
@@ -27,6 +28,9 @@ namespace jsonifier::internal::simd {
 
 	struct prefix_xor_op {
 		JSONIFIER_INLINE static uint64_t impl(uint64_t bitmask) noexcept {
+		#if defined(__ARM_FEATURE_AES) || defined(__ARM_FEATURE_CRYPTO)
+			return vgetq_lane_u64(vreinterpretq_u64_p128(vmull_p64(~0ULL, bitmask)), 0);
+		#else
 			bitmask ^= bitmask << 1;
 			bitmask ^= bitmask << 2;
 			bitmask ^= bitmask << 4;
@@ -34,6 +38,7 @@ namespace jsonifier::internal::simd {
 			bitmask ^= bitmask << 16;
 			bitmask ^= bitmask << 32;
 			return bitmask;
+		#endif
 		}
 	};
 
@@ -87,7 +92,7 @@ namespace jsonifier::internal::simd {
 	};
 
 	template<uint64_t registerCount> struct scalar_bitmask_collector {
-		using simd_array_type = scalar_simd_array_t<registerCount, 16>;
+		using simd_array_type = pod_simd_array_t<registerCount, 16>;
 
 		JSONIFIER_INLINE static uint64_t impl(const simd_array_type matches) noexcept {
 			static constexpr uint8x16_t bitMask{ 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80 };
@@ -109,7 +114,7 @@ namespace jsonifier::internal::simd {
 	};
 
 	template<uint64_t registerBytes, uint64_t registerCount> struct pod_cmp_eq_op {
-		using simd_array_type = scalar_simd_array_t<registerCount, registerBytes>;
+		using simd_array_type = pod_simd_array_t<registerCount, registerBytes>;
 
 		JSONIFIER_INLINE static uint64_t impl(const simd_array_type in_01, const uint8x16_t rhsBroadcast) noexcept {
 			simd_array_type matches;
@@ -124,7 +129,7 @@ namespace jsonifier::internal::simd {
 	};
 
 	template<uint64_t registerBytes, uint64_t registerCount> struct pod_ws_collector {
-		using simd_array_type = scalar_simd_array_t<registerCount, registerBytes>;
+		using simd_array_type = pod_simd_array_t<registerCount, registerBytes>;
 
 		JSONIFIER_INLINE static uint64_t impl(const simd_array_type in_01, const uint8x16_t whitespaceTableLocal) noexcept {
 			if constexpr (registerCount == simdRegistersPerBlock) {
@@ -143,7 +148,7 @@ namespace jsonifier::internal::simd {
 	};
 
 	template<uint64_t registerBytes, uint64_t registerCount> struct scalar_op_collector {
-		using simd_array_type = scalar_simd_array_t<registerCount, registerBytes>;
+		using simd_array_type = pod_simd_array_t<registerCount, registerBytes>;
 
 		JSONIFIER_INLINE static uint64_t impl(const simd_array_type in_01, const uint8x16_t opTable, const uint8x16_t spaceMask) noexcept {
 			if constexpr (registerCount == simdRegistersPerBlock) {
@@ -166,13 +171,11 @@ namespace jsonifier::internal::simd {
 		uint64_t prevInString{};
 		uint64_t prevScalar{};
 
-		JSONIFIER_INLINE static uint64_t toBitmask(const uint8x16_t match_0, const uint8x16_t match_1, const uint8x16_t match_2, const uint8x16_t match_3,
+		JSONIFIER_INLINE static uint8x16_t toPartialBitmask(const uint8x16_t match_0, const uint8x16_t match_1, const uint8x16_t match_2, const uint8x16_t match_3,
 			const uint8x16_t bitMask) noexcept {
-			uint8x16_t sum0 = vpaddq_u8(vandq_u8(match_0, bitMask), vandq_u8(match_1, bitMask));
-			uint8x16_t sum1 = vpaddq_u8(vandq_u8(match_2, bitMask), vandq_u8(match_3, bitMask));
-			sum0			= vpaddq_u8(sum0, sum1);
-			sum0			= vpaddq_u8(sum0, sum0);
-			return vgetq_lane_u64(vreinterpretq_u64_u8(sum0), 0);
+			const uint8x16_t sum0 = vpaddq_u8(vandq_u8(match_0, bitMask), vandq_u8(match_1, bitMask));
+			const uint8x16_t sum1 = vpaddq_u8(vandq_u8(match_2, bitMask), vandq_u8(match_3, bitMask));
+			return vpaddq_u8(sum0, sum1);
 		}
 
 		JSONIFIER_INLINE void finishNextNoInString() noexcept {
@@ -191,8 +194,12 @@ namespace jsonifier::internal::simd {
 			const uint8x16_t d1			  = in_01.template get<1>();
 			const uint8x16_t d2			  = in_01.template get<2>();
 			const uint8x16_t d3			  = in_01.template get<3>();
-			const uint64_t backslashLocal = toBitmask(vceqq_u8(d0, bsRegister), vceqq_u8(d1, bsRegister), vceqq_u8(d2, bsRegister), vceqq_u8(d3, bsRegister), bitMask);
-			const uint64_t quotesLocal	  = toBitmask(vceqq_u8(d0, quoteRegister), vceqq_u8(d1, quoteRegister), vceqq_u8(d2, quoteRegister), vceqq_u8(d3, quoteRegister), bitMask);
+			const uint8x16_t backslashPartial = toPartialBitmask(vceqq_u8(d0, bsRegister), vceqq_u8(d1, bsRegister), vceqq_u8(d2, bsRegister), vceqq_u8(d3, bsRegister), bitMask);
+			const uint8x16_t quotesPartial =
+				toPartialBitmask(vceqq_u8(d0, quoteRegister), vceqq_u8(d1, quoteRegister), vceqq_u8(d2, quoteRegister), vceqq_u8(d3, quoteRegister), bitMask);
+			const uint64x2_t pairedMasks  = vreinterpretq_u64_u8(vpaddq_u8(backslashPartial, quotesPartial));
+			const uint64_t backslashLocal = vgetq_lane_u64(pairedMasks, 0);
+			const uint64_t quotesLocal	  = vgetq_lane_u64(pairedMasks, 1);
 			const uint64_t escaped		  = nextEscapeAndTerminalCode(backslashLocal);
 			const uint64_t quotes		  = (quotesLocal & ~escaped);
 			rope_block::escaped			  = escaped;
@@ -200,7 +207,7 @@ namespace jsonifier::internal::simd {
 			return quotes ? finishNextInString() : finishNextNoInString();
 		}
 
-		template<uint64_t registerBytes, uint64_t registerCount> JSONIFIER_INLINE void nextScalar(const scalar_simd_array_t<registerCount, registerBytes> in_01,
+		template<uint64_t registerBytes, uint64_t registerCount> JSONIFIER_INLINE void nextScalar(const pod_simd_array_t<registerCount, registerBytes> in_01,
 			const typename simd_register<registerBytes>::type bsRegister, const typename simd_register<registerBytes>::type quoteRegister) noexcept {
 			if constexpr (registerCount == simdRegistersPerBlock) {
 				next(in_01, bsRegister, quoteRegister);
@@ -276,6 +283,8 @@ namespace jsonifier::internal::simd {
 
 	template<uint64_t size> alignas(64) static constexpr internal::array<uint8_t, size> opArray{ generateOpArrayNeon<size>() };
 
-#endif
+	#endif
 
 }
+
+#endif

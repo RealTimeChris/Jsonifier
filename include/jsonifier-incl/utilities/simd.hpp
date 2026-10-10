@@ -4,24 +4,25 @@
  * https://github.com/nihilai-collective/jsonifier
  * include/jsonifier-incl/utilities/simd.hpp
  */
-// The code below drew heavy inspiration from Dr. Lemire's library, simdjson (https://github.com/simdjson/simdjson)
-#pragma once
+// Sampled from Dr. Lemire's library, simdjson: https://github.com/simdjson/simdjson
+#if !defined(JSONIFIER_PASS_GUARD_UTILITIES_SIMD)
+	#define JSONIFIER_PASS_GUARD_UTILITIES_SIMD
 
-#include <jsonifier-incl/utilities/string_view.hpp>
-#include <jsonifier-incl/utilities/utility.hpp>
-#include <jsonifier-incl/simd/add_tape_values.hpp>
-#include <jsonifier-incl/simd/avx_stage1.hpp>
-#include <jsonifier-incl/simd/neon_stage1.hpp>
-#include <jsonifier-incl/core/fastio.hpp>
+	#include <jsonifier-incl/utilities/string_view.hpp>
+	#include <jsonifier-incl/utilities/utility.hpp>
+	#include <jsonifier-incl/simd/add_tape_values.hpp>
+	#include <jsonifier-incl/simd/avx_stage1.hpp>
+	#include <jsonifier-incl/simd/neon_stage1.hpp>
+	#include <jsonifier-incl/core/fastio.hpp>
 
-namespace jsonifier::internal {
+namespace JSONIFIER_INTERNAL_NAMESPACE {
 
-	inline static void printBitsAligned(uint64_t bits, read_buffer_ptr label, read_buffer_ptr __restrict str = nullptr, uint64_t len = 0) noexcept {
+	inline static void printBitsAligned(uint64_t bits, const char* label, read_buffer_ptr __restrict str = nullptr, uint64_t len = 0) noexcept {
 		out << label << ":" << endl;
 		if (str && len > 0) {
 			out << "STR:  ";
 			for (uint64_t i = 0; i < std::min<uint64_t>(len, 64); ++i) {
-				char c = str[i];
+				char c = static_cast<char>(str[i]);
 				if (c == '\n' || c == '\r' || c == '\t') {
 					c = ' ';
 				}
@@ -51,17 +52,17 @@ namespace jsonifier::internal {
 
 		JSONIFIER_INLINE void reset(read_buffer_ptr stringViewNew, uint64_t lengthNew) noexcept {
 			lengthMinusStep = lengthNew < stepBytes ? 0 : lengthNew - stepBytes;
-			inString		= std::bit_cast<const uint8_t*>(stringViewNew);
+			inString		= std::bit_cast<read_buffer_ptr>(stringViewNew);
 			length			= lengthNew;
 			index			= 0;
 		}
 
-		JSONIFIER_INLINE const uint8_t* getRemainder() noexcept {
+		JSONIFIER_INLINE read_buffer_ptr getRemainder() noexcept {
 			if (length == index) [[unlikely]] {
 				return nullptr;
 			}
 			std::memset(+block + (length - index), static_cast<uint8_t>(0x20), stepBytes - (length - index));
-			memcpyWrapper(+block, inString + index, length - index);
+			jsonifierMemcpy(+block, inString + index, length - index);
 			return +block;
 		}
 
@@ -69,8 +70,8 @@ namespace jsonifier::internal {
 			return length - index;
 		}
 
-		JSONIFIER_INLINE const uint8_t* fullBlock() noexcept {
-			const uint8_t* newPtr = inString + index;
+		JSONIFIER_INLINE read_buffer_ptr fullBlock() noexcept {
+			read_buffer_ptr newPtr = inString + index;
 			index += stepBytes;
 			return newPtr;
 		}
@@ -81,7 +82,7 @@ namespace jsonifier::internal {
 
 		alignas(64) uint8_t block[stepBytes]{};
 		uint64_t lengthMinusStep{};
-		const uint8_t* inString{};
+		read_buffer_ptr inString{};
 		uint64_t length{};
 		uint64_t index{};
 	};
@@ -89,34 +90,34 @@ namespace jsonifier::internal {
 	struct string_block_reader_locals {
 		static constexpr uint64_t stepBytes = simdBlocksPerStep * 64;
 
-		JSONIFIER_INLINE const uint8_t* getRemainder(uint64_t paddedBytes) noexcept {
-			uint8_t* __restrict blockPtr	 = +block;
-			const uint8_t* __restrict srcPtr = inString + index;
+		JSONIFIER_INLINE read_buffer_ptr getRemainder(uint64_t paddedBytes) noexcept {
+			restricted_write_buffer_ptr blockPtr = +block;
+			restricted_read_buffer_ptr srcPtr	 = inString + index;
 			std::memset(blockPtr + (length - index), static_cast<uint8_t>(0x20), paddedBytes - (length - index));
-			memcpyWrapper(blockPtr, srcPtr, length - index);
+			jsonifierMemcpy(blockPtr, srcPtr, length - index);
 			return +block;
 		}
 
 		JSONIFIER_INLINE void reset(read_buffer_ptr __restrict stringViewNew, uint64_t lengthNew) noexcept {
 			lengthMinusStep = lengthNew < stepBytes ? 0 : lengthNew - stepBytes;
-			inString		= std::bit_cast<const uint8_t*>(stringViewNew);
+			inString		= std::bit_cast<read_buffer_ptr>(stringViewNew);
 			length			= lengthNew;
 			index			= 0;
 		}
 
 		alignas(64) uint8_t block[stepBytes]{};
-		const uint8_t* __restrict inString{};
+		restricted_read_buffer_ptr inString{};
 		uint64_t lengthMinusStep{};
 		uint64_t length{};
 		uint64_t index{};
 	};
 
 	template<uint64_t stepBytes = simdBytesPerStep> struct pod_block_reader {
-		JSONIFIER_INLINE const uint8_t* getRemainder() noexcept {
-			const uint64_t remaining		 = lengthVal - indexVal;
-			uint8_t* __restrict blockPtr	 = +block;
-			const uint8_t* __restrict srcPtr = inString + indexVal;
-			memcpyWrapper(blockPtr, srcPtr, remaining);
+		JSONIFIER_INLINE read_buffer_ptr getRemainder() noexcept {
+			const uint64_t remaining			 = lengthVal - indexVal;
+			restricted_write_buffer_ptr blockPtr = +block;
+			restricted_read_buffer_ptr srcPtr	 = inString + indexVal;
+			jsonifierMemcpyUpTo<simdBytesPerBlock - 1>(blockPtr, srcPtr, remaining);
 			std::memset(blockPtr + remaining, static_cast<uint8_t>(0x20), simdBytesPerBlock - remaining);
 			return +block;
 		}
@@ -124,19 +125,19 @@ namespace jsonifier::internal {
 		JSONIFIER_INLINE void reset(read_buffer_ptr __restrict stringViewNew, uint64_t lengthNew) noexcept {
 			fullStepEnd	 = lengthNew & ~(stepBytes - 1ull);
 			fullBlockEnd = lengthNew & ~(simdBytesPerBlock - 1ull);
-			inString	 = std::bit_cast<const uint8_t*>(stringViewNew);
+			inString	 = std::bit_cast<read_buffer_ptr>(stringViewNew);
 			lengthVal	 = lengthNew;
 			indexVal	 = 0;
 		}
 
-		JSONIFIER_INLINE const uint8_t* fullBlock() noexcept {
-			const uint8_t* __restrict newPtr = inString + indexVal;
+		JSONIFIER_INLINE read_buffer_ptr fullBlock() noexcept {
+			restricted_read_buffer_ptr newPtr = inString + indexVal;
 			indexVal += simdBytesPerBlock;
 			return newPtr;
 		}
 
-		JSONIFIER_INLINE const uint8_t* fullStep() noexcept {
-			const uint8_t* __restrict newPtr = inString + indexVal;
+		JSONIFIER_INLINE read_buffer_ptr fullStep() noexcept {
+			restricted_read_buffer_ptr newPtr = inString + indexVal;
 			indexVal += stepBytes;
 			return newPtr;
 		}
@@ -162,7 +163,7 @@ namespace jsonifier::internal {
 		}
 
 		alignas(64) uint8_t block[simdBytesPerBlock];
-		const uint8_t* __restrict inString{};
+		restricted_read_buffer_ptr inString{};
 		uint64_t fullBlockEnd{};
 		uint64_t fullStepEnd{};
 		uint64_t lengthVal{};
@@ -185,9 +186,11 @@ namespace jsonifier::internal {
 		}
 	};
 
-	template<uint64_t initialBufferSize>
-	struct simd_string_reader_members : simd::rope_detector<rope_block>, string_block_reader, add_tape_values<make_integer_sequence<simdBlocksPerStep>>, alloc_wrapper<uint32_t> {
-		friend add_tape_values<make_integer_sequence<simdBlocksPerStep>>;
+	template<uint64_t initialBufferSize> struct simd_string_reader_members : simd::rope_detector<rope_block>,
+																			 string_block_reader,
+																			 add_tape_values<default_backend, make_integer_sequence<simdBlocksPerStep>>,
+																			 alloc_wrapper<uint32_t> {
+		friend add_tape_values<default_backend, make_integer_sequence<simdBlocksPerStep>>;
 		using allocator = alloc_wrapper<uint32_t>;
 
 		template<bool minified> JSONIFIER_INLINE void reset(read_buffer_ptr rootIter, uint64_t stringLength) noexcept {
@@ -218,24 +221,8 @@ namespace jsonifier::internal {
 			}
 		}
 
-		JSONIFIER_INLINE simd_string_reader_members& operator=(const simd_string_reader_members& other) noexcept {
-			if (&other != this) {
-				if (capacity < other.capacity) {
-					auto newTape = allocator::allocate(other.capacity);
-					if (tape) {
-						allocator::deallocate(tape, capacity);
-					}
-					tape	 = newTape;
-					capacity = other.capacity;
-				}
-				tapeCount					= other.tapeCount;
-				string_block_reader::length = other.string_block_reader::length;
-				if (other.tape) {
-					memcpyWrapper(tape, other.tape, sizeof(*tape) * (other.tapeCount + 1));
-				}
-			}
-			return *this;
-		}
+		simd_string_reader_members& operator=(const simd_string_reader_members& other) = delete;
+		simd_string_reader_members(const simd_string_reader_members& other)			   = delete;
 
 		JSONIFIER_INLINE simd_string_reader_members& operator=(simd_string_reader_members&& other) noexcept {
 			if (&other != this) {
@@ -247,7 +234,7 @@ namespace jsonifier::internal {
 			return *this;
 		}
 
-		JSONIFIER_INLINE structural_index_ptr begin() noexcept {
+		JSONIFIER_INLINE write_structural_index_ptr begin() noexcept {
 			tape[tapeCount] = static_cast<uint32_t>(string_block_reader::length);
 			return tape;
 		}
@@ -268,11 +255,7 @@ namespace jsonifier::internal {
 			*this = internal::move(other);
 		}
 
-		JSONIFIER_INLINE simd_string_reader_members(const simd_string_reader_members& other) noexcept : allocator{} {
-			*this = other;
-		}
-
-		JSONIFIER_INLINE structural_index_ptr end() noexcept {
+		JSONIFIER_INLINE write_structural_index_ptr end() noexcept {
 			return tape + tapeCount;
 		}
 
@@ -281,7 +264,7 @@ namespace jsonifier::internal {
 		}
 
 	  protected:
-		structural_index_ptr tape{};
+		write_structural_index_ptr tape{};
 		uint64_t tapeCount{};
 		uint64_t capacity{};
 
@@ -320,7 +303,7 @@ namespace jsonifier::internal {
 		}
 
 		template<uint64_t I, typename... jsonifier_simd_int_types> JSONIFIER_INLINE void processBlocksImpl(array<uint64_t, simdBlocksPerStep>& bitsArr,
-			array<uint64_t, simdBlocksPerStep>& cntsArr, const uint8_t* blockPtr, const jsonifier_simd_int_t bsRegister, const jsonifier_simd_int_t quoteRegister,
+			array<uint64_t, simdBlocksPerStep>& cntsArr, read_buffer_ptr blockPtr, const jsonifier_simd_int_t bsRegister, const jsonifier_simd_int_t quoteRegister,
 			const jsonifier_simd_int_t opTable, const jsonifier_simd_int_t spaceMask, const jsonifier_simd_int_types... args) noexcept {
 			simd_array_t inVals;
 			inVals.template set<0>(simd::gatherValuesU<jsonifier_simd_int_t>(blockPtr + I * 64));
@@ -337,7 +320,7 @@ namespace jsonifier::internal {
 			cntsArr[I]				   = simd::tape_writer_op::correctedPopcount(structurals);
 		}
 
-		template<typename... jsonifier_simd_int_types> JSONIFIER_INLINE void processBlocks(const uint8_t* blockPtr, uint64_t stepBaseIndex, const jsonifier_simd_int_t bsRegister,
+		template<typename... jsonifier_simd_int_types> JSONIFIER_INLINE void processBlocks(read_buffer_ptr blockPtr, uint64_t stepBaseIndex, const jsonifier_simd_int_t bsRegister,
 			const jsonifier_simd_int_t quoteRegister, const jsonifier_simd_int_t opTable, const jsonifier_simd_int_t spaceMask, const jsonifier_simd_int_types... args) noexcept {
 			array<uint64_t, simdBlocksPerStep> bitsArr;
 			array<uint64_t, simdBlocksPerStep> cntsArr;
@@ -356,7 +339,7 @@ namespace jsonifier::internal {
 				}
 			}
 
-			add_tape_values<make_integer_sequence<simdBlocksPerStep>>::impl(bitsArr, cntsArr, tape + tapeCount, stepBaseIndex);
+			add_tape_values<default_backend, make_integer_sequence<simdBlocksPerStep>>::impl(bitsArr, cntsArr, tape + tapeCount, stepBaseIndex);
 
 			tapeCount += cntsArr[0];
 			if constexpr (simdBlocksPerStep > 1) {
@@ -376,13 +359,13 @@ namespace jsonifier::internal {
 	};
 
 	template<uint64_t initialBufferSize>
-	struct simd_string_reader_locals : string_block_reader_locals, add_tape_values<make_integer_sequence<simdBlocksPerStep>>, alloc_wrapper<uint32_t> {
-		friend add_tape_values<make_integer_sequence<simdBlocksPerStep>>;
+	struct simd_string_reader_locals : string_block_reader_locals, add_tape_values<default_backend, make_integer_sequence<simdBlocksPerStep>>, alloc_wrapper<uint32_t> {
+		friend add_tape_values<default_backend, make_integer_sequence<simdBlocksPerStep>>;
 		using allocator = alloc_wrapper<uint32_t>;
 		using rope_type = simd::rope_detector<rope_block>;
 
-		template<typename... jsonifier_simd_int_types> JSONIFIER_INLINE static uint64_t processBlocks(rope_type& __restrict rope, const uint8_t* __restrict blockPtr,
-			structural_index_ptr __restrict tapePtr, uint64_t stepBaseIndex, const jsonifier_simd_int_t bsRegister, const jsonifier_simd_int_t quoteRegister,
+		template<typename... jsonifier_simd_int_types> JSONIFIER_INLINE static uint64_t processBlocks(rope_type& __restrict rope, restricted_read_buffer_ptr blockPtr,
+			write_structural_index_ptr __restrict tapePtr, uint64_t stepBaseIndex, const jsonifier_simd_int_t bsRegister, const jsonifier_simd_int_t quoteRegister,
 			const jsonifier_simd_int_t opTable, const jsonifier_simd_int_t spaceMask, const jsonifier_simd_int_types... args) noexcept {
 			array<uint64_t, simdBlocksPerStep> bitsArr;
 			array<uint64_t, simdBlocksPerStep> cntsArr;
@@ -401,7 +384,7 @@ namespace jsonifier::internal {
 				}
 			}
 
-			add_tape_values<make_integer_sequence<simdBlocksPerStep>>::impl(bitsArr, cntsArr, tapePtr, stepBaseIndex);
+			add_tape_values<default_backend, make_integer_sequence<simdBlocksPerStep>>::impl(bitsArr, cntsArr, tapePtr, stepBaseIndex);
 
 			uint64_t stepCount = cntsArr[0];
 			if constexpr (simdBlocksPerStep > 1) {
@@ -445,7 +428,7 @@ namespace jsonifier::internal {
 		}
 
 		template<uint64_t I, uint64_t laneCount, typename... jsonifier_simd_int_types> JSONIFIER_INLINE static void processBlocksImpl(rope_type& __restrict rope,
-			array<uint64_t, laneCount>& __restrict bitsArr, array<uint64_t, laneCount>& __restrict cntsArr, const uint8_t* __restrict blockPtr,
+			array<uint64_t, laneCount>& __restrict bitsArr, array<uint64_t, laneCount>& __restrict cntsArr, restricted_read_buffer_ptr blockPtr,
 			const jsonifier_simd_int_t bsRegister, const jsonifier_simd_int_t quoteRegister, const jsonifier_simd_int_t opTable, const jsonifier_simd_int_t spaceMask,
 			const jsonifier_simd_int_types... args) noexcept {
 			simd_array_t inVals;
@@ -466,12 +449,12 @@ namespace jsonifier::internal {
 		template<bool minified, typename... jsonifier_simd_int_types> JSONIFIER_INLINE void resetImpl(const jsonifier_simd_int_t bsRegister,
 			const jsonifier_simd_int_t quoteRegister, const jsonifier_simd_int_t opTable, const jsonifier_simd_int_t spaceMask, const jsonifier_simd_int_types... args) noexcept {
 			rope_type rope{};
-			structural_index_ptr tapeLocal		= tape;
-			const uint8_t* __restrict srcPtr	= string_block_reader_locals::inString;
-			const uint64_t lengthMinusStepLocal = string_block_reader_locals::lengthMinusStep;
-			const uint64_t lengthLocal			= string_block_reader_locals::length;
-			uint64_t tapeCountLocal				= 0;
-			uint64_t indexLocal					= 0;
+			write_structural_index_ptr tapeLocal = tape;
+			restricted_read_buffer_ptr srcPtr	 = string_block_reader_locals::inString;
+			const uint64_t lengthMinusStepLocal	 = string_block_reader_locals::lengthMinusStep;
+			const uint64_t lengthLocal			 = string_block_reader_locals::length;
+			uint64_t tapeCountLocal				 = 0;
+			uint64_t indexLocal					 = 0;
 
 			while (indexLocal < lengthMinusStepLocal) {
 				tapeCountLocal += processBlocks(rope, srcPtr + indexLocal, tapeLocal + tapeCountLocal, indexLocal, bsRegister, quoteRegister, opTable, spaceMask, args...);
@@ -480,8 +463,8 @@ namespace jsonifier::internal {
 			string_block_reader_locals::index = indexLocal;
 
 			if (const uint64_t remaining = lengthLocal - indexLocal; remaining != 0) {
-				const uint64_t tailBlocks		  = (remaining + 63) / 64;
-				const uint8_t* __restrict tailPtr = string_block_reader_locals::getRemainder(tailBlocks * 64);
+				const uint64_t tailBlocks		   = (remaining + 63) / 64;
+				restricted_read_buffer_ptr tailPtr = string_block_reader_locals::getRemainder(tailBlocks * 64);
 				for (uint64_t blockIndex = 0; blockIndex < tailBlocks; ++blockIndex) {
 					tapeCountLocal += processTailBlock(rope, tailPtr + blockIndex * 64, tapeLocal + tapeCountLocal, indexLocal + blockIndex * 64, bsRegister, quoteRegister,
 						opTable, spaceMask, args...);
@@ -504,34 +487,18 @@ namespace jsonifier::internal {
 			return op | quotes | scalarStart;
 		}
 
-		template<typename... jsonifier_simd_int_types> JSONIFIER_INLINE static uint64_t processTailBlock(rope_type& __restrict rope, const uint8_t* __restrict blockPtr,
-			structural_index_ptr __restrict tapePtr, uint64_t blockBaseIndex, const jsonifier_simd_int_t bsRegister, const jsonifier_simd_int_t quoteRegister,
+		template<typename... jsonifier_simd_int_types> JSONIFIER_INLINE static uint64_t processTailBlock(rope_type& __restrict rope, restricted_read_buffer_ptr blockPtr,
+			write_structural_index_ptr __restrict tapePtr, uint64_t blockBaseIndex, const jsonifier_simd_int_t bsRegister, const jsonifier_simd_int_t quoteRegister,
 			const jsonifier_simd_int_t opTable, const jsonifier_simd_int_t spaceMask, const jsonifier_simd_int_types... args) noexcept {
 			array<uint64_t, 1> bitsArr;
 			array<uint64_t, 1> cntsArr;
 			processBlocksImpl<0>(rope, bitsArr, cntsArr, blockPtr, bsRegister, quoteRegister, opTable, spaceMask, args...);
-			add_tape_values<make_integer_sequence<1>>::impl(bitsArr, cntsArr, tapePtr, blockBaseIndex);
+			add_tape_values<default_backend, make_integer_sequence<1>>::impl(bitsArr, cntsArr, tapePtr, blockBaseIndex);
 			return cntsArr[0];
 		}
 
-		JSONIFIER_INLINE simd_string_reader_locals& operator=(const simd_string_reader_locals& other) noexcept {
-			if (&other != this) {
-				if (capacity < other.capacity) {
-					auto newTape = allocator::allocate(other.capacity);
-					if (tape) {
-						allocator::deallocate(tape, capacity);
-					}
-					tape	 = newTape;
-					capacity = other.capacity;
-				}
-				tapeCount						   = other.tapeCount;
-				string_block_reader_locals::length = other.string_block_reader_locals::length;
-				if (other.tape) {
-					memcpyWrapper(tape, other.tape, sizeof(*tape) * (other.tapeCount + 1));
-				}
-			}
-			return *this;
-		}
+		simd_string_reader_locals& operator=(const simd_string_reader_locals& other) = delete;
+		simd_string_reader_locals(const simd_string_reader_locals& other)			 = delete;
 
 		JSONIFIER_INLINE static uint64_t getStructurals(rope_type& __restrict rope, const simd_array_t in_01, const jsonifier_simd_int_t opTable,
 			const jsonifier_simd_int_t spaceMask) noexcept {
@@ -553,7 +520,7 @@ namespace jsonifier::internal {
 			return *this;
 		}
 
-		JSONIFIER_INLINE structural_index_ptr begin() noexcept {
+		JSONIFIER_INLINE write_structural_index_ptr begin() noexcept {
 			tape[tapeCount] = static_cast<uint32_t>(string_block_reader_locals::length);
 			return tape;
 		}
@@ -574,11 +541,7 @@ namespace jsonifier::internal {
 			*this = internal::move(other);
 		}
 
-		JSONIFIER_INLINE simd_string_reader_locals(const simd_string_reader_locals& other) noexcept : allocator{} {
-			*this = other;
-		}
-
-		JSONIFIER_INLINE structural_index_ptr end() noexcept {
+		JSONIFIER_INLINE write_structural_index_ptr end() noexcept {
 			return tape + tapeCount;
 		}
 
@@ -586,23 +549,24 @@ namespace jsonifier::internal {
 			return tapeCount;
 		}
 
-		structural_index_ptr __restrict tape{};
+		write_structural_index_ptr __restrict tape{};
 		uint64_t tapeCount{};
 		uint64_t capacity{};
 	};
 
-#if JSONIFIER_COMPILER_CLANG
+	#if JSONIFIER_COMPILER_CLANG
 	template<uint64_t initialBufferSize> using simd_string_reader = simd_string_reader_members<initialBufferSize>;
-#else
+	#else
 	template<uint64_t initialBufferSize> using simd_string_reader = simd_string_reader_locals<initialBufferSize>;
-#endif
+	#endif
 
-	template<uint64_t initialBufferSize> struct pod_simd_string_reader : alloc_wrapper<uint32_t> {
+	template<jsonifier_backend backend, uint64_t initialBufferSize> struct pod_simd_string_reader_locals : alloc_wrapper<uint32_t> {
 		using allocator = alloc_wrapper<uint32_t>;
 		using rope_type = simd::rope_detector<rope_block>;
+		static constexpr uint64_t stepBytes{ backendBytesPerStep<backend> };
 
 		template<uint64_t blocksPerStep, uint64_t registerBytes, uint64_t registerCount, typename... simd_types>
-		JSONIFIER_INLINE static uint64_t processBlocks(rope_type& __restrict rope, const uint8_t* __restrict blockPtr, structural_index_ptr __restrict tapePtr,
+		JSONIFIER_INLINE static uint64_t processBlocks(rope_type& __restrict rope, restricted_read_buffer_ptr blockPtr, write_structural_index_ptr __restrict tapePtr,
 			uint64_t stepBaseIndex, const typename simd_register<registerBytes>::type bsRegister, const typename simd_register<registerBytes>::type quoteRegister,
 			const typename simd_register<registerBytes>::type opTable, const typename simd_register<registerBytes>::type spaceMask, const simd_types... args) noexcept {
 			array<uint64_t, blocksPerStep> bitsArr;
@@ -622,7 +586,7 @@ namespace jsonifier::internal {
 				}
 			}
 
-			add_tape_values<make_integer_sequence<blocksPerStep>>::impl(bitsArr, cntsArr, tapePtr, stepBaseIndex);
+			add_tape_values<backend, make_integer_sequence<blocksPerStep>>::impl(bitsArr, cntsArr, tapePtr, stepBaseIndex);
 
 			uint64_t stepCount = cntsArr[0];
 			if constexpr (blocksPerStep > 1) {
@@ -644,12 +608,12 @@ namespace jsonifier::internal {
 		template<uint64_t registerBytes, uint64_t registerCount, typename... simd_types> JSONIFIER_INLINE void resetImpl(read_buffer_ptr __restrict rootIter, uint64_t stringLength,
 			const typename simd_register<registerBytes>::type bsRegister, const typename simd_register<registerBytes>::type quoteRegister,
 			const typename simd_register<registerBytes>::type opTable, const typename simd_register<registerBytes>::type spaceMask, const simd_types... args) noexcept {
-			static constexpr uint64_t blocksPerStep{ simdBytesPerStep / simdBytesPerBlock };
-			pod_block_reader<simdBytesPerStep> stringBlockReader;
+			static constexpr uint64_t blocksPerStep{ stepBytes / simdBytesPerBlock };
+			pod_block_reader<stepBytes> stringBlockReader;
 			stringBlockReader.reset(rootIter, stringLength);
 			rope_type rope{};
-			structural_index_ptr tapeLocal = tape;
-			uint64_t tapeCountLocal		   = 0;
+			write_structural_index_ptr tapeLocal = tape;
+			uint64_t tapeCountLocal				 = 0;
 			if constexpr (registerCount * registerBytes == simdBytesPerBlock) {
 				while (stringBlockReader.hasFullStep()) {
 					const uint64_t stepBaseIndex = stringBlockReader.index();
@@ -677,11 +641,11 @@ namespace jsonifier::internal {
 		}
 
 		template<uint64_t I, uint64_t registerBytes, uint64_t registerCount, uint64_t blocksPerStep, typename... simd_types> JSONIFIER_INLINE static void processBlocksImpl(
-			rope_type& __restrict rope, array<uint64_t, blocksPerStep>& __restrict bitsArr, array<uint64_t, blocksPerStep>& __restrict cntsArr, const uint8_t* __restrict blockPtr,
+			rope_type& __restrict rope, array<uint64_t, blocksPerStep>& __restrict bitsArr, array<uint64_t, blocksPerStep>& __restrict cntsArr, restricted_read_buffer_ptr blockPtr,
 			const typename simd_register<registerBytes>::type bsRegister, const typename simd_register<registerBytes>::type quoteRegister,
 			const typename simd_register<registerBytes>::type opTable, const typename simd_register<registerBytes>::type spaceMask, const simd_types... args) noexcept {
 			using simd_type = typename simd_register<registerBytes>::type;
-			scalar_simd_array_t<registerCount, registerBytes> inVals;
+			pod_simd_array_t<registerCount, registerBytes> inVals;
 			inVals.template set<0>(simd::gatherValuesU<simd_type>(blockPtr + I * simdBytesPerBlock));
 			if constexpr (registerCount > 1) {
 				inVals.template set<1>(simd::gatherValuesU<simd_type>(blockPtr + I * simdBytesPerBlock + registerBytes * 1));
@@ -723,7 +687,7 @@ namespace jsonifier::internal {
 		}
 
 		template<uint64_t registerBytes, uint64_t registerCount> JSONIFIER_INLINE static uint64_t getStructurals(rope_type& __restrict rope,
-			const scalar_simd_array_t<registerCount, registerBytes> in_01, const typename simd_register<registerBytes>::type opTable,
+			const pod_simd_array_t<registerCount, registerBytes> in_01, const typename simd_register<registerBytes>::type opTable,
 			const typename simd_register<registerBytes>::type spaceMask, const typename simd_register<registerBytes>::type whitespaceTableLocal) noexcept {
 			const uint64_t whitespace  = simd::pod_ws_collector<registerBytes, registerCount>::impl(in_01, whitespaceTableLocal);
 			const uint64_t op		   = simd::scalar_op_collector<registerBytes, registerCount>::impl(in_01, opTable, spaceMask);
@@ -735,28 +699,28 @@ namespace jsonifier::internal {
 		}
 
 		template<bool minified> JSONIFIER_INLINE void reset(read_buffer_ptr __restrict rootIter, uint64_t stringLength) noexcept {
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
+	#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
 			if (stringLength <= 16) {
 				return resetDispatch<minified, 16, 1>(rootIter, stringLength);
 			}
-	#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
-			if (stringLength <= 32) {
-				return resetDispatch<minified, 32, 1>(rootIter, stringLength);
+			if constexpr (backendBytesPerRegister<backend> >= 32) {
+				if (stringLength <= 32) {
+					return resetDispatch<minified, 32, 1>(rootIter, stringLength);
+				}
 			}
-	#endif
-#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
+	#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
 			if (stringLength <= 16) {
 				return resetDispatch<minified, 16, 1>(rootIter, stringLength);
 			}
 			if (stringLength <= 32) {
 				return resetDispatch<minified, 16, 2>(rootIter, stringLength);
 			}
-#endif
-			resetDispatch<minified, simdBytesPerRegister, simdRegistersPerBlock>(rootIter, stringLength);
+	#endif
+			resetDispatch<minified, backendBytesPerRegister<backend>, backendRegistersPerBlock<backend>>(rootIter, stringLength);
 		}
 
 		template<uint64_t registerBytes, uint64_t registerCount> JSONIFIER_INLINE static uint64_t getStructurals(rope_type& __restrict rope,
-			const scalar_simd_array_t<registerCount, registerBytes> in_01, const typename simd_register<registerBytes>::type opTable,
+			const pod_simd_array_t<registerCount, registerBytes> in_01, const typename simd_register<registerBytes>::type opTable,
 			const typename simd_register<registerBytes>::type spaceMask) noexcept {
 			const uint64_t op		   = simd::scalar_op_collector<registerBytes, registerCount>::impl(in_01, opTable, spaceMask);
 			const uint64_t quotes	   = rope.quotes;
@@ -766,26 +730,10 @@ namespace jsonifier::internal {
 			return op | quotes | scalarStart;
 		}
 
-		JSONIFIER_INLINE pod_simd_string_reader& operator=(const pod_simd_string_reader& other) noexcept {
-			if (&other != this) {
-				if (capacity < other.capacity) {
-					auto newTape = allocator::allocate(other.capacity);
-					if (tape) {
-						allocator::deallocate(tape, capacity);
-					}
-					tape	 = newTape;
-					capacity = other.capacity;
-				}
-				tapeCount = other.tapeCount;
-				length	  = other.length;
-				if (other.tape) {
-					memcpyWrapper(tape, other.tape, sizeof(*tape) * (other.tapeCount + 1));
-				}
-			}
-			return *this;
-		}
+		pod_simd_string_reader_locals& operator=(const pod_simd_string_reader_locals& other) = delete;
+		pod_simd_string_reader_locals(const pod_simd_string_reader_locals& other)			   = delete;
 
-		JSONIFIER_INLINE pod_simd_string_reader& operator=(pod_simd_string_reader&& other) noexcept {
+		JSONIFIER_INLINE pod_simd_string_reader_locals& operator=(pod_simd_string_reader_locals&& other) noexcept {
 			if (&other != this) {
 				std::swap(tapeCount, other.tapeCount);
 				std::swap(capacity, other.capacity);
@@ -795,32 +743,28 @@ namespace jsonifier::internal {
 			return *this;
 		}
 
-		JSONIFIER_INLINE pod_simd_string_reader() noexcept {
+		JSONIFIER_INLINE pod_simd_string_reader_locals() noexcept {
 			tape	 = allocator::allocate(initialBufferSize);
 			capacity = initialBufferSize;
 		}
 
-		JSONIFIER_INLINE ~pod_simd_string_reader() noexcept {
+		JSONIFIER_INLINE ~pod_simd_string_reader_locals() noexcept {
 			if (tape) {
 				allocator::deallocate(tape, capacity);
 				tape = nullptr;
 			}
 		}
 
-		JSONIFIER_INLINE pod_simd_string_reader(pod_simd_string_reader&& other) noexcept : allocator{} {
+		JSONIFIER_INLINE pod_simd_string_reader_locals(pod_simd_string_reader_locals&& other) noexcept : allocator{} {
 			*this = internal::move(other);
 		}
 
-		JSONIFIER_INLINE structural_index_ptr begin() noexcept {
+		JSONIFIER_INLINE write_structural_index_ptr begin() noexcept {
 			tape[tapeCount] = static_cast<uint32_t>(length);
 			return tape;
 		}
 
-		JSONIFIER_INLINE pod_simd_string_reader(const pod_simd_string_reader& other) noexcept : allocator{} {
-			*this = other;
-		}
-
-		JSONIFIER_INLINE structural_index_ptr end() noexcept {
+		JSONIFIER_INLINE write_structural_index_ptr end() noexcept {
 			return tape + tapeCount;
 		}
 
@@ -828,10 +772,230 @@ namespace jsonifier::internal {
 			return tapeCount;
 		}
 
-		structural_index_ptr __restrict tape{};
+		write_structural_index_ptr __restrict tape{};
 		uint64_t tapeCount{};
 		uint64_t capacity{};
 		uint64_t length{};
 	};
 
+	template<jsonifier_backend backend, uint64_t initialBufferSize> struct pod_simd_string_reader_members : simd::rope_detector<rope_block>, alloc_wrapper<uint32_t> {
+		using allocator = alloc_wrapper<uint32_t>;
+		using rope_type = simd::rope_detector<rope_block>;
+		static constexpr uint64_t stepBytes{ backendBytesPerStep<backend> };
+
+		template<uint64_t blocksPerStep, uint64_t registerBytes, uint64_t registerCount, typename... simd_types>
+		JSONIFIER_INLINE void processBlocks(restricted_read_buffer_ptr blockPtr, uint64_t stepBaseIndex, const typename simd_register<registerBytes>::type bsRegister,
+			const typename simd_register<registerBytes>::type quoteRegister, const typename simd_register<registerBytes>::type opTable,
+			const typename simd_register<registerBytes>::type spaceMask, const simd_types... args) noexcept {
+			array<uint64_t, blocksPerStep> bitsArr;
+			array<uint64_t, blocksPerStep> cntsArr;
+			processBlocksImpl<0, registerBytes, registerCount>(bitsArr, cntsArr, blockPtr, bsRegister, quoteRegister, opTable, spaceMask, args...);
+			if constexpr (blocksPerStep > 1) {
+				processBlocksImpl<1, registerBytes, registerCount>(bitsArr, cntsArr, blockPtr, bsRegister, quoteRegister, opTable, spaceMask, args...);
+				if constexpr (blocksPerStep > 2) {
+					processBlocksImpl<2, registerBytes, registerCount>(bitsArr, cntsArr, blockPtr, bsRegister, quoteRegister, opTable, spaceMask, args...);
+					processBlocksImpl<3, registerBytes, registerCount>(bitsArr, cntsArr, blockPtr, bsRegister, quoteRegister, opTable, spaceMask, args...);
+					if constexpr (blocksPerStep > 4) {
+						processBlocksImpl<4, registerBytes, registerCount>(bitsArr, cntsArr, blockPtr, bsRegister, quoteRegister, opTable, spaceMask, args...);
+						processBlocksImpl<5, registerBytes, registerCount>(bitsArr, cntsArr, blockPtr, bsRegister, quoteRegister, opTable, spaceMask, args...);
+						processBlocksImpl<6, registerBytes, registerCount>(bitsArr, cntsArr, blockPtr, bsRegister, quoteRegister, opTable, spaceMask, args...);
+						processBlocksImpl<7, registerBytes, registerCount>(bitsArr, cntsArr, blockPtr, bsRegister, quoteRegister, opTable, spaceMask, args...);
+					}
+				}
+			}
+
+			add_tape_values<backend, make_integer_sequence<blocksPerStep>>::impl(bitsArr, cntsArr, tape + tapeCount, stepBaseIndex);
+
+			tapeCount += cntsArr[0];
+			if constexpr (blocksPerStep > 1) {
+				tapeCount += cntsArr[1];
+				if constexpr (blocksPerStep > 2) {
+					tapeCount += cntsArr[2];
+					tapeCount += cntsArr[3];
+					if constexpr (blocksPerStep > 4) {
+						tapeCount += cntsArr[4];
+						tapeCount += cntsArr[5];
+						tapeCount += cntsArr[6];
+						tapeCount += cntsArr[7];
+					}
+				}
+			}
+		}
+
+		template<uint64_t registerBytes, uint64_t registerCount, typename... simd_types> JSONIFIER_INLINE void resetImpl(read_buffer_ptr __restrict rootIter, uint64_t stringLength,
+			const typename simd_register<registerBytes>::type bsRegister, const typename simd_register<registerBytes>::type quoteRegister,
+			const typename simd_register<registerBytes>::type opTable, const typename simd_register<registerBytes>::type spaceMask, const simd_types... args) noexcept {
+			static constexpr uint64_t blocksPerStep{ stepBytes / simdBytesPerBlock };
+			stringBlockReader.reset(rootIter, stringLength);
+			rope_type::prevInString	 = 0;
+			rope_type::prevScalar	 = 0;
+			rope_type::nextIsEscaped = 0;
+			tapeCount				 = 0;
+			if constexpr (registerCount * registerBytes == simdBytesPerBlock) {
+				while (stringBlockReader.hasFullStep()) {
+					const uint64_t stepBaseIndex = stringBlockReader.index();
+					processBlocks<blocksPerStep, registerBytes, registerCount>(stringBlockReader.fullStep(), stepBaseIndex, bsRegister, quoteRegister, opTable, spaceMask, args...);
+				}
+
+				while (stringBlockReader.hasFullBlock()) {
+					const uint64_t blockBaseIndex = stringBlockReader.index();
+					processBlocks<1, registerBytes, registerCount>(stringBlockReader.fullBlock(), blockBaseIndex, bsRegister, quoteRegister, opTable, spaceMask, args...);
+				}
+			}
+
+			if (stringBlockReader.getRemainderBytes() != 0) {
+				const uint64_t blockBaseIndex = stringBlockReader.index();
+				processBlocks<1, registerBytes, registerCount>(stringBlockReader.getRemainder(), blockBaseIndex, bsRegister, quoteRegister, opTable, spaceMask, args...);
+				while (tapeCount > 0 && tape[tapeCount - 1] >= stringBlockReader.length()) {
+					--tapeCount;
+				}
+			}
+			length = stringBlockReader.length();
+		}
+
+		template<uint64_t I, uint64_t registerBytes, uint64_t registerCount, uint64_t blocksPerStep, typename... simd_types> JSONIFIER_INLINE void processBlocksImpl(
+			array<uint64_t, blocksPerStep>& __restrict bitsArr, array<uint64_t, blocksPerStep>& __restrict cntsArr, restricted_read_buffer_ptr blockPtr,
+			const typename simd_register<registerBytes>::type bsRegister, const typename simd_register<registerBytes>::type quoteRegister,
+			const typename simd_register<registerBytes>::type opTable, const typename simd_register<registerBytes>::type spaceMask, const simd_types... args) noexcept {
+			using simd_type = typename simd_register<registerBytes>::type;
+			pod_simd_array_t<registerCount, registerBytes> inVals;
+			inVals.template set<0>(simd::gatherValuesU<simd_type>(blockPtr + I * simdBytesPerBlock));
+			if constexpr (registerCount > 1) {
+				inVals.template set<1>(simd::gatherValuesU<simd_type>(blockPtr + I * simdBytesPerBlock + registerBytes * 1));
+				if constexpr (registerCount > 2) {
+					inVals.template set<2>(simd::gatherValuesU<simd_type>(blockPtr + I * simdBytesPerBlock + registerBytes * 2));
+					inVals.template set<3>(simd::gatherValuesU<simd_type>(blockPtr + I * simdBytesPerBlock + registerBytes * 3));
+				}
+			}
+			rope_type::template nextScalar<registerBytes, registerCount>(inVals, bsRegister, quoteRegister);
+			const uint64_t structurals = getStructurals<registerBytes, registerCount>(inVals, opTable, spaceMask, args...) & ~rope_type::stringTail();
+			bitsArr[I]				   = structurals;
+			cntsArr[I]				   = simd::tape_writer_op::correctedPopcount(structurals);
+		}
+
+		template<bool minified, uint64_t registerBytes, uint64_t registerCount>
+		JSONIFIER_INLINE void resetDispatch(read_buffer_ptr __restrict rootIter, uint64_t stringLength) noexcept {
+			using simd_type				  = typename simd_register<registerBytes>::type;
+			const uint64_t neededCapacity = stringLength + 64;
+			if (neededCapacity > capacity) {
+				auto newTape = allocator::allocate(neededCapacity);
+				if (tape) {
+					allocator::deallocate(tape, capacity);
+				}
+				tape	 = newTape;
+				capacity = neededCapacity;
+			}
+
+			const simd_type bsRegister	  = simd::gatherValue<simd_type>('\\');
+			const simd_type quoteRegister = simd::gatherValue<simd_type>('"');
+			const simd_type opTable		  = simd::gatherValues<simd_type>(simd::opArray<registerBytes>.data());
+			const simd_type spaceMask	  = simd::gatherValue<simd_type>(static_cast<char>(0x20));
+
+			if constexpr (minified) {
+				resetImpl<registerBytes, registerCount>(rootIter, stringLength, bsRegister, quoteRegister, opTable, spaceMask);
+			} else {
+				const simd_type whitespaceTableLocal = simd::gatherValues<simd_type>(simd::whitespaceArray<registerBytes>.data());
+				resetImpl<registerBytes, registerCount>(rootIter, stringLength, bsRegister, quoteRegister, opTable, spaceMask, whitespaceTableLocal);
+			}
+		}
+
+		template<uint64_t registerBytes, uint64_t registerCount>
+		JSONIFIER_INLINE uint64_t getStructurals(const pod_simd_array_t<registerCount, registerBytes> in_01, const typename simd_register<registerBytes>::type opTable,
+			const typename simd_register<registerBytes>::type spaceMask, const typename simd_register<registerBytes>::type whitespaceTableLocal) noexcept {
+			const uint64_t whitespace  = simd::pod_ws_collector<registerBytes, registerCount>::impl(in_01, whitespaceTableLocal);
+			const uint64_t op		   = simd::scalar_op_collector<registerBytes, registerCount>::impl(in_01, opTable, spaceMask);
+			const uint64_t scalar	   = ~(op | whitespace | rope_type::quotes);
+			const uint64_t follows	   = rope_type::followsNonquoteScalar(scalar);
+			const uint64_t scalarStart = scalar & ~follows;
+			return op | rope_type::quotes | scalarStart;
+		}
+
+		template<uint64_t registerBytes, uint64_t registerCount>
+		JSONIFIER_INLINE uint64_t getStructurals(const pod_simd_array_t<registerCount, registerBytes> in_01, const typename simd_register<registerBytes>::type opTable,
+			const typename simd_register<registerBytes>::type spaceMask) noexcept {
+			const uint64_t op		   = simd::scalar_op_collector<registerBytes, registerCount>::impl(in_01, opTable, spaceMask);
+			const uint64_t scalar	   = ~(op | rope_type::quotes);
+			const uint64_t follows	   = rope_type::followsNonquoteScalar(scalar);
+			const uint64_t scalarStart = scalar & ~follows;
+			return op | rope_type::quotes | scalarStart;
+		}
+
+		template<bool minified> JSONIFIER_INLINE void reset(read_buffer_ptr __restrict rootIter, uint64_t stringLength) noexcept {
+	#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
+			if (stringLength <= 16) {
+				return resetDispatch<minified, 16, 1>(rootIter, stringLength);
+			}
+			if constexpr (backendBytesPerRegister<backend> >= 32) {
+				if (stringLength <= 32) {
+					return resetDispatch<minified, 32, 1>(rootIter, stringLength);
+				}
+			}
+	#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
+			if (stringLength <= 16) {
+				return resetDispatch<minified, 16, 1>(rootIter, stringLength);
+			}
+			if (stringLength <= 32) {
+				return resetDispatch<minified, 16, 2>(rootIter, stringLength);
+			}
+	#endif
+			resetDispatch<minified, backendBytesPerRegister<backend>, backendRegistersPerBlock<backend>>(rootIter, stringLength);
+		}
+
+		pod_simd_string_reader_members& operator=(const pod_simd_string_reader_members& other) = delete;
+		pod_simd_string_reader_members(const pod_simd_string_reader_members& other)			   = delete;
+
+		JSONIFIER_INLINE pod_simd_string_reader_members& operator=(pod_simd_string_reader_members&& other) noexcept {
+			if (&other != this) {
+				std::swap(tapeCount, other.tapeCount);
+				std::swap(capacity, other.capacity);
+				std::swap(length, other.length);
+				std::swap(tape, other.tape);
+			}
+			return *this;
+		}
+
+		JSONIFIER_INLINE pod_simd_string_reader_members() noexcept {
+			tape	 = allocator::allocate(initialBufferSize);
+			capacity = initialBufferSize;
+		}
+
+		JSONIFIER_INLINE ~pod_simd_string_reader_members() noexcept {
+			if (tape) {
+				allocator::deallocate(tape, capacity);
+				tape = nullptr;
+			}
+		}
+
+		JSONIFIER_INLINE pod_simd_string_reader_members(pod_simd_string_reader_members&& other) noexcept : allocator{} {
+			*this = internal::move(other);
+		}
+
+		JSONIFIER_INLINE write_structural_index_ptr begin() noexcept {
+			tape[tapeCount] = static_cast<uint32_t>(length);
+			return tape;
+		}
+
+		JSONIFIER_INLINE write_structural_index_ptr end() noexcept {
+			return tape + tapeCount;
+		}
+
+		JSONIFIER_INLINE uint64_t getTapeCount() noexcept {
+			return tapeCount;
+		}
+
+		pod_block_reader<stepBytes> stringBlockReader;
+		write_structural_index_ptr tape{};
+		uint64_t tapeCount{};
+		uint64_t capacity{};
+		uint64_t length{};
+	};
+
+	#if JSONIFIER_COMPILER_CLANG
+	template<jsonifier_backend backend, uint64_t initialBufferSize> using pod_simd_string_reader = pod_simd_string_reader_members<backend, initialBufferSize>;
+	#else
+	template<jsonifier_backend backend, uint64_t initialBufferSize> using pod_simd_string_reader = pod_simd_string_reader_locals<backend, initialBufferSize>;
+	#endif
+
 }
+
+#endif
