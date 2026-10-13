@@ -11,7 +11,7 @@ Use it when you want to pull a handful of values out of arbitrary JSON without d
 #include <iostream>
 
 int main() {
-    jsonifier::generic::parser<> parser;
+    jsonifier::jsonifier_core<> parser;
 
     std::string json = R"({"name":"Concert","count":42,"tags":["music","live"]})";
 
@@ -33,12 +33,12 @@ int main() {
 }
 ```
 
-`jsonifier::generic::parser<initialBufferSize>` is a thin wrapper around a `jsonifier_core<initialBufferSize>`, so it gets the same [runtime CPU dispatch](CPU_Architecture_Selection.md#runtime-selection) as every other call: stage 1 runs on the best SIMD tier the running CPU supports. `jsonifier_core<>` exposes `iterate` and `iterateMany` directly as well, if you already have one.
+Generic parsing lives on `jsonifier_core<initialBufferSize>` itself, so the same core that parses, serializes and validates also exposes `iterate` and `iterateMany`, and it runs on the same [configured backend](CPU_Architecture_Selection.md#one-tier-per-build) as every other call: stage 1 uses the single SIMD tier chosen at configure time.
 
 ## Lifetimes
 
 - The input buffer must outlive the `document` and every handle derived from it. Strings are returned zero-copy as views into it when they contain no escapes.
-- A `document` points into its parser's tape. Calling `iterate`, `parseJson` or `validateJson` again on the same parser invalidates every handle from the previous document.
+- A `document` points into its parser's tape and generic-parsing state. Calling `iterate`, `parseJson` or `validateJson` again on the same parser, or moving the parser, invalidates every handle from the previous document.
 - A parser is not copyable. Use one per thread.
 
 ## Errors
@@ -52,7 +52,7 @@ auto err = doc["venue"]["location"]["lat"].get(lat);
 
 | `error_code` | Meaning |
 |--------------|---------|
-| `success` | — |
+| `success` | No error |
 | `empty` | No JSON in the input |
 | `tape_error` | Stage 1 found a structural error |
 | `unclosed_container` | An object or array was never closed |
@@ -113,7 +113,7 @@ In-order lookups cost a cursor step and a key compare. Out-of-order lookups rewi
 `iterateMany` reads a buffer holding many documents, such as NDJSON, the counterpart of simdjson's `iterate_many`:
 
 ```cpp
-jsonifier::generic::parser<> parser;
+jsonifier::jsonifier_core<> parser;
 std::string input = "{\"id\":1}\n{\"id\":2}\n{\"id\":3}\n";
 
 auto stream = parser.iterateMany(input);
@@ -127,14 +127,14 @@ for (auto iter = stream.begin(); iter != stream.end(); ++iter) {
 ```
 
 - By default documents are separated by whitespace (`parse_options{ .newLineDelimited = true }`). Pass `iterateMany<jsonifier::parse_options{}>(input)` to accept comma-separated documents instead.
-- Documents are indexed in windows of `batchSize` bytes (default `parser<>::defaultBatchSize`, 1 MiB), so the batch size must be at least as large as the largest single document.
+- Documents are indexed in windows of `batchSize` bytes (default `jsonifier::generic::defaultBatchSize`, 1 MiB), so the batch size must be at least as large as the largest single document.
 - `iter.currentIndex()` is the byte offset of the current document and `iter.source()` its source text.
 - `stream.truncatedBytes()` reports trailing bytes that did not form a complete document, and `stream.error()` the stream-level error.
 - Each document is invalidated when the iterator advances.
 
 ## `generic` vs. `raw_json_data` vs. Registered Types
 
-| | `generic::parser` | [`raw_json_data`](Parsing_Arbitrary_Data.md) | Registered struct |
+| | `jsonifier_core::iterate` | [`raw_json_data`](Parsing_Arbitrary_Data.md) | Registered struct |
 |---|---|---|---|
 | Schema needed | No | No | Yes |
 | Allocates a tree | No | Yes | No |
@@ -144,8 +144,8 @@ for (auto iter = stream.begin(); iter != stream.end(); ++iter) {
 
 ## What's Next
 
-- **[CPU Architecture Selection](CPU_Architecture_Selection.md)** — how the SIMD tier for stage 1 is picked at runtime
-- **[Parsing Arbitrary Data](Parsing_Arbitrary_Data.md)** — `raw_json_data`, the owning dynamic tree
-- **[Generic Parsing paper](../Generic-Parsing.md)** — design and benchmarks against simdjson On Demand
+- **[CPU Architecture Selection](CPU_Architecture_Selection.md)**: how the SIMD tier for stage 1 is chosen at configure time
+- **[Parsing Arbitrary Data](Parsing_Arbitrary_Data.md)**: `raw_json_data`, the owning dynamic tree
+- **[Generic Parsing paper](../Generic-Parsing.md)**: design and benchmarks against simdjson On Demand
 
 ---

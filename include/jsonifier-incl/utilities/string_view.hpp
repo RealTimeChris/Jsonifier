@@ -24,7 +24,7 @@ namespace jsonifier {
 		using traits_type			 = std::char_traits<value_type>;
 		static constexpr size_type npos{ std::numeric_limits<size_type>::max() };
 
-		template<typename value_type_newer = value_type> JSONIFIER_INLINE constexpr explicit operator std::basic_string<value_type_newer>() const noexcept {
+		template<typename value_type_newer = value_type> JSONIFIER_INLINE constexpr explicit operator std::basic_string<value_type_newer>() const {
 			std::basic_string<value_type_newer> returnValue{};
 			returnValue.resize(sizeVal);
 			if (sizeVal > 0 && dataVal) [[likely]] {
@@ -42,7 +42,7 @@ namespace jsonifier {
 			return string_view_base(dataVal + offsetNew, countNew);
 		}
 
-		template<internal::string_t value_type_newer> JSONIFIER_INLINE friend bool operator==(const string_view_base& lhs, const value_type_newer& rhs) noexcept {
+		template<internal::string_types value_type_newer> JSONIFIER_INLINE friend bool operator==(const string_view_base& lhs, const value_type_newer& rhs) noexcept {
 			if (lhs.size() == rhs.size()) {
 				if (lhs.size() > 0) {
 					return internal::comparison::compare(lhs.data(), rhs.data(), rhs.size());
@@ -74,7 +74,7 @@ namespace jsonifier {
 			return rhsLength == lhs.size() && internal::comparison::compare(lhs.data(), rhs, rhsLength);
 		}
 
-		template<typename value_type_newer, internal::same_character_size<value_type>>
+		template<typename value_type_newer, internal::same_character_size_types<value_type>>
 		JSONIFIER_INLINE constexpr string_view_base& operator=(const value_type_newer& stringNew) noexcept {
 			dataVal = stringNew.data();
 			sizeVal = stringNew.size();
@@ -97,7 +97,7 @@ namespace jsonifier {
 			return this->operator std::basic_string_view<value_type>().find_last_of(std::forward<arg_types>(args)...);
 		}
 
-		template<internal::string_t value_type_newer> JSONIFIER_INLINE constexpr string_view_base& operator=(value_type_newer&& stringNew) noexcept {
+		template<internal::string_types value_type_newer> JSONIFIER_INLINE constexpr string_view_base& operator=(value_type_newer&& stringNew) noexcept {
 			dataVal = stringNew.data();
 			sizeVal = stringNew.size();
 			return *this;
@@ -121,7 +121,8 @@ namespace jsonifier {
 			return internal::min(static_cast<uint64_t>(std::numeric_limits<std::ptrdiff_t>::max()), static_cast<uint64_t>(-1) / sizeof(value_type));
 		}
 
-		template<typename value_type_newer, internal::same_character_size<value_type>> JSONIFIER_INLINE constexpr string_view_base(const value_type_newer& stringNew) noexcept {
+		template<typename value_type_newer, internal::same_character_size_types<value_type>>
+		JSONIFIER_INLINE constexpr string_view_base(const value_type_newer& stringNew) noexcept {
 			*this = stringNew;
 		}
 
@@ -132,13 +133,13 @@ namespace jsonifier {
 		JSONIFIER_INLINE constexpr string_view_base(const_pointer pointerNew) noexcept : dataVal(pointerNew), sizeVal(std::char_traits<value_type>::length(pointerNew)) {
 		}
 
-		template<internal::string_t value_type_newer> JSONIFIER_INLINE constexpr string_view_base(value_type_newer&& stringNew) noexcept {
+		template<internal::string_types value_type_newer> JSONIFIER_INLINE constexpr string_view_base(value_type_newer&& stringNew) noexcept {
 			*this = stringNew;
 		}
 
 		JSONIFIER_INLINE constexpr void swap(string_view_base& other) noexcept {
-			std::swap(dataVal, other.dataVal);
-			std::swap(sizeVal, other.sizeVal);
+			jsonifier::internal::swap(dataVal, other.dataVal);
+			jsonifier::internal::swap(sizeVal, other.sizeVal);
 		}
 
 		JSONIFIER_INLINE constexpr string_view_base(const_pointer pointerNew, const size_type countNew) noexcept : dataVal(pointerNew), sizeVal(countNew) {
@@ -176,7 +177,7 @@ namespace jsonifier {
 			return sizeVal;
 		}
 
-		JSONIFIER_INLINE constexpr string_view_base() noexcept : dataVal(), sizeVal(0) {
+		JSONIFIER_INLINE constexpr string_view_base() noexcept : dataVal{}, sizeVal{ 0 } {
 		}
 
 		JSONIFIER_INLINE constexpr bool empty() const noexcept {
@@ -193,13 +194,12 @@ namespace jsonifier {
 
 	using string_view = string_view_base;
 
-	template<size_t buffer_size>
-	JSONIFIER_INLINE static internal::basic_stream<buffer_size>& operator<<(internal::basic_stream<buffer_size>& os, const string_view& input) noexcept {
+	template<uint64_t bufferSize> JSONIFIER_INLINE internal::basic_stream<bufferSize>& operator<<(internal::basic_stream<bufferSize>& os, const string_view& input) noexcept {
 		os << std::basic_string_view<char>{ input.data(), input.size() };
 		return os;
 	}
 
-	JSONIFIER_INLINE static std::ostream& operator<<(std::ostream& os, const string_view& input) noexcept {
+	JSONIFIER_INLINE std::ostream& operator<<(std::ostream& os, const string_view& input) noexcept {
 		os << std::basic_string_view<char>{ input.data(), input.size() };
 		return os;
 	}

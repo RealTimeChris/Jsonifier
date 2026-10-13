@@ -7,15 +7,15 @@
 #pragma once
 
 #include <jsonifier-incl/core/config.hpp>
-#include <jsonifier-incl/simd/backend_traits.hpp>
+#include <jsonifier-incl/simd/simd_config.hpp>
 
 namespace jsonifier::internal {
 
 	// from
 	// https://stackoverflow.com/questions/16337610/how-to-know-if-a-type-is-a-specialization-of-stdvector
-	template<typename, template<typename...> typename> constexpr bool is_specialization_v = false;
+	template<typename, template<typename...> typename> alignas(64) inline constexpr bool isSpecialization = false;
 
-	template<template<typename...> typename value_type, typename... arg_types> constexpr bool is_specialization_v<value_type<arg_types...>, value_type> = true;
+	template<template<typename...> typename value_type, typename... arg_types> alignas(64) inline constexpr bool isSpecialization<value_type<arg_types...>, value_type> = true;
 
 	template<typename value_type> struct remove_const {
 		using type = value_type;
@@ -100,52 +100,18 @@ namespace jsonifier::internal {
 	template<avx_type type> struct simd_type_wrapper;
 
 	template<> struct simd_type_wrapper<avx_type::m128> {
-		static constexpr auto simd_type = avx_type::m128;
-		using type						= jsonifier_simd_int_128;
+		static constexpr auto simdType = avx_type::m128;
+		using type					   = jsonifier_simd_int_128;
 	};
 
 	template<> struct simd_type_wrapper<avx_type::m256> {
-		static constexpr auto simd_type = avx_type::m256;
-		using type						= jsonifier_simd_int_256;
+		static constexpr auto simdType = avx_type::m256;
+		using type					   = jsonifier_simd_int_256;
 	};
 
 	template<> struct simd_type_wrapper<avx_type::m512> {
-		static constexpr auto simd_type = avx_type::m512;
-		using type						= jsonifier_simd_int_512;
+		static constexpr auto simdType = avx_type::m512;
+		using type					   = jsonifier_simd_int_512;
 	};
-
-	template<typename value_type> struct contained_type {
-		static constexpr bool value{ false };
-		using type = void;
-	};
-
-	template<typename value_type>
-		requires requires { typename value_type::value_type; }
-	struct contained_type<value_type> {
-		static constexpr bool value{ true };
-		using type = typename value_type::value_type;
-	};
-
-	template<typename value_type>
-		requires(
-			!requires { typename value_type::value_type; } && requires { typename value_type::element_type; })
-	struct contained_type<value_type> {
-		static constexpr bool value{ true };
-		using type = typename value_type::element_type;
-	};
-
-	template<typename value_type> struct contained_type<value_type*> {
-		static constexpr bool value{ true };
-		using type = value_type;
-	};
-
-	template<typename value_type, size_t size> struct contained_type<value_type[size]> {
-		static constexpr bool value{ true };
-		using type = value_type;
-	};
-
-	template<typename value_type> static constexpr bool has_contained_type_v = contained_type<remove_cvref_t<value_type>>::value;
-
-	template<typename value_type> using contained_type_t = typename contained_type<remove_cvref_t<value_type>>::type;
 
 }

@@ -10,111 +10,56 @@
 
 namespace jsonifier::internal {
 
-	template<std::endian, uint64_t size = 0> struct int_tables_impl;
+	template<uint64_t count> inline consteval uint64_t genTableSize() {
+		uint64_t result = 1;
+		for (uint64_t j = 0; j < count; ++j) {
+			result *= 10;
+		}
+		return result;
+	}
 
-	template<std::endian endianness> inline static constexpr array<uint32_t, 256> gen_1() {
-		array<uint32_t, 256> t{};
-		for (uint32_t i = 0; i < 256; ++i) {
-			const uint32_t d0	 = static_cast<uint8_t>('0') + (i / 100);
-			const uint32_t d1	 = static_cast<uint8_t>('0') + (i / 10 % 10);
-			const uint32_t d2	 = static_cast<uint8_t>('0') + (i % 10);
-			const uint32_t len	 = i > 99u ? 3u : i > 9u ? 2u : 1u;
-			const uint32_t shift = 8u * (3u - len);
-			if constexpr (endianness == std::endian::little) {
-				t[i] = ((d0 | (d1 << 8) | (d2 << 16)) >> shift) | (len << 24);
-			} else {
-				t[i] = ((d0 << 24) | (d1 << 16) | (d2 << 8)) << shift;
+	template<uint64_t count> using gen_table_value_t = conditional_t<(count <= 2ULL), uint16_t, uint32_t>;
+
+	template<uint64_t count> inline consteval array<gen_table_value_t<count>, genTableSize<count>()> genTable() {
+		using value_type		= gen_table_value_t<count>;
+		constexpr uint64_t size = genTableSize<count>();
+		array<value_type, size> t{};
+		for (uint64_t i = 0; i < size; ++i) {
+			uint64_t divisor = size / 10;
+			for (uint64_t j = 0; j < count; ++j) {
+				const auto digit	 = static_cast<value_type>(static_cast<uint8_t>('0') + (i / divisor % 10));
+				const uint64_t shift = (std::endian::native == std::endian::little ? j : sizeof(value_type) - 1 - j) * 8;
+				t[i] |= static_cast<value_type>(digit << shift);
+				divisor /= 10;
 			}
 		}
 		return t;
 	}
 
-	template<std::endian endianness> inline static constexpr array<uint16_t, 100> gen_2() {
-		array<uint16_t, 100> t{};
-		for (uint32_t i = 0; i < 100; ++i) {
-			if constexpr (endianness == std::endian::little) {
-				t[i] |= static_cast<uint16_t>(static_cast<uint8_t>('0') + (i / 10));
-				t[i] |= static_cast<uint16_t>(static_cast<uint8_t>('0') + (i % 10)) << 8;
-			} else {
-				t[i] |= static_cast<uint16_t>(static_cast<uint8_t>('0') + (i / 10)) << 8;
-				t[i] |= static_cast<uint16_t>(static_cast<uint8_t>('0') + (i % 10));
-			}
-		}
-		return t;
-	}
-
-	template<std::endian endianness> inline static constexpr array<uint32_t, 1000> gen_3() {
-		array<uint32_t, 1000> t{};
-		for (uint32_t i = 0; i < 1000; ++i) {
-			const uint32_t d0 = static_cast<uint8_t>('0') + (i / 100);
-			const uint32_t d1 = static_cast<uint8_t>('0') + (i / 10 % 10);
-			const uint32_t d2 = static_cast<uint8_t>('0') + (i % 10);
-			if constexpr (endianness == std::endian::little) {
-				t[i] = d0 | (d1 << 8) | (d2 << 16);
-			} else {
-				t[i] = (d0 << 24) | (d1 << 16) | (d2 << 8);
-			}
-		}
-		return t;
-	}
-
-	template<std::endian endianness> inline static constexpr array<uint32_t, 10000> gen_4() {
-		array<uint32_t, 10000> t{};
-		for (uint32_t i = 0; i < 10000; ++i) {
-			if constexpr (endianness == std::endian::little) {
-				t[i] |= static_cast<uint32_t>(static_cast<uint8_t>('0') + (i / 1000));
-				t[i] |= static_cast<uint32_t>(static_cast<uint8_t>('0') + (i / 100 % 10)) << 8;
-				t[i] |= static_cast<uint32_t>(static_cast<uint8_t>('0') + (i / 10 % 10)) << 16;
-				t[i] |= static_cast<uint32_t>(static_cast<uint8_t>('0') + (i % 10)) << 24;
-			} else {
-				t[i] |= static_cast<uint32_t>(static_cast<uint8_t>('0') + (i / 1000)) << 24;
-				t[i] |= static_cast<uint32_t>(static_cast<uint8_t>('0') + (i / 100 % 10)) << 16;
-				t[i] |= static_cast<uint32_t>(static_cast<uint8_t>('0') + (i / 10 % 10)) << 8;
-				t[i] |= static_cast<uint32_t>(static_cast<uint8_t>('0') + (i % 10));
-			}
-		}
-		return t;
-	}
-
-	template<std::endian endianness> struct int_tables_impl<endianness, 1> {
-		alignas(64) static constexpr array<uint32_t, 256> table{ gen_1<endianness>() };
-		alignas(64) static constexpr read_structural_index_ptr __restrict values{ table.data() };
-	};
-
-	template<std::endian endianness> struct int_tables_impl<endianness, 2> {
-		alignas(64) static constexpr array<uint16_t, 100> table{ gen_2<endianness>() };
-		alignas(64) static constexpr const uint16_t* __restrict values{ table.data() };
-	};
-
-	template<std::endian endianness> struct int_tables_impl<endianness, 3> {
-		alignas(64) static constexpr array<uint32_t, 1000> table{ gen_3<endianness>() };
-		alignas(64) static constexpr read_structural_index_ptr __restrict values{ table.data() };
-	};
-
-	template<std::endian endianness> struct int_tables_impl<endianness, 4> {
-		alignas(64) static constexpr array<uint32_t, 10000> table{ gen_4<endianness>() };
-		alignas(64) static constexpr read_structural_index_ptr __restrict values{ table.data() };
-	};
-
-	template<uint64_t size> using int_tables = int_tables_impl<std::endian::native, size>;
+	alignas(64) inline constexpr auto table02{ genTable<2ULL>() };
+	alignas(64) inline constexpr const auto* __restrict charTable2DigitData = table02.data();
+	alignas(64) inline constexpr auto table03{ genTable<3ULL>() };
+	alignas(64) inline constexpr const auto* __restrict charTable3DigitData = table03.data();
+	alignas(64) inline constexpr auto table04{ genTable<4ULL>() };
+	alignas(64) inline constexpr const auto* __restrict charTable4DigitData = table04.data();
 
 #if !JSONIFIER_COMPILER_CLANG && !JSONIFIER_COMPILER_GCC && !JSONIFIER_COMPILER_MSVC
 
-	template<uint_types v_type_new> JSONIFIER_INLINE static v_type_new mulhi_portable(v_type_new a, v_type_new b) noexcept {
-		using v_type						 = next_higher_int_t<v_type_new>;
-		static constexpr uint64_t total_bits = sizeof(v_type_new) * 8;
-		static constexpr uint64_t half_bits	 = total_bits / 2;
-		static constexpr v_type mask		 = (static_cast<v_type>(1) << half_bits) - 1;
-		const v_type a_lo					 = static_cast<v_type>(a) & mask;
-		const v_type a_hi					 = static_cast<v_type>(a) >> half_bits;
-		const v_type b_lo					 = static_cast<v_type>(b) & mask;
-		const v_type b_hi					 = static_cast<v_type>(b) >> half_bits;
-		const v_type lo_lo					 = a_lo * b_lo;
-		const v_type hi_lo					 = a_hi * b_lo;
-		const v_type lo_hi					 = a_lo * b_hi;
-		const v_type hi_hi					 = a_hi * b_hi;
-		const v_type cross					 = (lo_lo >> half_bits) + (hi_lo & mask) + (lo_hi & mask);
-		return static_cast<v_type_new>(hi_hi + (hi_lo >> half_bits) + (lo_hi >> half_bits) + (cross >> half_bits));
+	template<uint_types v_type_new> JSONIFIER_INLINE v_type_new mulhiPortable(v_type_new a, v_type_new b) noexcept {
+		using v_type						= next_higher_int_t<v_type_new>;
+		static constexpr uint64_t totalBits = sizeof(v_type_new) * 8;
+		static constexpr uint64_t halfBits	= totalBits / 2;
+		static constexpr v_type mask		= (static_cast<v_type>(1) << halfBits) - 1;
+		const v_type aLo					= static_cast<v_type>(a) & mask;
+		const v_type aHi					= static_cast<v_type>(a) >> halfBits;
+		const v_type bLo					= static_cast<v_type>(b) & mask;
+		const v_type bHi					= static_cast<v_type>(b) >> halfBits;
+		const v_type loLo					= aLo * bLo;
+		const v_type hiLo					= aHi * bLo;
+		const v_type loHi					= aLo * bHi;
+		const v_type hiHi					= aHi * bHi;
+		const v_type cross					= (loLo >> halfBits) + (hiLo & mask) + (loHi & mask);
+		return static_cast<v_type_new>(hiHi + (hiLo >> halfBits) + (loHi >> halfBits) + (cross >> halfBits));
 	}
 
 #endif
@@ -124,27 +69,23 @@ namespace jsonifier::internal {
 #if JSONIFIER_COMPILER_CLANG || JSONIFIER_COMPILER_GCC
 			return static_cast<uint64_t>(static_cast<__uint128_t>(value) * 12379400392853802749ULL >> 90);
 #elif JSONIFIER_COMPILER_MSVC
-			uint64_t high_part;
-			_umul128(12379400392853802749ULL, value, &high_part);
-			return static_cast<uint64_t>(high_part >> (90 - 64ULL));
+			uint64_t highPart;
+			_umul128(12379400392853802749ULL, value, &highPart);
+			return static_cast<uint64_t>(highPart >> (90 - 64ULL));
 #else
-			return static_cast<uint64_t>(mulhi_portable(value, 12379400392853802749ULL) >> (90 - 64ULL));
+			return static_cast<uint64_t>(mulhiPortable(value, 12379400392853802749ULL) >> (90 - 64ULL));
 #endif
 		}
 	};
 
-	static constexpr const auto* __restrict char_table_2_digit_data = int_tables<2>::values;
-	static constexpr const auto* __restrict char_table_3_digit_data = int_tables<3>::values;
-	static constexpr const auto* __restrict char_table_4_digit_data = int_tables<4>::values;
-
-	template<uint_types v_type> JSONIFIER_INLINE static void copy_3_digits(write_buffer_ptr __restrict buf, const v_type value) noexcept {
+	template<uint_types v_type> JSONIFIER_INLINE void copy3Digits(write_buffer_ptr __restrict buf, const v_type value) noexcept {
 		uint32_t packed;
-		pow2MemcpyWrapper<4ULL>(&packed, &char_table_3_digit_data[value]);
+		pow2MemcpyWrapper<4ULL>(&packed, &charTable3DigitData[value]);
 		pow2MemcpyWrapper<2ULL>(buf, &packed);
 		buf[2] = static_cast<uint8_t>(packed >> 16);
 	}
 
-	template<typename v_type, uint64_t digit_length> struct to_chars_internal;
+	template<typename v_type, uint64_t digitLength> struct to_chars_internal;
 
 	template<typename v_type> struct to_chars;
 
@@ -152,7 +93,7 @@ namespace jsonifier::internal {
 		inline static write_buffer_ptr impl(write_buffer_ptr __restrict buf JSONIFIER_LIFETIME_BOUND, const v_type value) noexcept {
 			const v_type a = value * 3518437209ULL >> 45;
 			*buf		   = static_cast<uint8_t>(a + '0');
-			pow2MemcpyWrapper<4ULL>(buf + 1, char_table_4_digit_data + value - a * 10000);
+			pow2MemcpyWrapper<4ULL>(buf + 1, charTable4DigitData + value - a * 10000);
 			return buf + 5;
 		}
 	};
@@ -160,8 +101,8 @@ namespace jsonifier::internal {
 	template<uint_types v_type> struct to_chars_internal<v_type, 6ULL> {
 		inline static write_buffer_ptr impl(write_buffer_ptr __restrict buf JSONIFIER_LIFETIME_BOUND, const v_type value) noexcept {
 			const v_type ab = value * 3518437209ULL >> 45;
-			pow2MemcpyWrapper<2ULL>(buf, char_table_2_digit_data + ab);
-			pow2MemcpyWrapper<4ULL>(buf + 2, char_table_4_digit_data + value - (ab * 10000ULL));
+			pow2MemcpyWrapper<2ULL>(buf, charTable2DigitData + ab);
+			pow2MemcpyWrapper<4ULL>(buf + 2, charTable4DigitData + value - (ab * 10000ULL));
 			return buf + 6;
 		}
 	};
@@ -169,8 +110,8 @@ namespace jsonifier::internal {
 	template<uint_types v_type> struct to_chars_internal<v_type, 7ULL> {
 		inline static write_buffer_ptr impl(write_buffer_ptr __restrict buf JSONIFIER_LIFETIME_BOUND, const v_type value) noexcept {
 			const v_type abc = value * 3518437209ULL >> 45;
-			copy_3_digits(buf, abc);
-			pow2MemcpyWrapper<4ULL>(buf + 3, char_table_4_digit_data + value - (abc * 10000ULL));
+			copy3Digits(buf, abc);
+			pow2MemcpyWrapper<4ULL>(buf + 3, charTable4DigitData + value - (abc * 10000ULL));
 			return buf + 7;
 		}
 	};
@@ -178,8 +119,8 @@ namespace jsonifier::internal {
 	template<uint_types v_type> struct to_chars_internal<v_type, 8ULL> {
 		inline static write_buffer_ptr impl(write_buffer_ptr __restrict buf JSONIFIER_LIFETIME_BOUND, const v_type value) noexcept {
 			const v_type abcd = value * 3518437209ULL >> 45;
-			pow2MemcpyWrapper<4ULL>(buf, char_table_4_digit_data + abcd);
-			pow2MemcpyWrapper<4ULL>(buf + 4, char_table_4_digit_data + value - (abcd * 10000ULL));
+			pow2MemcpyWrapper<4ULL>(buf, charTable4DigitData + abcd);
+			pow2MemcpyWrapper<4ULL>(buf + 4, charTable4DigitData + value - (abcd * 10000ULL));
 			return buf + 8;
 		}
 	};
@@ -191,8 +132,8 @@ namespace jsonifier::internal {
 			const v_type bcde	  = bcdefghi * 3518437209ULL >> 45;
 			const v_type fghi	  = bcdefghi - (bcde * 10000ULL);
 			*buf				  = static_cast<uint8_t>(a + '0');
-			pow2MemcpyWrapper<4ULL>(buf + 1, char_table_4_digit_data + bcde);
-			pow2MemcpyWrapper<4ULL>(buf + 5, char_table_4_digit_data + fghi);
+			pow2MemcpyWrapper<4ULL>(buf + 1, charTable4DigitData + bcde);
+			pow2MemcpyWrapper<4ULL>(buf + 5, charTable4DigitData + fghi);
 			return buf + 9;
 		}
 	};
@@ -203,9 +144,9 @@ namespace jsonifier::internal {
 			const v_type cdefghij = value - ab * 100000000ULL;
 			const v_type cdef	  = cdefghij * 3518437209ULL >> 45;
 			const v_type ghij	  = cdefghij - (cdef * 10000ULL);
-			pow2MemcpyWrapper<2ULL>(buf, char_table_2_digit_data + ab);
-			pow2MemcpyWrapper<4ULL>(buf + 2, char_table_4_digit_data + cdef);
-			pow2MemcpyWrapper<4ULL>(buf + 6, char_table_4_digit_data + ghij);
+			pow2MemcpyWrapper<2ULL>(buf, charTable2DigitData + ab);
+			pow2MemcpyWrapper<4ULL>(buf + 2, charTable4DigitData + cdef);
+			pow2MemcpyWrapper<4ULL>(buf + 6, charTable4DigitData + ghij);
 			return buf + 10;
 		}
 	};
@@ -216,9 +157,9 @@ namespace jsonifier::internal {
 			const v_type defghijk = value - abc * 100000000ULL;
 			const v_type defg	  = defghijk * 3518437209ULL >> 45;
 			const v_type hijk	  = defghijk - (defg * 10000ULL);
-			copy_3_digits(buf, abc);
-			pow2MemcpyWrapper<4ULL>(buf + 3, char_table_4_digit_data + defg);
-			pow2MemcpyWrapper<4ULL>(buf + 7, char_table_4_digit_data + hijk);
+			copy3Digits(buf, abc);
+			pow2MemcpyWrapper<4ULL>(buf + 3, charTable4DigitData + defg);
+			pow2MemcpyWrapper<4ULL>(buf + 7, charTable4DigitData + hijk);
 			return buf + 11;
 		}
 	};
@@ -229,9 +170,9 @@ namespace jsonifier::internal {
 			const v_type efghijkl = value - abcd * 100000000ULL;
 			const v_type efgh	  = efghijkl * 3518437209ULL >> 45;
 			const v_type ijkl	  = efghijkl - (efgh * 10000ULL);
-			pow2MemcpyWrapper<4ULL>(buf, char_table_4_digit_data + abcd);
-			pow2MemcpyWrapper<4ULL>(buf + 4, char_table_4_digit_data + efgh);
-			pow2MemcpyWrapper<4ULL>(buf + 8, char_table_4_digit_data + ijkl);
+			pow2MemcpyWrapper<4ULL>(buf, charTable4DigitData + abcd);
+			pow2MemcpyWrapper<4ULL>(buf + 4, charTable4DigitData + efgh);
+			pow2MemcpyWrapper<4ULL>(buf + 8, charTable4DigitData + ijkl);
 			return buf + 12;
 		}
 	};
@@ -245,9 +186,9 @@ namespace jsonifier::internal {
 			const v_type fghi	  = fghijklm * 3518437209ULL >> 45;
 			const v_type jklm	  = fghijklm - (fghi * 10000ULL);
 			*buf				  = static_cast<uint8_t>(a + '0');
-			pow2MemcpyWrapper<4ULL>(buf + 1, char_table_4_digit_data + bcde);
-			pow2MemcpyWrapper<4ULL>(buf + 5, char_table_4_digit_data + fghi);
-			pow2MemcpyWrapper<4ULL>(buf + 9, char_table_4_digit_data + jklm);
+			pow2MemcpyWrapper<4ULL>(buf + 1, charTable4DigitData + bcde);
+			pow2MemcpyWrapper<4ULL>(buf + 5, charTable4DigitData + fghi);
+			pow2MemcpyWrapper<4ULL>(buf + 9, charTable4DigitData + jklm);
 			return buf + 13;
 		}
 	};
@@ -260,10 +201,10 @@ namespace jsonifier::internal {
 			const v_type cdef	  = abcdef - (ab * 10000ULL);
 			const v_type ghij	  = ghijklmn * 3518437209ULL >> 45;
 			const v_type klmn	  = ghijklmn - (ghij * 10000ULL);
-			pow2MemcpyWrapper<2ULL>(buf, char_table_2_digit_data + ab);
-			pow2MemcpyWrapper<4ULL>(buf + 2, char_table_4_digit_data + cdef);
-			pow2MemcpyWrapper<4ULL>(buf + 6, char_table_4_digit_data + ghij);
-			pow2MemcpyWrapper<4ULL>(buf + 10, char_table_4_digit_data + klmn);
+			pow2MemcpyWrapper<2ULL>(buf, charTable2DigitData + ab);
+			pow2MemcpyWrapper<4ULL>(buf + 2, charTable4DigitData + cdef);
+			pow2MemcpyWrapper<4ULL>(buf + 6, charTable4DigitData + ghij);
+			pow2MemcpyWrapper<4ULL>(buf + 10, charTable4DigitData + klmn);
 			return buf + 14;
 		}
 	};
@@ -276,10 +217,10 @@ namespace jsonifier::internal {
 			const v_type defg	  = abcdefg - (abc * 10000ULL);
 			const v_type hijk	  = hijklmno * 3518437209ULL >> 45;
 			const v_type lmno	  = hijklmno - (hijk * 10000ULL);
-			copy_3_digits(buf, abc);
-			pow2MemcpyWrapper<4ULL>(buf + 3, char_table_4_digit_data + defg);
-			pow2MemcpyWrapper<4ULL>(buf + 7, char_table_4_digit_data + hijk);
-			pow2MemcpyWrapper<4ULL>(buf + 11, char_table_4_digit_data + lmno);
+			copy3Digits(buf, abc);
+			pow2MemcpyWrapper<4ULL>(buf + 3, charTable4DigitData + defg);
+			pow2MemcpyWrapper<4ULL>(buf + 7, charTable4DigitData + hijk);
+			pow2MemcpyWrapper<4ULL>(buf + 11, charTable4DigitData + lmno);
 			return buf + 15;
 		}
 	};
@@ -292,10 +233,10 @@ namespace jsonifier::internal {
 			const v_type efgh	  = abcdefgh - (abcd * 10000ULL);
 			const v_type ijkl	  = ijklmnop * 3518437209ULL >> 45;
 			const v_type mnop	  = ijklmnop - (ijkl * 10000ULL);
-			pow2MemcpyWrapper<4ULL>(buf, char_table_4_digit_data + abcd);
-			pow2MemcpyWrapper<4ULL>(buf + 4, char_table_4_digit_data + efgh);
-			pow2MemcpyWrapper<4ULL>(buf + 8, char_table_4_digit_data + ijkl);
-			pow2MemcpyWrapper<4ULL>(buf + 12, char_table_4_digit_data + mnop);
+			pow2MemcpyWrapper<4ULL>(buf, charTable4DigitData + abcd);
+			pow2MemcpyWrapper<4ULL>(buf + 4, charTable4DigitData + efgh);
+			pow2MemcpyWrapper<4ULL>(buf + 8, charTable4DigitData + ijkl);
+			pow2MemcpyWrapper<4ULL>(buf + 12, charTable4DigitData + mnop);
 			return buf + 16;
 		}
 	};
@@ -311,10 +252,10 @@ namespace jsonifier::internal {
 			const v_type jklm	   = jklmnopq * 3518437209ULL >> 45;
 			const v_type nopq	   = jklmnopq - (jklm * 10000ULL);
 			*buf				   = static_cast<uint8_t>(a + '0');
-			pow2MemcpyWrapper<4ULL>(buf + 1, char_table_4_digit_data + bcde);
-			pow2MemcpyWrapper<4ULL>(buf + 5, char_table_4_digit_data + fghi);
-			pow2MemcpyWrapper<4ULL>(buf + 9, char_table_4_digit_data + jklm);
-			pow2MemcpyWrapper<4ULL>(buf + 13, char_table_4_digit_data + nopq);
+			pow2MemcpyWrapper<4ULL>(buf + 1, charTable4DigitData + bcde);
+			pow2MemcpyWrapper<4ULL>(buf + 5, charTable4DigitData + fghi);
+			pow2MemcpyWrapper<4ULL>(buf + 9, charTable4DigitData + jklm);
+			pow2MemcpyWrapper<4ULL>(buf + 13, charTable4DigitData + nopq);
 			return buf + 17;
 		}
 	};
@@ -329,11 +270,11 @@ namespace jsonifier::internal {
 			const v_type ghij		= cdefghij - (cdef * 10000ULL);
 			const v_type klmn		= klmnopqr * 3518437209ULL >> 45;
 			const v_type opqr		= klmnopqr - (klmn * 10000ULL);
-			pow2MemcpyWrapper<2ULL>(buf, char_table_2_digit_data + ab);
-			pow2MemcpyWrapper<4ULL>(buf + 2, char_table_4_digit_data + cdef);
-			pow2MemcpyWrapper<4ULL>(buf + 6, char_table_4_digit_data + ghij);
-			pow2MemcpyWrapper<4ULL>(buf + 10, char_table_4_digit_data + klmn);
-			pow2MemcpyWrapper<4ULL>(buf + 14, char_table_4_digit_data + opqr);
+			pow2MemcpyWrapper<2ULL>(buf, charTable2DigitData + ab);
+			pow2MemcpyWrapper<4ULL>(buf + 2, charTable4DigitData + cdef);
+			pow2MemcpyWrapper<4ULL>(buf + 6, charTable4DigitData + ghij);
+			pow2MemcpyWrapper<4ULL>(buf + 10, charTable4DigitData + klmn);
+			pow2MemcpyWrapper<4ULL>(buf + 14, charTable4DigitData + opqr);
 			return buf + 18;
 		}
 	};
@@ -348,11 +289,11 @@ namespace jsonifier::internal {
 			const v_type hijk		 = defghijk - (defg * 10000ULL);
 			const v_type lmno		 = lmnopqrs * 3518437209ULL >> 45;
 			const v_type pqrs		 = lmnopqrs - (lmno * 10000ULL);
-			copy_3_digits(buf, abc);
-			pow2MemcpyWrapper<4ULL>(buf + 3, char_table_4_digit_data + defg);
-			pow2MemcpyWrapper<4ULL>(buf + 7, char_table_4_digit_data + hijk);
-			pow2MemcpyWrapper<4ULL>(buf + 11, char_table_4_digit_data + lmno);
-			pow2MemcpyWrapper<4ULL>(buf + 15, char_table_4_digit_data + pqrs);
+			copy3Digits(buf, abc);
+			pow2MemcpyWrapper<4ULL>(buf + 3, charTable4DigitData + defg);
+			pow2MemcpyWrapper<4ULL>(buf + 7, charTable4DigitData + hijk);
+			pow2MemcpyWrapper<4ULL>(buf + 11, charTable4DigitData + lmno);
+			pow2MemcpyWrapper<4ULL>(buf + 15, charTable4DigitData + pqrs);
 			return buf + 19;
 		}
 	};
@@ -367,91 +308,90 @@ namespace jsonifier::internal {
 			const v_type ijkl		  = efghijkl - (efgh * 10000ULL);
 			const v_type mnop		  = mnopqrst * 3518437209ULL >> 45;
 			const v_type qrst		  = mnopqrst - (mnop * 10000ULL);
-			pow2MemcpyWrapper<4ULL>(buf, char_table_4_digit_data + abcd);
-			pow2MemcpyWrapper<4ULL>(buf + 4, char_table_4_digit_data + efgh);
-			pow2MemcpyWrapper<4ULL>(buf + 8, char_table_4_digit_data + ijkl);
-			pow2MemcpyWrapper<4ULL>(buf + 12, char_table_4_digit_data + mnop);
-			pow2MemcpyWrapper<4ULL>(buf + 16, char_table_4_digit_data + qrst);
+			pow2MemcpyWrapper<4ULL>(buf, charTable4DigitData + abcd);
+			pow2MemcpyWrapper<4ULL>(buf + 4, charTable4DigitData + efgh);
+			pow2MemcpyWrapper<4ULL>(buf + 8, charTable4DigitData + ijkl);
+			pow2MemcpyWrapper<4ULL>(buf + 12, charTable4DigitData + mnop);
+			pow2MemcpyWrapper<4ULL>(buf + 16, charTable4DigitData + qrst);
 			return buf + 20;
 		}
 	};
 
 	template<uint64_types auto size, uint_types v_type>
-	JSONIFIER_INLINE static write_buffer_ptr impl_internal(write_buffer_ptr __restrict buf JSONIFIER_LIFETIME_BOUND, const v_type value) noexcept {
+	JSONIFIER_INLINE write_buffer_ptr implInternal(write_buffer_ptr __restrict buf JSONIFIER_LIFETIME_BOUND, const v_type value) noexcept {
 		return to_chars_internal<v_type, size>::impl(buf, value);
 	}
 
 	template<uint64_types v_type> struct to_chars<v_type> {
 		JSONIFIER_INLINE static write_buffer_ptr impl(write_buffer_ptr __restrict buf JSONIFIER_LIFETIME_BOUND, const v_type value) noexcept {
-			return value < 100000000ULL			  ? value < 10000ULL ? value < 100ULL ? value < 10U
-							? (static_cast<void>(buf[0] = static_cast<uint8_t>(value + '0')), buf + 1)
-							: (static_cast<void>(pow2MemcpyWrapper<2ULL>(buf, char_table_2_digit_data + value)), buf + 2)
-						: value < 1000U										? (static_cast<void>(copy_3_digits(buf, value)), buf + 3)
-																			: (static_cast<void>(pow2MemcpyWrapper<4ULL>(buf, char_table_4_digit_data + value)), buf + 4)
-					: value < 1000000ULL				   ? value < 100000ULL ? impl_internal<5ULL>(buf, value) : impl_internal<6ULL>(buf, value)
-					: value < 10000000ULL				   ? impl_internal<7ULL>(buf, value)
-														   : impl_internal<8ULL>(buf, value)
-				: value < 1000000000000ULL		  ? value < 10000000000ULL ? value < 1000000000ULL ? impl_internal<9ULL>(buf, value) : impl_internal<10ULL>(buf, value)
-					: value < 100000000000ULL						? impl_internal<11ULL>(buf, value)
-																	: impl_internal<12ULL>(buf, value)
-				: value < 10000000000000000ULL	  ? value < 100000000000000ULL ? value < 10000000000000ULL ? impl_internal<13ULL>(buf, value) : impl_internal<14ULL>(buf, value)
-					: value < 1000000000000000ULL							? impl_internal<15ULL>(buf, value)
-																			: impl_internal<16ULL>(buf, value)
-				: value < 1000000000000000000ULL  ? value < 100000000000000000ULL ? impl_internal<17ULL>(buf, value) : impl_internal<18ULL>(buf, value)
-				: value < 10000000000000000000ULL ? impl_internal<19ULL>(buf, value)
-												  : impl_internal<20ULL>(buf, value);
+			return value < 100000000ULL ? value < 10000ULL ? value < 100ULL ? value < 10U ? (static_cast<void>(buf[0] = static_cast<uint8_t>(value + '0')), buf + 1)
+																						  : (static_cast<void>(pow2MemcpyWrapper<2ULL>(buf, charTable2DigitData + value)), buf + 2)
+						: value < 1000U										? (static_cast<void>(copy3Digits(buf, value)), buf + 3)
+																			: (static_cast<void>(pow2MemcpyWrapper<4ULL>(buf, charTable4DigitData + value)), buf + 4)
+					: value < 1000000ULL				   ? value < 100000ULL ? implInternal<5ULL>(buf, value) : implInternal<6ULL>(buf, value)
+					: value < 10000000ULL				   ? implInternal<7ULL>(buf, value)
+														   : implInternal<8ULL>(buf, value)
+				: value < 1000000000000ULL		  ? value < 10000000000ULL ? value < 1000000000ULL ? implInternal<9ULL>(buf, value) : implInternal<10ULL>(buf, value)
+					: value < 100000000000ULL						? implInternal<11ULL>(buf, value)
+																	: implInternal<12ULL>(buf, value)
+				: value < 10000000000000000ULL	  ? value < 100000000000000ULL ? value < 10000000000000ULL ? implInternal<13ULL>(buf, value) : implInternal<14ULL>(buf, value)
+					: value < 1000000000000000ULL							? implInternal<15ULL>(buf, value)
+																			: implInternal<16ULL>(buf, value)
+				: value < 1000000000000000000ULL  ? value < 100000000000000000ULL ? implInternal<17ULL>(buf, value) : implInternal<18ULL>(buf, value)
+				: value < 10000000000000000000ULL ? implInternal<19ULL>(buf, value)
+												  : implInternal<20ULL>(buf, value);
 		}
 	};
 
 	template<uint32_types v_type> struct to_chars<v_type> {
 		JSONIFIER_INLINE static write_buffer_ptr impl(write_buffer_ptr __restrict buf JSONIFIER_LIFETIME_BOUND, const v_type value) noexcept {
 			return value < 100000U	  ? value < 1000U ? value < 100U ? value < 10U ? (static_cast<void>(buf[0] = static_cast<uint8_t>(value + '0')), buf + 1)
-																				   : (static_cast<void>(pow2MemcpyWrapper<2ULL>(buf, char_table_2_digit_data + value)), buf + 2)
-																	 : (static_cast<void>(copy_3_digits(buf, value)), buf + 3)
-					: value < 10000ULL			   ? (static_cast<void>(pow2MemcpyWrapper<4ULL>(buf, char_table_4_digit_data + value)), buf + 4)
-												   : impl_internal<5ULL>(buf, value)
-				: value < 10000000U	  ? value < 1000000U ? impl_internal<6ULL>(buf, value) : impl_internal<7ULL>(buf, value)
-				: value < 1000000000U ? value < 100000000U ? impl_internal<8ULL>(buf, value) : impl_internal<9ULL>(buf, value)
-									  : impl_internal<10ULL>(buf, value);
+																				   : (static_cast<void>(pow2MemcpyWrapper<2ULL>(buf, charTable2DigitData + value)), buf + 2)
+																	 : (static_cast<void>(copy3Digits(buf, value)), buf + 3)
+					: value < 10000ULL			   ? (static_cast<void>(pow2MemcpyWrapper<4ULL>(buf, charTable4DigitData + value)), buf + 4)
+												   : implInternal<5ULL>(buf, value)
+				: value < 10000000U	  ? value < 1000000U ? implInternal<6ULL>(buf, value) : implInternal<7ULL>(buf, value)
+				: value < 1000000000U ? value < 100000000U ? implInternal<8ULL>(buf, value) : implInternal<9ULL>(buf, value)
+									  : implInternal<10ULL>(buf, value);
 		}
 	};
 
 	template<uint16_types v_type> struct to_chars<v_type> {
 		JSONIFIER_INLINE static write_buffer_ptr impl(write_buffer_ptr __restrict buf JSONIFIER_LIFETIME_BOUND, const v_type value) noexcept {
 			return value < 1000U   ? value < 100U ? value < 10U ? (static_cast<void>(buf[0] = static_cast<uint8_t>(value + '0')), buf + 1)
-																: (static_cast<void>(pow2MemcpyWrapper<2ULL>(buf, char_table_2_digit_data + value)), buf + 2)
-												  : (static_cast<void>(copy_3_digits(buf, value)), buf + 3)
-				: value < 10000ULL ? (static_cast<void>(pow2MemcpyWrapper<4ULL>(buf, char_table_4_digit_data + value)), buf + 4)
-								   : impl_internal<5ULL>(buf, value);
+																: (static_cast<void>(pow2MemcpyWrapper<2ULL>(buf, charTable2DigitData + value)), buf + 2)
+												  : (static_cast<void>(copy3Digits(buf, value)), buf + 3)
+				: value < 10000ULL ? (static_cast<void>(pow2MemcpyWrapper<4ULL>(buf, charTable4DigitData + value)), buf + 4)
+								   : implInternal<5ULL>(buf, value);
 		}
 	};
 
 	template<uint8_types v_type> struct to_chars<v_type> {
 		JSONIFIER_INLINE static write_buffer_ptr impl(write_buffer_ptr __restrict buf, const v_type value) noexcept {
 			return value < 100 ? value < 10 ? (static_cast<void>(buf[0] = static_cast<uint8_t>(value + '0')), buf + 1)
-											: (static_cast<void>(pow2MemcpyWrapper<2>(buf, &char_table_2_digit_data[value])), buf + 2)
-							   : (static_cast<void>(copy_3_digits(buf, value)), buf + 3);
+											: (static_cast<void>(pow2MemcpyWrapper<2>(buf, &charTable2DigitData[value])), buf + 2)
+							   : (static_cast<void>(copy3Digits(buf, value)), buf + 3);
 		}
 	};
 
 	template<int_types v_type> struct to_chars<v_type> {
 		JSONIFIER_INLINE static write_buffer_ptr impl(write_buffer_ptr __restrict buf JSONIFIER_LIFETIME_BOUND, const v_type value) noexcept {
-			using unsigned_type					 = std::make_unsigned_t<v_type>;
-			constexpr unsigned_type shift_amount = static_cast<unsigned_type>(sizeof(v_type) * 8ULL - 1ULL);
-			return (value < 0) ? impl_negative(buf, value)
+			using unsigned_type					= std::make_unsigned_t<v_type>;
+			constexpr unsigned_type shiftAmount = static_cast<unsigned_type>(sizeof(v_type) * 8ULL - 1ULL);
+			return (value < 0) ? implNegative(buf, value)
 							   : to_chars<unsigned_type>::impl(buf,
-									 static_cast<unsigned_type>((static_cast<unsigned_type>(value) ^ static_cast<unsigned_type>(value >> shift_amount)) -
-										 static_cast<unsigned_type>(value >> shift_amount)));
+									 static_cast<unsigned_type>((static_cast<unsigned_type>(value) ^ static_cast<unsigned_type>(value >> shiftAmount)) -
+										 static_cast<unsigned_type>(value >> shiftAmount)));
 		}
 
-		JSONIFIER_INLINE static write_buffer_ptr impl_negative(write_buffer_ptr __restrict buf, const v_type value) noexcept {
-			using unsigned_type					 = std::make_unsigned_t<v_type>;
-			constexpr unsigned_type shift_amount = static_cast<unsigned_type>(sizeof(v_type) * 8ULL - 1ULL);
-			*buf								 = '-';
+		JSONIFIER_INLINE static write_buffer_ptr implNegative(write_buffer_ptr __restrict buf, const v_type value) noexcept {
+			using unsigned_type					= std::make_unsigned_t<v_type>;
+			constexpr unsigned_type shiftAmount = static_cast<unsigned_type>(sizeof(v_type) * 8ULL - 1ULL);
+			*buf								= '-';
 			return to_chars<unsigned_type>::impl(buf + 1,
 				static_cast<unsigned_type>(
-					(static_cast<unsigned_type>(value) ^ static_cast<unsigned_type>(value >> shift_amount)) - static_cast<unsigned_type>(value >> shift_amount)));
+					(static_cast<unsigned_type>(value) ^ static_cast<unsigned_type>(value >> shiftAmount)) - static_cast<unsigned_type>(value >> shiftAmount)));
 		}
 	};
 
-};// namespace internal
+}

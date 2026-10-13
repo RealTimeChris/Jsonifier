@@ -84,14 +84,14 @@ namespace jsonifier::internal {
 		count,
 	};
 
-	inline void appendUnsigned(string& stream, uint64_t value) {
+	inline void appendUnsigned(string& stream, uint64_t value) noexcept {
 		uint8_t buffer[24];
 		auto* end = to_chars<uint64_t>::impl(buffer, value);
-		stream.append(std::bit_cast<const char*>(+buffer), static_cast<size_t>(end - buffer));
+		stream.append(std::bit_cast<const char*>(+buffer), static_cast<uint64_t>(end - buffer));
 	}
 
-	inline void appendErrorType(status_classes status_class, string& stream, uint64_t value) {
-		switch (static_cast<uint64_t>(status_class)) {
+	inline void appendErrorType(status_classes statusClass, string& stream, uint64_t value) noexcept {
+		switch (static_cast<uint64_t>(statusClass)) {
 			case static_cast<uint64_t>(status_classes::parsing): {
 				stream += getName(static_cast<parse_statuses>(value));
 				return;
@@ -114,7 +114,7 @@ namespace jsonifier::internal {
 		}
 	}
 
-	inline void appendEscapedByte(string& stream, char b) {
+	inline void appendEscapedByte(string& stream, char b) noexcept {
 		switch (b) {
 			case '\a':
 				stream += "\\a";
@@ -157,7 +157,7 @@ namespace jsonifier::internal {
 					static constexpr char hexDigits[]{ "0123456789abcdef" };
 					stream += "\\x";
 					stream += hexDigits[(static_cast<uint8_t>(b) >> 4U) & 0xFU];
-					stream += hexDigits[static_cast<uint8_t>(b) & 0xFU];
+					stream += hexDigits[static_cast<uint64_t>(b) & 0xFU];
 					return;
 				}
 		}
@@ -178,17 +178,16 @@ namespace jsonifier::internal {
 		object_end	 = '}',
 	};
 
-	constexpr array<bool, 256ULL> genBoolTable() {
+	consteval array<bool, 256ULL> genBoolTable() {
 		array<bool, 256ULL> returnValues{};
 		returnValues[static_cast<uint64_t>('t')] = true;
 		returnValues[static_cast<uint64_t>('f')] = true;
 		return returnValues;
 	}
 
-	alignas(64) inline constexpr const bool* __restrict boolTable{ []() constexpr {
-		constexpr auto local{ genBoolTable() };
-		return make_static<local>::value.data();
-	}() };
+	alignas(64) inline constexpr auto boolTableRaw{ genBoolTable() };
+
+	alignas(64) inline constexpr const bool* __restrict boolTable{ boolTableRaw.data() };
 
 	struct error {
 		inline void formatReport() noexcept {
@@ -262,7 +261,7 @@ namespace jsonifier::internal {
 			return { sourceLocation, errorClassNew, rootIter, errorPos, endIter, typeNew };
 		}
 
-		inline static void collectValues(string& stream, const string& inputValues) {
+		inline static void collectValues(string& stream, const string& inputValues) noexcept {
 			for (uint64_t i = 0; i < 32 && i < inputValues.size(); ++i) {
 				stream += "'";
 				appendEscapedByte(stream, inputValues[i]);
@@ -298,12 +297,12 @@ namespace jsonifier::internal {
 		uint64_t line{};
 	};
 
-	template<size_t buffer_size> inline static basic_stream<buffer_size>& operator<<(basic_stream<buffer_size>& os, const error& errorNew) noexcept {
+	template<uint64_t bufferSize> inline basic_stream<bufferSize>& operator<<(basic_stream<bufferSize>& os, const error& errorNew) noexcept {
 		os << errorNew.reportError();
 		return os;
 	}
 
-	inline static std::ostream& operator<<(std::ostream& os, const error& errorNew) noexcept {
+	inline std::ostream& operator<<(std::ostream& os, const error& errorNew) noexcept {
 		os << errorNew.reportError();
 		return os;
 	}

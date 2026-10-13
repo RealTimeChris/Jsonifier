@@ -13,18 +13,6 @@
 
 namespace jsonifier {
 
-#if JSONIFIER_CONFIGURED_AVX_TIER >= 2
-	namespace avx2::internal {
-		template<typename value_type, typename context_type, parse_options options> struct parse_impl;
-	}
-#endif
-
-#if JSONIFIER_CONFIGURED_AVX_TIER >= 3
-	namespace avx512::internal {
-		template<typename value_type, typename context_type, parse_options options> struct parse_impl;
-	}
-#endif
-
 	namespace internal {
 		template<typename value_type, typename context_type, parse_options options> struct parse_impl;
 	}
@@ -38,7 +26,7 @@ namespace jsonifier {
 			read_buffer_ptr last  = std::bit_cast<read_buffer_ptr>(sv.data() + sv.size());
 
 			if (sv.empty()) {
-				uint_val	= 0;
+				uintVal		= 0;
 				number_type = number_types::uint64;
 				return;
 			}
@@ -55,7 +43,7 @@ namespace jsonifier {
 					int64_t ival = 0;
 					auto ptr	 = internal::integer_parser<int64_t>::parseInt(ival, first, last);
 					if (ptr == last) {
-						int_val		= ival;
+						intVal		= ival;
 						number_type = number_types::int64;
 						return;
 					}
@@ -63,7 +51,7 @@ namespace jsonifier {
 					uint64_t uval = 0;
 					auto ptr	  = internal::integer_parser<uint64_t>::parseInt(uval, first, last);
 					if (ptr == last) {
-						uint_val	= uval;
+						uintVal		= uval;
 						number_type = number_types::uint64;
 						return;
 					}
@@ -73,10 +61,10 @@ namespace jsonifier {
 			double dval = 0.0;
 			auto ptr	= internal::float_parser<double>::parseFloat(dval, first, last);
 			if (ptr == last) {
-				double_val	= dval;
+				doubleVal	= dval;
 				number_type = number_types::double64;
 			} else {
-				uint_val	= 0;
+				uintVal		= 0;
 				number_type = number_types::uint64;
 			}
 		}
@@ -105,13 +93,13 @@ namespace jsonifier {
 		JSONIFIER_INLINE int64_t getInt() const noexcept {
 			switch (static_cast<uint64_t>(number_type)) {
 				case static_cast<uint64_t>(number_types::uint64): {
-					return static_cast<int64_t>(uint_val);
+					return static_cast<int64_t>(uintVal);
 				}
 				case static_cast<uint64_t>(number_types::int64): {
-					return int_val;
+					return intVal;
 				}
 				case static_cast<uint64_t>(number_types::double64): {
-					return static_cast<int64_t>(double_val);
+					return static_cast<int64_t>(doubleVal);
 				}
 				default: {
 					return 0;
@@ -120,25 +108,25 @@ namespace jsonifier {
 		}
 
 		JSONIFIER_INLINE double getDouble() const noexcept {
-			return number_type == number_types::double64 ? double_val : 0.0;
+			return number_type == number_types::double64 ? doubleVal : 0.0;
 		}
 
 		JSONIFIER_INLINE uint64_t getUint() const noexcept {
-			return number_type == number_types::uint64 ? uint_val : 0;
+			return number_type == number_types::uint64 ? uintVal : 0;
 		}
 
-		JSONIFIER_INLINE json_number() noexcept : uint_val(0), number_type(number_types::uint64) {
+		JSONIFIER_INLINE json_number() noexcept : uintVal{ 0 }, number_type{ number_types::uint64 } {
 		}
 
-		JSONIFIER_INLINE number_types getType() const {
+		JSONIFIER_INLINE number_types getType() const noexcept {
 			return number_type;
 		}
 
 	  protected:
 		union {
-			uint64_t uint_val;
-			double double_val;
-			int64_t int_val;
+			uint64_t uintVal;
+			double doubleVal;
+			int64_t intVal;
 		};
 		number_types number_type;
 	};
@@ -190,7 +178,7 @@ namespace jsonifier {
 			}
 		}
 
-		template<std::convertible_to<string_view> key_type> JSONIFIER_INLINE bool contains(key_type&& key) const noexcept {
+		template<std::convertible_to<string_view> key_type> JSONIFIER_INLINE bool contains(key_type&& key) const {
 			if (!std::holds_alternative<object_type>(value)) {
 				return false;
 			}
@@ -199,7 +187,7 @@ namespace jsonifier {
 			return object.contains(static_cast<key_type_local>(key));
 		}
 
-		template<std::convertible_to<string_view> key_type> JSONIFIER_INLINE raw_json_data& operator[](key_type&& key) noexcept {
+		template<std::convertible_to<string_view> key_type> JSONIFIER_INLINE raw_json_data& operator[](key_type&& key) {
 			if (std::holds_alternative<null_type>(value)) {
 				value = object_type{};
 			}
@@ -208,17 +196,17 @@ namespace jsonifier {
 			return object[static_cast<key_type_local>(key)];
 		}
 
-		template<std::convertible_to<const string_view> key_type> JSONIFIER_INLINE const raw_json_data& operator[](key_type&& key) const noexcept {
+		template<std::convertible_to<const string_view> key_type> JSONIFIER_INLINE const raw_json_data& operator[](key_type&& key) const {
 			const auto& object	 = std::get<object_type>(value);
 			using key_type_local = typename internal::base_t<decltype(object)>::key_type;
 			return object.at(static_cast<key_type_local>(key));
 		}
 
-		template<internal::uint_types index_type> JSONIFIER_INLINE const raw_json_data& operator[](index_type&& index) const noexcept {
+		template<internal::uint_types index_type> JSONIFIER_INLINE const raw_json_data& operator[](index_type&& index) const {
 			return (std::get<array_type>(value))[index];
 		}
 
-		template<internal::uint_types index_type> JSONIFIER_INLINE raw_json_data& operator[](index_type&& index) noexcept {
+		template<internal::uint_types index_type> JSONIFIER_INLINE raw_json_data& operator[](index_type&& index) {
 			return (std::get<array_type>(value))[index];
 		}
 
@@ -226,55 +214,55 @@ namespace jsonifier {
 			return value == other.value;
 		}
 
-		JSONIFIER_INLINE const object_type& getObject() const noexcept {
+		JSONIFIER_INLINE const object_type& getObject() const {
 			return std::get<object_type>(value);
 		}
 
-		JSONIFIER_INLINE const string_type& getString() const noexcept {
+		JSONIFIER_INLINE const string_type& getString() const {
 			return std::get<string_type>(value);
 		}
 
-		JSONIFIER_INLINE const number_type& getNumber() const noexcept {
+		JSONIFIER_INLINE const number_type& getNumber() const {
 			return std::get<number_type>(value);
 		}
 
-		JSONIFIER_INLINE double getDouble() const noexcept {
+		JSONIFIER_INLINE double getDouble() const {
 			return std::get<number_type>(value).getDouble();
 		}
 
-		JSONIFIER_INLINE uint64_t getUint() const noexcept {
+		JSONIFIER_INLINE uint64_t getUint() const {
 			return std::get<number_type>(value).getUint();
 		}
 
-		JSONIFIER_INLINE const array_type& getArray() const noexcept {
+		JSONIFIER_INLINE const array_type& getArray() const {
 			return std::get<array_type>(value);
 		}
 
-		JSONIFIER_INLINE int64_t getInt() const noexcept {
+		JSONIFIER_INLINE int64_t getInt() const {
 			return std::get<number_type>(value).getInt();
 		}
 
-		JSONIFIER_INLINE const bool_type& getBool() const noexcept {
+		JSONIFIER_INLINE const bool_type& getBool() const {
 			return std::get<bool_type>(value);
 		}
 
-		JSONIFIER_INLINE object_type& getObject() noexcept {
+		JSONIFIER_INLINE object_type& getObject() {
 			return std::get<object_type>(value);
 		}
 
-		JSONIFIER_INLINE string_type& getString() noexcept {
+		JSONIFIER_INLINE string_type& getString() {
 			return std::get<string_type>(value);
 		}
 
-		JSONIFIER_INLINE number_type& getNumber() noexcept {
+		JSONIFIER_INLINE number_type& getNumber() {
 			return std::get<number_type>(value);
 		}
 
-		JSONIFIER_INLINE array_type& getArray() noexcept {
+		JSONIFIER_INLINE array_type& getArray() {
 			return std::get<array_type>(value);
 		}
 
-		JSONIFIER_INLINE bool_type& getBool() noexcept {
+		JSONIFIER_INLINE bool_type& getBool() {
 			return std::get<bool_type>(value);
 		}
 
@@ -284,12 +272,6 @@ namespace jsonifier {
 
 	  protected:
 		template<typename value_type_new, typename context_type, parse_options options> friend struct internal::parse_impl;
-#if JSONIFIER_CONFIGURED_AVX_TIER >= 2
-		template<typename value_type_new, typename context_type, parse_options options> friend struct avx2::internal::parse_impl;
-#endif
-#if JSONIFIER_CONFIGURED_AVX_TIER >= 3
-		template<typename value_type_new, typename context_type, parse_options options> friend struct avx512::internal::parse_impl;
-#endif
 
 		template<typename context_type> inline void constructValueFromRawJsonData(context_type& context, const string& jsonDataNew) noexcept {
 			static constexpr parse_options optionsNew{};
@@ -328,26 +310,36 @@ namespace jsonifier {
 						value.emplace<null_type>();
 						return;
 					}
-					case '0':
+					case '0': {
 						[[fallthrough]];
-					case '1':
+					}
+					case '1': {
 						[[fallthrough]];
-					case '2':
+					}
+					case '2': {
 						[[fallthrough]];
-					case '3':
+					}
+					case '3': {
 						[[fallthrough]];
-					case '4':
+					}
+					case '4': {
 						[[fallthrough]];
-					case '5':
+					}
+					case '5': {
 						[[fallthrough]];
-					case '6':
+					}
+					case '6': {
 						[[fallthrough]];
-					case '7':
+					}
+					case '7': {
 						[[fallthrough]];
-					case '8':
+					}
+					case '8': {
 						[[fallthrough]];
-					case '9':
+					}
+					case '9': {
 						[[fallthrough]];
+					}
 					case '-': {
 						value.emplace<number_type>(jsonDataNew);
 						return;

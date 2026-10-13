@@ -11,36 +11,33 @@
 
 namespace jsonifier::internal {
 
-	template<typename = void> struct exp_tables {
-		static constexpr bool expTable[]{ false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-			false, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false };
+	consteval array<bool, 256> generateExpTable() {
+		array<bool, 256> table{};
+		table['E'] = true;
+		table['e'] = true;
+		return table;
+	}
 
-		static constexpr bool expFracTable[]{ false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-			false, false, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-			false, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false, false, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-			false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false };
-	};
+	template<typename = void> alignas(64) inline constexpr array<bool, 256> expTableRaw = generateExpTable();
 
-	static constexpr char decimal{ '.' };
-	static constexpr char minus{ '-' };
-	static constexpr char plus{ '+' };
-	static constexpr char nine{ '9' };
+	alignas(64) inline constexpr const bool* __restrict expTable{ expTableRaw<>.data() };
+
+	consteval array<bool, 256> generateExpFracTable() {
+		array<bool, 256> table{};
+		table['.'] = true;
+		table['E'] = true;
+		table['e'] = true;
+		return table;
+	}
+
+	template<typename = void> alignas(64) inline constexpr array<bool, 256> expFracTableRaw = generateExpFracTable();
+
+	alignas(64) inline constexpr const bool* __restrict expFracTable{ expFracTableRaw<>.data() };
+
+	alignas(64) inline constexpr char decimal{ '.' };
+	alignas(64) inline constexpr char minus{ '-' };
+	alignas(64) inline constexpr char plus{ '+' };
+	alignas(64) inline constexpr char nine{ '9' };
 
 	struct parsed_number {
 		read_buffer_ptr lastMatch{};
@@ -53,34 +50,34 @@ namespace jsonifier::internal {
 		bool valid{};
 	};
 
-	JSONIFIER_INLINE static parsed_number parse_number_string(read_buffer_ptr iter, read_buffer_ptr end, bool storeSpans) noexcept {
+	JSONIFIER_INLINE parsed_number parseNumberString(read_buffer_ptr iter, read_buffer_ptr end, bool storeSpans) noexcept {
 		parsed_number answer{};
 		answer.negative = (*iter == minus);
 		if (answer.negative) {
 			++iter;
-			if (iter == end || !is_integer(*iter)) [[unlikely]] {
+			if (iter == end || !isDigit(*iter)) [[unlikely]] {
 				return answer;
 			}
 		}
 		read_buffer_ptr const startDigits = iter;
 
 		uint64_t mantissa{};
-		if ((iter != end) && is_integer(*iter)) {
+		if ((iter != end) && isDigit(*iter)) {
 			mantissa = static_cast<uint64_t>(*iter - '0');
 			++iter;
-			if ((iter != end) && is_integer(*iter)) {
+			if ((iter != end) && isDigit(*iter)) {
 				mantissa = 10 * mantissa + static_cast<uint64_t>(*iter - '0');
 				++iter;
-				if ((iter != end) && is_integer(*iter)) {
+				if ((iter != end) && isDigit(*iter)) {
 					mantissa = 10 * mantissa + static_cast<uint64_t>(*iter - '0');
 					++iter;
-					if ((iter != end) && is_integer(*iter)) {
+					if ((iter != end) && isDigit(*iter)) {
 						mantissa = 10 * mantissa + static_cast<uint64_t>(*iter - '0');
 						++iter;
-						if ((iter != end) && is_integer(*iter)) {
+						if ((iter != end) && isDigit(*iter)) {
 							mantissa = 10 * mantissa + static_cast<uint64_t>(*iter - '0');
 							++iter;
-							while ((iter != end) && is_integer(*iter)) {
+							while ((iter != end) && isDigit(*iter)) {
 								mantissa = 10 * mantissa + static_cast<uint64_t>(*iter - '0');
 								++iter;
 							}
@@ -103,8 +100,8 @@ namespace jsonifier::internal {
 		if (hasDecimalPoint) {
 			++iter;
 			read_buffer_ptr const before = iter;
-			loop_parse_if_eight_digits(iter, end, mantissa);
-			while ((iter != end) && is_integer(*iter)) {
+			loopParseIfEightDigits(iter, end, mantissa);
+			while ((iter != end) && isDigit(*iter)) {
 				uint8_t digit = static_cast<uint8_t>(*iter - '0');
 				++iter;
 				mantissa = mantissa * 10 + digit;
@@ -129,10 +126,10 @@ namespace jsonifier::internal {
 			} else if ((iter != end) && (*iter == plus)) {
 				++iter;
 			}
-			if ((iter == end) || !is_integer(*iter)) [[unlikely]] {
+			if ((iter == end) || !isDigit(*iter)) [[unlikely]] {
 				return answer;
 			}
-			while ((iter != end) && is_integer(*iter)) {
+			while ((iter != end) && isDigit(*iter)) {
 				uint8_t digit = static_cast<uint8_t>(*iter - '0');
 				if (expNumber < 0x10000000) {
 					expNumber = 10 * expNumber + digit;
@@ -183,29 +180,29 @@ namespace jsonifier::internal {
 		return answer;
 	}
 
-	template<float_t value_type> struct float_parser {
-		JSONIFIER_INLINE static bool clinger_fast_path(uint64_t mantissa, int64_t exponent, bool negative, value_type& value) noexcept {
-			if (binary_format<value_type>::min_exponent_fast_path <= exponent && exponent <= binary_format<value_type>::max_exponent_fast_path &&
-				mantissa <= binary_format<value_type>::max_mantissa_fast_path_value) {
+	template<float_types value_type> struct float_parser {
+		JSONIFIER_INLINE static bool clingerFastPath(uint64_t mantissa, int64_t exponent, bool negative, value_type& value) noexcept {
+			if (binary_format<value_type>::minExponentFastPath <= exponent && exponent <= binary_format<value_type>::maxExponentFastPath &&
+				mantissa <= binary_format<value_type>::maxMantissaFastPathValue) {
 				if (rounds_to_nearest::roundsToNearest) {
 					value = static_cast<value_type>(mantissa);
 					if (exponent < 0) {
-						value = value / binary_format<value_type>::exact_power_of_ten(-exponent);
+						value = value / binary_format<value_type>::exactPowerOfTen(-exponent);
 					} else {
-						value = value * binary_format<value_type>::exact_power_of_ten(exponent);
+						value = value * binary_format<value_type>::exactPowerOfTen(exponent);
 					}
 					if (negative) {
 						value = -value;
 					}
 					return true;
-				} else if (exponent >= 0 && mantissa <= binary_format<value_type>::max_mantissa_fast_path(exponent)) {
+				} else if (exponent >= 0 && mantissa <= binary_format<value_type>::maxMantissaFastPath(exponent)) {
 #if JSONIFIER_COMPILER_CLANG
 					if (mantissa == 0) {
 						value = negative ? static_cast<value_type>(-0.) : static_cast<value_type>(0.);
 						return true;
 					}
 #endif
-					value = static_cast<value_type>(mantissa) * binary_format<value_type>::exact_power_of_ten(exponent);
+					value = static_cast<value_type>(mantissa) * binary_format<value_type>::exactPowerOfTen(exponent);
 					if (negative) {
 						value = -value;
 					}
@@ -216,23 +213,23 @@ namespace jsonifier::internal {
 		}
 
 		JSONIFIER_INLINE static read_buffer_ptr parseFloatSlow(value_type& value, read_buffer_ptr iter, read_buffer_ptr end) noexcept {
-			parsed_number pns = parse_number_string(iter, end, true);
-			if (!pns.tooManyDigits && clinger_fast_path(pns.mantissa, pns.exponent, pns.negative, value)) {
+			parsed_number pns = parseNumberString(iter, end, true);
+			if (!pns.tooManyDigits && clingerFastPath(pns.mantissa, pns.exponent, pns.negative, value)) {
 				return pns.lastMatch;
 			}
-			adjusted_mantissa am = compute_float<binary_format<value_type>>(pns.exponent, pns.mantissa);
+			adjusted_mantissa am = computeFloat<binary_format<value_type>>(pns.exponent, pns.mantissa);
 			if (pns.tooManyDigits && am.power2 >= 0) {
-				if (am != compute_float<binary_format<value_type>>(pns.exponent, pns.mantissa + 1)) {
-					am = compute_error<binary_format<value_type>>(pns.exponent, pns.mantissa);
+				if (am != computeFloat<binary_format<value_type>>(pns.exponent, pns.mantissa + 1)) {
+					am = computeError<binary_format<value_type>>(pns.exponent, pns.mantissa);
 				}
 			}
 			if (am.power2 < 0) {
-				am = digit_comp<value_type>(pns.integer, pns.fraction, pns.mantissa, pns.exponent, am);
+				am = digitComp<value_type>(pns.integer, pns.fraction, pns.mantissa, pns.exponent, am);
 			}
-			if (am.power2 == binary_format<value_type>::infinite_power) {
+			if (am.power2 == binary_format<value_type>::infinitePower) {
 				return nullptr;
 			}
-			to_float(pns.negative, am, value);
+			toFloat(pns.negative, am, value);
 			return pns.lastMatch;
 		}
 
@@ -240,24 +237,24 @@ namespace jsonifier::internal {
 			if (iter >= end) [[unlikely]] {
 				return nullptr;
 			}
-			parsed_number pns = parse_number_string(iter, end, false);
+			parsed_number pns = parseNumberString(iter, end, false);
 			if (!pns.valid) [[unlikely]] {
 				return nullptr;
 			}
 			if (pns.tooManyDigits) [[unlikely]] {
 				return parseFloatSlow(value, iter, end);
 			}
-			if (clinger_fast_path(pns.mantissa, pns.exponent, pns.negative, value)) {
+			if (clingerFastPath(pns.mantissa, pns.exponent, pns.negative, value)) {
 				return pns.lastMatch;
 			}
-			adjusted_mantissa am = compute_float<binary_format<value_type>>(pns.exponent, pns.mantissa);
+			adjusted_mantissa am = computeFloat<binary_format<value_type>>(pns.exponent, pns.mantissa);
 			if (am.power2 < 0) [[unlikely]] {
 				return parseFloatSlow(value, iter, end);
 			}
-			if (am.power2 == binary_format<value_type>::infinite_power) [[unlikely]] {
+			if (am.power2 == binary_format<value_type>::infinitePower) [[unlikely]] {
 				return nullptr;
 			}
-			to_float(pns.negative, am, value);
+			toFloat(pns.negative, am, value);
 			return pns.lastMatch;
 		}
 	};

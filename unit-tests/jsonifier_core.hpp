@@ -10,7 +10,7 @@
 
 namespace core_tests {
 
-	inline static void runTests() {
+	inline void runTests() {
 		{
 			jsonifier::jsonifier_core<> parserA{};
 			static constexpr std::string_view testInput{ R"({"test_string":"hello","test_int":42,"test_bool":true})" };
@@ -74,19 +74,12 @@ namespace core_tests {
 		}
 
 		{
-			const jsonifier::jsonifier_backend selected{ jsonifier::jsonifier_core<>::selectBackend() };
-			rt_ut::unit_test<"core, collection-selects-supported-backend", true>::assert_eq(true, [&]() {
-				return jsonifier::internal::backendSupported(selected) || selected == jsonifier::default_backend;
-			});
-		}
-
-		{
 			jsonifier::jsonifier_core<> parser{};
 			static constexpr std::string_view badInput{ R"({"test_string":)" };
 			abc_in_order_partial_test_struct data{};
 			parser.parseJson(data, badInput);
 
-			rt_ut::unit_test<"core, collection-shares-error-storage", true>::assert_eq(true, [&]() {
+			rt_ut::unit_test<"core, records-parse-errors", true>::assert_eq(true, [&]() {
 				return !parser.getErrors().empty();
 			});
 		}
@@ -101,7 +94,7 @@ namespace core_tests {
 			static constexpr std::string_view testInput{ R"({"test_string":"rebound","test_int":3,"test_bool":true})" };
 			abc_in_order_partial_test_struct dataB{};
 
-			rt_ut::unit_test<"core, collection-move-rebinds-shared-storage", true>::assert_eq(true, [&]() {
+			rt_ut::unit_test<"core, move-construct-keeps-errors", true>::assert_eq(true, [&]() {
 				return !parserB.getErrors().empty() && parserB.parseJson(dataB, testInput) && dataB.test_string == "rebound" && dataB.test_int == 3;
 			});
 		}

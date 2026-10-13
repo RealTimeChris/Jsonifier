@@ -23,7 +23,7 @@ Every string the parser materializes is validated as it is unescaped:
 parser.parseJson(data, json);
 ```
 
-The validator is fused into the string-parsing SIMD path. Non-string JSON bytes (structural characters, numbers, keywords) are validated against JSON grammar during normal parsing, which implicitly guarantees they're 7-bit ASCII — so UTF-8 validation only needs to cover string content. If any string in the document contains malformed UTF-8, `parseJson` returns `false` and the error lands in `parser.getErrors()`.
+The validator is fused into the string-parsing SIMD path. Non-string JSON bytes (structural characters, numbers, keywords) are validated against JSON grammar during normal parsing, which implicitly guarantees they're 7-bit ASCII, so UTF-8 validation only needs to cover string content. If any string in the document contains malformed UTF-8, `parseJson` returns `false` and the error lands in `parser.getErrors()`.
 
 ### Inside `validateJson`
 
@@ -35,7 +35,7 @@ bool valid = parser.validateJson(json);
 
 ### Standalone (arbitrary byte buffers)
 
-For validating byte sequences that aren't JSON at all — file contents, network buffers, existing string data, protocol payloads — call `jsonifier::validateUtf8` directly:
+For validating byte sequences that aren't JSON at all (file contents, network buffers, existing string data, protocol payloads), call `jsonifier::validateUtf8` directly:
 
 ```cpp
 #include <jsonifier>
@@ -70,33 +70,33 @@ Most malformed JSON is rejected by the parser's grammar checks; the UTF-8 valida
 
 ## Performance
 
-When integrated into JSON parsing, UTF-8 validation scopes to **string content only**. Non-string bytes are validated against JSON grammar during normal parsing, which implicitly guarantees they're 7-bit ASCII — so there's no additional UTF-8 work outside string values.
+When integrated into JSON parsing, UTF-8 validation scopes to **string content only**. Non-string bytes are validated against JSON grammar during normal parsing, which implicitly guarantees they're 7-bit ASCII, so there's no additional UTF-8 work outside string values.
 
 This means UTF-8 validation cost during parsing is proportional to **how much string content** is in the document, not the total document size. A JSON document that's mostly numbers, booleans, and structural characters pays almost nothing for it. A document that's mostly long string values pays more.
 
-When running standalone via `jsonifier::validateUtf8`, every byte in the input is validated — cost is proportional to the full buffer size.
+When running standalone via `jsonifier::validateUtf8`, every byte in the input is validated, so cost is proportional to the full buffer size.
 
 In both modes, the validator has an ASCII fast-path: if all bytes in a SIMD register are in the ASCII range (high bit clear), the register is validated in a single comparison and the rest of the validation work is skipped. Real-world English or code-heavy content sees near-zero overhead. Multi-byte-heavy content (CJK, emoji, non-Latin scripts) pays the full validation cost, but the SIMD validator's throughput on multi-byte content is still measured in gigabytes per second on modern hardware.
 
 ## Under the Hood: Cross-Width Register Validation
 
-Jsonifier's UTF-8 validator is based on the [Keiser-Lemire algorithm](https://arxiv.org/abs/2010.03090) — a lookup-table approach where each byte's role (lead, continuation, illegal patterns) is classified via SIMD table lookups, and errors are accumulated into an error register that's OR'd across the whole input. If the error register is non-zero at the end, the input is invalid.
+Jsonifier's UTF-8 validator is based on the [Keiser-Lemire algorithm](https://arxiv.org/abs/2010.03090), a lookup-table approach where each byte's role (lead, continuation, illegal patterns) is classified via SIMD table lookups, and errors are accumulated into an error register that's OR'd across the whole input. If the error register is non-zero at the end, the input is invalid.
 
 The core problem in SIMD UTF-8 validation is that codepoints can be up to 4 bytes long, and a codepoint can start near the end of one SIMD register and continue into the next. Naive per-register validation misses these boundary-crossing codepoints or produces false errors when it can't see the lead byte from the previous register.
 
 Jsonifier's validators solve this by carrying three registers from one load to the next:
 
-- **`prevInput`** — the previous register's bytes, so the byte-shifted lookbacks (`opPrev<15>`, `opPrev<14>`, `opPrev<13>`: one, two, and three bytes back) can reach across the boundary
-- **`incompleteRegister`** (`prevIncomplete` in the block validator) — nonzero when the previous register ended with an unfinished codepoint, i.e. a lead byte in its last 1–3 positions still waiting for continuation bytes
-- **`error`** — an accumulated error register, OR'd across everything validated so far
+- **`prevInput`**: the previous register's bytes, so the byte-shifted lookbacks (`opPrev<15>`, `opPrev<14>`, `opPrev<13>`: one, two, and three bytes back) can reach across the boundary
+- **`incompleteRegister`** (`prevIncomplete` in the block validator): nonzero when the previous register ended with an unfinished codepoint, i.e. a lead byte in its last 1–3 positions still waiting for continuation bytes
+- **`error`**: an accumulated error register, OR'd across everything validated so far
 
 For each register, the validator:
 
-1. **ASCII fast path** — if every byte has its high bit clear, OR the pending incomplete carry into `error` (an unfinished codepoint followed by ASCII is invalid), save the register as `prevInput`, clear the carry, and skip the rest.
-2. **Byte classification** — classify each byte against the one-byte lookback (`opPrev<15>`) using the three Keiser-Lemire nibble tables (`byte1HighTable`, `byte1LowTable`, `byte2HighTable`).
-3. **Multi-byte length checks** — use the two- and three-byte lookbacks (`opPrev<14>`, `opPrev<13>`) to verify that 3- and 4-byte lead bytes are followed by the right number of continuation bytes.
-4. **State update** — save the register as `prevInput`, and recompute the incomplete carry with a saturating subtract against the `isIncompleteMax` thresholds (last byte ≥ 0xC0, second-to-last ≥ 0xE0, third-to-last ≥ 0xF0).
-5. **Finalize** — the input is invalid if either `error` or the incomplete carry is nonzero, since ending on an unfinished codepoint is itself invalid.
+1. **ASCII fast path**: if every byte has its high bit clear, OR the pending incomplete carry into `error` (an unfinished codepoint followed by ASCII is invalid), save the register as `prevInput`, clear the carry, and skip the rest.
+2. **Byte classification**: classify each byte against the one-byte lookback (`opPrev<15>`) using the three Keiser-Lemire nibble tables (`byte1HighTable`, `byte1LowTable`, `byte2HighTable`).
+3. **Multi-byte length checks**: use the two- and three-byte lookbacks (`opPrev<14>`, `opPrev<13>`) to verify that 3- and 4-byte lead bytes are followed by the right number of continuation bytes.
+4. **State update**: save the register as `prevInput`, and recompute the incomplete carry with a saturating subtract against the `isIncompleteMax` thresholds (last byte ≥ 0xC0, second-to-last ≥ 0xE0, third-to-last ≥ 0xF0).
+5. **Finalize**: the input is invalid if either `error` or the incomplete carry is nonzero, since ending on an unfinished codepoint is itself invalid.
 
 There are two validators built on this algorithm. The standalone `jsonifier::validateUtf8` uses `utf8_checker`, which works in 64-byte blocks and takes its ASCII fast path per block. The parser uses `utf8_register_validator`, which works one register at a time inside the string-scanning loop, at whatever width that loop is using: 16 bytes on SSE, NEON, and SVE2, 32 on AVX2, and 64 on AVX-512.
 
@@ -110,7 +110,7 @@ Input that doesn't fill a whole register is copied into a register-sized scratch
 #include <jsonifier>
 #include <iostream>
 
-int main() {
+int32_t main() {
     jsonifier::jsonifier_core<> parser;
 
     std::string json_valid = R"({"name":"Concert 🎵","id":42})";
@@ -142,12 +142,12 @@ int main() {
 }
 ```
 
-The `event` registration is omitted from this snippet — see [Reflection](Reflection.md) for the setup.
+The `event` registration is omitted from this snippet; see [Reflection](Reflection.md) for the setup.
 
 ## What's Next
 
-- **[Validating](Validating.md)** — the pure structural-check function that includes UTF-8 validation automatically
-- **[Serializing & Parsing](Usage_Serializing_Parsing.md)** — the full `parse_options` reference
-- **[Error Handling](Errors.md)** — how UTF-8 errors are reported through `parser.getErrors()`
+- **[Validating](Validating.md)**: the pure structural-check function that includes UTF-8 validation automatically
+- **[Serializing & Parsing](Usage_Serializing_Parsing.md)**: the full `parse_options` reference
+- **[Error Handling](Errors.md)**: how UTF-8 errors are reported through `parser.getErrors()`
 
 ---

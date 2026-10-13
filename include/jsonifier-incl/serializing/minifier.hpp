@@ -4,15 +4,14 @@
  * https://github.com/nihilai-collective/jsonifier
  * include/jsonifier-incl/serializing/minifier.hpp
  */
-#if !defined(JSONIFIER_PASS_GUARD_MINIFIER)
-	#define JSONIFIER_PASS_GUARD_MINIFIER
+#pragma once
 
-	#include <jsonifier-incl/utilities/compare.hpp>
-	#include <jsonifier-incl/utilities/simd.hpp>
+#include <jsonifier-incl/utilities/compare.hpp>
+#include <jsonifier-incl/utilities/simd.hpp>
 
-namespace JSONIFIER_INTERNAL_NAMESPACE {
+namespace jsonifier::internal {
 
-	constexpr array<json_structural_type, 256ULL> genJsonTypes() {
+	consteval array<json_structural_type, 256ULL> genJsonTypes() {
 		array<json_structural_type, 256ULL> returnValues{};
 		using enum json_structural_type;
 		returnValues[static_cast<uint64_t>('"')] = string;
@@ -39,13 +38,12 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 		return returnValues;
 	}
 
-	alignas(64) inline constexpr const json_structural_type* __restrict jsonTypes{ []() constexpr {
-		constexpr auto local{ genJsonTypes() };
-		return make_static<local>::value.data();
-	}() };
+	alignas(64) inline constexpr auto jsonTypesRaw{ genJsonTypes() };
+
+	alignas(64) inline constexpr const json_structural_type* __restrict jsonTypes{ jsonTypesRaw.data() };
 
 	template<typename minifier_type> struct minify_context_ro {
-		inline minify_context_ro(minifier_type& minifierNew, write_structural_index_ptr iterNew, write_structural_index_ptr endStructuralNew, read_buffer_ptr rootIterNew,
+		JSONIFIER_INLINE minify_context_ro(minifier_type& minifierNew, write_structural_index_ptr iterNew, write_structural_index_ptr endStructuralNew, read_buffer_ptr rootIterNew,
 			read_buffer_ptr endIterNew) noexcept
 			: endStructural{ endStructuralNew }, iter{ iterNew }, rootIter{ rootIterNew }, endIter{ endIterNew }, minifier{ minifierNew } {
 		}
@@ -72,7 +70,7 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 		using derived_type = derived_type_new;
 		template<typename prettifier_type> friend struct minify_context_ro;
 
-		template<string_t input_string_type, string_t output_buffer_type> inline bool minifyJson(input_string_type&& in, output_buffer_type&& buffer) noexcept {
+		template<string_types input_string_type, string_types output_buffer_type> inline bool minifyJson(input_string_type&& in, output_buffer_type&& buffer) {
 			derivedRef.errors.clear();
 			read_buffer_ptr rootIter = std::bit_cast<read_buffer_ptr>(in.data());
 			read_buffer_ptr endIter	 = rootIter + in.size();
@@ -85,7 +83,7 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 			}
 			const uint64_t requiredSize = in.size();
 			using context_type			= minify_context_ro<remove_reference_t<decltype(*this)>>;
-			if constexpr (has_resize_and_overwrite<remove_cvref_t<output_buffer_type>>) {
+			if constexpr (resize_and_overwriteable_types<remove_cvref_t<output_buffer_type>>) {
 				buffer.resize_and_overwrite(requiredSize, context_type{ *this, iter, endStructural, rootIter, endIter });
 			} else {
 				if (buffer.size() < requiredSize) {
@@ -107,8 +105,8 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 		inline ~minifier() noexcept				   = default;
 		inline minifier() noexcept				   = default;
 
-		template<prettify_buffer_t string_type, typename iterator, typename iterator_end> inline uint64_t impl(iterator* __restrict& iter, iterator_end* __restrict endStructural,
-			string_type&& outBuffer, read_buffer_ptr rootIter, read_buffer_ptr endIter) noexcept {
+		template<prettify_buffer_types string_type, typename iterator, typename iterator_end>
+		inline uint64_t impl(iterator* __restrict& iter, iterator_end* __restrict endStructural, string_type&& outBuffer, read_buffer_ptr rootIter, read_buffer_ptr endIter) {
 			using enum json_structural_type;
 			read_buffer_ptr previousPtr{};
 			int64_t currentDistance{};
@@ -118,7 +116,7 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 			while (iter < endStructural) {
 				previousPtr = rootIter + *iter;
 				++iter;
-				switch (static_cast<uint64_t>(jsonTypes[static_cast<uint8_t>(*previousPtr)])) {
+				switch (static_cast<uint64_t>(jsonTypes[static_cast<uint64_t>(*previousPtr)])) {
 					case static_cast<uint64_t>(string): {
 						backTrackWs(currentDistance, previousPtr, iter, rootIter);
 						if (currentDistance > 0) [[likely]] {
@@ -138,7 +136,7 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 					}
 					case static_cast<uint64_t>(number): {
 						currentDistance = 0;
-						while (!whitespaceTable[static_cast<uint8_t>(previousPtr[++currentDistance])] && ((previousPtr + currentDistance) < (rootIter + *iter))) {
+						while (!whitespaceTable[static_cast<uint64_t>(previousPtr[++currentDistance])] && ((previousPtr + currentDistance) < (rootIter + *iter))) {
 						}
 						jsonifierMemcpy(&outBuffer[index], previousPtr, static_cast<uint64_t>(currentDistance));
 						index += static_cast<uint64_t>(currentDistance);
@@ -232,11 +230,9 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 		}
 
 		JSONIFIER_INLINE void skipWs(int64_t& currentDistance, read_buffer_ptr previousPtr) noexcept {
-			while (whitespaceTable[static_cast<uint8_t>(previousPtr[--currentDistance])]) {
+			while (whitespaceTable[static_cast<uint64_t>(previousPtr[--currentDistance])]) {
 			}
 		}
 	};
 
-}// namespace internal
-
-#endif
+}

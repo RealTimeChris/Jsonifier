@@ -1,12 +1,48 @@
-<p align="center"><img src="./Logo.png?raw=true" width="350"/></p>
+<p align="center"><img src="./Logo.png?raw=true" width="450"/></p>
 
-![Commit Activity](https://img.shields.io/github/commit-activity/y/nihilai-collective/jsonifier?color=999EE0&label=Commits&style=plastic)
-![License](https://img.shields.io/badge/License-MIT-blue.svg?style=plastic)
-![C++23](https://img.shields.io/badge/C%2B%2B-23-blue.svg?style=plastic)
+![Lines of Code](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/nihilai-collective/jsonifier/badges/loc.json&style=plastic)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg?style=plastic)](License.md)
+[![C++](https://img.shields.io/badge/C%2B%2B-23-blue.svg?style=plastic)](https://isocpp.org/)
+[![Header-only](https://img.shields.io/badge/header--only-yes-brightgreen.svg?style=plastic)](include/)
+
+---
+## Compiler Support
+![MSVC](https://img.shields.io/github/actions/workflow/status/nihilai-collective/jsonifier/unit-tests.yml?style=plastic&logo=microsoft&logoColor=green&label=MSVC&labelColor=pewter&color=blue&branch=main)
+![GCC](https://img.shields.io/github/actions/workflow/status/nihilai-collective/jsonifier/unit-tests.yml?style=plastic&logo=linux&logoColor=green&label=GCC&labelColor=pewter&color=blue&branch=main)
+![CLANG](https://img.shields.io/github/actions/workflow/status/nihilai-collective/jsonifier/unit-tests.yml?style=plastic&logo=apple&logoColor=green&label=CLANG&labelColor=pewter&color=blue&branch=main)
+
+## Operating System Support
+![Windows](https://img.shields.io/github/actions/workflow/status/nihilai-collective/jsonifier/unit-tests.yml?style=plastic&logo=microsoft&logoColor=green&label=Windows&labelColor=pewter&color=blue&branch=main)
+![Linux](https://img.shields.io/github/actions/workflow/status/nihilai-collective/jsonifier/unit-tests.yml?style=plastic&logo=linux&logoColor=green&label=Linux&labelColor=pewter&color=blue&branch=main)
+![Mac](https://img.shields.io/github/actions/workflow/status/nihilai-collective/jsonifier/unit-tests.yml?style=plastic&logo=apple&logoColor=green&label=MacOS&labelColor=pewter&color=blue&branch=main)
+
+---
+
+Parsing at least slightly more gigabytes of JSON per second, most of the time.
+===============================================
+
+Jsonifier uses SIMD structural indexing and compile-time perfect hash maps to read and write JSON **1.8x to 2.3x faster than Glaze** and **1.6x to 3.1x faster than simdjson**, across every major compiler and both x86-64 and ARM64. ([Oct 21, 2026 results](https://github.com/nihilai-collective/Json-Performance))
+
+* **Schema-aware (reflected structs):** 913 wins, 12 ties, and 40 losses in 965 head-to-head tests against Glaze and simdjson on Linux, macOS, and Windows.
+* **Faster reads:** geometric-mean parse throughput is 1.33x to 1.48x that of Glaze and 1.42x to 2.37x that of simdjson On Demand.
+* **Faster writes:** geometric-mean serialization throughput is 2.25x to 3.72x that of Glaze and up to 6.07x that of simdjson's C++26 reflection writer.
+* **Generic (schemaless) parsing:** 1366 wins, 74 ties, and 180 losses against simdjson On Demand, running 1.20x to 1.30x faster on GCC and Clang and 2.17x faster on MSVC.
+* **Portable:** CI-verified on GCC, Clang, and MSVC, with AVX2 and NEON backends.
+* **Strict:** fully [RFC8259](https://datatracker.ietf.org/doc/html/rfc8259) compliant.
+
+| Platform | vs Glaze (schema-aware) | vs simdjson (schema-aware) | vs simdjson On Demand (generic) |
+| :--- | :---: | :---: | :---: |
+| Linux GCC 16.2.1 | 1.79x | 2.72x | 1.22x |
+| Linux Clang 24.0.0 | 1.79x | 1.59x | 1.22x |
+| macOS GCC 16.2.0 | 2.20x | 3.13x | 1.30x |
+| macOS Clang 23.1.3 | 2.27x | 1.78x | 1.20x |
+| Windows MSVC 19.51 / 19.44 | 1.83x | 2.47x | 2.17x |
+
+<sub>Geometric mean of per-test throughput ratios: Jsonifier's best variant against each competitor's best variant. Glaze has no schemaless entry in the generic suite.</sub>
 
 **Jsonifier is fully [RFC8259](https://datatracker.ietf.org/doc/html/rfc8259) compliant.**
 
-A high-performance C++ library for validating, serializing, parsing, prettifying, and minifying JSON data — **very rapidly**.
+A high-performance C++ library for validating, serializing, parsing, prettifying, and minifying JSON data, **very rapidly**.
 
 It achieves this through the usage of [SIMD instructions](./include/jsonifier-incl/simd) as well as compile-time [hash maps](./include/jsonifier-incl/utilities/hash_map.hpp) for efficient key lookups during parsing.
 
@@ -17,37 +53,21 @@ It achieves this through the usage of [SIMD instructions](./include/jsonifier-in
 
 ---
 
-## Compiler Support
-
-| Compiler | Status |
-|----------|--------|
-| ![MSVC](https://img.shields.io/github/actions/workflow/status/nihilai-collective/jsonifier/unit-tests.yml?style=plastic&logo=microsoft&logoColor=green&label=MSVC&labelColor=pewter&color=blue&branch=main) | Visual Studio (Latest) |
-| ![GCC](https://img.shields.io/github/actions/workflow/status/nihilai-collective/jsonifier/unit-tests.yml?style=plastic&logo=linux&logoColor=green&label=GCC&labelColor=pewter&color=blue&branch=main) | GCC (Latest) |
-| ![CLANG](https://img.shields.io/github/actions/workflow/status/nihilai-collective/jsonifier/unit-tests.yml?style=plastic&logo=apple&logoColor=green&label=CLANG&labelColor=pewter&color=blue&branch=main) | Clang (Latest) |
-
-## Operating System Support
-
-| OS | Status |
-|----|--------|
-| ![Windows](https://img.shields.io/github/actions/workflow/status/nihilai-collective/jsonifier/unit-tests.yml?style=plastic&logo=microsoft&logoColor=green&label=Windows&labelColor=pewter&color=blue&branch=main) | Windows (Latest) |
-| ![Linux](https://img.shields.io/github/actions/workflow/status/nihilai-collective/jsonifier/unit-tests.yml?style=plastic&logo=linux&logoColor=green&label=Linux&labelColor=pewter&color=blue&branch=main) | Ubuntu (Latest) |
-| ![Mac](https://img.shields.io/github/actions/workflow/status/nihilai-collective/jsonifier/unit-tests.yml?style=plastic&logo=apple&logoColor=green&label=MacOS&labelColor=pewter&color=blue&branch=main) | macOS (Latest) |
-
 > **Android:** `JSONIFIER_PLATFORM_ANDROID` is detected and handled distinctly from `JSONIFIER_PLATFORM_LINUX` (separate `mmap`/`unistd.h` wiring, its own entry in the supported-platform check), for NDK cross-compilation. It is not part of the CI matrix above, so treat it as best-effort rather than continuously verified.
 
 ## CPU Architecture Support
 
 Jsonifier automatically detects and optimizes for your CPU architecture:
 
-- **x64 / AMD64** — 64-bit extension of x86 with enhanced memory addressing
-- **AVX** — 128-bit vector registers for SIMD operations
-- **AVX2** — 256-bit vector registers with additional integer operations
-- **AVX-512** — 512-bit vector registers for maximum parallelism (requires F + BW + VBMI2 support detected together)
-- **PCLMULQDQ** — carry-less multiplication support, detected and used where available
-- **ARM-NEON** — SIMD instructions for ARM processors
-- **ARM-SVE2** — scalable vector extensions for ARM processors ⚠️ **experimental** — the SVE2 backend is new and still under active development; a handful of parsing cases are not yet handled correctly. NEON remains the recommended path for production ARM builds until SVE2 correctness is fully verified. Feedback and bug reports on SVE2-specific behavior are very welcome.
+- **x64 / AMD64**: 64-bit extension of x86 with enhanced memory addressing
+- **AVX**: 128-bit vector registers for SIMD operations
+- **AVX2**: 256-bit vector registers with additional integer operations
+- **AVX-512**: 512-bit vector registers for maximum parallelism (requires F + BW + VBMI2 support detected together)
+- **PCLMULQDQ**: carry-less multiplication support, detected and used where available
+- **ARM-NEON**: SIMD instructions for ARM processors
+- **ARM-SVE2**: scalable vector extensions for ARM processors ⚠️ **experimental**: the SVE2 backend is new and still under active development; a handful of parsing cases are not yet handled correctly. NEON remains the recommended path for production ARM builds until SVE2 correctness is fully verified. Feedback and bug reports on SVE2-specific behavior are very welcome.
 
-On x64, the configured tier is the *highest* one compiled in: the SIMD code is compiled once per tier (AVX, AVX2, AVX-512) into a single binary, and `jsonifier_core<>` picks the best tier the running CPU supports via `cpuid`/`xgetbv` on first use. A binary configured for AVX-512 also runs on AVX2 and AVX machines. See [Runtime selection](documentation/CPU_Architecture_Selection.md#runtime-selection).
+Exactly one SIMD backend is compiled into each build, chosen at configure time; nothing is selected at run time. A binary configured for AVX-512 requires AVX-512 on every machine that runs it, so configure for the lowest tier you need to support when distributing to mixed hardware. Define `JSONIFIER_MAX_AVX_TIER` (1, 2 or 3) to cap the x64 tier below what was detected. See [One tier per build](documentation/CPU_Architecture_Selection.md#one-tier-per-build).
 
 Manual configuration and cross-compilation are supported by pre-defining `JSONIFIER_CPU_INSTRUCTIONS` (plus `JSONIFIER_SVE2_VECTOR_BITS` for SVE2 targets) at CMake configure time to skip native feature detection.
 
@@ -56,33 +76,33 @@ Manual configuration and cross-compilation are supported by pre-defining `JSONIF
 ## Features
 
 ### Compile-Time Reflection
-Structures are registered via template specialization using member pointers as non-type template parameters. No macros, no code generation, no runtime type registry — the entire schema is known to the compiler, which means key lookups collapse into compile-time hash-map dispatch and dead branches get eliminated before they exist. Custom JSON key names (kebab-case, digit-prefixed, reserved words) are handled at compile time via `makeJsonEntity<&member, "custom-name">()` with zero runtime overhead.
+Structures are registered via template specialization using member pointers as non-type template parameters. No macros, no code generation, no runtime type registry; the entire schema is known to the compiler, which means key lookups collapse into compile-time hash-map dispatch and dead branches get eliminated before they exist. Custom JSON key names (kebab-case, digit-prefixed, reserved words) are handled at compile time via `makeJsonEntity<&member, "custom-name">()` with zero runtime overhead.
 
 ### SIMD-Accelerated Stage-1
-Structural indexing runs through a batched-drain, fused-scan architecture: character classification, quote-scope tracking, and UTF-8 validation happen in the same pass over the input, with cross-SIMD-width validation state carried between blocks via a dedicated register-scoped validator. The structural index itself is stored as a compact array of offsets into the source buffer rather than raw pointers, keeping the index footprint small and cache-friendly. Everything the compiler can know statically about the target architecture — cache-line size, vector width, alignment — is baked into the binary as constexpr.
+Structural indexing runs through a batched-drain, fused-scan architecture: character classification, quote-scope tracking, and UTF-8 validation happen in the same pass over the input, with cross-SIMD-width validation state carried between blocks via a dedicated register-scoped validator. The structural index itself is stored as a compact array of offsets into the source buffer rather than raw pointers, keeping the index footprint small and cache-friendly. Everything the compiler can know statically about the target architecture (cache-line size, vector width, alignment) is baked into the binary as constexpr.
 
 ### UTF-8 Validation, By Default
 Full UTF-8 validation runs as part of every parse, always, built on a Lemire/simdjson-derived table-lookup validator with both a bulk-buffer path and a streaming, register-scoped path that carries state across chunk boundaries. Validation is fused directly into string scanning rather than requiring a separate pass. Correctness is backed by the full Markus Kuhn UTF-8 stress-test corpus, alignment-sweep fuzzing, and page-boundary overrun checks.
 
 ### Purpose-Built Hash Maps
-Key lookups during parsing use compile-time-generated hash maps specialized for object size (1, 2, 3+ fields), each picking a different strategy based on what's fastest for that cardinality. No runtime hashing, no bucket walks — the lookup is generated for the specific set of keys your struct declares.
+Key lookups during parsing use compile-time-generated hash maps specialized for object size (1, 2, 3+ fields), each picking a different strategy based on what's fastest for that cardinality. No runtime hashing, no bucket walks; the lookup is generated for the specific set of keys your struct declares.
 
 ### Complete JSON Support
 Full RFC8259 compliance. All types (objects, arrays, strings, numbers, booleans, null), full Unicode with proper surrogate-pair handling, all escape sequences, and `jsonifier::raw_json_data` for preserving arbitrary sub-trees verbatim.
 
 ### Flexible Parsing Modes
-- **Default parsing** — single pass over the raw buffer, compile-time hash-map key dispatch, keys accepted in any order
-- **Known-order parsing** — tries the declaration-order key first, then a self-tuning per-position memo, then the hash map; adds a fused literal-match fast path for minified input
-- **Partial reading** — parse unordered or partial JSON structures
-- **Arbitrary data** — work with unknown JSON via `raw_json_data`
-- **Generic (schema-free) parsing** — lazy, On Demand-style `jsonifier::generic::parser` with re-readable values, out-of-order field access, JSON Pointers and `iterateMany` for NDJSON streams
+- **Default parsing**: single pass over the raw buffer, compile-time hash-map key dispatch, keys accepted in any order
+- **Known-order parsing**: tries the declaration-order key first, then a self-tuning per-position memo, then the hash map; adds a fused literal-match fast path for minified input
+- **Partial reading**: parse unordered or partial JSON structures
+- **Arbitrary data**: work with unknown JSON via `raw_json_data`
+- **Generic (schema-free) parsing**: lazy, On Demand-style `jsonifier_core::iterate` with re-readable values, out-of-order field access, JSON Pointers and `iterateMany` for NDJSON streams
 
 Every parsing-family test in the suite is run across all eight combinations of `partialRead`, `knownOrder`, and `nullTerminated`.
 
 ### Safety & Reliability
-Comprehensive error reporting with source location tracking, backed by a compact, purpose-built status-code model — parsing, validation, minification, and prettification each propagate failure immediately on the first error rather than continuing to walk a broken buffer. Configurable maximum nesting depth (`parse_options::maxDepth`, default 1024) guards against malicious or runaway input.
+Comprehensive error reporting with source location tracking, backed by a compact, purpose-built status-code model: parsing, validation, minification, and prettification each propagate failure immediately on the first error rather than continuing to walk a broken buffer. Configurable maximum nesting depth (`parse_options::maxDepth`, default 1024) guards against malicious or runaway input.
 
-Continuous integration runs AddressSanitizer and UndefinedBehaviorSanitizer on every push across every supported platform and compiler. The conformance test suite covers the full RFC8259 pass/fail battery — both the classic `jsonchecker` corpus and the full JSONTestSuite Y/N corpus — plus dedicated UTF-8 correctness tests including the full Markus Kuhn stress-test set, chunk/block-boundary crossings, unaligned-pointer sweeps, and an mmap page-boundary fault check.
+Continuous integration runs AddressSanitizer and UndefinedBehaviorSanitizer on every push across every supported platform and compiler. The conformance test suite covers the full RFC8259 pass/fail battery (both the classic `jsonchecker` corpus and the full JSONTestSuite Y/N corpus), plus dedicated UTF-8 correctness tests including the full Markus Kuhn stress-test set, chunk/block-boundary crossings, unaligned-pointer sweeps, and an mmap page-boundary fault check.
 
 ---
 
@@ -123,7 +143,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 ```
 
-This ensures memory safety and undefined behavior detection across all supported platforms. Note that sanitizers are automatically disabled for the GCC-on-macOS combination (unsupported), and UBSan has no effect under MSVC (no equivalent runtime) — Clang-cl or a Clang/GCC build is needed for UBSan coverage there.
+This ensures memory safety and undefined behavior detection across all supported platforms. Note that sanitizers are automatically disabled for the GCC-on-macOS combination (unsupported), and UBSan has no effect under MSVC (no equivalent runtime), so Clang-cl or a Clang/GCC build is needed for UBSan coverage there.
 
 The full suite passes on **Ubuntu (Clang/GCC), macOS (Clang/GCC), and Windows (MSVC)** on every push.
 
@@ -138,38 +158,38 @@ Jsonifier includes an extensive test suite that runs on **every push** across **
 | Test Category | Description |
 |---------------|-------------|
 | **Conformance Tests** | Full RFC8259 compliance testing against two corpora, each wired up independently: `conformance.hpp` drives the classic `jsonchecker` set (77 of 79 `fail*.json` on disk + all 27 `pass*.json`, each checked against a specific expected `parse_statuses` error), and `JSONTestSuite.hpp` drives the JSONTestSuite Y/N corpus (all 188 `n_*.json` + all 95 `y_*.json`; the `i_*.json` implementation-defined cases are intentionally unused). 387 documents total, each run across all eight `partialRead` / `knownOrder` / `nullTerminated` combinations |
-| **Round-Trip Tests** | 27 serialize → parse → compare documents covering primitives, raw pointers, `unique_ptr`, and nested objects — 54 checks per configuration, run across the four `partialRead` / `knownOrder` combinations |
+| **Round-Trip Tests** | 27 serialize → parse → compare documents covering primitives, raw pointers, `unique_ptr`, and nested objects; 54 checks per configuration, run across the four `partialRead` / `knownOrder` combinations |
 | **Float Validation** | 64 edge cases including denormals, subnormal boundaries, round-half-to-even cases, infinities, and extreme exponents |
 | **Integer Validation** | Bounds testing for signed (24 pass / 11 fail) and unsigned (16 pass / 11 fail) integers, from zero through the full int64/uint64 range |
 | **String Validation** | 35 pass cases (Unicode, escape sequences, control characters, multi-byte emoji, ZWJ sequences, surrogate pairs) and 26 fail cases (malformed escapes, invalid `\u` sequences, unterminated strings) |
 | **UTF-8 Validation** | 202 tests: the full Markus Kuhn UTF-8 stress-test corpus, standalone 1–4 byte sequence and chunk/block-boundary tests, second-byte boundary tests per lead-byte class, fused string-parser validation (escape-aware, surrogate-pair-aware), an unaligned-pointer sweep, an unaligned invalid-sequence sweep, an mmap page-boundary fault check, and a width-transition sweep across body lengths 24–224 |
-| **Bounds/Truncation** | Progressive truncation of full JSON payloads (Canada, CitmCatalog, Discord, Google Maps, Instruments, Marine IK, Mesh, Random, Twitter, Twitter Partial) — 10 corpus documents, minified and prettified (20 files), across all eight configurations (160 truncation runs), to validate graceful failure on malformed/truncated input |
+| **Bounds/Truncation** | Progressive truncation of full JSON payloads (Canada, CitmCatalog, Discord, Google Maps, Instruments, Marine IK, Mesh, Random, Twitter, Twitter Partial): 10 corpus documents, minified and prettified (20 files), across all eight configurations (160 truncation runs), to validate graceful failure on malformed/truncated input |
 | **Parsing Tests** | Parse/serialize/minify/prettify/validate correctness across the full real-world payload suite, both minified and prettified, across all eight `partialRead` / `knownOrder` / `nullTerminated` combinations |
-| **Intrinsics Tests** | Direct correctness testing of the SIMD abstraction layer — comparison, bitmask, logical, saturating-subtract, shift, cross-register alignment, and load/store round-trips at every unaligned offset |
+| **Intrinsics Tests** | Direct correctness testing of the SIMD abstraction layer: comparison, bitmask, logical, saturating-subtract, shift, cross-register alignment, and load/store round-trips at every unaligned offset |
 | **Error & Core Tests** | 10 tests for construction, equality, line-number reporting, and control-character escaping of the error-reporting model, plus 11 `jsonifier_core` copy/move/self-assignment tests |
 | **Generic Parsing** | 75 tests for the schema-free On Demand-style parser: in-order, reverse-order, and missing-key access, JSON pointers, escaped and non-ASCII strings, invalid-UTF-8 rejection, and multi-document streams |
-| **raw_json_data** | 41 tests for type detection, int/uint/double round-trips, key and index access, `contains`, `size`, deep nesting, equality, and serialization (compact, prettified, and default-constructed) |
+| **raw_json_data** | 41 tests for type detection, int32_t/uint/double round-trips, key and index access, `contains`, `size`, deep nesting, equality, and serialization (compact, prettified, and default-constructed) |
 | **Number Serialization** | 527 tests: 76 fastio digit-count/integer/float tests, 83 zmij double-serialization tests, and 368 digit-boundary tests for `i_to_str` and `jsonifier::toString` across all eight integer types |
-| **Type Coverage** | Primitives, containers (`vector`, `array`, `map`, `unordered_map`), tuples, `optional`, `shared_ptr`, enums, nested structs, renamed/escaped keys — 69 dedicated unit tests |
-| **Internal Containers & Utilities** | Direct correctness tests for the library's own building blocks — the fixed-size allocator, `jsonifier::array`, the tuple implementation and its iterator, the compile-time hash and hash-map generators, comparators and the string-literal comparator, enum-name and member-name reflection, the `jsonifier::string` class, stage-1 tape emission, and the minifier/prettifier/printer output paths — 624 dedicated unit tests |
+| **Type Coverage** | Primitives, containers (`vector`, `array`, `map`, `unordered_map`), tuples, `optional`, `shared_ptr`, enums, nested structs, renamed/escaped keys; 69 dedicated unit tests |
+| **Internal Containers & Utilities** | Direct correctness tests for the library's own building blocks: the fixed-size allocator, `jsonifier::array`, the tuple implementation and its iterator, the compile-time hash and hash-map generators, comparators and the string-literal comparator, enum-name and member-name reflection, the `jsonifier::string` class, stage-1 tape emission, and the minifier/prettifier/printer output paths; 624 dedicated unit tests |
 
 ### What Gets Tested
 
 - **69 dedicated unit tests** covering reflection, renamed fields, optionals, enums, `shared_ptr`, nested structs, containers, tuples, maps, and escaped keys
-- **624 additional unit tests** directly exercising the library's internal containers and utilities — allocator, `jsonifier::array`, tuple/iterator, compile-time hash and hash-map generation, comparators, enum/member-name reflection, `jsonifier::string`, stage-1 tape emission, and the minify/prettify/print output paths
+- **624 additional unit tests** directly exercising the library's internal containers and utilities: allocator, `jsonifier::array`, tuple/iterator, compile-time hash and hash-map generation, comparators, enum/member-name reflection, `jsonifier::string`, stage-1 tape emission, and the minify/prettify/print output paths
 - **75 generic-parser tests**, **41 `raw_json_data` tests**, and **527 number-serialization tests**
 - **7,030 assertions in total** per platform (Windows MSVC, AVX2 backend), all passing
-- **265 conformance fail cases + 122 pass cases** (77+27 from `jsonchecker`, 188+95 from JSONTestSuite), each asserting the exact expected `parse_statuses` value — 3,096 conformance assertions per platform across all eight configs
+- **265 conformance fail cases + 122 pass cases** (77+27 from `jsonchecker`, 188+95 from JSONTestSuite), each asserting the exact expected `parse_statuses` value, for 3,096 conformance assertions per platform across all eight configs
 - **27 round-trip documents** (54 checks per configuration) including edge cases (null, empty, large numbers, raw pointers, `unique_ptr`, special floats)
-- **64 float edge cases** (plus dedicated serialization-fidelity checks) and **24+16 int/uint pass cases** with **11+11 matching fail cases**, backed by separate digit-boundary/`toString` tests across all eight integer types
+- **64 float edge cases** (plus dedicated serialization-fidelity checks) and **24+16 int32_t/uint pass cases** with **11+11 matching fail cases**, backed by separate digit-boundary/`toString` tests across all eight integer types
 - **35 string pass cases + 26 fail cases**, including full Unicode/emoji/ZWJ/escape coverage
-- **A full UTF-8 correctness gauntlet** — basic sequence tests, the complete Markus Kuhn stress corpus, second-byte boundary tests, fused string-parser tests, unaligned-pointer and unaligned-invalid-sequence sweeps, an mmap page-boundary fault check, and a width-transition sweep
+- **A full UTF-8 correctness gauntlet**: basic sequence tests, the complete Markus Kuhn stress corpus, second-byte boundary tests, fused string-parser tests, unaligned-pointer and unaligned-invalid-sequence sweeps, an mmap page-boundary fault check, and a width-transition sweep
 - **Direct SIMD intrinsics correctness tests**, independent of parsing, covering every primitive operation across all supported backends
-- **Memory safety** — No leaks, double-frees, or use-after-free (ASAN)
-- **Undefined behavior** — No signed overflow, null pointer dereference, or invalid casts (UBSAN)
-- **Bounds checking** — Proper, graceful handling of truncated/malformed input across the full real-world payload suite
-- **Unicode and emoji** — Full UTF-8 support, including ZWJ sequences and surrogate pairs
-- **Edge cases** — Infinity, NaN, denormal numbers, integer overflow boundaries
+- **Memory safety**: No leaks, double-frees, or use-after-free (ASAN)
+- **Undefined behavior**: No signed overflow, null pointer dereference, or invalid casts (UBSAN)
+- **Bounds checking**: Proper, graceful handling of truncated/malformed input across the full real-world payload suite
+- **Unicode and emoji**: Full UTF-8 support, including ZWJ sequences and surrogate pairs
+- **Edge cases**: Infinity, NaN, denormal numbers, integer overflow boundaries
 
 Every parsing-family category above runs across all **eight** combinations of `partialRead`, `knownOrder`, and `nullTerminated` (round-trip runs the four `partialRead` × `knownOrder` combinations), and the full suite passes on **Ubuntu (GCC/Clang), macOS (GCC/Clang), and Windows (MSVC)**.
 
@@ -222,7 +242,7 @@ template<> struct jsonifier::core<catalog> {
         makeJsonEntity<&value_type::schema_version, "schema-version">()>();
 };
 
-int main() {
+int32_t main() {
     jsonifier::jsonifier_core<> parser;
 
     catalog data;
@@ -236,41 +256,41 @@ int main() {
 }
 ```
 
-Note the `makeJsonEntity<&value_type::schema_version, "schema-version">()` — Jsonifier maps the C++-legal `schema_version` member to the kebab-case `"schema-version"` key in JSON entirely at compile time, with zero runtime cost.
+Note the `makeJsonEntity<&value_type::schema_version, "schema-version">()`: Jsonifier maps the C++-legal `schema_version` member to the kebab-case `"schema-version"` key in JSON entirely at compile time, with zero runtime cost.
 
 Warning: Include only <jsonifier>. Direct inclusion of internal headers may cause unrelated code in the including translation unit to become uncompilable.
 
-The `jsonifier_core<>` type is templated on an initial scratch-buffer size in bytes (default 1MB) — e.g. `jsonifier::jsonifier_core<4 * 1024 * 1024> parser;` for workloads that consistently deal with larger documents. It is an alias for `jsonifier_core_collection`. On x64 the collection holds one parser core per compiled SIMD tier (AVX, AVX2 and AVX-512, up to the configured one) and forwards each call to the best tier the running CPU supports. A binary configured for AVX-512 therefore also runs on AVX2 and AVX machines. The cores share one string buffer and error list. See [Backends and the Core Collection](documentation/CPU_Architecture_Selection.md#backends-and-the-core-collection).
+The `jsonifier_core<>` type is templated on an initial scratch-buffer size in bytes (default 1MB), e.g. `jsonifier::jsonifier_core<4 * 1024 * 1024> parser;` for workloads that consistently deal with larger documents. It is compiled for the single SIMD tier configured at build time, so a binary configured for AVX-512 requires AVX-512 on every machine that runs it. See [Backends and the Core](documentation/CPU_Architecture_Selection.md#backends-and-the-core).
 
 ---
 
 ## Documentation
 
 ### Getting Started
-- [Installation](documentation/Installation.md) — Install via vcpkg, CMake FetchContent, or source
-- [Quick Start](documentation/QuickStart.md) — Five-minute onramp with a working example
+- [Installation](documentation/Installation.md): Install via vcpkg, CMake FetchContent, or source
+- [Quick Start](documentation/QuickStart.md): Five-minute onramp with a working example
 
 ### Core Usage
-- [Reflection](documentation/Reflection.md) — Registering structures with compile-time reflection
-- [Serializing & Parsing](documentation/Usage_Serializing_Parsing.md) — Complete serialization/parsing guide
-- [Validating](documentation/Validating.md) — JSON validation against RFC standards
+- [Reflection](documentation/Reflection.md): Registering structures with compile-time reflection
+- [Serializing & Parsing](documentation/Usage_Serializing_Parsing.md): Complete serialization/parsing guide
+- [Validating](documentation/Validating.md): JSON validation against RFC standards
 
 ### Optimization
-- [Known Order Parsing](documentation/Known_Order.md) — Guaranteed-order optimization for hot paths
-- [Optimizing For Minified JSON](documentation/Optimizing_For_Minified_Json.md) — Boost performance for minified input
-- [Partial Reading](documentation/PartialReading.md) — Parse unordered or partial JSON structures
-- [CPU Architecture Selection](documentation/CPU_Architecture_Selection.md) — Runtime x64 tier dispatch and manual CPU instruction set configuration, including SVE2 and cross-compilation overrides
+- [Known Order Parsing](documentation/Known_Order.md): Guaranteed-order optimization for hot paths
+- [Optimizing For Minified JSON](documentation/Optimizing_For_Minified_Json.md): Boost performance for minified input
+- [Partial Reading](documentation/PartialReading.md): Parse unordered or partial JSON structures
+- [CPU Architecture Selection](documentation/CPU_Architecture_Selection.md): Configure-time backend selection, tier capping, and manual CPU instruction set configuration, including SVE2 and cross-compilation overrides
 
 ### Output Formatting
-- [Prettifying](documentation/Prettifying.md) — Pretty-print JSON with customizable indentation
-- [Minifying](documentation/Minifying.md) — Minify JSON for compact output
+- [Prettifying](documentation/Prettifying.md): Pretty-print JSON with customizable indentation
+- [Minifying](documentation/Minifying.md): Minify JSON for compact output
 
 ### Advanced Topics
-- [UTF-8 Validation](documentation/UTF8_Validation.md) — Cross-SIMD-width validation architecture
-- [Error Handling](documentation/Errors.md) — Detailed error reporting and handling
-- [Excluding Keys at Runtime](documentation/Excluding_Keys.md) — Dynamic key exclusion during serialization
-- [Parsing Arbitrary Data](documentation/Parsing_Arbitrary_Data.md) — Working with unknown JSON structures
-- [Generic Parsing](documentation/Generic_Parsing.md) — Schema-free, On Demand-style parsing and NDJSON streams
+- [UTF-8 Validation](documentation/UTF8_Validation.md): Cross-SIMD-width validation architecture
+- [Error Handling](documentation/Errors.md): Detailed error reporting and handling
+- [Excluding Keys at Runtime](documentation/Excluding_Keys.md): Dynamic key exclusion during serialization
+- [Parsing Arbitrary Data](documentation/Parsing_Arbitrary_Data.md): Working with unknown JSON structures
+- [Generic Parsing](documentation/Generic_Parsing.md): Schema-free, On Demand-style parsing and NDJSON streams
 
 ---
 
@@ -280,7 +300,7 @@ The `jsonifier_core<>` type is templated on an initial scratch-buffer size in by
 - C++23 compliant compiler (MSVC 2022 v19.40+, GCC 14+, Clang 18+)
 - Supported CPU (x64, ARM64 with NEON or SVE2*)
 
-<sub>* SVE2 support is experimental — see the CPU Architecture Support section above.</sub>
+<sub>* SVE2 support is experimental; see the CPU Architecture Support section above.</sub>
 
 ---
 

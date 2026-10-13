@@ -11,7 +11,7 @@
 
 namespace jsonifier::internal {
 
-	template<printable_enum_types auto current_index> consteval string_view getEnumName() {
+	template<printable_enum_types auto currentIndex> consteval string_view getEnumName() {
 		string_view str = std::source_location::current().function_name();
 #if JSONIFIER_COMPILER_GCC
 		str			   = str.substr(str.find("=") + 2);
@@ -32,7 +32,7 @@ namespace jsonifier::internal {
 #endif
 	}
 
-	consteval bool isValidEnumName(string_view name) noexcept {
+	consteval bool isValidEnumName(string_view name) {
 		if (name.empty()) {
 			return false;
 		}
@@ -53,7 +53,7 @@ namespace jsonifier::internal {
 			array<string_view, n> names{};
 		};
 
-		template<uint64_t n> static consteval entries<n> buildEntries() noexcept {
+		template<uint64_t n> static consteval entries<n> buildEntries() {
 			entries<n> result{};
 			uint64_t pos{};
 			(
@@ -70,15 +70,15 @@ namespace jsonifier::internal {
 			return result;
 		}
 
-		static consteval uint64_t countValid() noexcept {
+		static consteval uint64_t countValid() {
 			uint64_t total{};
 			((isValidEnumName(getEnumName<static_cast<current_type>(indices)>()) ? ++total : total), ...);
 			return total;
 		}
 	};
 
-	template<printable_enum_types current_type, uint64_t probe_range = static_cast<uint64_t>(current_type::count)> struct enum_data {
-		using entry_getter = enum_entry_getter<make_integer_sequence<probe_range>, current_type>;
+	template<printable_enum_types current_type, uint64_t probeRange = static_cast<uint64_t>(current_type::count)> struct enum_data {
+		using entry_getter = enum_entry_getter<make_integer_sequence<probeRange>, current_type>;
 		static constexpr uint64_t validCount{ entry_getter::countValid() };
 		static constexpr auto value{ entry_getter::template buildEntries<validCount>() };
 	};
@@ -93,13 +93,12 @@ namespace jsonifier::internal {
 		return "Unknown Type";
 	}
 
-	template<printable_enum_types enum_type, size_t buffer_size>
-	JSONIFIER_INLINE static basic_stream<buffer_size>& operator<<(basic_stream<buffer_size>& os, enum_type type) noexcept {
+	template<printable_enum_types enum_type, uint64_t bufferSize> JSONIFIER_INLINE basic_stream<bufferSize>& operator<<(basic_stream<bufferSize>& os, enum_type type) noexcept {
 		os << getName(type).operator std::basic_string_view<char>();
 		return os;
 	}
 
-	template<printable_enum_types enum_type> JSONIFIER_INLINE static std::ostream& operator<<(std::ostream& os, enum_type type) noexcept {
+	template<printable_enum_types enum_type> JSONIFIER_INLINE std::ostream& operator<<(std::ostream& os, enum_type type) noexcept {
 		os << getName(type).operator std::basic_string_view<char>();
 		return os;
 	}

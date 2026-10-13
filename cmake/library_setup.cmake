@@ -26,6 +26,7 @@ set(JSONIFIER_COMPILE_DEFINITIONS
     JSONIFIER_OPTIMIZED=$<IF:$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>,1,0>
     "JSONIFIER_INLINE=$<IF:$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>,$<IF:$<CXX_COMPILER_ID:MSVC>,[[msvc::forceinline]] inline,inline __attribute__((always_inline))>,inline>"
     "JSONIFIER_INLINE_EXCEPT_MAC_GCC=$<IF:$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>,$<IF:$<CXX_COMPILER_ID:MSVC>,inline,$<IF:$<AND:$<PLATFORM_ID:Darwin>,$<CXX_COMPILER_ID:GNU>>,inline,inline __attribute__((always_inline))>>,inline>"
+    "JSONIFIER_INLINE_LINUX_GCC=$<IF:$<AND:$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>,$<PLATFORM_ID:Linux>,$<CXX_COMPILER_ID:GNU>>,inline __attribute__((always_inline)),inline>"
     "JSONIFIER_NOINLINE=$<IF:$<CXX_COMPILER_ID:MSVC>,__declspec(noinline) inline,inline __attribute__((noinline))>"
     "JSONIFIER_NO_SANITIZE_ADDRESS=$<IF:$<CXX_COMPILER_ID:MSVC>,__declspec(no_sanitize_address),__attribute__((no_sanitize_address))>"
     "JSONIFIER_LIFETIME_BOUND=$<IF:$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>>,[[clang::lifetimebound]],$<IF:$<CXX_COMPILER_ID:MSVC>,[[msvc::lifetimebound]],>>"

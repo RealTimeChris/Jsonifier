@@ -20,8 +20,8 @@ namespace generic_parser_tests {
 		return target.get(out);
 	}
 
-	inline constexpr jsonifier::parse_options comma{};
-	inline constexpr jsonifier::parse_options newLines{ .newLineDelimited = true };
+	alignas(64) inline constexpr jsonifier::parse_options comma{};
+	alignas(64) inline constexpr jsonifier::parse_options newLines{ .newLineDelimited = true };
 
 	struct stream_summary {
 		jsonifier::generic::error_code lastError{ jsonifier::generic::error_code::success };
@@ -35,7 +35,7 @@ namespace generic_parser_tests {
 	};
 
 	template<jsonifier::parse_options options = newLines, typename parser_type>
-	inline stream_summary summarizeStream(parser_type& parser, const std::string& input, uint64_t batchSize = parser_type::defaultBatchSize) {
+	inline stream_summary summarizeStream(parser_type& parser, const std::string& input, uint64_t batchSize = jsonifier::generic::defaultBatchSize) {
 		stream_summary summary{};
 		auto stream = parser.template iterateMany<options>(input, batchSize);
 		for (auto iter = stream.begin(); iter != stream.end(); ++iter) {
@@ -63,7 +63,7 @@ namespace generic_parser_tests {
 		return out;
 	}
 
-	template<typename parser_type> inline static void runStreamTests(parser_type& parser) {
+	template<typename parser_type> inline void runStreamTests(parser_type& parser) {
 		using error_code = jsonifier::generic::error_code;
 		static_assert(std::input_iterator<typename jsonifier::generic::document_stream<parser_type, comma>::iterator>);
 		static_assert(std::input_iterator<typename jsonifier::generic::document_stream<parser_type, newLines>::iterator>);
@@ -94,7 +94,7 @@ namespace generic_parser_tests {
 
 		static constexpr rt_ut::string_literal streamCommaName{ "generic_stream_comma_separated" };
 		rt_ut::unit_test<streamCommaName, true>::assert_eq(true, [&] {
-			const auto summary = summarizeStream<comma>(parser, std::string{ "{\"id\":1} , {\"id\":2},[3],4 ,\"five\"" }, parser_type::defaultBatchSize);
+			const auto summary = summarizeStream<comma>(parser, std::string{ "{\"id\":1} , {\"id\":2},[3],4 ,\"five\"" }, jsonifier::generic::defaultBatchSize);
 			return summary.sources == std::vector<std::string>{ "{\"id\":1}", "{\"id\":2}", "[3]", "4", "\"five\"" } && summary.idSum == 3 &&
 				summary.lastError == error_code::success;
 		});
@@ -107,13 +107,13 @@ namespace generic_parser_tests {
 
 		static constexpr rt_ut::string_literal streamCommaTrailingName{ "generic_stream_comma_trailing" };
 		rt_ut::unit_test<streamCommaTrailingName, true>::assert_eq(true, [&] {
-			const auto summary = summarizeStream<comma>(parser, std::string{ "1,2, " }, parser_type::defaultBatchSize);
+			const auto summary = summarizeStream<comma>(parser, std::string{ "1,2, " }, jsonifier::generic::defaultBatchSize);
 			return summary.sources.size() == 2 && summary.lastError == error_code::trailing_content;
 		});
 
 		static constexpr rt_ut::string_literal streamCommaDoubleName{ "generic_stream_comma_double" };
 		rt_ut::unit_test<streamCommaDoubleName, true>::assert_eq(true, [&] {
-			const auto summary = summarizeStream<comma>(parser, std::string{ "1,,2" }, parser_type::defaultBatchSize);
+			const auto summary = summarizeStream<comma>(parser, std::string{ "1,,2" }, jsonifier::generic::defaultBatchSize);
 			return summary.sources.size() == 1 && summary.lastError == error_code::tape_error;
 		});
 
@@ -132,7 +132,7 @@ namespace generic_parser_tests {
 		rt_ut::unit_test<streamBatchedCommaName, true>::assert_eq(true, [&] {
 			std::string input = makeNdjson(300, ",\n");
 			input.resize(input.size() - 2);
-			const auto whole = summarizeStream<comma>(parser, input, parser_type::defaultBatchSize);
+			const auto whole = summarizeStream<comma>(parser, input, jsonifier::generic::defaultBatchSize);
 			bool allMatch	 = whole.sources.size() == 300 && whole.idSum == 44850 && whole.lastError == error_code::success;
 			for (uint64_t batch: { 128ull, 151ull, 512ull }) {
 				allMatch = allMatch && summarizeStream<comma>(parser, input, batch) == whole;
@@ -187,7 +187,7 @@ namespace generic_parser_tests {
 				input += x % 2 == 0 ? "[" + std::to_string(x) + ",[2,3],{\"a\":1}]\n" : "\"str\" 7\n";
 			}
 			bool allMatch{ true };
-			for (uint64_t batch: std::initializer_list<uint64_t>{ 128ull, 201ull, 4096ull, parser_type::defaultBatchSize }) {
+			for (uint64_t batch: std::initializer_list<uint64_t>{ 128ull, 201ull, 4096ull, jsonifier::generic::defaultBatchSize }) {
 				uint64_t idSum{};
 				uint64_t deepSum{};
 				uint64_t documents{};
@@ -209,12 +209,12 @@ namespace generic_parser_tests {
 		});
 	}
 
-	inline static void runTests() {
+	inline void runTests() {
 		std::cout << "generic_parser Tests" << std::endl;
 
 		using error_code = jsonifier::generic::error_code;
 
-		jsonifier::generic::parser<> parser{};
+		jsonifier::jsonifier_core<> parser{};
 		std::string sample{ R"({ "a" : 1, "b": [1, 2.5, -3, true, false, null, "x\ny", "plain"], "c": {"d": {"e": "deep"}}, "e~/": 7, "big": 18446744073709551615 })" };
 
 		static constexpr rt_ut::string_literal iterateSuccessName{ "generic_iterate_success" };
@@ -266,7 +266,7 @@ namespace generic_parser_tests {
 			return errorCode == error_code::success && out == "x\ny";
 		});
 
-		static_assert(!jsonifier::internal::has_resize_and_overwrite<jsonifier::string> && jsonifier::internal::has_resize_and_overwrite<std::string>);
+		static_assert(!jsonifier::internal::resize_and_overwriteable_types<jsonifier::string> && jsonifier::internal::resize_and_overwriteable_types<std::string>);
 
 		static constexpr rt_ut::string_literal escapedStringIntoJsonifierStringName{ "generic_escaped_string_into_jsonifier_string" };
 		rt_ut::unit_test<escapedStringIntoJsonifierStringName, true>::assert_eq(true, [&] {

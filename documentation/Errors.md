@@ -14,7 +14,7 @@ if (!parser.parseJson(data, json)) {
 }
 ```
 
-`parser.getErrors()` returns `std::vector<jsonifier::internal::error>&` — a reference to the internal list. The list is cleared at the start of each parse, minify, prettify, and validate call, so inspect it before invoking the parser again.
+`parser.getErrors()` returns `std::vector<jsonifier::internal::error>&`, a reference to the internal list. The list is cleared at the start of each parse, minify, prettify, and validate call, so inspect it before invoking the parser again.
 
 ## What an `error` Contains
 
@@ -28,13 +28,13 @@ In file: /path/to/jsonifier-incl/parsing/parse_impl.hpp, at line/column: 218:24
 
 Breaking that down:
 
-- **`Error of Class:`** — which operation produced the error (`parsing`, `minifying`, `prettifying`, `validating`)
-- **`of Type:`** — the specific status enum value (`missing_comma`, `invalid_string_characters`, etc.) as a human-readable string
-- **`global index`** — the byte offset in your input where the error was detected
-- **`line`** — the line number within your input (1-indexed, counted by newlines)
-- **`local index`** — the column within that line
-- **`Here's some of the string's values:`** — up to 16 bytes of context starting at the error position (tabs normalized to spaces), byte-by-byte with escape sequences printed (`\n`, `\t`, `\x00`, etc.) so you can see exactly what was there — including invisible or non-printable characters
-- **`In file: ..., at line/column: ...`** — the source location **inside Jsonifier's own code** where the error was reported. This is Jsonifier's internal file/line/function, not your code — useful for reporting bugs or understanding which parser path detected the issue.
+- **`Error of Class:`**: which operation produced the error (`parsing`, `minifying`, `prettifying`, `validating`)
+- **`of Type:`**: the specific status enum value (`missing_comma`, `invalid_string_characters`, etc.) as a human-readable string
+- **`global index`**: the byte offset in your input where the error was detected
+- **`line`**: the line number within your input (1-indexed, counted by newlines)
+- **`local index`**: the column within that line
+- **`Here's some of the string's values:`**: up to 16 bytes of context starting at the error position (tabs normalized to spaces), byte-by-byte with escape sequences printed (`\n`, `\t`, `\x00`, etc.) so you can see exactly what was there, including invisible or non-printable characters
+- **`In file: ..., at line/column: ...`**: the source location **inside Jsonifier's own code** where the error was reported. This is Jsonifier's internal file/line/function, not your code, useful for reporting bugs or understanding which parser path detected the issue.
 
 ## Accessing Fields Programmatically
 
@@ -52,11 +52,11 @@ for (auto& err : parser.getErrors()) {
 }
 ```
 
-- **`template<typename T> operator T()`** — `static_cast`s the raw status code to whatever you convert to: `uint64_t` for the integer, `parse_statuses` (or another status enum) for switching, `bool` for "is non-success"
-- **`operator==`** — compares two errors by class, type, global index, line, and local index
-- **Public fields** — `errorClass`, `errorType`, `errorIndex`, `line`, `localIndex`, and `sourceLocation`
+- **`template<typename T> operator T()`**: `static_cast`s the raw status code to whatever you convert to: `uint64_t` for the integer, `parse_statuses` (or another status enum) for switching, `bool` for "is non-success"
+- **`operator==`**: compares two errors by class, type, global index, line, and local index
+- **Public fields**: `errorClass`, `errorType`, `errorIndex`, `line`, `localIndex`, and `sourceLocation`
 
-For the full formatted string, call `err.reportError()` — it returns a `std::string_view` of the same text that streaming to `std::ostream` produces.
+For the full formatted string, call `err.reportError()`; it returns a `std::string_view` of the same text that streaming to `std::ostream` produces.
 
 ## The Four Status Classes
 
@@ -122,9 +122,9 @@ Produced by `minifyJson`:
 |--------|---------|
 | `success` | No error |
 | `no_input` | Input was empty |
-| `invalid_string_length` | String bounds don't match structural indices — usually indicates malformed input |
+| `invalid_string_length` | String bounds don't match structural indices; usually indicates malformed input |
 | `invalid_number_value` | Number token doesn't parse |
-| `incorrect_structural_index` | Structural scanner produced an unexpected token — usually indicates malformed input |
+| `incorrect_structural_index` | Structural scanner produced an unexpected token; usually indicates malformed input |
 | `unclosed_object` | Input ended with an object still open |
 | `unclosed_array` | Input ended with an array still open |
 
@@ -143,11 +143,11 @@ Produced by `prettifyJson`:
 
 ### Serialization
 
-`serializeJson` has no status enum and never pushes errors — it consumes a valid C++ object and produces valid JSON, returning `bool`.
+`serializeJson` has no status enum and never pushes errors: it consumes a valid C++ object and produces valid JSON, returning `bool`.
 
 ## Multiple Errors Per Call
 
-The parser can accumulate multiple errors from a single call. When one error is detected, the parser aborts the current value and unwinds — but partial state left behind can trigger follow-on errors as the unwind progresses. In practice the first error in the list is usually the actionable one; later errors are consequences.
+The parser can accumulate multiple errors from a single call. When one error is detected, the parser aborts the current value and unwinds, but partial state left behind can trigger follow-on errors as the unwind progresses. In practice the first error in the list is usually the actionable one; later errors are consequences.
 
 For diagnostic output, printing all errors gives the most context. For programmatic branching, checking just the first is usually enough.
 
@@ -179,8 +179,8 @@ The first error's status is enough for high-level branching. The full `reportErr
 
 ## What's Next
 
-- **[Serializing & Parsing](Usage_Serializing_Parsing.md)** — the operations that produce these errors
-- **[Validating](Validating.md)** — when to use `validateJson` for pre-flight checking
-- **[Minifying](Minifying.md)** and **[Prettifying](Prettifying.md)** — the string-transform operations and their error modes
+- **[Serializing & Parsing](Usage_Serializing_Parsing.md)**: the operations that produce these errors
+- **[Validating](Validating.md)**: when to use `validateJson` for pre-flight checking
+- **[Minifying](Minifying.md)** and **[Prettifying](Prettifying.md)**: the string-transform operations and their error modes
 
 ---

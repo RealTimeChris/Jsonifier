@@ -4,23 +4,21 @@
  * https://github.com/nihilai-collective/jsonifier
  * include/jsonifier-incl/parsing/parser.hpp
  */
-#if !defined(JSONIFIER_PASS_GUARD_PARSER)
-	#define JSONIFIER_PASS_GUARD_PARSER
+#pragma once
 
-	#include <jsonifier-incl/core/defines.hpp>
+#include <jsonifier-incl/core/defines.hpp>
 
-	#include <jsonifier-incl/utilities/json_entity.hpp>
-	#include <jsonifier-incl/parsing/validator.hpp>
-	#include <jsonifier-incl/utilities/hash_map.hpp>
-	#include <jsonifier-incl/utilities/number_utils.hpp>
-	#include <jsonifier-incl/utilities/string.hpp>
-	#include <jsonifier-incl/utilities/error.hpp>
-	#include <jsonifier-incl/utilities/simd.hpp>
+#include <jsonifier-incl/utilities/json_entity.hpp>
+#include <jsonifier-incl/parsing/validator.hpp>
+#include <jsonifier-incl/utilities/hash_map.hpp>
+#include <jsonifier-incl/utilities/number_utils.hpp>
+#include <jsonifier-incl/utilities/string.hpp>
+#include <jsonifier-incl/utilities/error.hpp>
+#include <jsonifier-incl/utilities/simd.hpp>
 
-namespace JSONIFIER_INTERNAL_NAMESPACE {
+namespace jsonifier::internal {
 
-	#if JSONIFIER_BACKEND_PASS == 0
-	template<typename value_type> [[maybe_unused]] JSONIFIER_INLINE static auto getBeginIterVec(value_type& value JSONIFIER_LIFETIME_BOUND) {
+	template<typename value_type> [[maybe_unused]] JSONIFIER_INLINE auto getBeginIterVec(value_type& value JSONIFIER_LIFETIME_BOUND) {
 		if constexpr (std::is_same_v<typename value_type::value_type, bool>) {
 			return value.begin();
 		} else {
@@ -28,20 +26,19 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 		}
 	}
 
-	template<typename value_type> [[maybe_unused]] JSONIFIER_INLINE static auto getEndIterVec(value_type& value JSONIFIER_LIFETIME_BOUND) {
+	template<typename value_type> [[maybe_unused]] JSONIFIER_INLINE auto getEndIterVec(value_type& value JSONIFIER_LIFETIME_BOUND) {
 		if constexpr (std::is_same_v<typename value_type::value_type, bool>) {
 			return value.end();
 		} else {
 			return value.data() + value.size();
 		}
 	}
-	#endif
 
 	template<typename value_type, typename context_type, parse_options options> struct parse_impl;
 
 	template<parse_options options> struct parse {
 		template<typename value_type, typename iterator_type, typename context_type>
-		inline static iterator_type impl(value_type&& value, iterator_type iter, uint64_t depth, context_type& context) noexcept {
+		inline static iterator_type impl(value_type&& value, iterator_type iter, uint64_t depth, context_type& context) {
 			if constexpr (inlinableOpType<remove_cvref_t<value_type>, maxParseInlineMemberCount>()) {
 				return parse_impl<remove_cvref_t<value_type>, context_type, options>::impl(value, iter, depth, context);
 			} else {
@@ -50,7 +47,7 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 		}
 
 		template<typename value_type, typename iterator_type, typename context_type>
-		JSONIFIER_NOINLINE static iterator_type implOutline(value_type& value, iterator_type iter, uint64_t depth, context_type& context) noexcept {
+		JSONIFIER_NOINLINE static iterator_type implOutline(value_type& value, iterator_type iter, uint64_t depth, context_type& context) {
 			return parse_impl<remove_cvref_t<value_type>, context_type, options>::implOutline(value, iter, depth, context);
 		}
 	};
@@ -85,11 +82,11 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 		using derived_type = derived_type_new;
 
 		template<parse_options options = parse_options{}, typename comparison_type, typename buffer_type>
-		inline bool parseJsonForComparison(comparison_type&& object, const buffer_type& in) noexcept {
+		inline bool parseJsonForComparison(comparison_type&& object, const buffer_type& in) {
 			static constexpr parse_options parseOpts{ options };
 			derivedRef.errors.clear();
-			auto* __restrict rootIter = JSONIFIER_INTERNAL_NAMESPACE::getBeginIter(in);
-			auto* __restrict endIter  = JSONIFIER_INTERNAL_NAMESPACE::getEndIter(in);
+			auto* __restrict rootIter = jsonifier::internal::getBeginIter(in);
+			auto* __restrict endIter  = jsonifier::internal::getEndIter(in);
 			object.indices.clear();
 			derivedRef.section.template reset<parseOpts.minified>(rootIter, static_cast<uint64_t>(endIter - rootIter));
 			if (derivedRef.errors.size() == 0) {
@@ -103,27 +100,27 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 
 		template<parse_options options = parse_options{}, typename buffer_type> inline write_structural_index_ptr collectStructurals(buffer_type&& in) noexcept {
 			static constexpr parse_options parseOpts{ options };
-			auto* __restrict rootIter = JSONIFIER_INTERNAL_NAMESPACE::getBeginIter(in);
-			auto* __restrict endIter  = JSONIFIER_INTERNAL_NAMESPACE::getEndIter(in);
+			auto* __restrict rootIter = jsonifier::internal::getBeginIter(in);
+			auto* __restrict endIter  = jsonifier::internal::getEndIter(in);
 			derivedRef.section.template reset<parseOpts.minified>(rootIter, static_cast<uint64_t>(endIter - rootIter));
 			return derivedRef.section.begin();
 		}
 
 		template<parse_options options = parse_options{}, typename buffer_type> inline write_structural_index_ptr collectStructuralsSingle(buffer_type&& in) noexcept {
 			static constexpr parse_options parseOpts{ options };
-			auto* __restrict rootIter = JSONIFIER_INTERNAL_NAMESPACE::getBeginIter(in);
-			auto* __restrict endIter  = JSONIFIER_INTERNAL_NAMESPACE::getEndIter(in);
+			auto* __restrict rootIter = jsonifier::internal::getBeginIter(in);
+			auto* __restrict endIter  = jsonifier::internal::getEndIter(in);
 			derivedRef.podSection.template reset<parseOpts.minified>(rootIter, static_cast<uint64_t>(endIter - rootIter));
 			return derivedRef.podSection.begin();
 		}
 
-		template<parse_options options = parse_options{}, string_t value_type, typename buffer_type>
-		JSONIFIER_INLINE bool parseJson(value_type&& object, const buffer_type& in) noexcept {
+		template<parse_options options = parse_options{}, string_types value_type, typename buffer_type>
+		JSONIFIER_INLINE bool parseJson(value_type&& object, const buffer_type& in) {
 			static constexpr parse_options parseOpts{ options };
 			if constexpr (parseOpts.partialRead) {
 				derivedRef.errors.clear();
-				auto* __restrict rootIter = JSONIFIER_INTERNAL_NAMESPACE::getBeginIter(in);
-				auto* __restrict endIter  = JSONIFIER_INTERNAL_NAMESPACE::getEndIter(in);
+				auto* __restrict rootIter = jsonifier::internal::getBeginIter(in);
+				auto* __restrict endIter  = jsonifier::internal::getEndIter(in);
 				if (!rootIter || rootIter == endIter) [[unlikely]] {
 					derivedRef.errors.emplace_back(error::constructError<status_classes::parsing, parse_statuses::no_input>(rootIter, rootIter, endIter));
 					return false;
@@ -149,8 +146,8 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 				}
 				return true;
 			} else {
-				auto* __restrict rootIter = JSONIFIER_INTERNAL_NAMESPACE::getBeginIter(in);
-				auto* __restrict endIter  = JSONIFIER_INTERNAL_NAMESPACE::getEndIter(in);
+				auto* __restrict rootIter = jsonifier::internal::getBeginIter(in);
+				auto* __restrict endIter  = jsonifier::internal::getEndIter(in);
 				if (rootIter >= endIter) [[unlikely]] {
 					derivedRef.errors.emplace_back(error::constructError<status_classes::parsing, parse_statuses::no_input>(rootIter, rootIter, endIter));
 					return false;
@@ -175,7 +172,7 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 					return false;
 				}
 				if constexpr (!options.minified) {
-					while (rootIter < endIter && whitespaceTable[static_cast<uint8_t>(*rootIter)]) {
+					while (rootIter < endIter && whitespaceTable[static_cast<uint64_t>(*rootIter)]) {
 						++rootIter;
 					}
 				}
@@ -187,13 +184,12 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 			}
 		}
 
-		template<parse_options options = parse_options{}, bool_t value_type, typename buffer_type>
-		JSONIFIER_INLINE bool parseJson(value_type&& object, const buffer_type& in) noexcept {
+		template<parse_options options = parse_options{}, bool_types value_type, typename buffer_type> JSONIFIER_INLINE bool parseJson(value_type&& object, const buffer_type& in) {
 			static constexpr parse_options parseOpts{ options };
 			if constexpr (parseOpts.partialRead) {
 				derivedRef.errors.clear();
-				auto* __restrict rootIter = JSONIFIER_INTERNAL_NAMESPACE::getBeginIter(in);
-				auto* __restrict endIter  = JSONIFIER_INTERNAL_NAMESPACE::getEndIter(in);
+				auto* __restrict rootIter = jsonifier::internal::getBeginIter(in);
+				auto* __restrict endIter  = jsonifier::internal::getEndIter(in);
 				if (!rootIter || rootIter == endIter) [[unlikely]] {
 					derivedRef.errors.emplace_back(error::constructError<status_classes::parsing, parse_statuses::no_input>(rootIter, rootIter, endIter));
 					return false;
@@ -224,8 +220,8 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 			} else {
 				static constexpr uint32_t trueVal{ 0b01100101'01110101'01110010'01110100 };
 				static constexpr uint32_t falseVal{ 0b01110011'01101100'01100001'01100110 };
-				auto* __restrict rootIter = JSONIFIER_INTERNAL_NAMESPACE::getBeginIter(in);
-				auto* __restrict endIter  = JSONIFIER_INTERNAL_NAMESPACE::getEndIter(in);
+				auto* __restrict rootIter = jsonifier::internal::getBeginIter(in);
+				auto* __restrict endIter  = jsonifier::internal::getEndIter(in);
 				if (endIter - rootIter < 4) [[unlikely]] {
 					derivedRef.errors.emplace_back(error::constructError<status_classes::parsing, parse_statuses::invalid_bool_value>(rootIter, rootIter, endIter));
 					return false;
@@ -256,13 +252,13 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 			}
 		}
 
-		template<parse_options options = parse_options{}, number_t value_type, typename buffer_type>
-		JSONIFIER_INLINE bool parseJson(value_type&& object, const buffer_type& in) noexcept {
+		template<parse_options options = parse_options{}, number_types value_type, typename buffer_type>
+		JSONIFIER_INLINE bool parseJson(value_type&& object, const buffer_type& in) {
 			static constexpr parse_options parseOpts{ options };
 			if constexpr (parseOpts.partialRead) {
 				derivedRef.errors.clear();
-				auto* __restrict rootIter = JSONIFIER_INTERNAL_NAMESPACE::getBeginIter(in);
-				auto* __restrict endIter  = JSONIFIER_INTERNAL_NAMESPACE::getEndIter(in);
+				auto* __restrict rootIter = jsonifier::internal::getBeginIter(in);
+				auto* __restrict endIter  = jsonifier::internal::getEndIter(in);
 				if (!rootIter || rootIter == endIter) [[unlikely]] {
 					derivedRef.errors.emplace_back(error::constructError<status_classes::parsing, parse_statuses::no_input>(rootIter, rootIter, endIter));
 					return false;
@@ -271,17 +267,17 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 				auto* __restrict valueIter				  = rootIter + *tapeIter;
 				return parseRootNumber<options>(object, rootIter, valueIter, endIter);
 			} else {
-				auto* __restrict rootIter = JSONIFIER_INTERNAL_NAMESPACE::getBeginIter(in);
-				auto* __restrict endIter  = JSONIFIER_INTERNAL_NAMESPACE::getEndIter(in);
+				auto* __restrict rootIter = jsonifier::internal::getBeginIter(in);
+				auto* __restrict endIter  = jsonifier::internal::getEndIter(in);
 				return parseRootNumber<options>(object, rootIter, rootIter, endIter);
 			}
 		}
 
-		template<parse_options options = parse_options{}, typename value_type, typename buffer_type> inline bool parseJson(value_type&& object, const buffer_type& in) noexcept {
+		template<parse_options options = parse_options{}, typename value_type, typename buffer_type> inline bool parseJson(value_type&& object, const buffer_type& in) {
 			static constexpr parse_options parseOpts{ options };
 			derivedRef.errors.clear();
-			auto* __restrict rootIter = JSONIFIER_INTERNAL_NAMESPACE::getBeginIter(in);
-			auto* __restrict endIter  = JSONIFIER_INTERNAL_NAMESPACE::getEndIter(in);
+			auto* __restrict rootIter = jsonifier::internal::getBeginIter(in);
+			auto* __restrict endIter  = jsonifier::internal::getEndIter(in);
 			auto newSize			  = static_cast<uint64_t>(endIter - rootIter);
 			if (derivedRef.stringBuffer.size() < newSize) {
 				derivedRef.stringBuffer.resize(newSize);
@@ -309,12 +305,12 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 		inline parser() noexcept			   = default;
 
 		template<parse_options parseOpts, typename value_type, typename iterator_type, typename context_type>
-		JSONIFIER_INLINE bool runParse(value_type& object, iterator_type iter, context_type& context) noexcept {
+		JSONIFIER_INLINE bool runParse(value_type& object, iterator_type iter, context_type& context) {
 			using cursor = json_cursor<parseOpts, iterator_type>;
 			if (!cursor::anyInput(iter, context)) [[unlikely]] {
 				return false;
 			}
-			if constexpr (!parseOpts.minified && !structural_context<context_type>) {
+			if constexpr (!parseOpts.minified && !structural_context_types<context_type>) {
 				cursor::collectIndentSize(iter, context);
 			}
 			if (const iterator_type iterNew = parse<parseOpts>::impl(object, iter, 0, context); iterNew) [[likely]] {
@@ -331,8 +327,8 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 		}
 
 		template<parse_options options, typename value_type>
-		JSONIFIER_INLINE static typename string_scanner<options>::scan_result scanString(value_type& object, auto* strIter, const auto* endIter) noexcept {
-			if (const auto swar = JSONIFIER_INTERNAL_NAMESPACE::swarScanAsciiString(strIter, endIter); swar.found) [[likely]] {
+		JSONIFIER_INLINE static typename string_scanner<options>::scan_result scanString(value_type& object, auto* strIter, const auto* endIter) {
+			if (const auto swar = jsonifier::internal::swarScanAsciiString(strIter, endIter); swar.found) [[likely]] {
 				if constexpr (requires { object.assign(strIter, swar.length); }) {
 					object.assign(strIter, swar.length);
 				} else {
@@ -343,7 +339,7 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 			using context_type = string_scan_context<options, value_type, decltype(strIter)>;
 			const auto needed  = static_cast<uint64_t>(endIter - strIter) + simdBytesPerStep;
 			typename string_scanner<options>::scan_result res{};
-			if constexpr (has_resize_and_overwrite<value_type>) {
+			if constexpr (resize_and_overwriteable_types<value_type>) {
 				object.resize_and_overwrite(needed, context_type{ res, strIter, endIter });
 			} else {
 				if (object.size() < needed) [[unlikely]] {
@@ -357,10 +353,9 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 			return res;
 		}
 
-		template<parse_options options, typename value_type>
-		JSONIFIER_INLINE bool parseRootNumber(value_type& object, auto* rootIter, auto* valueIter, const auto* endIter) noexcept {
+		template<parse_options options, typename value_type> JSONIFIER_INLINE bool parseRootNumber(value_type& object, auto* rootIter, auto* valueIter, const auto* endIter) {
 			using num_type = remove_cvref_t<value_type>;
-			if constexpr (integer_t<num_type>) {
+			if constexpr (integer_types<num_type>) {
 				if constexpr (uint_types<num_type>) {
 					if constexpr (uint64_types<num_type>) {
 						if (auto iterNew = integer_parser<num_type>::parseInt(object, valueIter, endIter); iterNew) {
@@ -403,9 +398,9 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 			}
 		}
 
-		template<bool minified> JSONIFIER_INLINE bool finish(auto* rootIter, auto* iterNew, const auto* endIter) noexcept {
+		template<bool minified> JSONIFIER_INLINE bool finish(auto* rootIter, auto* iterNew, const auto* endIter) {
 			if constexpr (!minified) {
-				while (iterNew < endIter && whitespaceTable[static_cast<uint8_t>(*iterNew)]) {
+				while (iterNew < endIter && whitespaceTable[static_cast<uint64_t>(*iterNew)]) {
 					++iterNew;
 				}
 			}
@@ -418,5 +413,3 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 	};
 
 }
-
-#endif

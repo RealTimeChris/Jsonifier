@@ -20,7 +20,7 @@ Create it once, use it for both parsing and serialization. Reusing the same inst
 
 ## Define Your Types
 
-Let's model a small event catalog — nested structs, optionals, containers, and one field whose JSON name doesn't match its C++ name:
+Let's model a small event catalog with nested structs, optionals, containers, and one field whose JSON name doesn't match its C++ name:
 
 ```cpp
 struct event {
@@ -36,7 +36,7 @@ struct catalog {
 };
 ```
 
-These are plain C++ structs. No inheritance, no macros, no base class. Jsonifier doesn't touch your types — it reflects on them from the outside.
+These are plain C++ structs. No inheritance, no macros, no base class. Jsonifier doesn't touch your types; it reflects on them from the outside.
 
 ## Register the Types
 
@@ -62,9 +62,9 @@ template<> struct jsonifier::core<catalog> {
 
 Two things to notice here.
 
-**First, the members are passed as pointers-to-member as non-type template parameters.** No strings, no macros, no runtime dispatch — the schema is entirely visible to the compiler, which means key lookups collapse into compile-time hash-map dispatch and unused code paths get eliminated before they exist.
+**First, the members are passed as pointers-to-member as non-type template parameters.** No strings, no macros, no runtime dispatch; the schema is entirely visible to the compiler, which means key lookups collapse into compile-time hash-map dispatch and unused code paths get eliminated before they exist.
 
-**Second, `makeJsonEntity` maps a C++ member to a JSON key with a different name.** Here, `schema_version` in C++ becomes `"schema-version"` in JSON. This is compile-time — the mapping is baked into the binary with zero runtime cost, so you can use kebab-case, digit-prefixed keys (`"337100890"`), reserved C++ words, or any other JSON key that isn't a legal C++ identifier without paying for it at runtime.
+**Second, `makeJsonEntity` maps a C++ member to a JSON key with a different name.** Here, `schema_version` in C++ becomes `"schema-version"` in JSON. This is compile-time: the mapping is baked into the binary with zero runtime cost, so you can use kebab-case, digit-prefixed keys (`"337100890"`), reserved C++ words, or any other JSON key that isn't a legal C++ identifier without paying for it at runtime.
 
 Members without `makeJsonEntity` use the C++ name directly as the JSON key.
 
@@ -82,7 +82,7 @@ catalog data;
 parser.parseJson(data, json);
 ```
 
-That's it. `parseJson` takes the destination object first, then the source JSON. The nested structs, the map, the optional handling `null`, the renamed key — all handled automatically because the schema was registered.
+That's it. `parseJson` takes the destination object first, then the source JSON. The nested structs, the map, the optional handling `null`, the renamed key: all handled automatically because the schema was registered.
 
 If parsing fails, `parser.getErrors()` returns a list of errors with source location tracking. See [Error Handling](Errors.md) for the details.
 
@@ -137,7 +137,7 @@ template<> struct jsonifier::core<catalog> {
         makeJsonEntity<&value_type::schema_version, "schema-version">()>();
 };
 
-int main() {
+int32_t main() {
     jsonifier::jsonifier_core<> parser;
 
     std::string json = R"({"events":{"42":{"id":42,"name":"Concert","logo":null,"topicIds":[1,2,3]}},"schema-version":"1.0"})";
@@ -162,10 +162,10 @@ Compile with a C++23 compiler and Jsonifier linked (`Jsonifier::Jsonifier` if yo
 
 You now have the basics. From here, pick what you need:
 
-- **[Reflection](Reflection.md)** — the full guide to registering types, including inheritance, custom serialization, and more advanced `makeJsonEntity` patterns
-- **[Serializing & Parsing](Usage_Serializing_Parsing.md)** — every parse and serialize option, including the ones this page skipped
-- **[Known Order Parsing](Known_Order.md)** — when you can guarantee JSON keys arrive in declaration order, the parser can skip lookup entirely for a significant speedup
-- **[Partial Reading](PartialReading.md)** — for parsing JSON where the key order isn't guaranteed
-- **[Error Handling](Errors.md)** — for production error reporting with source locations
+- **[Reflection](Reflection.md)**: the full guide to registering types, including inheritance, custom serialization, and more advanced `makeJsonEntity` patterns
+- **[Serializing & Parsing](Usage_Serializing_Parsing.md)**: every parse and serialize option, including the ones this page skipped
+- **[Known Order Parsing](Known_Order.md)**: when you can guarantee JSON keys arrive in declaration order, the parser can skip lookup entirely for a significant speedup
+- **[Partial Reading](PartialReading.md)**: for parsing JSON where the key order isn't guaranteed
+- **[Error Handling](Errors.md)**: for production error reporting with source locations
 
 If you're benchmarking or shipping to production, [Optimizing For Minified JSON](Optimizing_For_Minified_Json.md) and [CPU Architecture Selection](CPU_Architecture_Selection.md) are also worth a look.

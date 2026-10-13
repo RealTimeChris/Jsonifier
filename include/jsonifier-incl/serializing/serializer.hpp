@@ -4,14 +4,13 @@
  * https://github.com/nihilai-collective/jsonifier
  * include/jsonifier-incl/serializing/serializer.hpp
  */
-#if !defined(JSONIFIER_PASS_GUARD_SERIALIZER)
-	#define JSONIFIER_PASS_GUARD_SERIALIZER
+#pragma once
 
-	#include <jsonifier-incl/utilities/number_utils.hpp>
-	#include <jsonifier-incl/utilities/string_utils.hpp>
-	#include <jsonifier-incl/utilities/error.hpp>
+#include <jsonifier-incl/utilities/number_utils.hpp>
+#include <jsonifier-incl/utilities/string_utils.hpp>
+#include <jsonifier-incl/utilities/error.hpp>
 
-namespace JSONIFIER_INTERNAL_NAMESPACE {
+namespace jsonifier::internal {
 
 	template<typename value_type, serialize_options optionsNew> struct serialize_impl;
 
@@ -52,12 +51,12 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 	template<typename derived_type_new> struct serializer {
 		using derived_type = derived_type_new;
 
-		template<serialize_options optionsNew = serialize_options{}, typename value_type, buffer_like buffer_type>
-		inline bool serializeJson(value_type&& object, buffer_type&& buffer) noexcept {
+		template<serialize_options optionsNew = serialize_options{}, typename value_type, buffer_like_types buffer_type>
+		inline bool serializeJson(value_type&& object, buffer_type&& buffer) {
 			static constexpr serialize_options options{ optionsNew };
 			uint64_t sizeIndent{};
 			const uint64_t newSize = get_size<options>::impl(object, sizeIndent) + 64ull;
-			if constexpr (has_resize_and_overwrite<remove_cvref_t<buffer_type>>) {
+			if constexpr (resize_and_overwriteable_types<remove_cvref_t<buffer_type>>) {
 				buffer.resize_and_overwrite(newSize, serialize_writer_ro<options, remove_reference_t<value_type>>{ object });
 			} else {
 				if (buffer.size() < newSize) {
@@ -69,11 +68,11 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 			return true;
 		}
 
-		template<serialize_options optionsNew = serialize_options{}, number_t value_type, buffer_like buffer_type>
-		JSONIFIER_INLINE bool serializeJson(value_type&& object, buffer_type&& buffer) noexcept {
+		template<serialize_options optionsNew = serialize_options{}, number_types value_type, buffer_like_types buffer_type>
+		JSONIFIER_INLINE bool serializeJson(value_type&& object, buffer_type&& buffer) {
 			static constexpr serialize_options options{ optionsNew };
 			const uint64_t newSize{ digit_sizes<value_type>::value };
-			if constexpr (has_resize_and_overwrite<remove_cvref_t<buffer_type>>) {
+			if constexpr (resize_and_overwriteable_types<remove_cvref_t<buffer_type>>) {
 				buffer.resize_and_overwrite(newSize, serialize_writer_ro<options, remove_reference_t<value_type>>{ object });
 			} else {
 				if (buffer.size() < newSize) {
@@ -85,11 +84,11 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 			return true;
 		}
 
-		template<serialize_options optionsNew = serialize_options{}, string_t value_type, buffer_like buffer_type>
-		JSONIFIER_INLINE bool serializeJson(value_type&& object, buffer_type&& buffer) noexcept {
+		template<serialize_options optionsNew = serialize_options{}, string_types value_type, buffer_like_types buffer_type>
+		JSONIFIER_INLINE bool serializeJson(value_type&& object, buffer_type&& buffer) {
 			static constexpr serialize_options options{ optionsNew };
 			const auto newSize = object.size() * 6ull + 2ull + simdBytesPerStep;
-			if constexpr (has_resize_and_overwrite<remove_cvref_t<buffer_type>>) {
+			if constexpr (resize_and_overwriteable_types<remove_cvref_t<buffer_type>>) {
 				buffer.resize_and_overwrite(newSize, serialize_writer_ro<options, remove_reference_t<value_type>>{ object });
 			} else {
 				if (buffer.size() < newSize) {
@@ -101,10 +100,10 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 			return true;
 		}
 
-		template<serialize_options optionsNew = serialize_options{}, bool_t value_type, buffer_like buffer_type>
-		JSONIFIER_INLINE bool serializeJson(value_type&& object, buffer_type&& buffer) noexcept {
+		template<serialize_options optionsNew = serialize_options{}, bool_types value_type, buffer_like_types buffer_type>
+		JSONIFIER_INLINE bool serializeJson(value_type&& object, buffer_type&& buffer) {
 			static constexpr serialize_options options{ optionsNew };
-			if constexpr (has_resize_and_overwrite<remove_cvref_t<buffer_type>>) {
+			if constexpr (resize_and_overwriteable_types<remove_cvref_t<buffer_type>>) {
 				buffer.resize_and_overwrite(8ull, serialize_writer_ro<options, remove_reference_t<value_type>>{ object });
 			} else {
 				if (buffer.size() < 8ull) {
@@ -129,5 +128,3 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 	};
 
 }
-
-#endif

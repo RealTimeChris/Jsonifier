@@ -10,7 +10,7 @@
 
 namespace add_tape_values_tests {
 
-	inline static std::vector<uint32_t> runAddTapeValues(const jsonifier::internal::array<uint64_t, jsonifier::simdBlocksPerStep>& bitsArr, uint64_t strIdx) {
+	inline std::vector<uint32_t> runAddTapeValues(const jsonifier::internal::array<uint64_t, jsonifier::simdBlocksPerStep>& bitsArr, uint64_t strIdx) {
 		jsonifier::internal::array<uint64_t, jsonifier::simdBlocksPerStep> cntsArr{};
 		uint64_t total{};
 		for (uint64_t i = 0; i < jsonifier::simdBlocksPerStep; ++i) {
@@ -18,13 +18,13 @@ namespace add_tape_values_tests {
 			total += cntsArr[i];
 		}
 		std::vector<uint32_t> tape(jsonifier::simdBlocksPerStep * 64 + 64, 0xFFFFFFFFu);
-		jsonifier::internal::add_tape_values<jsonifier::default_backend, jsonifier::internal::make_integer_sequence<jsonifier::simdBlocksPerStep>>::impl(bitsArr, cntsArr,
+		jsonifier::internal::add_tape_values<jsonifier::defaultBackend, jsonifier::internal::make_integer_sequence<jsonifier::simdBlocksPerStep>>::impl(bitsArr, cntsArr,
 			tape.data(), strIdx);
 		tape.resize(total);
 		return tape;
 	}
 
-	inline static void runTests() {
+	inline void runTests() {
 		std::cout << "add_tape_values Tests" << std::endl;
 
 		rt_ut::unit_test<"add_tape_values_single_bit_in_first_block", true>::assert_eq(true, [] {

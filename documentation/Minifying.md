@@ -16,7 +16,7 @@ std::string minified;
 parser.minifyJson(pretty, minified);
 ```
 
-The result: `{"name":"Concert","id":42}` — same JSON, no wasted bytes.
+The result: `{"name":"Concert","id":42}`. Same JSON, no wasted bytes.
 
 `minifyJson(input, output)` returns `bool`. Both arguments must be string types (`std::string`, `jsonifier::string`, and so on); `output` is resized to fit.
 
@@ -24,7 +24,7 @@ Unlike `parseJson` and `serializeJson`, minifying doesn't involve your registere
 
 ## How It Works
 
-Minifying uses the same stage-1 structural scanner that powers [Partial Reading](PartialReading.md). Stage-1 scans the input once and builds a tape of offsets to every structural character (`{ } [ ] " , :`) and every value. Minifying then walks that tape, emitting each structural character directly and copying string and number values verbatim — with any whitespace between them stripped out.
+Minifying uses the same stage-1 structural scanner that powers [Partial Reading](PartialReading.md). Stage-1 scans the input once and builds a tape of offsets to every structural character (`{ } [ ] " , :`) and every value. Minifying then walks that tape, emitting each structural character directly and copying string and number values verbatim, with any whitespace between them stripped out.
 
 Booleans and nulls are normalized to canonical form (`true`, `false`, `null`) rather than copied byte-for-byte from the source. In practice this changes nothing because valid JSON already uses those exact literals, but if your input has any oddities the output will always be canonical.
 
@@ -46,16 +46,16 @@ Minifier-specific error statuses live in a `minify_statuses` enum, covering case
 
 Minifying preserves everything semantically meaningful:
 
-- **All keys and values** — nothing is dropped
-- **Key order** — fields stay in the order they appear in the input
-- **String contents** — including all internal whitespace, escapes, and Unicode
-- **Number precision** — the number token is copied verbatim, so `1.0`, `1`, and `1e0` stay distinct
+- **All keys and values**: nothing is dropped
+- **Key order**: fields stay in the order they appear in the input
+- **String contents**: including all internal whitespace, escapes, and Unicode
+- **Number precision**: the number token is copied verbatim, so `1.0`, `1`, and `1e0` stay distinct
 
 ## What Gets Stripped
 
-- **Whitespace between structural characters** — spaces, tabs, newlines, carriage returns
-- **Indentation** — regardless of style or depth
-- **Trailing whitespace** — inside numbers and after values
+- **Whitespace between structural characters**: spaces, tabs, newlines, carriage returns
+- **Indentation**: regardless of style or depth
+- **Trailing whitespace**: inside numbers and after values
 
 ## Round-Tripping With Prettifying
 
@@ -77,7 +77,7 @@ The final `minified_output` will be byte-identical to `minified_input` (assuming
 #include <jsonifier>
 #include <iostream>
 
-int main() {
+int32_t main() {
     jsonifier::jsonifier_core<> parser;
 
     std::string pretty = R"({
@@ -108,13 +108,13 @@ int main() {
 
 Both produce minified output, but they operate on different inputs:
 
-- **`minifyJson`** — takes a JSON string and produces a minified JSON string. No typed object involved. Use when you're passing JSON through your system without needing to interpret it.
-- **`serializeJson`** — takes a typed C++ object (via your registered `jsonifier::core<T>`) and produces JSON. Use when you're producing JSON from your own data.
+- **`minifyJson`**: takes a JSON string and produces a minified JSON string. No typed object involved. Use when you're passing JSON through your system without needing to interpret it.
+- **`serializeJson`**: takes a typed C++ object (via your registered `jsonifier::core<T>`) and produces JSON. Use when you're producing JSON from your own data.
 
-If you have a typed object and want minified output, use `serializeJson` — going through `minifyJson` afterward would just be a round-trip through the parser for no reason.
+If you have a typed object and want minified output, use `serializeJson`; going through `minifyJson` afterward would just be a round-trip through the parser for no reason.
 
 ## What's Next
 
-- **[Prettifying](Prettifying.md)** — the inverse operation, adding indentation and newlines for human readability
-- **[Serializing & Parsing](Usage_Serializing_Parsing.md)** — for producing JSON directly from typed C++ objects
-- **[Error Handling](Errors.md)** — full breakdown of error reporting including minifier errors
+- **[Prettifying](Prettifying.md)**: the inverse operation, adding indentation and newlines for human readability
+- **[Serializing & Parsing](Usage_Serializing_Parsing.md)**: for producing JSON directly from typed C++ objects
+- **[Error Handling](Errors.md)**: full breakdown of error reporting including minifier errors

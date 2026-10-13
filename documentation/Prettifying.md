@@ -1,6 +1,6 @@
 # Prettifying
 
-Prettifying reformats a JSON document with indentation and newlines, making it easy to read. It's the inverse of [minifying](Minifying.md) — same input, human-readable output.
+Prettifying reformats a JSON document with indentation and newlines, making it easy to read. It's the inverse of [minifying](Minifying.md): same input, human-readable output.
 
 ## The Basics
 
@@ -24,7 +24,7 @@ The result:
 
 `prettifyJson(input, output)` returns `bool`. Both arguments must be string types; `output` is resized to fit.
 
-Like [minifying](Minifying.md), prettifying operates on JSON strings directly. No `jsonifier::core<T>` involved, no typed objects — just JSON string in, JSON string out.
+Like [minifying](Minifying.md), prettifying operates on JSON strings directly. No `jsonifier::core<T>` involved, no typed objects. Just JSON string in, JSON string out.
 
 ## Prettify Options
 
@@ -44,7 +44,7 @@ The full set:
 | `indentSize` | `3` | Number of `indentChar` characters per indent level. |
 | `indentChar` | `' '` | Character used for indentation. Set to `'\t'` for tab-based indenting. |
 
-The template argument is evaluated at compile time — different option sets produce different specialized code paths.
+The template argument is evaluated at compile time; different option sets produce different specialized code paths.
 
 Example with tab indentation:
 
@@ -61,7 +61,7 @@ Prettifying uses the same stage-1 structural scanner that powers [Partial Readin
 
 - **Structural characters** (`{`, `}`, `[`, `]`) get newlines and indentation around them
 - **Commas** are followed by a newline and the current indent
-- **Colons** are followed by a single indent character (usually a space) — `"key": value`
+- **Colons** are followed by a single indent character (usually a space): `"key": value`
 - **Strings, numbers, booleans, and nulls** are emitted verbatim
 
 Empty objects (`{}`) and empty arrays (`[]`) are kept on a single line rather than being split across three lines.
@@ -84,10 +84,10 @@ Prettifier-specific error statuses live in a `prettify_statuses` enum, covering 
 
 Prettifying preserves everything semantically meaningful:
 
-- **All keys and values** — nothing is dropped
-- **Key order** — fields stay in the order they appear in the input
-- **String contents** — including all internal whitespace, escapes, and Unicode
-- **Number precision** — the number token is copied verbatim
+- **All keys and values**: nothing is dropped
+- **Key order**: fields stay in the order they appear in the input
+- **String contents**: including all internal whitespace, escapes, and Unicode
+- **Number precision**: the number token is copied verbatim
 
 ## Round-Tripping With Minifying
 
@@ -109,7 +109,7 @@ parser.minifyJson(pretty, minified_again);
 #include <jsonifier>
 #include <iostream>
 
-int main() {
+int32_t main() {
     jsonifier::jsonifier_core<> parser;
 
     std::string minified = R"({"events":{"42":{"id":42,"name":"Concert","topicIds":[1,2,3]}},"schema-version":"1.0"})";
@@ -148,19 +148,19 @@ Output:
 
 ## Prettifying vs. `serializeJson` With `prettify = true`
 
-Both produce pretty-printed output, but they operate on different inputs — and use different option types.
+Both produce pretty-printed output, but they operate on different inputs and use different option types.
 
-- **`prettifyJson`** — takes a JSON string and produces a pretty-printed JSON string. Uses `jsonifier::prettify_options`. No typed object involved.
-- **`serializeJson<serialize_options{ .prettify = true }>`** — takes a typed C++ object (via your registered `jsonifier::core<T>`) and produces pretty-printed JSON. Uses `jsonifier::serialize_options`.
+- **`prettifyJson`**: takes a JSON string and produces a pretty-printed JSON string. Uses `jsonifier::prettify_options`. No typed object involved.
+- **`serializeJson<serialize_options{ .prettify = true }>`**: takes a typed C++ object (via your registered `jsonifier::core<T>`) and produces pretty-printed JSON. Uses `jsonifier::serialize_options`.
 
-If you have a typed object and want pretty output, use `serializeJson` — going through `prettifyJson` afterward would be an unnecessary round-trip.
+If you have a typed object and want pretty output, use `serializeJson`; going through `prettifyJson` afterward would be an unnecessary round-trip.
 
 Note that `prettify_options` and `serialize_options` are separate types with overlapping fields. Both have `indentSize` and `indentChar`, but only `serialize_options` has `prettify` (the toggle) and `indent` (starting depth). Standalone prettifying always prettifies from indent depth zero.
 
 ## What's Next
 
-- **[Minifying](Minifying.md)** — the inverse operation, stripping whitespace
-- **[Serializing & Parsing](Usage_Serializing_Parsing.md)** — for producing pretty JSON directly from typed C++ objects
-- **[Error Handling](Errors.md)** — full breakdown of error reporting including prettifier errors
+- **[Minifying](Minifying.md)**: the inverse operation, stripping whitespace
+- **[Serializing & Parsing](Usage_Serializing_Parsing.md)**: for producing pretty JSON directly from typed C++ objects
+- **[Error Handling](Errors.md)**: full breakdown of error reporting including prettifier errors
 
 ---

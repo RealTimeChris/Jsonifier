@@ -22,7 +22,7 @@ std::string json = R"({"events":{}, "schema-version":"1.0"})";
 bool ok = parser.parseJson(data, json);
 ```
 
-`parseJson` returns `true` on success, `false` if any errors were encountered. The destination is populated in place — whatever was there before gets overwritten.
+`parseJson` returns `true` on success, `false` if any errors were encountered. The destination is populated in place; whatever was there before gets overwritten.
 
 Both arguments are flexible. The destination can be any registered type, and the source can be any contiguous buffer of characters (`std::string`, `std::string_view`, `std::vector<char>`, raw pointers, etc.).
 
@@ -43,9 +43,9 @@ The full set:
 | `minified` | `false` | Tells the parser the input has no whitespace, eliminating all whitespace-skipping logic in the value walker. See [Optimizing For Minified JSON](Optimizing_For_Minified_Json.md). |
 | `newLineDelimited` | `false` | Reserved; declared in `parse_options` but not currently consumed by the parser. |
 | `nullTerminated` | `true` | Whether the input buffer has a trailing null byte. **See the warning below.** |
-| `maxDepth` | `1024` | Maximum JSON nesting depth. Enforced at runtime — inputs exceeding this depth are rejected with `parse_statuses::exceeded_max_depth`. Guards against stack exhaustion on adversarial input. |
+| `maxDepth` | `1024` | Maximum JSON nesting depth. Enforced at runtime: inputs exceeding this depth are rejected with `parse_statuses::exceeded_max_depth`. Guards against stack exhaustion on adversarial input. |
 
-Options compose — you can turn any combination on simultaneously:
+Options compose, so you can turn any combination on simultaneously:
 
 ```cpp
 parser.parseJson<jsonifier::parse_options{
@@ -61,10 +61,10 @@ The template argument is evaluated at compile time, so different option sets pro
 
 `nullTerminated` defaults to **`true`**. When it's `true`, the parser uses the null byte at the end of your buffer as a stop sentinel and skips explicit `iter < endIter` bounds checks on every character access. This is faster, but it's only correct if your buffer actually has a null byte at `buffer.data() + buffer.size()`.
 
-- **`std::string`** — safe. Its underlying storage is guaranteed to be null-terminated since C++11.
-- **`std::string_view` into a string literal or `std::string`** — safe for the same reason.
-- **`std::vector<char>`** — **not safe by default.** No trailing null guarantee.
-- **Raw `const char*` buffers from a file read, socket, or arbitrary source** — **only safe if you know it's null-terminated.**
+- **`std::string`**: safe. Its underlying storage is guaranteed to be null-terminated since C++11.
+- **`std::string_view` into a string literal or `std::string`**: safe for the same reason.
+- **`std::vector<char>`**: **not safe by default.** No trailing null guarantee.
+- **Raw `const char*` buffers from a file read, socket, or arbitrary source**: **only safe if you know it's null-terminated.**
 
 If your source doesn't have a trailing null, set `nullTerminated = false` explicitly:
 
@@ -72,7 +72,7 @@ If your source doesn't have a trailing null, set `nullTerminated = false` explic
 parser.parseJson<jsonifier::parse_options{ .nullTerminated = false }>(data, my_char_buffer);
 ```
 
-Passing a non-null-terminated buffer with `nullTerminated = true` is **undefined behavior** — the parser will read past the buffer end, likely producing a crash, silent data corruption, or a security vulnerability. When in doubt, set it to `false`.
+Passing a non-null-terminated buffer with `nullTerminated = true` is **undefined behavior**: the parser will read past the buffer end, likely producing a crash, silent data corruption, or a security vulnerability. When in doubt, set it to `false`.
 
 ### Handling Errors
 
@@ -88,7 +88,7 @@ if (!parser.parseJson(data, json)) {
 
 Errors carry source location, the specific `parse_statuses` enum value that fired, and enough context to diagnose the input. See [Error Handling](Errors.md) for the full breakdown.
 
-The error list is reused across parse calls — `parseJson` clears it at the start of each call, so you should inspect errors before invoking the parser again.
+The error list is reused across parse calls; `parseJson` clears it at the start of each call, so you should inspect errors before invoking the parser again.
 
 ## Serializing
 
@@ -118,7 +118,7 @@ The full set:
 | `indentChar` | `' '` | Character used for indentation. Set to `'\t'` for tab-based indenting. |
 | `indent` | `0` | Starting indent depth. Useful when serializing a fragment into a larger pre-indented document. |
 
-Like parse options, these are template arguments — the compiler generates a specialized serializer for each option set with no runtime branching.
+Like parse options, these are template arguments; the compiler generates a specialized serializer for each option set with no runtime branching.
 
 Example with tab indentation:
 
@@ -132,7 +132,7 @@ parser.serializeJson<jsonifier::serialize_options{
 
 ### Pretty vs. Minified
 
-By default, serialization is minified — no whitespace, smallest possible output. Turn on `prettify` for output intended for humans:
+By default, serialization is minified: no whitespace, smallest possible output. Turn on `prettify` for output intended for humans:
 
 ```cpp
 parser.serializeJson(data, minified_output);
@@ -198,7 +198,7 @@ template<> struct jsonifier::core<catalog> {
         makeJsonEntity<&value_type::schema_version, "schema-version">()>();
 };
 
-int main() {
+int32_t main() {
     jsonifier::jsonifier_core<> parser;
 
     std::string input = R"({"events":{"42":{"id":42,"name":"Concert","logo":null,"topicIds":[1,2,3]}},"schema-version":"1.0"})";
@@ -224,11 +224,11 @@ int main() {
 
 ## What's Next
 
-- **[Known Order Parsing](Known_Order.md)** — the biggest single parsing optimization when applicable
-- **[Partial Reading](PartialReading.md)** — for unordered or partial JSON structures
-- **[Optimizing For Minified JSON](Optimizing_For_Minified_Json.md)** — details on the `minified` option
-- **[UTF-8 Validation](UTF8_Validation.md)** — what the always-on validator catches and how it works
-- **[Error Handling](Errors.md)** — full breakdown of the error type and `parse_statuses` enum
-- **[Prettifying](Prettifying.md)** and **[Minifying](Minifying.md)** — for reformatting JSON strings without going through typed objects
+- **[Known Order Parsing](Known_Order.md)**: the biggest single parsing optimization when applicable
+- **[Partial Reading](PartialReading.md)**: for unordered or partial JSON structures
+- **[Optimizing For Minified JSON](Optimizing_For_Minified_Json.md)**: details on the `minified` option
+- **[UTF-8 Validation](UTF8_Validation.md)**: what the always-on validator catches and how it works
+- **[Error Handling](Errors.md)**: full breakdown of the error type and `parse_statuses` enum
+- **[Prettifying](Prettifying.md)** and **[Minifying](Minifying.md)**: for reformatting JSON strings without going through typed objects
 
 ---

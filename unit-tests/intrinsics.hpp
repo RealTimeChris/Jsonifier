@@ -24,10 +24,10 @@ namespace intrinsics_tests {
 	using active_simd_t = jsonifier::jsonifier_simd_int_128;
 #endif
 
-	static constexpr uint64_t activeWidth{ sizeof(active_simd_t) };
+	inline constexpr uint64_t activeWidth{ sizeof(active_simd_t) };
 
-	inline static void runTests() {
-		std::cout << "SIMD Intrinsics Layer Tests (active backend: " << jsonifier::cpu_arch_name << ", width: " << activeWidth << " bytes)" << std::endl;
+	inline void runTests() {
+		std::cout << "SIMD Intrinsics Layer Tests (active backend: " << jsonifier::cpuArchName << ", width: " << activeWidth << " bytes)" << std::endl;
 
 		static constexpr rt_ut::string_literal opCmpEqAllMatchName{ "op_cmp_eq_all_match" };
 		rt_ut::unit_test<opCmpEqAllMatchName, true>::assert_eq(true, [] {
@@ -52,14 +52,14 @@ namespace intrinsics_tests {
 			alignas(64) uint8_t buffer[activeWidth];
 			auto needle = jsonifier::internal::simd::gatherValue<active_simd_t>(static_cast<uint8_t>(0x3A));
 			std::vector<decltype(jsonifier::internal::simd::opCmpEq(jsonifier::internal::simd::gatherValues<active_simd_t>(buffer), needle))> results;
-			for (size_t targetPos = 0; targetPos < activeWidth; ++targetPos) {
+			for (uint64_t targetPos = 0; targetPos < activeWidth; ++targetPos) {
 				std::memset(buffer, 0x41, activeWidth);
 				buffer[targetPos] = 0x3A;
 				auto loaded		  = jsonifier::internal::simd::gatherValues<active_simd_t>(buffer);
 				results.push_back(jsonifier::internal::simd::opCmpEq(loaded, needle));
 			}
-			for (size_t i = 0; i < results.size(); ++i) {
-				for (size_t j = i + 1; j < results.size(); ++j) {
+			for (uint64_t i = 0; i < results.size(); ++i) {
+				for (uint64_t j = i + 1; j < results.size(); ++j) {
 					if (results[i] == results[j]) {
 						std::cout << "COLLISION between byte position " << i << " and " << j << std::endl;
 						return false;
@@ -104,18 +104,18 @@ namespace intrinsics_tests {
 			auto baseline	  = jsonifier::internal::simd::gatherValues<active_simd_t>(buffer);
 			auto baselineMask = jsonifier::internal::simd::opBitMask(baseline);
 			std::vector<decltype(baselineMask)> results;
-			for (size_t targetPos = 0; targetPos < activeWidth; ++targetPos) {
+			for (uint64_t targetPos = 0; targetPos < activeWidth; ++targetPos) {
 				std::memset(buffer, 0x00, activeWidth);
 				buffer[targetPos] = 0xFF;
 				auto loaded		  = jsonifier::internal::simd::gatherValues<active_simd_t>(buffer);
 				results.push_back(jsonifier::internal::simd::opBitMask(loaded));
 			}
-			for (size_t i = 0; i < results.size(); ++i) {
+			for (uint64_t i = 0; i < results.size(); ++i) {
 				if (results[i] == baselineMask) {
 					std::cout << "SINGLE-BIT-SWEEP position " << i << " matched all-zero baseline unexpectedly" << std::endl;
 					return false;
 				}
-				for (size_t j = i + 1; j < results.size(); ++j) {
+				for (uint64_t j = i + 1; j < results.size(); ++j) {
 					if (results[i] == results[j]) {
 						std::cout << "SINGLE-BIT-SWEEP collision between position " << i << " and " << j << std::endl;
 						return false;
@@ -134,19 +134,19 @@ namespace intrinsics_tests {
 			auto baselineRaw	= jsonifier::internal::simd::opCmpEqRaw(baselineLoaded, needle);
 			auto baselinePacked = jsonifier::internal::simd::opBitMaskRaw(baselineRaw);
 			std::vector<decltype(baselinePacked)> results;
-			for (size_t targetPos = 0; targetPos < activeWidth; ++targetPos) {
+			for (uint64_t targetPos = 0; targetPos < activeWidth; ++targetPos) {
 				std::memset(buffer, 0x41, activeWidth);
 				buffer[targetPos] = 0x3A;
 				auto loaded		  = jsonifier::internal::simd::gatherValues<active_simd_t>(buffer);
 				auto raw		  = jsonifier::internal::simd::opCmpEqRaw(loaded, needle);
 				results.push_back(jsonifier::internal::simd::opBitMaskRaw(raw));
 			}
-			for (size_t i = 0; i < results.size(); ++i) {
+			for (uint64_t i = 0; i < results.size(); ++i) {
 				if (results[i] == baselinePacked) {
 					std::cout << "OPBITMASKRAW position " << i << " matched no-match baseline unexpectedly" << std::endl;
 					return false;
 				}
-				for (size_t j = i + 1; j < results.size(); ++j) {
+				for (uint64_t j = i + 1; j < results.size(); ++j) {
 					if (results[i] == results[j]) {
 						std::cout << "OPBITMASKRAW collision between position " << i << " and " << j << std::endl;
 						return false;
@@ -214,14 +214,14 @@ namespace intrinsics_tests {
 		static constexpr rt_ut::string_literal opSrLiShiftName{ "op_sr_li_shift" };
 		rt_ut::unit_test<opSrLiShiftName, true>::assert_eq(true, [] {
 			alignas(64) uint8_t src[activeWidth];
-			for (size_t i = 0; i < activeWidth; ++i) {
+			for (uint64_t i = 0; i < activeWidth; ++i) {
 				src[i] = 0x80;
 			}
 			auto a	 = jsonifier::internal::simd::gatherValues<active_simd_t>(src);
 			auto res = jsonifier::internal::simd::opSrLi<4>(a);
 			alignas(64) uint8_t out[activeWidth];
 			jsonifier::internal::simd::store(res, out);
-			for (size_t i = 0; i < activeWidth; ++i) {
+			for (uint64_t i = 0; i < activeWidth; ++i) {
 				if (out[i] != 0x08) {
 					std::cout << "OP_SR_LI byte " << i << " expected 0x08 got 0x" << std::hex << static_cast<uint32_t>(out[i]) << std::dec << std::endl;
 					return false;
@@ -272,7 +272,7 @@ namespace intrinsics_tests {
 		rt_ut::unit_test<storeRoundTripName, true>::assert_eq(true, [] {
 			alignas(64) uint8_t src[activeWidth];
 			alignas(64) uint8_t dst[activeWidth];
-			for (size_t i = 0; i < activeWidth; ++i) {
+			for (uint64_t i = 0; i < activeWidth; ++i) {
 				src[i] = static_cast<uint8_t>(i * 7 + 1);
 			}
 			auto loaded = jsonifier::internal::simd::gatherValues<active_simd_t>(src);
@@ -284,11 +284,11 @@ namespace intrinsics_tests {
 		rt_ut::unit_test<storeURoundTripUnalignedName, true>::assert_eq(true, [] {
 			alignas(64) uint8_t srcBuf[activeWidth * 2];
 			alignas(64) uint8_t dstBuf[activeWidth * 2];
-			for (size_t i = 0; i < activeWidth * 2; ++i) {
+			for (uint64_t i = 0; i < activeWidth * 2; ++i) {
 				srcBuf[i] = static_cast<uint8_t>(i * 3 + 2);
 			}
 			uint64_t failCount = 0;
-			for (size_t offset = 0; offset < activeWidth; ++offset) {
+			for (uint64_t offset = 0; offset < activeWidth; ++offset) {
 				std::memset(dstBuf, 0x00, activeWidth * 2);
 				auto loaded = jsonifier::internal::simd::gatherValuesU<active_simd_t>(srcBuf + offset);
 				jsonifier::internal::simd::storeU(loaded, dstBuf + offset);

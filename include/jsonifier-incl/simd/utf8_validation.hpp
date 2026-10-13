@@ -5,32 +5,31 @@
  * include/jsonifier-incl/simd/utf8_validation.hpp
  */
 // Sampled from Dr. Lemire's library, simdjson: https://github.com/simdjson/simdjson
-#if !defined(JSONIFIER_PASS_GUARD_UTF8_VALIDATION)
-	#define JSONIFIER_PASS_GUARD_UTF8_VALIDATION
+#pragma once
 
-	#include <jsonifier-incl/utilities/utility.hpp>
-	#include <jsonifier-incl/containers/array.hpp>
-	#include <jsonifier-incl/simd/fallback.hpp>
-	#include <jsonifier-incl/simd/bit_ops.hpp>
-	#include <jsonifier-incl/simd/avx.hpp>
-	#include <jsonifier-incl/simd/neon.hpp>
+#include <jsonifier-incl/utilities/utility.hpp>
+#include <jsonifier-incl/containers/array.hpp>
+#include <jsonifier-incl/simd/fallback.hpp>
+#include <jsonifier-incl/simd/bit_ops.hpp>
+#include <jsonifier-incl/simd/avx.hpp>
+#include <jsonifier-incl/simd/neon.hpp>
 
-namespace JSONIFIER_INTERNAL_NAMESPACE {
+namespace jsonifier::internal {
 
-	static constexpr uint8_t tooShort	  = 1 << 0;
-	static constexpr uint8_t tooLong	  = 1 << 1;
-	static constexpr uint8_t overLong3	  = 1 << 2;
-	static constexpr uint8_t tooLarge	  = 1 << 3;
-	static constexpr uint8_t surrogate	  = 1 << 4;
-	static constexpr uint8_t overLong2	  = 1 << 5;
-	static constexpr uint8_t twoConts	  = 1 << 7;
-	static constexpr uint8_t tooLarge1000 = 1 << 6;
-	static constexpr uint8_t overLong4	  = 1 << 6;
-	static constexpr uint8_t carry		  = tooShort | tooLong | twoConts;
+	alignas(64) inline constexpr uint8_t tooShort	  = 1 << 0;
+	alignas(64) inline constexpr uint8_t tooLong	  = 1 << 1;
+	alignas(64) inline constexpr uint8_t overLong3	  = 1 << 2;
+	alignas(64) inline constexpr uint8_t tooLarge	  = 1 << 3;
+	alignas(64) inline constexpr uint8_t surrogate	  = 1 << 4;
+	alignas(64) inline constexpr uint8_t overLong2	  = 1 << 5;
+	alignas(64) inline constexpr uint8_t twoConts	  = 1 << 7;
+	alignas(64) inline constexpr uint8_t tooLarge1000 = 1 << 6;
+	alignas(64) inline constexpr uint8_t overLong4	  = 1 << 6;
+	alignas(64) inline constexpr uint8_t carry		  = tooShort | tooLong | twoConts;
 
 	using namespace simd;
 
-	constexpr array<uint8_t, simdBytesPerRegister> genByte1HighTable() {
+	consteval array<uint8_t, simdBytesPerRegister> genByte1HighTable() {
 		constexpr array<uint8_t, 16ULL> raw{ { tooLong, tooLong, tooLong, tooLong, tooLong, tooLong, tooLong, tooLong, twoConts, twoConts, twoConts, twoConts, tooShort | overLong2,
 			tooShort, tooShort | overLong3 | surrogate, tooShort | tooLarge | tooLarge1000 | overLong4 } };
 		array<uint8_t, simdBytesPerRegister> returnValue{};
@@ -40,12 +39,11 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 		return returnValue;
 	}
 
-	alignas(64) inline constexpr const uint8_t* __restrict byte1HighTable{ []() constexpr {
-		constexpr auto local{ genByte1HighTable() };
-		return make_static<local>::value.data();
-	}() };
+	alignas(64) inline constexpr auto byte1HighTableRaw{ genByte1HighTable() };
 
-	constexpr array<uint8_t, simdBytesPerRegister> genByte1LowTable() {
+	alignas(64) inline constexpr const uint8_t* __restrict byte1HighTable{ byte1HighTableRaw.data() };
+
+	consteval array<uint8_t, simdBytesPerRegister> genByte1LowTable() {
 		constexpr array<uint8_t, 16ULL> raw{ { carry | overLong3 | overLong2 | overLong4, carry | overLong2, carry, carry, carry | tooLarge, carry | tooLarge | tooLarge1000,
 			carry | tooLarge | tooLarge1000, carry | tooLarge | tooLarge1000, carry | tooLarge | tooLarge1000, carry | tooLarge | tooLarge1000, carry | tooLarge | tooLarge1000,
 			carry | tooLarge | tooLarge1000, carry | tooLarge | tooLarge1000, carry | tooLarge | tooLarge1000 | surrogate, carry | tooLarge | tooLarge1000,
@@ -57,12 +55,11 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 		return returnValue;
 	}
 
-	alignas(64) inline constexpr const uint8_t* __restrict byte1LowTable{ []() constexpr {
-		constexpr auto local{ genByte1LowTable() };
-		return make_static<local>::value.data();
-	}() };
+	alignas(64) inline constexpr auto byte1LowTableRaw{ genByte1LowTable() };
 
-	constexpr array<uint8_t, simdBytesPerRegister> genByte2HighTable() {
+	alignas(64) inline constexpr const uint8_t* __restrict byte1LowTable{ byte1LowTableRaw.data() };
+
+	consteval array<uint8_t, simdBytesPerRegister> genByte2HighTable() {
 		constexpr array<uint8_t, 16ULL> raw{ { tooShort, tooShort, tooShort, tooShort, tooShort, tooShort, tooShort, tooShort,
 			tooLong | overLong2 | twoConts | overLong3 | tooLarge1000 | overLong4, tooLong | overLong2 | twoConts | overLong3 | tooLarge,
 			tooLong | overLong2 | twoConts | surrogate | tooLarge, tooLong | overLong2 | twoConts | surrogate | tooLarge, tooShort, tooShort, tooShort, tooShort } };
@@ -73,25 +70,21 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 		return returnValue;
 	}
 
-	alignas(64) inline constexpr const uint8_t* __restrict byte2HighTable{ []() constexpr {
-		constexpr auto local{ genByte2HighTable() };
-		return make_static<local>::value.data();
-	}() };
+	alignas(64) inline constexpr auto byte2HighTableRaw{ genByte2HighTable() };
 
-	alignas(64) static constexpr uint8_t isIncompleteMax[64]{ 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+	alignas(64) inline constexpr const uint8_t* __restrict byte2HighTable{ byte2HighTableRaw.data() };
+
+	alignas(64) inline constexpr uint8_t isIncompleteMax[64]{ 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
 		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
 		255, 255, 255, 255, static_cast<uint8_t>(0xF0u - 1), static_cast<uint8_t>(0xE0u - 1), static_cast<uint8_t>(0xC0u - 1) };
 
 	template<typename integer_sequence> struct chunk_loader;
 
 	template<uint64_t... indices> struct chunk_loader<integer_sequence<indices...>> {
-		template<uint64_t index> JSONIFIER_INLINE static void impl(simd_array_t& __restrict result, restricted_read_buffer_ptr src) noexcept {
-			result.template set<index>(gatherValuesU<jsonifier_simd_int_t>(std::bit_cast<const jsonifier_simd_int_t* __restrict>(src + index * simdBytesPerRegister)));
-		}
-
 		JSONIFIER_INLINE static simd_array_t impl(restricted_read_buffer_ptr src) noexcept {
 			simd_array_t returnValues;
-			(impl<indices>(returnValues, src), ...);
+			(returnValues.template set<indices>(gatherValuesU<jsonifier_simd_int_t>(std::bit_cast<const jsonifier_simd_int_t* __restrict>(src + indices * simdBytesPerRegister))),
+				...);
 			return returnValues;
 		}
 	};
@@ -99,12 +92,8 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 	template<typename derived_type, typename integer_sequence> struct step_checker;
 
 	template<typename derived_type, uint64_t... indices> struct step_checker<derived_type, integer_sequence<indices...>> {
-		template<uint64_t index> JSONIFIER_INLINE void impl(restricted_read_buffer_ptr src_new) noexcept {
-			static_cast<derived_type*>(this)->checkStepImpl(src_new + index * simdBytesPerBlock);
-		}
-
-		JSONIFIER_INLINE void impl(restricted_read_buffer_ptr src_new) noexcept {
-			(impl<indices>(src_new), ...);
+		JSONIFIER_INLINE void impl(restricted_read_buffer_ptr srcNew) noexcept {
+			(static_cast<derived_type*>(this)->checkStepImpl(srcNew + indices * simdBytesPerBlock), ...);
 		}
 	};
 
@@ -112,7 +101,7 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 		using step_checker_type = step_checker<utf8_checker, make_integer_sequence<simdBlocksPerStep>>;
 		template<typename integer_sequence> struct chunk_processor;
 
-		JSONIFIER_INLINE void checkStepImpl(restricted_read_buffer_ptr src) {
+		JSONIFIER_INLINE void checkStepImpl(restricted_read_buffer_ptr src) noexcept {
 			simd_array_t chunks = chunk_loader<make_integer_sequence<simdRegistersPerBlock>>::impl(src);
 
 			if (isAscii(simd::orAll<jsonifier_simd_int_t>(chunks))) {
@@ -128,30 +117,30 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 			prevIncomplete = checkIncomplete(chunks.template get<simdRegistersPerBlock - 1>());
 		}
 
-		JSONIFIER_INLINE jsonifier_simd_int_t checkSpecialCases(jsonifier_simd_int_t input, jsonifier_simd_int_t p1) {
+		JSONIFIER_INLINE jsonifier_simd_int_t checkSpecialCases(jsonifier_simd_int_t input, jsonifier_simd_int_t p1) noexcept {
 			const jsonifier_simd_int_t loNibbleMask = gatherValue<jsonifier_simd_int_t>(static_cast<char>(0x0Fu));
 			return opAnd(opAnd(opShuffle(lookupH, opAnd(opSrLi<4>(p1), loNibbleMask)), opShuffle(lookupL, opAnd(p1, loNibbleMask))),
 				opShuffle(lookup2, opAnd(opSrLi<4>(input), loNibbleMask)));
 		}
 
-		JSONIFIER_INLINE jsonifier_simd_int_t checkMultibyteLengths(jsonifier_simd_int_t input, jsonifier_simd_int_t prev, jsonifier_simd_int_t sc) {
+		JSONIFIER_INLINE jsonifier_simd_int_t checkMultibyteLengths(jsonifier_simd_int_t input, jsonifier_simd_int_t prev, jsonifier_simd_int_t sc) noexcept {
 			return opXor(opAnd(mustBe23Continuation(opPrev<14>(input, prev), opPrev<13>(input, prev)), gatherValue<jsonifier_simd_int_t>(static_cast<char>(0x80u))), sc);
 		}
 
-		JSONIFIER_INLINE jsonifier_simd_int_t mustBe23Continuation(jsonifier_simd_int_t p2, jsonifier_simd_int_t p3) {
+		JSONIFIER_INLINE jsonifier_simd_int_t mustBe23Continuation(jsonifier_simd_int_t p2, jsonifier_simd_int_t p3) noexcept {
 			return opOr(opSubs(p2, gatherValue<jsonifier_simd_int_t>(static_cast<char>(0xE0u - 0x80u))),
 				opSubs(p3, gatherValue<jsonifier_simd_int_t>(static_cast<char>(0xF0u - 0x80u))));
 		}
 
-		JSONIFIER_INLINE void checkChunk(jsonifier_simd_int_t input, jsonifier_simd_int_t prev) {
+		JSONIFIER_INLINE void checkChunk(jsonifier_simd_int_t input, jsonifier_simd_int_t prev) noexcept {
 			error = opOr(error, checkMultibyteLengths(input, prev, checkSpecialCases(input, opPrev<15>(input, prev))));
 		}
 
-		JSONIFIER_INLINE jsonifier_simd_int_t checkIncomplete(jsonifier_simd_int_t input) {
+		JSONIFIER_INLINE jsonifier_simd_int_t checkIncomplete(jsonifier_simd_int_t input) noexcept {
 			return opSubs(input, gatherValues<jsonifier_simd_int_t>(isIncompleteMax + (64 - simdBytesPerRegister)));
 		}
 
-		JSONIFIER_INLINE void reset() {
+		JSONIFIER_INLINE void reset() noexcept {
 			prevIncomplete = jsonifier_simd_int_t{};
 			prevInput	   = jsonifier_simd_int_t{};
 			error		   = jsonifier_simd_int_t{};
@@ -161,11 +150,11 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 		const jsonifier_simd_int_t lookup2{ gatherValues<jsonifier_simd_int_t>(std::bit_cast<const jsonifier_simd_int_t* __restrict>(byte2HighTable)) };
 		const jsonifier_simd_int_t lookupL{ gatherValues<jsonifier_simd_int_t>(std::bit_cast<const jsonifier_simd_int_t* __restrict>(byte1LowTable)) };
 
-		JSONIFIER_INLINE void checkStep(restricted_read_buffer_ptr src_new) {
-			step_checker_type::impl(src_new);
+		JSONIFIER_INLINE void checkStep(restricted_read_buffer_ptr srcNew) noexcept {
+			step_checker_type::impl(srcNew);
 		}
 
-		JSONIFIER_INLINE bool errors() {
+		JSONIFIER_INLINE bool errors() noexcept {
 			return !opTest(opOr(error, prevIncomplete));
 		}
 
@@ -190,7 +179,7 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 		};
 	};
 
-	inline bool validateUtf8(restricted_read_buffer_ptr src, uint64_t len) {
+	inline bool validateUtf8(restricted_read_buffer_ptr src, uint64_t len) noexcept {
 		if (len == 0) {
 			return true;
 		}
@@ -368,12 +357,10 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 
 }
 
-namespace JSONIFIER_NAMESPACE {
+namespace jsonifier {
 
-	inline bool validateUtf8(restricted_read_buffer_ptr src, uint64_t len) {
+	inline bool validateUtf8(restricted_read_buffer_ptr src, uint64_t len) noexcept {
 		return internal::validateUtf8(src, len);
 	}
 
 }
-
-#endif

@@ -37,7 +37,7 @@ The SIMD backend is selected at compile time, so please test on the hardware you
 ## Code Style
 
 - Run `run-clang-format.ps1` before committing; formatting follows the repository `.clang-format`.
-- Do not add comments to code. If current-us cannot write self-documenting code, then future-us does not deserve to understand it.
+- Do not add explanatory comments to code. Write self-documenting code instead. Comments that attribute algorithms, techniques, or implementations to their original authors or sources are explicitly permitted. If current-us cannot write self-documenting code, then future-us does not deserve to understand it.
 - Keep includes lean. Only include what the file actually uses.
 - Keep changes focused. Unrelated refactors belong in their own pull request.
 
@@ -49,7 +49,7 @@ Jsonifier is performance-sensitive. A change on a hot path (parsing, serializati
 
 - [ ] Builds and passes tests on all CI platforms
 - [ ] Formatted with clang-format
-- [ ] No added code comments
+- [ ] No added explanatory code comments (source attributions are permitted)
 - [ ] Benchmarks included for performance-sensitive changes
 - [ ] Linked to the issue it addresses, if any
 

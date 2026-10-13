@@ -16,7 +16,7 @@ if(Git_FOUND AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
     )
 endif()
 
-if(git_result EQUAL 0 AND git_tag)
+if(git_result EQUAL 0 AND git_tag MATCHES "^v?[0-9]+(\\.[0-9]+)*$")
     string(REGEX REPLACE "^v" "" CLEAN_VERSION "${git_tag}")
 elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Version")
     file(READ "${CMAKE_CURRENT_SOURCE_DIR}/Version" CLEAN_VERSION)

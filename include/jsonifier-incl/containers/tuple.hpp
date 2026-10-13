@@ -293,18 +293,18 @@ namespace jsonifier::internal {
 
 	template<typename... value_type> struct tuple_size<std::tuple<value_type...>> : public integral_constant<sizeof...(value_type)> {};
 
-	template<typename tuple_type> static constexpr uint64_t tuple_size_v = tuple_size<remove_cvref_t<tuple_type>>::value;
+	template<typename tuple_type> alignas(64) inline constexpr uint64_t tupleSizeOf = tuple_size<remove_cvref_t<tuple_type>>::value;
 
 	template<typename... value_types> tuple(value_types&&...) -> tuple<value_types...>;
 
-	template<uint64_t index, typename Ts>
-		requires(is_specialization_of_v<remove_cvref_t<Ts>, jsonifier::internal::tuple>)
-	JSONIFIER_INLINE constexpr decltype(auto) getBecauseOtherLibAuthorsResolve(Ts&& t JSONIFIER_LIFETIME_BOUND) noexcept {
-		return std::forward<Ts>(t)[tag<index>{}];
+	template<uint64_t index, typename tuple_type>
+		requires(specialization_of_types<remove_cvref_t<tuple_type>, jsonifier::internal::tuple>)
+	JSONIFIER_INLINE constexpr decltype(auto) getBecauseOtherLibAuthorsResolve(tuple_type&& t JSONIFIER_LIFETIME_BOUND) noexcept {
+		return std::forward<tuple_type>(t)[tag<index>{}];
 	}
 
 	struct completion_signal {
-		inline constexpr operator bool() const {
+		inline constexpr operator bool() const noexcept {
 			return notDone;
 		}
 
@@ -322,7 +322,7 @@ namespace jsonifier::internal {
 	template<typename target_type, typename tuple_type, typename integer_sequence> struct index_finder;
 
 	template<typename target_type, typename tuple_type, uint64_t... indices> struct index_finder<target_type, tuple_type, integer_sequence<indices...>> {
-		inline static constexpr uint64_t getIndex() {
+		inline static consteval uint64_t getIndex() {
 			completion_signal result{};
 			((result = index_tag<indices, target_type, tuple_type>::value) && ...);
 			return result.index;
@@ -331,35 +331,15 @@ namespace jsonifier::internal {
 		static_assert(index != std::numeric_limits<uint64_t>::max(), "Sorry, but that type does not appear to exist in this tuple!");
 	};
 
-	template<typename target_type, typename tuple_type> JSONIFIER_INLINE static constexpr decltype(auto) get(tuple_type&& tupleVal) noexcept {
+	template<typename target_type, typename tuple_type> JSONIFIER_INLINE constexpr decltype(auto) get(tuple_type&& tupleVal) noexcept {
 		constexpr uint64_t index = index_finder<target_type, tuple_type, make_integer_sequence<remove_cvref_t<tuple_type>::size>>::index;
 		return std::forward<tuple_type>(tupleVal)[tag<index>{}];
 	}
 
-#if JSONIFIER_COMPILER_GCC && JSONIFIER_PLATFORM_MAC
-
-	template<typename... types> JSONIFIER_INLINE static constexpr auto makeTuple(types&&... args) noexcept {
-		auto result = tuple<types...>{};
-		if constexpr (sizeof...(types) > 0) {
-			constructInPlace<0>(result, std::forward<types>(args)...);
-		}
-		return result;
-	}
-
-	template<uint64_t I, typename tuple_t, typename arg_t, typename... rest_t>
-	JSONIFIER_INLINE static constexpr void constructInPlace(tuple_t& t, arg_t&& arg, rest_t&&... rest) noexcept {
-		t[tag<I>{}] = std::forward<arg_t>(arg);
-		if constexpr (sizeof...(rest) > 0) {
-			constructInPlace<I + 1>(t, std::forward<rest_t>(rest)...);
-		}
-	}
-
-#else
-	template<typename... types> JSONIFIER_INLINE static constexpr auto makeTuple(types&&... args) noexcept {
+	template<typename... types> JSONIFIER_INLINE constexpr auto makeTuple(types&&... args) noexcept {
 		using base = type_list_t<types...>;
 		return tuple<types...>{ base{ { std::forward<types>(args) }... } };
 	}
-#endif
 
 	template<typename... tuple_types> struct join_tuples;
 
@@ -394,7 +374,7 @@ namespace jsonifier::internal {
 
 		template<typename integer_sequence> struct tuple_cat_impl_internal;
 
-		template<uint64_t index, typename list_type> JSONIFIER_INLINE static constexpr decltype(auto) getIndividualElement(list_type&& list) {
+		template<uint64_t index, typename list_type> JSONIFIER_INLINE static constexpr decltype(auto) getIndividualElement(list_type&& list) noexcept {
 			constexpr uint64_t listIdx	= map.listIdx[index];
 			constexpr uint64_t localIdx = map.localIdx[index];
 			auto* tuplePtr				= list[tag<listIdx>{}];
@@ -402,7 +382,7 @@ namespace jsonifier::internal {
 			if constexpr (std::is_lvalue_reference_v<source_type>) {
 				return (*tuplePtr)[tag<localIdx>{}];
 			} else {
-				return std::move((*tuplePtr)[tag<localIdx>{}]);
+				return jsonifier::internal::move((*tuplePtr)[tag<localIdx>{}]);
 			}
 		}
 
@@ -434,22 +414,23 @@ namespace jsonifier::internal {
 		};
 	};
 
-	template<typename... tuple_list_types> JSONIFIER_INLINE static constexpr decltype(auto) tupleCat(tuple_list_types&&... listVals) noexcept {
+	template<typename... tuple_list_types> JSONIFIER_INLINE constexpr decltype(auto) tupleCat(tuple_list_types&&... listVals) noexcept {
 		return tuple_cat_impl<tuple_list_types...>::impl(listVals...);
 	}
 }
 
 namespace std {
 
-	template<uint64_t I, typename... Ts> struct tuple_element<I, jsonifier::internal::tuple<Ts...>> {
-		using type = jsonifier::internal::tuple_element_t<I, jsonifier::internal::tuple<Ts...>>;
+	template<uint64_t index, typename... element_types> struct tuple_element<index, jsonifier::internal::tuple<element_types...>> {
+		using type = jsonifier::internal::tuple_element_t<index, jsonifier::internal::tuple<element_types...>>;
 	};
 
-	template<typename... Ts> struct tuple_size<jsonifier::internal::tuple<Ts...>> : public jsonifier::internal::integral_constant<jsonifier::internal::tuple<Ts...>::size> {};
+	template<typename... element_types> struct tuple_size<jsonifier::internal::tuple<element_types...>>
+		: public jsonifier::internal::integral_constant<jsonifier::internal::tuple<element_types...>::size> {};
 
-	template<uint64_t I, typename Ts>
-		requires(jsonifier::internal::is_specialization_of_v<remove_cvref_t<Ts>, jsonifier::internal::tuple>)
-	JSONIFIER_INLINE constexpr decltype(auto) get(Ts&& t) noexcept {
-		return jsonifier::internal::getBecauseOtherLibAuthorsResolve<I>(std::forward<Ts>(t));
+	template<uint64_t index, typename tuple_type>
+		requires(jsonifier::internal::specialization_of_types<remove_cvref_t<tuple_type>, jsonifier::internal::tuple>)
+	JSONIFIER_INLINE constexpr decltype(auto) get(tuple_type&& t) noexcept {
+		return jsonifier::internal::getBecauseOtherLibAuthorsResolve<index>(std::forward<tuple_type>(t));
 	}
 }

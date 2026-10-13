@@ -1,6 +1,6 @@
 # Excluding Keys at Runtime
 
-Sometimes you need to control which fields participate in serialization or parsing based on runtime state — omitting a password field from log output, hiding internal-only fields when serializing for an external API, or skipping fields you know you don't need when parsing. Jsonifier supports this with a per-instance excluded-keys mechanism: add a `jsonifierExcludedKeys` member to your struct, put the JSON key names you want skipped into it, and both serialization and parsing will respect the list.
+Sometimes you need to control which fields participate in serialization or parsing based on runtime state: omitting a password field from log output, hiding internal-only fields when serializing for an external API, or skipping fields you know you don't need when parsing. Jsonifier supports this with a per-instance excluded-keys mechanism: add a `jsonifierExcludedKeys` member to your struct, put the JSON key names you want skipped into it, and both serialization and parsing will respect the list.
 
 ## The Basics
 
@@ -24,7 +24,7 @@ template<> struct jsonifier::core<my_object> {
 };
 ```
 
-When you serialize this object, the `secret` field is skipped. When you parse into it, incoming `"secret"` fields are read past and their values discarded — the `secret` member keeps whatever it had before the parse.
+When you serialize this object, the `secret` field is skipped. When you parse into it, incoming `"secret"` fields are read past and their values discarded; the `secret` member keeps whatever it had before the parse.
 
 ```cpp
 jsonifier::jsonifier_core<> parser;
@@ -46,7 +46,7 @@ std::unordered_set<jsonifier::string>
 std::map<std::string, T> for any T
 std::unordered_map<std::string, T> for any T
 
-The map types work because the exclusion check is just a key lookup — the mapped values are ignored. If you already have an unordered_map around for some other purpose (say, per-key metadata or per-key exclusion rules), you can reuse it directly as the excluded-keys set.
+The map types work because the exclusion check is just a key lookup; the mapped values are ignored. If you already have an unordered_map around for some other purpose (say, per-key metadata or per-key exclusion rules), you can reuse it directly as the excluded-keys set.
 
 Pick whichever container matches your usage pattern. For a small handful of excluded keys, std::set is fine. For frequently-modified lists or large exclusion sets, std::unordered_set gives you O(1) lookup.
 
@@ -54,7 +54,7 @@ Pick whichever container matches your usage pattern. For a small handful of excl
 
 Both the parser and the serializer detect the `jsonifierExcludedKeys` member via a compile-time concept check. If your struct has it, the generated parse and serialize paths include a lookup against the set on every field; if it doesn't, the check compiles out entirely and there's no cost.
 
-**During serialization**, before emitting each registered field, the serializer checks whether the field's JSON key name is in the excluded set. If it is, the field is skipped — no key, no value, no comma. The output JSON simply doesn't contain that field.
+**During serialization**, before emitting each registered field, the serializer checks whether the field's JSON key name is in the excluded set. If it is, the field is skipped: no key, no value, no comma. The output JSON simply doesn't contain that field.
 
 **During parsing**, when the parser dispatches to a registered field, it checks whether that field's JSON key name is in the excluded set. If it is, the parser skips the value in the input (using the fast structural-skip when `partialRead = true`, or the scalar skip otherwise) and continues to the next field. The corresponding member on your struct is left untouched.
 
@@ -78,7 +78,7 @@ c.jsonifierExcludedKeys.insert("schema-version");
 
 ## Runtime-Dynamic Exclusion
 
-The exclusion set is a normal runtime member — you can mutate it whenever you want. This makes the mechanism useful for context-dependent output:
+The exclusion set is a normal runtime member, so you can mutate it whenever you want. This makes the mechanism useful for context-dependent output:
 
 ```cpp
 my_object obj{ "John", 30, "hunter2" };
@@ -94,7 +94,7 @@ parser.serializeJson(obj, internal_json);
 // internal_json: {"name":"John","age":30,"secret":"hunter2"}
 ```
 
-Same object, different output based on runtime state. No separate types, no serialization-time flags — just mutate the set.
+Same object, different output based on runtime state. No separate types, no serialization-time flags. Just mutate the set.
 
 ## Full Example
 
@@ -121,7 +121,7 @@ template<> struct jsonifier::core<user_profile> {
         &value_type::created_at>();
 };
 
-int main() {
+int32_t main() {
     jsonifier::jsonifier_core<> parser;
     user_profile user{ "Jane", "jane@example.com", "$2b$12$....", 1728000000 };
 
@@ -148,18 +148,18 @@ Internal: {"name":"Jane","email":"jane@example.com","password_hash":"$2b$12$....
 
 ## Zero Cost When Not Used
 
-If your struct doesn't have a `jsonifierExcludedKeys` member, the concept check fails at compile time and none of the exclusion code is generated. Structs that don't opt in pay nothing — no extra branch, no extra field lookup, no extra generated code.
+If your struct doesn't have a `jsonifierExcludedKeys` member, the concept check fails at compile time and none of the exclusion code is generated. Structs that don't opt in pay nothing: no extra branch, no extra field lookup, no extra generated code.
 
 ## Interaction With Other Options
 
-- **`partialRead`** — Fully compatible. Excluded keys are skipped using the structural-tape skip path when `partialRead = true`, which is faster than the default scalar skip.
-- **`knownOrder`** — Fully compatible. The exclusion check happens after key dispatch, so it doesn't disrupt the known-order fast path for keys that aren't excluded.
-- **`makeJsonEntity`** — Compatible; use the JSON key name (not the C++ member name) in the excluded set.
+- **`partialRead`**: Fully compatible. Excluded keys are skipped using the structural-tape skip path when `partialRead = true`, which is faster than the default scalar skip.
+- **`knownOrder`**: Fully compatible. The exclusion check happens after key dispatch, so it doesn't disrupt the known-order fast path for keys that aren't excluded.
+- **`makeJsonEntity`**: Compatible; use the JSON key name (not the C++ member name) in the excluded set.
 
 ## What's Next
 
-- **[Reflection](Reflection.md)** — full details on `makeJsonEntity` and how JSON key names get bound to C++ members
-- **[Serializing & Parsing](Usage_Serializing_Parsing.md)** — the runtime API that respects the exclusion set
-- **[Parsing Arbitrary Data](Parsing_Arbitrary_Data.md)** — for when you don't want to declare a schema at all
+- **[Reflection](Reflection.md)**: full details on `makeJsonEntity` and how JSON key names get bound to C++ members
+- **[Serializing & Parsing](Usage_Serializing_Parsing.md)**: the runtime API that respects the exclusion set
+- **[Parsing Arbitrary Data](Parsing_Arbitrary_Data.md)**: for when you don't want to declare a schema at all
 
 ---

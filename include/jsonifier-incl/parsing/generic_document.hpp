@@ -10,13 +10,10 @@
 #include <jsonifier-incl/utilities/json_iterator.hpp>
 #include <jsonifier-incl/utilities/string_utils.hpp>
 #include <jsonifier-incl/utilities/simd.hpp>
-#include <memory>
 
 namespace jsonifier::generic {
 
-	static constexpr uint64_t defaultBatchSize{ 1024 * 1024 };
-
-	template<uint64_t initialBufferSize = 1024 * 1024> class parser;
+	alignas(64) inline constexpr uint64_t defaultBatchSize{ 1024 * 1024 };
 
 	enum class error_code : uint8_t {
 		success,
@@ -106,6 +103,19 @@ namespace jsonifier::generic {
 
 		JSONIFIER_INLINE char* scratch() const noexcept {
 			return scratchPtr;
+		}
+
+		JSONIFIER_INLINE string_arena& operator=(string_arena&& other) noexcept {
+			if (this != &other) [[likely]] {
+				buffer	   = internal::move(other.buffer);
+				scratchPtr = std::exchange(other.scratchPtr, nullptr);
+				slots	   = std::exchange(other.slots, nullptr);
+			}
+			return *this;
+		}
+
+		JSONIFIER_INLINE string_arena(string_arena&& other) noexcept
+			: buffer{ internal::move(other.buffer) }, scratchPtr{ std::exchange(other.scratchPtr, nullptr) }, slots{ std::exchange(other.slots, nullptr) } {
 		}
 
 		string_arena& operator=(const string_arena&) = delete;
@@ -204,6 +214,22 @@ namespace jsonifier::generic {
 
 		JSONIFIER_INLINE uint64_t size() const noexcept {
 			return count;
+		}
+
+		JSONIFIER_INLINE field_index_map& operator=(field_index_map&& other) noexcept {
+			if (this != &other) [[likely]] {
+				controls  = internal::move(other.controls);
+				entries	  = internal::move(other.entries);
+				slotCount = std::exchange(other.slotCount, uint32_t{});
+				groupMask = std::exchange(other.groupMask, uint64_t{});
+				count	  = std::exchange(other.count, uint64_t{});
+			}
+			return *this;
+		}
+
+		JSONIFIER_INLINE field_index_map(field_index_map&& other) noexcept
+			: controls{ internal::move(other.controls) }, entries{ internal::move(other.entries) }, slotCount{ std::exchange(other.slotCount, uint32_t{}) },
+			  groupMask{ std::exchange(other.groupMask, uint64_t{}) }, count{ std::exchange(other.count, uint64_t{}) } {
 		}
 
 		field_index_map& operator=(const field_index_map&) = delete;
@@ -470,46 +496,58 @@ namespace jsonifier::generic {
 
 	using array_type_table = internal::array<json_type, 256>;
 
-	alignas(64) inline constexpr auto utf8StringStopTable{ [] {
-		internal::array<bool, 256> table{};
+	consteval internal::array<bool, 256ULL> genUtf8StringStopTable() {
+		internal::array<bool, 256ULL> returnValues{};
 		for (uint64_t x = 0; x < 0x20; ++x) {
-			table[x] = true;
+			returnValues[x] = true;
 		}
-		table[static_cast<uint8_t>('"')]  = true;
-		table[static_cast<uint8_t>('\\')] = true;
-		return table;
-	}() };
+		returnValues[static_cast<uint64_t>('"')]  = true;
+		returnValues[static_cast<uint64_t>('\\')] = true;
+		return returnValues;
+	}
 
-	alignas(64) inline constexpr auto asciiStringStopTable{ [] {
-		internal::array<bool, 256> table{};
+	alignas(64) inline constexpr auto utf8StringStopTableRaw{ genUtf8StringStopTable() };
+
+	alignas(64) inline constexpr const bool* __restrict utf8StringStopTable{ utf8StringStopTableRaw.data() };
+
+	consteval internal::array<bool, 256ULL> genAsciiStringStopTable() {
+		internal::array<bool, 256ULL> returnValues{};
 		for (uint64_t x = 0; x < 0x20; ++x) {
-			table[x] = true;
+			returnValues[x] = true;
 		}
 		for (uint64_t x = 0x80; x < 0x100; ++x) {
-			table[x] = true;
+			returnValues[x] = true;
 		}
-		table[static_cast<uint8_t>('"')]  = true;
-		table[static_cast<uint8_t>('\\')] = true;
-		return table;
-	}() };
+		returnValues[static_cast<uint64_t>('"')]  = true;
+		returnValues[static_cast<uint64_t>('\\')] = true;
+		return returnValues;
+	}
 
-	alignas(64) inline constexpr auto typeTable{ [] {
-		array_type_table table{};
-		for (auto& entry: table) {
+	alignas(64) inline constexpr auto asciiStringStopTableRaw{ genAsciiStringStopTable() };
+
+	alignas(64) inline constexpr const bool* __restrict asciiStringStopTable{ asciiStringStopTableRaw.data() };
+
+	consteval array_type_table genTypeTable() {
+		array_type_table returnValues{};
+		for (auto& entry: returnValues) {
 			entry = json_type::unset;
 		}
-		table[static_cast<uint8_t>('{')] = json_type::object;
-		table[static_cast<uint8_t>('[')] = json_type::array;
-		table[static_cast<uint8_t>('"')] = json_type::string;
-		table[static_cast<uint8_t>('t')] = json_type::boolean;
-		table[static_cast<uint8_t>('f')] = json_type::boolean;
-		table[static_cast<uint8_t>('n')] = json_type::null;
-		table[static_cast<uint8_t>('-')] = json_type::number;
-		for (uint8_t digit = '0'; digit <= '9'; ++digit) {
-			table[digit] = json_type::number;
+		returnValues[static_cast<uint64_t>('{')] = json_type::object;
+		returnValues[static_cast<uint64_t>('[')] = json_type::array;
+		returnValues[static_cast<uint64_t>('"')] = json_type::string;
+		returnValues[static_cast<uint64_t>('t')] = json_type::boolean;
+		returnValues[static_cast<uint64_t>('f')] = json_type::boolean;
+		returnValues[static_cast<uint64_t>('n')] = json_type::null;
+		returnValues[static_cast<uint64_t>('-')] = json_type::number;
+		for (uint64_t x = static_cast<uint64_t>('0'); x <= static_cast<uint64_t>('9'); ++x) {
+			returnValues[x] = json_type::number;
 		}
-		return table;
-	}() };
+		return returnValues;
+	}
+
+	alignas(64) inline constexpr auto typeTableRaw{ genTypeTable() };
+
+	alignas(64) inline constexpr const json_type* __restrict typeTable{ typeTableRaw.data() };
 
 	class object;
 	class array;
@@ -556,7 +594,7 @@ namespace jsonifier::generic {
 
 	class value {
 	  public:
-		template<internal::buffer_like string_type> [[nodiscard]] JSONIFIER_INLINE error_code getString(string_type& out) const noexcept {
+		template<internal::buffer_like_types string_type> [[nodiscard]] JSONIFIER_INLINE error_code getString(string_type& out) const {
 			if (err != error_code::success) [[unlikely]] {
 				return err;
 			}
@@ -566,7 +604,7 @@ namespace jsonifier::generic {
 			consume();
 			read_buffer_ptr stringStart = doc->root + *iter + 1;
 			if (const uint64_t directLength = zeroCopyLength<false>(stringStart); directLength != noZeroCopy) [[likely]] {
-				if constexpr (internal::has_resize_and_overwrite<string_type>) {
+				if constexpr (internal::resize_and_overwriteable_types<string_type>) {
 					out.resize_and_overwrite(directLength, plain_string_copy_context{ stringStart });
 				} else {
 					out.resize(directLength);
@@ -576,7 +614,7 @@ namespace jsonifier::generic {
 			}
 			const uint64_t upperBound = static_cast<uint64_t>(doc->root + *(iter + 1) - stringStart) + 64;
 			uint64_t outLength{};
-			if constexpr (internal::has_resize_and_overwrite<string_type>) {
+			if constexpr (internal::resize_and_overwriteable_types<string_type>) {
 				out.resize_and_overwrite(upperBound, escaped_string_copy_context{ stringStart, doc->end, outLength });
 			} else {
 				if (out.size() < upperBound) [[unlikely]] {
@@ -694,8 +732,8 @@ namespace jsonifier::generic {
 		JSONIFIER_INLINE value(document_state* docNew, read_structural_index_ptr iterNew, uint64_t depthNew) noexcept : iter{ iterNew }, doc{ docNew }, depth{ depthNew } {
 		}
 
-		template<jsonifier::internal::convertible_to_string_view key_type> JSONIFIER_INLINE value operator[](key_type&& key) const noexcept;
-		template<typename value_type> [[nodiscard]] JSONIFIER_INLINE error_code get(value_type& out) const noexcept;
+		template<jsonifier::internal::string_view_convertible_types key_type> JSONIFIER_INLINE value operator[](key_type&& key) const noexcept;
+		template<typename value_type> [[nodiscard]] JSONIFIER_INLINE error_code get(value_type& out) const;
 		JSONIFIER_INLINE value findFieldUnordered(string_view key) const noexcept;
 
 		JSONIFIER_INLINE value(error_code errNew) noexcept : err{ errNew } {
@@ -810,7 +848,7 @@ namespace jsonifier::generic {
 				static_cast<uint64_t>(static_cast<mask_type>(internal::simd::opBitMask(stops))) };
 		}
 
-		template<jsonifier::internal::string_t value_type> JSONIFIER_INLINE error_code unescape(read_structural_index_ptr stringIter, value_type& result) const noexcept {
+		template<jsonifier::internal::string_types value_type> JSONIFIER_INLINE error_code unescape(read_structural_index_ptr stringIter, value_type& result) const noexcept {
 			read_buffer_ptr stringStart = doc->root + *stringIter + 1;
 			if (const uint64_t directLength = zeroCopyLength<true>(stringStart); directLength != noZeroCopy) [[likely]] {
 				result = value_type{ std::bit_cast<const char*>(stringStart), directLength };
@@ -850,7 +888,7 @@ namespace jsonifier::generic {
 					return false;
 				}
 			}
-			return valueStart + atomSize == doc->end || internal::validPostPrimitiveTable[static_cast<uint8_t>(valueStart[atomSize])];
+			return valueStart + atomSize == doc->end || internal::validPostPrimitiveTable[static_cast<uint64_t>(valueStart[atomSize])];
 		}
 
 		JSONIFIER_INLINE bool trueMatches() const noexcept {
@@ -882,7 +920,7 @@ namespace jsonifier::generic {
 		}
 
 		JSONIFIER_INLINE static error_code finishNumber(read_buffer_ptr parsedEnd, read_buffer_ptr valueEnd) noexcept {
-			if (parsedEnd && (parsedEnd == valueEnd || internal::validPostPrimitiveTable[static_cast<uint8_t>(*parsedEnd)])) [[likely]] {
+			if (parsedEnd && (parsedEnd == valueEnd || internal::validPostPrimitiveTable[static_cast<uint64_t>(*parsedEnd)])) [[likely]] {
 				return error_code::success;
 			}
 			return error_code::number_error;
@@ -1405,7 +1443,7 @@ namespace jsonifier::generic {
 		return array{ doc, iter, depth + 1 };
 	}
 
-	template<jsonifier::internal::convertible_to_string_view key_type> JSONIFIER_INLINE value value::operator[](key_type&& key) const noexcept {
+	template<jsonifier::internal::string_view_convertible_types key_type> JSONIFIER_INLINE value value::operator[](key_type&& key) const noexcept {
 		return getObject().findFieldUnordered(static_cast<string_view>(key));
 	}
 
@@ -1493,7 +1531,7 @@ namespace jsonifier::generic {
 		return error_code::success;
 	}
 
-	template<typename value_type> JSONIFIER_INLINE error_code value::get(value_type& out) const noexcept {
+	template<typename value_type> JSONIFIER_INLINE error_code value::get(value_type& out) const {
 		if constexpr (std::is_same_v<value_type, double>) {
 			return getDouble(out);
 		} else if constexpr (std::is_same_v<value_type, int64_t>) {
@@ -1502,7 +1540,7 @@ namespace jsonifier::generic {
 			return getUint64(out);
 		} else if constexpr (std::is_same_v<value_type, bool>) {
 			return getBool(out);
-		} else if constexpr (std::is_same_v<value_type, std::string_view> || internal::buffer_like<value_type>) {
+		} else if constexpr (std::is_same_v<value_type, std::string_view> || internal::buffer_like_types<value_type>) {
 			return getString(out);
 		} else if constexpr (std::is_same_v<value_type, object>) {
 			out = getObject();
@@ -1527,22 +1565,27 @@ namespace jsonifier::generic {
 	};
 
 	struct generic_storage {
+		inline generic_storage& operator=(generic_storage&& other) noexcept {
+			if (this != &other) [[likely]] {
+				fieldIndex	= internal::move(other.fieldIndex);
+				arena		= internal::move(other.arena);
+				state		= document_state{};
+				other.state = document_state{};
+			}
+			return *this;
+		}
+
+		inline generic_storage(generic_storage&& other) noexcept : fieldIndex{ internal::move(other.fieldIndex) }, arena{ internal::move(other.arena) } {
+			other.state = document_state{};
+		}
+
 		generic_storage& operator=(const generic_storage&) = delete;
 		generic_storage(const generic_storage&)			   = delete;
-		generic_storage& operator=(generic_storage&&)	   = delete;
-		generic_storage(generic_storage&&)				   = delete;
 		inline generic_storage() noexcept				   = default;
 		field_index_map fieldIndex{};
 		document_state state{};
 		string_arena arena{};
 	};
-
-	inline generic_storage& acquireStorage(std::unique_ptr<generic_storage>& storage) noexcept {
-		if (!storage) [[unlikely]] {
-			storage = std::make_unique<generic_storage>();
-		}
-		return *storage;
-	}
 
 	template<typename parser_type, parse_options options> class document_stream {
 	  public:
@@ -1563,20 +1606,20 @@ namespace jsonifier::generic {
 				return stream->currentIndex();
 			}
 
-			JSONIFIER_INLINE iterator& operator++() noexcept {
+			JSONIFIER_INLINE iterator& operator++() {
 				stream->advance();
 				return *this;
 			}
 
-			JSONIFIER_INLINE string_view source() const noexcept {
+			JSONIFIER_INLINE string_view source() const {
 				return stream->source();
 			}
 
-			JSONIFIER_INLINE document operator*() const noexcept {
+			JSONIFIER_INLINE document operator*() const {
 				return stream->current();
 			}
 
-			JSONIFIER_INLINE void operator++(int) noexcept {
+			JSONIFIER_INLINE void operator++(int32_t) {
 				stream->advance();
 			}
 
@@ -1595,7 +1638,7 @@ namespace jsonifier::generic {
 			  batchSize{ std::clamp<uint64_t>(batchSizeNew, minimumBatchSize, maximumBatchSize) } {
 		}
 
-		JSONIFIER_INLINE iterator begin() noexcept {
+		JSONIFIER_INLINE iterator begin() {
 			if (!started) {
 				started = true;
 				if (inputLength == 0) {
@@ -1608,16 +1651,16 @@ namespace jsonifier::generic {
 			return iterator{ this };
 		}
 
+		JSONIFIER_INLINE iterator end() noexcept {
+			return iterator{};
+		}
+
 		JSONIFIER_INLINE uint64_t truncatedBytes() const noexcept {
 			return truncated;
 		}
 
 		JSONIFIER_INLINE error_code error() const noexcept {
 			return err;
-		}
-
-		JSONIFIER_INLINE iterator end() noexcept {
-			return iterator{};
 		}
 
 		document_stream& operator=(const document_stream&) = delete;
@@ -1627,7 +1670,7 @@ namespace jsonifier::generic {
 		static constexpr uint64_t minimumBatchSize{ 64 };
 		static constexpr uint64_t maximumBatchSize{ std::numeric_limits<uint32_t>::max() - 64 };
 
-		JSONIFIER_INLINE void locate(read_structural_index_ptr next) noexcept {
+		JSONIFIER_INLINE void locate(read_structural_index_ptr next) {
 			if constexpr (!options.newLineDelimited) {
 				locateDelimited(next);
 			} else {
@@ -1635,7 +1678,7 @@ namespace jsonifier::generic {
 			}
 		}
 
-		JSONIFIER_INLINE void locateWhitespace(read_structural_index_ptr next) noexcept {
+		JSONIFIER_INLINE void locateWhitespace(read_structural_index_ptr next) {
 			while (true) {
 				if (next == completeEnd) {
 					if (finalWindow) {
@@ -1659,7 +1702,7 @@ namespace jsonifier::generic {
 			}
 		}
 
-		JSONIFIER_INLINE void locateDelimited(read_structural_index_ptr next) noexcept {
+		JSONIFIER_INLINE void locateDelimited(read_structural_index_ptr next) {
 			while (true) {
 				if (next == windowTapeEnd) {
 					if (finalWindow) {
@@ -1708,7 +1751,7 @@ namespace jsonifier::generic {
 			return !document_state::isOpener(c) && c != ',' && c != ':';
 		}
 
-		JSONIFIER_INLINE read_structural_index_ptr lastDocumentStart() const noexcept {
+		JSONIFIER_INLINE read_structural_index_ptr lastDocumentStart() const {
 			const document_state& state = storage().state;
 			for (read_structural_index_ptr iter = windowTapeEnd - 1; iter > windowTape; --iter) {
 				if (startsDocument(state.charAt(iter)) && endsValue(state.charAt(iter - 1))) {
@@ -1718,7 +1761,7 @@ namespace jsonifier::generic {
 			return windowTape;
 		}
 
-		JSONIFIER_INLINE void findCompleteEnd() noexcept {
+		JSONIFIER_INLINE void findCompleteEnd() {
 			if (windowTape == windowTapeEnd) {
 				completeEnd = windowTapeEnd;
 				return;
@@ -1738,7 +1781,7 @@ namespace jsonifier::generic {
 			}
 		}
 
-		JSONIFIER_INLINE read_structural_index_ptr consumedEnd() noexcept {
+		JSONIFIER_INLINE read_structural_index_ptr consumedEnd() {
 			document_state& state = storage().state;
 			if (state.depth > 0) {
 				state.finishToDepth(0);
@@ -1750,7 +1793,7 @@ namespace jsonifier::generic {
 			return state.skipValue(docBegin);
 		}
 
-		JSONIFIER_INLINE read_structural_index_ptr findDocumentEnd(read_structural_index_ptr start) noexcept {
+		JSONIFIER_INLINE read_structural_index_ptr findDocumentEnd(read_structural_index_ptr start) {
 			const document_state& state = storage().state;
 			const uint8_t first			= state.charAt(start);
 			if (document_state::isOpener(first)) {
@@ -1775,11 +1818,11 @@ namespace jsonifier::generic {
 			return start + 1;
 		}
 
-		JSONIFIER_INLINE generic_storage& storage() const noexcept {
+		JSONIFIER_INLINE generic_storage& storage() const {
 			return parser->genericStorage();
 		}
 
-		JSONIFIER_INLINE void loadWindow(uint64_t start) noexcept {
+		JSONIFIER_INLINE void loadWindow(uint64_t start) {
 			windowStart				   = start;
 			windowLength			   = std::min(batchSize, inputLength - start);
 			finalWindow				   = start + windowLength == inputLength;
@@ -1798,7 +1841,7 @@ namespace jsonifier::generic {
 			}
 		}
 
-		JSONIFIER_INLINE string_view source() const noexcept {
+		JSONIFIER_INLINE string_view source() const {
 			if (err != error_code::success) [[unlikely]] {
 				return {};
 			}
@@ -1816,7 +1859,7 @@ namespace jsonifier::generic {
 			return string_view{ std::bit_cast<const char*>(base + start), stop - start };
 		}
 
-		JSONIFIER_INLINE void bindDocument(read_structural_index_ptr begin, read_structural_index_ptr end) noexcept {
+		JSONIFIER_INLINE void bindDocument(read_structural_index_ptr begin, read_structural_index_ptr end) {
 			docBegin			  = begin;
 			docEnd				  = end;
 			pendingSeparator	  = false;
@@ -1828,14 +1871,14 @@ namespace jsonifier::generic {
 			data.fieldIndex.reset();
 		}
 
-		JSONIFIER_INLINE document current() const noexcept {
+		JSONIFIER_INLINE document current() const {
 			if (err != error_code::success) [[unlikely]] {
 				return document{ err };
 			}
 			return document{ &storage().state, docBegin, 0 };
 		}
 
-		JSONIFIER_INLINE void advance() noexcept {
+		JSONIFIER_INLINE void advance() {
 			if (err != error_code::success) [[unlikely]] {
 				finished = true;
 				return;

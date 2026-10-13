@@ -10,7 +10,7 @@
 
 namespace raw_json_data_tests {
 
-	inline static void runTests() {
+	inline void runTests() {
 		std::cout << "raw_json_data Tests" << std::endl;
 
 		jsonifier::jsonifier_core<> parser{};
@@ -384,7 +384,7 @@ namespace raw_json_data_tests {
 		rt_ut::unit_test<smallArrayCapacityName, true>::assert_eq(true, [&] {
 			// A large array followed by small ones: the small arrays must not reserve the large array's size.
 			std::string json = "[[";
-			for (int i = 0; i < 1000; ++i) {
+			for (int32_t i = 0; i < 1000; ++i) {
 				json += i ? ",0" : "0";
 			}
 			json += "],[1,2],[3,4]]";

@@ -4,96 +4,92 @@
 * https://github.com/nihilai-collective/jsonifier
 * include/jsonifier-incl/utilities/string_utils.hpp
 */
-#if !defined(JSONIFIER_PASS_GUARD_STRING_UTILS)
-	#define JSONIFIER_PASS_GUARD_STRING_UTILS
+#pragma once
 
-	#include <jsonifier-incl/simd/utf8_validation.hpp>
-	#include <jsonifier-incl/containers/allocator.hpp>
-	#include <jsonifier-incl/utilities/hash_map.hpp>
-	#include <jsonifier-incl/utilities/str_to_d.hpp>
-	#include <jsonifier-incl/utilities/error.hpp>
-	#include <jsonifier-incl/utilities/simd.hpp>
+#include <jsonifier-incl/simd/utf8_validation.hpp>
+#include <jsonifier-incl/containers/allocator.hpp>
+#include <jsonifier-incl/utilities/hash_map.hpp>
+#include <jsonifier-incl/utilities/str_to_d.hpp>
+#include <jsonifier-incl/utilities/error.hpp>
+#include <jsonifier-incl/utilities/simd.hpp>
 
-namespace JSONIFIER_INTERNAL_NAMESPACE {
+namespace jsonifier::internal {
 
-	template<typename = void> struct digit_tables {
-		alignas(64) static constexpr uint32_t digitToVal32[]{ 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0x0u, 0x1u, 0x2u, 0x3u, 0x4u, 0x5u, 0x6u, 0x7u, 0x8u, 0x9u, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xAu, 0xBu, 0xCu,
-			0xDu, 0xEu, 0xFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xAu, 0xBu, 0xCu, 0xDu, 0xEu, 0xFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0x0u, 0x10u, 0x20u, 0x30u, 0x40u, 0x50u, 0x60u, 0x70u, 0x80u, 0x90u, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xA0u, 0xB0u, 0xC0u, 0xD0u, 0xE0u, 0xF0u, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xA0u, 0xB0u, 0xC0u, 0xD0u, 0xE0u, 0xF0u, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0x0u, 0x100u, 0x200u,
-			0x300u, 0x400u, 0x500u, 0x600u, 0x700u, 0x800u, 0x900u, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xA00u, 0xB00u,
-			0xC00u, 0xD00u, 0xE00u, 0xF00u, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xA00u, 0xB00u, 0xC00u, 0xD00u, 0xE00u, 0xF00u, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0x0u, 0x1000u, 0x2000u, 0x3000u, 0x4000u, 0x5000u, 0x6000u, 0x7000u, 0x8000u, 0x9000u,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xA000u, 0xB000u, 0xC000u, 0xD000u, 0xE000u, 0xF000u, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xA000u,
-			0xB000u, 0xC000u, 0xD000u, 0xE000u, 0xF000u, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
-			0xFFFFFFFFu };
-	};
+	template<typename = void> alignas(64) inline constexpr uint32_t digitToVal32[]{ 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0x0u, 0x1u, 0x2u, 0x3u, 0x4u, 0x5u, 0x6u, 0x7u, 0x8u, 0x9u, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xAu, 0xBu, 0xCu, 0xDu, 0xEu, 0xFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xAu, 0xBu, 0xCu, 0xDu, 0xEu, 0xFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0x0u, 0x10u, 0x20u, 0x30u, 0x40u, 0x50u, 0x60u, 0x70u, 0x80u, 0x90u, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xA0u, 0xB0u, 0xC0u, 0xD0u, 0xE0u, 0xF0u, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xA0u, 0xB0u, 0xC0u, 0xD0u, 0xE0u, 0xF0u, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0x0u, 0x100u, 0x200u, 0x300u, 0x400u,
+		0x500u, 0x600u, 0x700u, 0x800u, 0x900u, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xA00u, 0xB00u, 0xC00u, 0xD00u, 0xE00u,
+		0xF00u, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xA00u, 0xB00u, 0xC00u, 0xD00u, 0xE00u, 0xF00u, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0x0u, 0x1000u, 0x2000u, 0x3000u, 0x4000u, 0x5000u, 0x6000u, 0x7000u, 0x8000u, 0x9000u, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xA000u, 0xB000u, 0xC000u, 0xD000u, 0xE000u, 0xF000u, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xA000u, 0xB000u, 0xC000u, 0xD000u, 0xE000u, 0xF000u,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu };
 
 	// Sampled from Dr. Lemire's library, simdjson: https://github.com/simdjson/simdjson
-	JSONIFIER_INLINE static uint32_t hexToU32NoCheck(read_buffer_ptr string1) noexcept {
-		return digit_tables<>::digitToVal32[630ull + static_cast<uint8_t>(string1[0])] | digit_tables<>::digitToVal32[420ull + static_cast<uint8_t>(string1[1])] |
-			digit_tables<>::digitToVal32[210ull + static_cast<uint8_t>(string1[2])] | digit_tables<>::digitToVal32[0ull + static_cast<uint8_t>(string1[3])];
+	JSONIFIER_INLINE uint32_t hexToU32NoCheck(read_buffer_ptr string1) noexcept {
+		return digitToVal32<>[630ull + static_cast<uint8_t>(string1[0])] | digitToVal32<>[420ull + static_cast<uint8_t>(string1[1])] |
+			digitToVal32<>[210ull + static_cast<uint8_t>(string1[2])] | digitToVal32<>[0ull + static_cast<uint8_t>(string1[3])];
 	}
 
 	// Sampled from Dr. Lemire's library, simdjson: https://github.com/simdjson/simdjson
-	template<typename char_type> JSONIFIER_INLINE static uint32_t codePointToUtf8(uint32_t cp, char_type* c) noexcept {
+	template<typename char_type> JSONIFIER_INLINE uint32_t codePointToUtf8(uint32_t cp, char_type* c) noexcept {
 		if (cp <= 0x7F) {
 			c[0] = static_cast<char_type>(cp);
 			return 1;
@@ -121,7 +117,7 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 
 	// Sampled from Dr. Lemire's library, simdjson: https://github.com/simdjson/simdjson
 	template<typename basic_iterator01, typename basic_iterator02>
-	JSONIFIER_INLINE static bool handleUnicodeCodePoint(basic_iterator01& srcPtr, basic_iterator02& dstPtr, basic_iterator01 srcEnd) noexcept {
+	JSONIFIER_INLINE bool handleUnicodeCodePoint(basic_iterator01& srcPtr, basic_iterator02& dstPtr, basic_iterator01 srcEnd) noexcept {
 		static constexpr uint8_t bs{ '\\' };
 		static constexpr uint8_t u{ 'u' };
 
@@ -129,7 +125,7 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 			return false;
 		}
 
-		uint32_t codePoint = JSONIFIER_INTERNAL_NAMESPACE::hexToU32NoCheck(srcPtr + 2);
+		uint32_t codePoint = jsonifier::internal::hexToU32NoCheck(srcPtr + 2);
 		srcPtr += 6;
 		if (codePoint >= 0xD800 && codePoint <= 0xDFFF) {
 			if (codePoint >= 0xDC00) {
@@ -141,7 +137,7 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 			if (((srcPtr[0] << 8) | srcPtr[1]) != ((bs << 8) | u)) {
 				return false;
 			}
-			uint32_t lowSurrogate = JSONIFIER_INTERNAL_NAMESPACE::hexToU32NoCheck(srcPtr + 2);
+			uint32_t lowSurrogate = jsonifier::internal::hexToU32NoCheck(srcPtr + 2);
 			uint32_t lowBit		  = lowSurrogate - 0xDC00;
 			if (lowBit >> 10) {
 				return false;
@@ -155,24 +151,24 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 	}
 
 	template<typename simd_type, typename integer_type>
-	[[maybe_unused]] JSONIFIER_INLINE static integer_type findSerialize(simd_type simdValue, simd_type simdValues01, simd_type simdValues02, simd_type simdValues03) noexcept {
+	[[maybe_unused]] JSONIFIER_INLINE integer_type findSerialize(simd_type simdValue, simd_type simdValues01, simd_type simdValues02, simd_type simdValues03) noexcept {
 		auto result01 = simd::opOr(simd::opOr(simd::opCmpLtRaw(simdValue, simdValues03), simd::opCmpEqRaw(simdValue, simdValues02)), simd::opCmpEqRaw(simdValue, simdValues01));
 		return static_cast<integer_type>(simd::postCmpTzcnt(static_cast<integer_type>(simd::opBitMaskRaw(result01))));
 	}
 
-	template<uint_types simd_type, uint_types integer_type> [[maybe_unused]] JSONIFIER_INLINE static integer_type findSerialize(simd_type& simdValue) noexcept {
-		static constexpr integer_type mask{ JSONIFIER_INTERNAL_NAMESPACE::repeatByte<0b01111111, integer_type>() };
-		static constexpr integer_type less32Bits{ JSONIFIER_INTERNAL_NAMESPACE::repeatByte<0b01100000, integer_type>() };
-		static constexpr integer_type hiBits{ JSONIFIER_INTERNAL_NAMESPACE::repeatByte<0b10000000, integer_type>() };
-		static constexpr integer_type quoteBits{ JSONIFIER_INTERNAL_NAMESPACE::repeatByte<'"', integer_type>() };
-		static constexpr integer_type bsBits{ JSONIFIER_INTERNAL_NAMESPACE::repeatByte<'\\', integer_type>() };
+	template<uint_types simd_type, uint_types integer_type> [[maybe_unused]] JSONIFIER_INLINE integer_type findSerialize(simd_type& simdValue) noexcept {
+		static constexpr integer_type mask{ jsonifier::internal::repeatByte<0b01111111, integer_type>() };
+		static constexpr integer_type less32Bits{ jsonifier::internal::repeatByte<0b01100000, integer_type>() };
+		static constexpr integer_type hiBits{ jsonifier::internal::repeatByte<0b10000000, integer_type>() };
+		static constexpr integer_type quoteBits{ jsonifier::internal::repeatByte<'"', integer_type>() };
+		static constexpr integer_type bsBits{ jsonifier::internal::repeatByte<'\\', integer_type>() };
 		const integer_type lo7	= simdValue & mask;
 		const integer_type next = ~((((lo7 ^ quoteBits) + mask) & ((lo7 ^ bsBits) + mask) & ((simdValue & less32Bits) + mask)) | simdValue) & hiBits;
 		return static_cast<integer_type>(simd::countrZero(next) >> 3u);
 	}
 
 	// Sampled from Stephen Berry's library, Glaze: https://github.com/StephenBerry/Glaze
-	template<typename basic_iterator01> [[maybe_unused]] JSONIFIER_INLINE static void skipStringImpl(basic_iterator01& string1, uint64_t lengthNew) noexcept {
+	template<typename basic_iterator01> [[maybe_unused]] JSONIFIER_INLINE void skipStringImpl(basic_iterator01& string1, uint64_t lengthNew) noexcept {
 		if (static_cast<int64_t>(lengthNew) > 0) {
 			const auto endIter = string1 + lengthNew;
 			while (string1 < endIter) {
@@ -197,7 +193,7 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 		}
 	}
 
-	constexpr array<char, 256ULL> genEscapeMap() {
+	consteval array<char, 256ULL> genEscapeMap() {
 		array<char, 256ULL> returnValues{};
 		returnValues[static_cast<uint64_t>('"')]  = '\"';
 		returnValues[static_cast<uint64_t>('\\')] = '\\';
@@ -210,25 +206,24 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 		return returnValues;
 	}
 
-	alignas(64) inline constexpr const char* __restrict escapeMap{ []() constexpr {
-		constexpr auto local{ genEscapeMap() };
-		return make_static<local>::value.data();
-	}() };
+	alignas(64) inline constexpr auto escapeMapRaw{ genEscapeMap() };
+
+	alignas(64) inline constexpr const char* __restrict escapeMap{ escapeMapRaw.data() };
 
 	template<typename basic_iterator01, typename basic_iterator02>
-	JSONIFIER_INLINE static basic_iterator02 unescapeImpl(basic_iterator01 string1Start, const basic_iterator01 string1End, basic_iterator02 string2) noexcept {
+	JSONIFIER_INLINE basic_iterator02 unescapeImpl(basic_iterator01 string1Start, const basic_iterator01 string1End, basic_iterator02 string2) noexcept {
 		char escapeChar;
 		while (string1Start < string1End) {
 			escapeChar = *string1Start;
 			if (escapeChar == '\\') {
 				escapeChar = string1Start[1];
 				if (escapeChar == 'u') {
-					if (!JSONIFIER_INTERNAL_NAMESPACE::handleUnicodeCodePoint(string1Start, string2, string1End)) {
+					if (!jsonifier::internal::handleUnicodeCodePoint(string1Start, string2, string1End)) {
 						return nullptr;
 					}
 					continue;
 				}
-				escapeChar = escapeMap[static_cast<uint8_t>(escapeChar)];
+				escapeChar = escapeMap[static_cast<uint64_t>(escapeChar)];
 				if (escapeChar == 0) {
 					return nullptr;
 				}
@@ -252,15 +247,15 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 		}
 	};
 
-	#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
-	static constexpr uint64_t start_index = 0;
-	#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
-	static constexpr uint64_t start_index = 1;
-	#else
-	static constexpr uint64_t start_index = 2;
-	#endif
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
+	alignas(64) inline constexpr uint64_t startIndex = 0;
+#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
+	alignas(64) inline constexpr uint64_t startIndex = 1;
+#else
+	alignas(64) inline constexpr uint64_t startIndex = 2;
+#endif
 
-	static constexpr uint64_t list_size = 3;
+	alignas(64) inline constexpr uint64_t listSize = 3;
 
 	template<uint64_t start, uint64_t end, uint64_t... indices> struct make_ascending_range_impl : make_ascending_range_impl<start + 1, end, indices..., start> {};
 	template<uint64_t end, uint64_t... indices> struct make_ascending_range_impl<end, end, indices...> {
@@ -287,7 +282,7 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 		JSONIFIER_INLINE static bool handleEscape(basic_iterator01& srcPtr, const basic_iterator01 srcEnd, basic_iterator02& dstPtr) noexcept {
 			const uint8_t escapeChar = static_cast<uint8_t>(srcPtr[1]);
 			if (escapeChar == 'u') {
-				return JSONIFIER_INTERNAL_NAMESPACE::handleUnicodeCodePoint(srcPtr, dstPtr, srcEnd);
+				return jsonifier::internal::handleUnicodeCodePoint(srcPtr, dstPtr, srcEnd);
 			}
 			const uint8_t decoded = static_cast<uint8_t>(escapeMap[escapeChar]);
 			if (decoded == 0u) [[unlikely]] {
@@ -304,13 +299,13 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 				const basic_iterator01 string1End, basic_iterator02& string2, const basic_iterator01 stringStart, const basic_iterator02 outStart, scan_state& scanState) noexcept {
 				using simd_list_local					 = type_list_element_t<index, simd::avx_integer_list>;
 				using integer_type						 = typename simd_list_local::integer_type;
-				static constexpr auto simd_type			 = simd_list_local::type::simd_type;
-				using simd_type_local					 = typename simd_type_wrapper<simd_type>::type;
+				static constexpr auto simdType			 = simd_list_local::type::simdType;
+				using simd_type_local					 = typename simd_type_wrapper<simdType>::type;
 				static constexpr uint64_t bytesProcessed = simd_list_local::bytesProcessed;
 				if (scanState.complete || scanState.outLength == std::numeric_limits<uint64_t>::max()) {
 					return nullptr;
 				}
-				utf8_register_validator<simd_type_wrapper<simd_type>> validator{ scanState.validationState };
+				utf8_register_validator<simd_type_wrapper<simdType>> validator{ scanState.validationState };
 				const simd_type_local simdValues00 = simd::gatherValue<simd_type_local>('\\');
 				const simd_type_local simdValues01 = simd::gatherValue<simd_type_local>('"');
 				const simd_type_local simdValues02 = simd::gatherValue<simd_type_local>(static_cast<char>(32));
@@ -420,7 +415,7 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 			const auto outStart	   = string2;
 			scan_state scanState{};
 
-			string_parse_executor<string_scan_step, make_ascending_range<start_index, list_size>>::impl(string1Start, string1End, string2, stringStart, outStart, scanState);
+			string_parse_executor<string_scan_step, make_ascending_range<startIndex, listSize>>::impl(string1Start, string1End, string2, stringStart, outStart, scanState);
 
 			if (scanState.outLength == std::numeric_limits<uint64_t>::max()) [[unlikely]] {
 				return {};
@@ -448,8 +443,8 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 				const basic_iterator01 stringStart, scan_state& scanState) noexcept {
 				using simd_list_local					 = type_list_element_t<index, simd::avx_integer_list>;
 				using integer_type						 = typename simd_list_local::integer_type;
-				static constexpr auto simd_type			 = simd_list_local::type::simd_type;
-				using simd_type_local					 = typename simd_type_wrapper<simd_type>::type;
+				static constexpr auto simdType			 = simd_list_local::type::simdType;
+				using simd_type_local					 = typename simd_type_wrapper<simdType>::type;
 				static constexpr uint64_t bytesProcessed = simd_list_local::bytesProcessed;
 				if (scanState.complete) {
 					return nullptr;
@@ -514,7 +509,7 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 		template<typename basic_iterator01> JSONIFIER_INLINE static prescan_result impl(basic_iterator01 string1Start, const basic_iterator01 string1End) noexcept {
 			const auto stringStart = string1Start;
 			scan_state scanState{};
-			string_parse_executor<string_prescan_step, make_ascending_range<start_index, list_size>>::impl(string1Start, string1End, stringStart, scanState);
+			string_parse_executor<string_prescan_step, make_ascending_range<startIndex, listSize>>::impl(string1Start, string1End, stringStart, scanState);
 			return scanState.result;
 		}
 	};
@@ -531,13 +526,13 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 				const basic_iterator01 string1End, basic_iterator02& string2, copy_state& copyState) noexcept {
 				using simd_list_local					 = type_list_element_t<index, simd::avx_integer_list>;
 				using integer_type						 = typename simd_list_local::integer_type;
-				static constexpr auto simd_type			 = simd_list_local::type::simd_type;
-				using simd_type_local					 = typename simd_type_wrapper<simd_type>::type;
+				static constexpr auto simdType			 = simd_list_local::type::simdType;
+				using simd_type_local					 = typename simd_type_wrapper<simdType>::type;
 				static constexpr uint64_t bytesProcessed = simd_list_local::bytesProcessed;
 				if (copyState.complete) {
 					return nullptr;
 				}
-				utf8_register_validator<simd_type_wrapper<simd_type>> validator{ copyState.validationState };
+				utf8_register_validator<simd_type_wrapper<simdType>> validator{ copyState.validationState };
 				const simd_type_local simdValues00 = simd::gatherValue<simd_type_local>(static_cast<char>(32));
 				while (static_cast<uint64_t>(string1End - string1Start) >= bytesProcessed) {
 					const simd_type_local simdValue = simd::gatherValuesU<simd_type_local>(string1Start);
@@ -579,59 +574,31 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 		JSONIFIER_INLINE static bool impl(basic_iterator01 string1Start, uint64_t length, basic_iterator02 string2) noexcept {
 			const auto string1End = string1Start + length;
 			copy_state copyState{};
-			string_parse_executor<string_copy_step, make_ascending_range<start_index, list_size>>::impl(string1Start, string1End, string2, copyState);
+			string_parse_executor<string_copy_step, make_ascending_range<startIndex, listSize>>::impl(string1Start, string1End, string2, copyState);
 			return !copyState.failed;
 		}
 	};
 
-	constexpr array<array<char, 8>, 256ULL> genEscapeStorage() {
+	consteval array<array<char, 8ULL>, 256ULL> genEscapeTable() {
 		array<array<char, 8ULL>, 256ULL> returnValues{};
+		constexpr char hex[]{ "0123456789ABCDEF" };
 		for (uint64_t x = 0; x < 32ULL; ++x) {
-			constexpr char hex[]{ "0123456789ABCDEF" };
-			returnValues[x] = { { '\\', 'u', '0', '0', hex[x >> 4], hex[x & 0xF], '\0', '\0' } };
+			returnValues[x] = { { '\\', 'u', '0', '0', hex[x >> 4], hex[x & 0xF], '\0', 6 } };
 		}
-		returnValues[0]							  = {};
-		returnValues[static_cast<uint64_t>('\b')] = { { '\\', 'b' } };
-		returnValues[static_cast<uint64_t>('\t')] = { { '\\', 't' } };
-		returnValues[static_cast<uint64_t>('\n')] = { { '\\', 'n' } };
-		returnValues[static_cast<uint64_t>('\f')] = { { '\\', 'f' } };
-		returnValues[static_cast<uint64_t>('\r')] = { { '\\', 'r' } };
-		returnValues[static_cast<uint64_t>('"')]  = { { '\\', '"' } };
-		returnValues[static_cast<uint64_t>('\\')] = { { '\\', '\\' } };
+		auto setShort = [&](char value, char escaped) {
+			returnValues[static_cast<uint8_t>(value)] = { { '\\', escaped, '\0', '\0', '\0', '\0', '\0', 2 } };
+		};
+		setShort('\b', 'b');
+		setShort('\t', 't');
+		setShort('\n', 'n');
+		setShort('\f', 'f');
+		setShort('\r', 'r');
+		setShort('"', '"');
+		setShort('\\', '\\');
 		return returnValues;
 	}
 
-	alignas(64) inline constexpr const array<char, 8>* __restrict escapeStorage{ []() constexpr {
-		constexpr auto local{ genEscapeStorage() };
-		return make_static<local>::value.data();
-	}() };
-
-	constexpr array<const char*, 256ULL> genEscapeTable() {
-		array<const char*, 256ULL> returnValue{};
-		for (uint64_t x = 0; x < 256ULL; ++x) {
-			returnValue[x] = escapeStorage[x].data();
-		}
-		return returnValue;
-	}
-
-	alignas(64) inline constexpr const char* const* __restrict escapeTable{ []() constexpr {
-		constexpr auto local{ genEscapeTable() };
-		return make_static<local>::value.data();
-	}() };
-
-	constexpr array<uint64_t, 256ULL> genEscapeTableSizes() {
-		constexpr auto storage{ genEscapeStorage() };
-		array<uint64_t, 256ULL> returnValues{};
-		for (uint64_t x = 0; x < 256ULL; ++x) {
-			returnValues[x] = strLen(storage[x].data());
-		}
-		return returnValues;
-	}
-
-	alignas(64) inline constexpr const uint64_t* __restrict escapeTableSizes{ []() constexpr {
-		constexpr auto local{ genEscapeTableSizes() };
-		return make_static<local>::value.data();
-	}() };
+	alignas(64) inline constexpr auto escapeTable{ genEscapeTable() };
 
 	template<serialize_options options> struct string_serializer {
 		struct string_serialize_step {
@@ -682,10 +649,9 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 				copyUpTo16(string2, string1Start, runLength);
 				string2 += runLength;
 				string1Start += runLength;
-				const uint8_t nextChar	  = static_cast<uint8_t>(*string1Start);
-				const uint64_t escapeSize = escapeTableSizes[nextChar];
-				jsonifierMemcpy(string2, escapeTable[nextChar], escapeSize);
-				string2 += escapeSize;
+				const auto& entry = escapeTable[static_cast<uint8_t>(*string1Start)];
+				pow2MemcpyWrapper<8>(string2, entry.data());
+				string2 += static_cast<uint8_t>(entry[7]);
 				++string1Start;
 				escapeMask = static_cast<integer_type>(static_cast<integer_type>(escapeMask >> (bitsPerByte * runLength)) >> bitsPerByte);
 			}
@@ -709,7 +675,7 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 		}
 
 		JSONIFIER_INLINE static uint64_t escapedByteSize(uint8_t nextChar) noexcept {
-			const uint64_t escapeSize = escapeTableSizes[nextChar];
+			const uint64_t escapeSize = static_cast<uint8_t>(escapeTable[nextChar][7]);
 			return escapeSize > 0 ? escapeSize : 1;
 		}
 
@@ -737,10 +703,10 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 		template<typename basic_iterator01, typename basic_iterator02>
 		JSONIFIER_INLINE static basic_iterator02 scalarImpl(basic_iterator01& string1Start, const basic_iterator01 string1End, basic_iterator02 string2) noexcept {
 			for (; string1Start < string1End; ++string1Start) {
-				const uint8_t nextChar	  = static_cast<uint8_t>(*string1Start);
-				const uint64_t escapeSize = escapeTableSizes[nextChar];
-				if (escapeSize > 0) {
-					jsonifierMemcpy(string2, escapeTable[nextChar], escapeSize);
+				const uint8_t nextChar = static_cast<uint8_t>(*string1Start);
+				const auto& entry	   = escapeTable[nextChar];
+				if (const uint8_t escapeSize = static_cast<uint8_t>(entry[7]); escapeSize) {
+					pow2MemcpyWrapper<8>(string2, entry.data());
 					string2 += escapeSize;
 				} else {
 					*string2 = nextChar;
@@ -768,10 +734,9 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 				const uint64_t offset = static_cast<uint64_t>(std::countr_zero(flags)) >> 3;
 				string1Start += offset;
 				string2 += offset;
-				const uint8_t nextChar	  = static_cast<uint8_t>(*string1Start);
-				const uint64_t escapeSize = escapeTableSizes[nextChar];
-				jsonifierMemcpy(string2, escapeTable[nextChar], escapeSize);
-				string2 += escapeSize;
+				const auto& entry = escapeTable[static_cast<uint8_t>(*string1Start)];
+				pow2MemcpyWrapper<8>(string2, entry.data());
+				string2 += static_cast<uint8_t>(entry[7]);
 				++string1Start;
 			}
 			const uint64_t remaining = static_cast<uint64_t>(string1End - string1Start);
@@ -827,7 +792,7 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 				}
 			} else if (length == 1) {
 				const uint8_t nextChar = static_cast<uint8_t>(*string1Start);
-				if (escapeTableSizes[nextChar] == 0) {
+				if (escapeTable[nextChar][7] == 0) {
 					*string2 = nextChar;
 					++string1Start;
 					return string2 + 1;
@@ -881,24 +846,24 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 
 		static constexpr uint64_t pageSize = 4096;
 
-	#if JSONIFIER_ASAN_ENABLED
+#if JSONIFIER_ASAN_ENABLED
 		template<typename simd_type> JSONIFIER_NOINLINE JSONIFIER_NO_SANITIZE_ADDRESS static simd_type loadPageSafe16(const void* source) noexcept {
-		#if JSONIFIER_COMPILER_MSVC
+	#if JSONIFIER_COMPILER_MSVC
 			using unaligned_uint64 = uint64_t;
-		#else
+	#else
 			using unaligned_uint64 [[gnu::may_alias, gnu::aligned(1)]] = uint64_t;
-		#endif
+	#endif
 			const unaligned_uint64* sourceNew = static_cast<const unaligned_uint64*>(source);
 			const uint64_t values[2]{ sourceNew[0], sourceNew[1] };
 			simd_type result;
 			pow2MemcpyWrapper<16>(&result, values);
 			return result;
 		}
-	#else
+#else
 		template<typename simd_type> JSONIFIER_INLINE static simd_type loadPageSafe16(const void* source) noexcept {
 			return simd::gatherValuesU<simd_type>(source);
 		}
-	#endif
+#endif
 
 		template<typename basic_iterator01, typename basic_iterator02>
 		JSONIFIER_INLINE static basic_iterator02 pageSafeShortImpl(basic_iterator01& string1Start, const uint64_t length, basic_iterator02 string2) noexcept {
@@ -946,7 +911,7 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 			if (length <= 32) {
 				return copyIfClean<2>(string1Start, string2, length);
 			}
-			if constexpr (start_index <= 1) {
+			if constexpr (startIndex <= 1) {
 				return copyIfClean<1>(string1Start, string2, length);
 			} else {
 				return copyIfClean<2>(string1Start, string2, 32) && copyIfClean<2>(string1Start + (length - 32), string2 + (length - 32), 32);
@@ -968,12 +933,12 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 				return string2 + lengthNew;
 			}
 			const basic_iterator01 string1End = string1Start + lengthNew;
-			string_parse_executor<string_serialize_step, make_ascending_range<start_index, list_size>>::impl(string1Start, string1End, string2);
+			string_parse_executor<string_serialize_step, make_ascending_range<startIndex, listSize>>::impl(string1Start, string1End, string2);
 			return overlappedFinish(string1Start, string1End, string2);
 		}
 	};
 
-	template<string_literal string> static consteval convert_length_to_int_t<string.size()> getStringAsInt() noexcept {
+	template<string_literal string> consteval convert_length_to_int_t<string.size()> getStringAsInt() {
 		const auto* stringNew = string.data();
 		convert_length_to_int_t<string.size()> returnValue{};
 		for (uint64_t x = 0; x < string.size(); ++x) {
@@ -985,7 +950,7 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 		return returnValue;
 	}
 
-	template<string_literal stringNew> JSONIFIER_INLINE static bool compareStringAsInt(read_buffer_ptr src) {
+	template<string_literal stringNew> JSONIFIER_INLINE bool compareStringAsInt(read_buffer_ptr src) noexcept {
 		using integer_type = convert_length_to_int_t<stringNew.size()>;
 		static constexpr auto string{ stringNew };
 		static_assert(stringNew.size() == 4, "Sorry, but please only use a string with a length of 4 in this function!");
@@ -995,24 +960,22 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 		return !static_cast<bool>(sourceVal ^ stringInt);
 	}
 
-	JSONIFIER_INLINE static bool validateBool(read_buffer_ptr context, read_buffer_ptr end) noexcept {
+	JSONIFIER_INLINE bool validateBool(read_buffer_ptr context, read_buffer_ptr end) noexcept {
 		const auto remaining = end - context;
-		if (remaining >= 4 && JSONIFIER_INTERNAL_NAMESPACE::compareStringAsInt<"true">(context)) {
+		if (remaining >= 4 && jsonifier::internal::compareStringAsInt<"true">(context)) {
 			return true;
-		} else if (remaining >= 5 && JSONIFIER_INTERNAL_NAMESPACE::compareStringAsInt<"fals">(context) && context[4] == 'e') {
+		} else if (remaining >= 5 && jsonifier::internal::compareStringAsInt<"fals">(context) && context[4] == 'e') {
 			return true;
 		}
 		return false;
 	}
 
-	JSONIFIER_INLINE static bool validateNull(read_buffer_ptr context, read_buffer_ptr end) noexcept {
-		if (end - context >= 4 && JSONIFIER_INTERNAL_NAMESPACE::compareStringAsInt<"null">(context)) [[likely]] {
+	JSONIFIER_INLINE bool validateNull(read_buffer_ptr context, read_buffer_ptr end) noexcept {
+		if (end - context >= 4 && jsonifier::internal::compareStringAsInt<"null">(context)) [[likely]] {
 			return true;
 		} else {
 			return false;
 		}
 	}
 
-}// namespace internal
-
-#endif
+}

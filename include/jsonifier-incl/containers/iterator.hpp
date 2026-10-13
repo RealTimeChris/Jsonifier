@@ -159,4 +159,4 @@ namespace jsonifier::internal {
 
 	template<typename value_type> using basic_iterator = sized_iterator<value_type, 1ULL>;
 
-}// namespace internal
+}

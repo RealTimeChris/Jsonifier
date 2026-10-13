@@ -4,22 +4,19 @@
  * https://github.com/nihilai-collective/jsonifier
  * include/jsonifier-incl/utilities/number_utils.hpp
  */
-#if !defined(JSONIFIER_PASS_GUARD_NUMBER_UTILS)
-	#define JSONIFIER_PASS_GUARD_NUMBER_UTILS
+#pragma once
 
-	#include <jsonifier-incl/containers/allocator.hpp>
-	#include <jsonifier-incl/utilities/string.hpp>
-	#include <jsonifier-incl/utilities/i_to_str.hpp>
-	#include <jsonifier-incl/utilities/d_to_str.hpp>
-	#include <jsonifier-incl/utilities/str_to_d.hpp>
-	#include <jsonifier-incl/utilities/str_to_i.hpp>
-	#include <jsonifier-incl/parsing/parser.hpp>
+#include <jsonifier-incl/containers/allocator.hpp>
+#include <jsonifier-incl/utilities/string.hpp>
+#include <jsonifier-incl/utilities/i_to_str.hpp>
+#include <jsonifier-incl/utilities/d_to_str.hpp>
+#include <jsonifier-incl/utilities/str_to_d.hpp>
+#include <jsonifier-incl/utilities/str_to_i.hpp>
+#include <jsonifier-incl/parsing/parser.hpp>
 
-namespace JSONIFIER_NAMESPACE {
+namespace jsonifier {
 
-	template<jsonifier_backend, uint64_t, bool> class jsonifier_core_internal;
-
-	template<internal::number_t value_type01> inline static string toString(const value_type01& value) noexcept {
+	template<internal::number_types value_type01> inline string toString(const value_type01& value) noexcept {
 		string returnString{};
 		returnString.resize(64);
 		if constexpr (sizeof(value_type01) == 8) {
@@ -43,7 +40,7 @@ namespace JSONIFIER_NAMESPACE {
 		return returnString;
 	}
 
-	template<uint64_t base = 10> inline static double strToDouble(const string& stringNew) noexcept {
+	template<uint64_t base = 10> inline double strToDouble(const string& stringNew) noexcept {
 		double newValue{};
 		if (stringNew.size() > 0) [[likely]] {
 			auto iter = std::bit_cast<read_buffer_ptr>(stringNew.data());
@@ -61,7 +58,7 @@ namespace JSONIFIER_NAMESPACE {
 		return newValue;
 	}
 
-	template<uint64_t base = 10> inline static int64_t strToInt64(const string& stringNew) noexcept {
+	template<uint64_t base = 10> inline int64_t strToInt64(const string& stringNew) noexcept {
 		int64_t newValue{};
 		if (stringNew.size() > 0) [[likely]] {
 			auto iter = std::bit_cast<read_buffer_ptr>(stringNew.data());
@@ -79,7 +76,7 @@ namespace JSONIFIER_NAMESPACE {
 		return newValue;
 	}
 
-	template<uint64_t base = 10> inline static uint64_t strToUint64(const string& stringNew) noexcept {
+	template<uint64_t base = 10> inline uint64_t strToUint64(const string& stringNew) noexcept {
 		uint64_t newValue{};
 		if (stringNew.size() > 0) [[likely]] {
 			auto iter = std::bit_cast<read_buffer_ptr>(stringNew.data());
@@ -98,12 +95,12 @@ namespace JSONIFIER_NAMESPACE {
 	}
 }
 
-namespace JSONIFIER_INTERNAL_NAMESPACE {
+namespace jsonifier::internal {
 
-	template<typename value_type_new, typename iterator> JSONIFIER_INLINE static bool parseNumber(value_type_new& value, iterator&& iter, iterator&& end) noexcept {
+	template<typename value_type_new, typename iterator> JSONIFIER_INLINE bool parseNumber(value_type_new& value, iterator&& iter, iterator&& end) noexcept {
 		using value_type = value_type_new;
 
-		if constexpr (integer_t<value_type>) {
+		if constexpr (integer_types<value_type>) {
 			if constexpr (uint_types<value_type>) {
 				if constexpr (uint64_types<value_type>) {
 					return integer_parser<value_type>::parseInt(value, iter, end);
@@ -129,5 +126,3 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 		}
 	}
 }
-
-#endif

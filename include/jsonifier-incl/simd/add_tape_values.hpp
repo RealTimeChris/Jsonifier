@@ -4,15 +4,14 @@
  * https://github.com/nihilai-collective/jsonifier
  * include/jsonifier-incl/simd/add_tape_values.hpp
  */
-#if !defined(JSONIFIER_PASS_GUARD_ADD_TAPE_VALUES)
-	#define JSONIFIER_PASS_GUARD_ADD_TAPE_VALUES
+#pragma once
 
-	#include <jsonifier-incl/utilities/utility.hpp>
-	#include <jsonifier-incl/simd/neon_stage1.hpp>
-	#include <jsonifier-incl/simd/sve2_stage1.hpp>
-	#include <jsonifier-incl/simd/avx_stage1.hpp>
+#include <jsonifier-incl/utilities/utility.hpp>
+#include <jsonifier-incl/simd/neon_stage1.hpp>
+#include <jsonifier-incl/simd/sve2_stage1.hpp>
+#include <jsonifier-incl/simd/avx_stage1.hpp>
 
-namespace JSONIFIER_INTERNAL_NAMESPACE {
+namespace jsonifier::internal {
 
 	template<jsonifier_backend backend, typename integer_sequence_type> struct add_tape_values;
 
@@ -67,7 +66,7 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 		}
 	};
 
-	#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
+#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
 
 	// Sampled from Dr. Lemire's library, simdjson: https://github.com/simdjson/simdjson
 	template<uint64_t... indices> struct add_tape_values<jsonifier_backend::avx512, integer_sequence<indices...>> {
@@ -110,8 +109,6 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 		}
 	};
 
-	#endif
+#endif
 
 }
-
-#endif

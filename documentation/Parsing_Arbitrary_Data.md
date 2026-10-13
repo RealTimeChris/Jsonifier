@@ -1,6 +1,6 @@
 # Parsing Arbitrary Data
 
-Not every JSON parse has a fixed schema. Sometimes you're building a JSON linter, a data-inspection tool, or a proxy that routes messages based on partial content. Sometimes your schema is 90% fixed but has one field that holds "some other JSON, whatever it is." For these cases, Jsonifier provides `jsonifier::raw_json_data` — a type that holds arbitrary JSON as a dynamically typed tree.
+Not every JSON parse has a fixed schema. Sometimes you're building a JSON linter, a data-inspection tool, or a proxy that routes messages based on partial content. Sometimes your schema is 90% fixed but has one field that holds "some other JSON, whatever it is." For these cases, Jsonifier provides `jsonifier::raw_json_data`, a type that holds arbitrary JSON as a dynamically typed tree.
 
 ## The Basics
 
@@ -10,7 +10,7 @@ Use `raw_json_data` as the destination for any JSON you don't want to (or can't)
 #include <jsonifier>
 #include <iostream>
 
-int main() {
+int32_t main() {
     jsonifier::jsonifier_core<> parser;
 
     std::string json = R"({"name":"Concert","count":42,"tags":["music","live"]})";
@@ -79,7 +79,7 @@ JSON has one number grammar, but C++ has three number families. `json_number` pi
 
 - **`getUint()`** returns the value only if it was stored as `uint64_t`, otherwise `0`
 - **`getDouble()`** returns the value only if it was stored as `double`, otherwise `0.0`
-- **`getInt()`** converts from any storage — unsigned values are cast, doubles are truncated
+- **`getInt()`** converts from any storage: unsigned values are cast, doubles are truncated
 
 So for a non-negative integer like `42`, use `getUint()` or `getInt()`; `getDouble()` would return `0.0`.
 
@@ -102,7 +102,7 @@ template<> struct jsonifier::core<message> {
         &value_type::payload>();
 };
 
-int main() {
+int32_t main() {
     jsonifier::jsonifier_core<> parser;
     message msg;
 
@@ -195,7 +195,7 @@ template<> struct jsonifier::core<discord_message> {
         &value_type::data>();
 };
 
-int main() {
+int32_t main() {
     jsonifier::jsonifier_core<> parser;
 
     std::string message_created = R"({
@@ -228,9 +228,9 @@ Two different Discord message shapes, the same top-level envelope struct, dynami
 
 ## What's Next
 
-- **[Reflection](Reflection.md)** — for registering the parts of your schema that are stable
-- **[Generic Parsing](Generic_Parsing.md)** — lazy, schema-free reads without building a tree
-- **[Partial Reading](PartialReading.md)** — for the "known schema, skip most of it" case
-- **[Serializing & Parsing](Usage_Serializing_Parsing.md)** — the full API that both `raw_json_data` and registered types go through
+- **[Reflection](Reflection.md)**: for registering the parts of your schema that are stable
+- **[Generic Parsing](Generic_Parsing.md)**: lazy, schema-free reads without building a tree
+- **[Partial Reading](PartialReading.md)**: for the "known schema, skip most of it" case
+- **[Serializing & Parsing](Usage_Serializing_Parsing.md)**: the full API that both `raw_json_data` and registered types go through
 
 ---

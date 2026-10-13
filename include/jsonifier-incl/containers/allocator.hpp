@@ -6,7 +6,7 @@
  */
 #pragma once
 
-#include <jsonifier-incl/simd/backend_traits.hpp>
+#include <jsonifier-incl/simd/simd_config.hpp>
 #include <jsonifier-incl/utilities/utility.hpp>
 
 namespace jsonifier::internal {
@@ -177,7 +177,7 @@ namespace jsonifier::internal {
 			return true;
 		}
 
-		template<typename U> JSONIFIER_INLINE alloc_wrapper(const alloc_wrapper<U>&) noexcept {
+		template<typename other_type> JSONIFIER_INLINE alloc_wrapper(const alloc_wrapper<other_type>&) noexcept {
 		}
 
 		JSONIFIER_INLINE static void destroy(pointer) noexcept {
@@ -187,11 +187,11 @@ namespace jsonifier::internal {
 
 		using allocator_traits = std::allocator_traits<alloc_wrapper<value_type>>;
 
-		template<typename U> struct rebind {
-			using other = alloc_wrapper<U>;
+		template<typename other_type> struct rebind {
+			using other = alloc_wrapper<other_type>;
 		};
 
 		static_assert(alignment >= alignof(allocation_header), "alignment must cover allocation_header's alignment requirement.");
 	};
 
-}// namespace internal
+}

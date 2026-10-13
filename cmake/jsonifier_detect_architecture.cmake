@@ -19,16 +19,6 @@ voided_hw_detect_cpu(
     HEADER "${CMAKE_CURRENT_SOURCE_DIR}/include/jsonifier-incl/simd/jsonifier_cpu_properties.hpp"
 )
 
-if(TARGET voided_hw_jsonifier_cpu AND NOT CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm64|ARM64)$")
-    get_target_property(jsonifier_cpu_flags voided_hw_jsonifier_cpu INTERFACE_COMPILE_OPTIONS)
-    if(jsonifier_cpu_flags)
-        list(FILTER jsonifier_cpu_flags EXCLUDE REGEX ":/arch:AVX[0-9]*>$")
-        list(FILTER jsonifier_cpu_flags EXCLUDE REGEX ":-m(avx2|avx512[a-z0-9]*|fma|f16c)>$")
-        set_property(TARGET voided_hw_jsonifier_cpu PROPERTY INTERFACE_COMPILE_OPTIONS "${jsonifier_cpu_flags}")
-        message(STATUS "Jsonifier runtime dispatch: compiling at the AVX baseline; wider backends are selected at runtime.")
-    endif()
-endif()
-
 file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/include/jsonifier-incl/simd/jsonifier_cpu_instructions.hpp" "/*
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2026 Nihilai Collective Corp

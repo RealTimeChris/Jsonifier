@@ -4,19 +4,16 @@
  * https://github.com/nihilai-collective/jsonifier
  * include/jsonifier-incl/utilities/d_to_str.hpp
  */
-#if !defined(JSONIFIER_PASS_GUARD_D_TO_STR)
-	#define JSONIFIER_PASS_GUARD_D_TO_STR
+#pragma once
 
-	#include <jsonifier-incl/containers/allocator.hpp>
-	#include <jsonifier-incl/utilities/zmij.hpp>
+#include <jsonifier-incl/containers/allocator.hpp>
+#include <jsonifier-incl/utilities/zmij.hpp>
 
-namespace JSONIFIER_INTERNAL_NAMESPACE {
+namespace jsonifier::internal {
 
-	template<float_t value_type> struct to_chars<value_type> {
+	template<float_types value_type> struct to_chars<value_type> {
 		JSONIFIER_INLINE static write_buffer_ptr impl(write_buffer_ptr buf, value_type val) noexcept {
 			return zmij::detail::write(val, buf);
 		}
 	};
 }
-
-#endif

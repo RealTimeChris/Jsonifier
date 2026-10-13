@@ -4,19 +4,18 @@
  * https://github.com/nihilai-collective/jsonifier
  * include/jsonifier-incl/parsing/generic_iterator.hpp
  */
-#if !defined(JSONIFIER_PASS_GUARD_GENERIC_ITERATOR)
-	#define JSONIFIER_PASS_GUARD_GENERIC_ITERATOR
+#pragma once
 
-	#include <jsonifier-incl/parsing/generic_document.hpp>
+#include <jsonifier-incl/parsing/generic_document.hpp>
 
-namespace JSONIFIER_INTERNAL_NAMESPACE {
+namespace jsonifier::internal {
 
 	template<typename derived_type_new> struct generic_iterator {
 		using derived_type = derived_type_new;
 
-		static constexpr uint64_t smallDocumentBytes{ JSONIFIER_NAMESPACE::simdBlocksPerStep * 64 };
+		static constexpr uint64_t smallDocumentBytes{ jsonifier::simdBlocksPerStep * 64 };
 
-		template<parse_options options = parse_options{}, typename buffer_type> inline jsonifier::generic::document iterate(const buffer_type& in) noexcept {
+		template<parse_options options = parse_options{}, typename buffer_type> inline jsonifier::generic::document iterate(const buffer_type& in) {
 			using jsonifier::generic::document;
 			using jsonifier::generic::error_code;
 			read_buffer_ptr rootIter = std::bit_cast<read_buffer_ptr>(in.data());
@@ -43,7 +42,7 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 			return document{ &data.state, data.state.tape, 0 };
 		}
 
-		template<parse_options options> inline uint64_t indexGenericWindow(read_buffer_ptr rootIter, uint64_t length) noexcept {
+		template<parse_options options> inline uint64_t indexGenericWindow(read_buffer_ptr rootIter, uint64_t length) {
 			::jsonifier::generic::document_state& state = derivedRef.genericStorage().state;
 			if (length < smallDocumentBytes) {
 				derivedRef.podSection.template reset<options.minified>(rootIter, length);
@@ -62,5 +61,3 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 	};
 
 }
-
-#endif

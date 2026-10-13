@@ -4,28 +4,27 @@
  * https://github.com/nihilai-collective/jsonifier
  * include/jsonifier-incl/serializing/prettifier.hpp
  */
-#if !defined(JSONIFIER_PASS_GUARD_PRETTIFIER)
-	#define JSONIFIER_PASS_GUARD_PRETTIFIER
+#pragma once
 
-	#include <jsonifier-incl/serializing/serialize_impl.hpp>
-	#include <jsonifier-incl/serializing/minifier.hpp>
-	#include <jsonifier-incl/utilities/utility.hpp>
-	#include <jsonifier-incl/utilities/compare.hpp>
+#include <jsonifier-incl/serializing/serialize_impl.hpp>
+#include <jsonifier-incl/serializing/minifier.hpp>
+#include <jsonifier-incl/utilities/utility.hpp>
+#include <jsonifier-incl/utilities/compare.hpp>
 
-namespace JSONIFIER_INTERNAL_NAMESPACE {
+namespace jsonifier::internal {
 
 	struct prettify_status {
-		uint64_t object_depth{};
-		uint64_t array_depth{};
+		uint64_t objectDepth{};
+		uint64_t arrayDepth{};
 		uint64_t newSize{};
 		uint64_t index{};
 		int64_t indent{};
 	};
 
 	template<prettify_options options, typename prettifier_type> struct prettify_context_ro {
-		inline prettify_context_ro(prettifier_type& prettifierNew, write_structural_index_ptr iterNew, write_structural_index_ptr endStructuralNew, read_buffer_ptr dataPtrNew,
-			read_buffer_ptr rootIterNew, read_buffer_ptr endIterNew) noexcept
-			: endStructural{ endStructuralNew }, prettifier{ prettifierNew }, iter{ iterNew }, rootIter{ rootIterNew }, dataPtr{ dataPtrNew }, endIter{ endIterNew } {
+		JSONIFIER_INLINE prettify_context_ro(prettifier_type& prettifierNew, write_structural_index_ptr iterNew, write_structural_index_ptr endStructuralNew,
+			read_buffer_ptr dataPtrNew, read_buffer_ptr rootIterNew, read_buffer_ptr endIterNew) noexcept
+			: endStructural{ endStructuralNew }, iter{ iterNew }, prettifier{ prettifierNew }, rootIter{ rootIterNew }, dataPtr{ dataPtrNew }, endIter{ endIterNew } {
 		}
 
 		JSONIFIER_INLINE uint64_t operator()(char* __restrict ptrNew, uint64_t) noexcept {
@@ -40,8 +39,8 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 		prettify_context_ro() noexcept										= delete;
 
 		write_structural_index_ptr endStructural{};
-		prettifier_type& prettifier;
 		write_structural_index_ptr iter{};
+		prettifier_type& prettifier;
 		read_buffer_ptr rootIter{};
 		read_buffer_ptr dataPtr{};
 		read_buffer_ptr endIter{};
@@ -51,8 +50,8 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 		using derived_type = derived_type_new;
 		template<prettify_options options, typename prettifier_type> friend struct prettify_context_ro;
 
-		template<prettify_options options = prettify_options{}, string_t input_string_type, string_t output_buffer_type>
-		inline bool prettifyJson(input_string_type&& in, output_buffer_type&& buffer) noexcept {
+		template<prettify_options options = prettify_options{}, string_types input_string_type, string_types output_buffer_type>
+		inline bool prettifyJson(input_string_type&& in, output_buffer_type&& buffer) {
 			static constexpr prettify_options optionsFinal{ options };
 			derivedRef.errors.clear();
 			read_buffer_ptr dataPtr	 = std::bit_cast<read_buffer_ptr>(in.data());
@@ -88,7 +87,7 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 			const uint64_t structuralCount = static_cast<uint64_t>(endStructural - iter);
 			const uint64_t requiredSize	   = in.size() + structuralCount * (maxDepth * optionsFinal.indentSize + 2);
 			using context_type			   = prettify_context_ro<optionsFinal, remove_reference_t<decltype(*this)>>;
-			if constexpr (has_resize_and_overwrite<remove_cvref_t<output_buffer_type>>) {
+			if constexpr (resize_and_overwriteable_types<remove_cvref_t<output_buffer_type>>) {
 				buffer.resize_and_overwrite(requiredSize, context_type{ *this, iter, endStructural, dataPtr, rootIter, endIter });
 			} else {
 				if (buffer.size() < requiredSize) {
@@ -110,9 +109,8 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 		inline ~prettifier() noexcept				   = default;
 		inline prettifier() noexcept				   = default;
 
-		template<prettify_options options, prettify_buffer_t string_type, typename iterator, typename iterator_end> inline uint64_t impl(iterator* __restrict& iter,
-			iterator_end* __restrict endStructural, read_buffer_ptr __restrict stringRootIter, string_type&& outBuffer, read_buffer_ptr rootIter,
-			read_buffer_ptr endIter) noexcept {
+		template<prettify_options options, prettify_buffer_types string_type, typename iterator, typename iterator_end> inline uint64_t impl(iterator* __restrict& iter,
+			iterator_end* __restrict endStructural, read_buffer_ptr __restrict stringRootIter, string_type&& outBuffer, read_buffer_ptr rootIter, read_buffer_ptr endIter) {
 			using comma_indent = indent_table<",\n", options.indentChar, options.indentSize>;
 			using open_indent  = indent_table<"\n", options.indentChar, options.indentSize>;
 			using close_indent = indent_table<"\n", options.indentChar, options.indentSize>;
@@ -120,7 +118,7 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 			read_buffer_ptr newPtr{};
 			prettify_status status{};
 			while (iter < endStructural) {
-				switch (static_cast<uint64_t>(jsonTypes[static_cast<uint8_t>(stringRootIter[*iter])])) {
+				switch (static_cast<uint64_t>(jsonTypes[static_cast<uint64_t>(stringRootIter[*iter])])) {
 					case static_cast<uint64_t>(string): {
 						newPtr = stringRootIter + *iter;
 						++iter;
@@ -156,14 +154,14 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 						outBuffer[status.index] = '[';
 						++status.index;
 						++iter;
-						++status.array_depth;
+						++status.arrayDepth;
 						status.indent += options.indentSize;
 						if (stringRootIter[*iter] != ']') [[likely]] {
 							write_buffer_ptr outPtr = outBuffer + status.index;
 							open_indent::blitWithOverflow(outPtr, static_cast<uint64_t>(status.indent));
 							status.index = static_cast<uint64_t>(outPtr - outBuffer);
 						} else {
-							--status.array_depth;
+							--status.arrayDepth;
 							status.indent -= options.indentSize;
 							outBuffer[status.index] = ']';
 							++status.index;
@@ -179,7 +177,7 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 					}
 					case static_cast<uint64_t>(array_end): {
 						status.indent -= options.indentSize;
-						--status.array_depth;
+						--status.arrayDepth;
 						if (status.indent < 0) {
 							derivedRef.errors.emplace_back(jsonifier::internal::error::constructError<status_classes::prettifying, prettify_statuses::incorrect_structural_index>(
 								rootIter, &rootIter[*iter], endIter));
@@ -216,7 +214,7 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 					}
 					case static_cast<uint64_t>(object_start): {
 						outBuffer[status.index] = '{';
-						++status.object_depth;
+						++status.objectDepth;
 						++status.index;
 						++iter;
 						status.indent += options.indentSize;
@@ -225,7 +223,7 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 							open_indent::blitWithOverflow(outPtr, static_cast<uint64_t>(status.indent));
 							status.index = static_cast<uint64_t>(outPtr - outBuffer);
 						} else {
-							--status.object_depth;
+							--status.objectDepth;
 							status.indent -= options.indentSize;
 							outBuffer[status.index] = '}';
 							++status.index;
@@ -235,7 +233,7 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 					}
 					case static_cast<uint64_t>(object_end): {
 						status.indent -= options.indentSize;
-						--status.object_depth;
+						--status.objectDepth;
 						if (status.indent < 0) {
 							derivedRef.errors.emplace_back(jsonifier::internal::error::constructError<status_classes::prettifying, prettify_statuses::incorrect_structural_index>(
 								rootIter, &rootIter[*iter], endIter));
@@ -260,11 +258,11 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 					}
 				}
 			}
-			if (status.array_depth > 0 || status.object_depth > 0) {
-				if (status.array_depth > 0) {
+			if (status.arrayDepth > 0 || status.objectDepth > 0) {
+				if (status.arrayDepth > 0) {
 					derivedRef.errors.emplace_back(
 						jsonifier::internal::error::constructError<status_classes::prettifying, prettify_statuses::unclosed_array>(rootIter, &rootIter[*iter], endIter));
-				} else if (status.object_depth > 0) {
+				} else if (status.objectDepth > 0) {
 					derivedRef.errors.emplace_back(
 						jsonifier::internal::error::constructError<status_classes::prettifying, prettify_statuses::unclosed_object>(rootIter, &rootIter[*iter], endIter));
 				}
@@ -275,6 +273,4 @@ namespace JSONIFIER_INTERNAL_NAMESPACE {
 		}
 	};
 
-}// namespace internal
-
-#endif
+}

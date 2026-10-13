@@ -8,18 +8,12 @@
 
 #include <jsonifier-incl/containers/array.hpp>
 #include <jsonifier-incl/utilities/concepts.hpp>
-#include <atomic>
-#include <cstdio>
 
 namespace jsonifier::internal {
 
 	template<typename value_type> using base_t = remove_cvref_t<value_type>;
 
-	template<auto valueNew> struct make_static {
-		static constexpr auto value{ valueNew };
-	};
-
-	constexpr array<bool, 256ULL> genWhitespaceTable() {
+	consteval array<bool, 256ULL> genWhitespaceTable() {
 		array<bool, 256ULL> returnValues{};
 		returnValues[static_cast<uint64_t>('\t')] = true;
 		returnValues[static_cast<uint64_t>(' ')]  = true;
@@ -28,12 +22,11 @@ namespace jsonifier::internal {
 		return returnValues;
 	}
 
-	alignas(64) inline constexpr const bool* __restrict whitespaceTable{ []() constexpr {
-		constexpr auto local{ genWhitespaceTable() };
-		return make_static<local>::value.data();
-	}() };
+	alignas(64) inline constexpr auto whitespaceTableRaw{ genWhitespaceTable() };
 
-	constexpr array<int64_t, 256ULL> genNestingDeltaTable() {
+	alignas(64) inline constexpr const bool* __restrict whitespaceTable{ whitespaceTableRaw.data() };
+
+	consteval array<int64_t, 256ULL> genNestingDeltaTable() {
 		array<int64_t, 256ULL> returnValues{};
 		returnValues[static_cast<uint64_t>('{')] = 1;
 		returnValues[static_cast<uint64_t>('[')] = 1;
@@ -42,24 +35,22 @@ namespace jsonifier::internal {
 		return returnValues;
 	}
 
-	alignas(64) inline constexpr const int64_t* __restrict nestingDeltaTable{ []() constexpr {
-		constexpr auto local{ genNestingDeltaTable() };
-		return make_static<local>::value.data();
-	}() };
+	alignas(64) inline constexpr auto nestingDeltaTableRaw{ genNestingDeltaTable() };
 
-	constexpr array<bool, 256ULL> genNewlineTable() {
+	alignas(64) inline constexpr const int64_t* __restrict nestingDeltaTable{ nestingDeltaTableRaw.data() };
+
+	consteval array<bool, 256ULL> genNewlineTable() {
 		array<bool, 256ULL> returnValues{};
 		returnValues[static_cast<uint64_t>('\n')] = true;
 		returnValues[static_cast<uint64_t>('\r')] = true;
 		return returnValues;
 	}
 
-	alignas(64) inline constexpr const bool* __restrict newlineTable{ []() constexpr {
-		constexpr auto local{ genNewlineTable() };
-		return make_static<local>::value.data();
-	}() };
+	alignas(64) inline constexpr auto newlineTableRaw{ genNewlineTable() };
 
-	constexpr array<bool, 256ULL> genNumberTable() {
+	alignas(64) inline constexpr const bool* __restrict newlineTable{ newlineTableRaw.data() };
+
+	consteval array<bool, 256ULL> genNumberTable() {
 		array<bool, 256ULL> returnValues{};
 		returnValues[static_cast<uint64_t>('-')] = true;
 		returnValues[static_cast<uint64_t>('0')] = true;
@@ -75,12 +66,11 @@ namespace jsonifier::internal {
 		return returnValues;
 	}
 
-	alignas(64) inline constexpr const bool* __restrict numberTable{ []() constexpr {
-		constexpr auto local{ genNumberTable() };
-		return make_static<local>::value.data();
-	}() };
+	alignas(64) inline constexpr auto numberTableRaw{ genNumberTable() };
 
-	constexpr array<array<char, 2>, 256ULL> genCharEscapeStorage() {
+	alignas(64) inline constexpr const bool* __restrict numberTable{ numberTableRaw.data() };
+
+	consteval array<array<char, 2>, 256ULL> genCharEscapeStorage() {
 		array<array<char, 2>, 256ULL> returnValue{};
 		for (uint64_t x = 0; x < 256ULL; ++x) {
 			returnValue[x][0] = static_cast<char>(x);
@@ -103,12 +93,11 @@ namespace jsonifier::internal {
 		return returnValue;
 	}
 
-	alignas(64) inline constexpr const array<char, 2>* __restrict charEscapeStorage{ []() constexpr {
-		constexpr auto local{ genCharEscapeStorage() };
-		return make_static<local>::value.data();
-	}() };
+	alignas(64) inline constexpr auto charEscapeStorageRaw{ genCharEscapeStorage() };
 
-	constexpr array<const char*, 256ULL> genCharEscapeTable() {
+	alignas(64) inline constexpr const array<char, 2>* __restrict charEscapeStorage{ charEscapeStorageRaw.data() };
+
+	consteval array<const char*, 256ULL> genCharEscapeTable() {
 		array<const char*, 256ULL> returnValue{};
 		for (uint64_t x = 0; x < 256ULL; ++x) {
 			returnValue[x] = charEscapeStorage[x].data();
@@ -116,12 +105,11 @@ namespace jsonifier::internal {
 		return returnValue;
 	}
 
-	alignas(64) inline constexpr const char* const* __restrict charEscapeTable{ []() constexpr {
-		constexpr auto local{ genCharEscapeTable() };
-		return make_static<local>::value.data();
-	}() };
+	alignas(64) inline constexpr auto charEscapeTableRaw{ genCharEscapeTable() };
 
-	constexpr array<uint64_t, 256ULL> genCharEscapeSizes() {
+	alignas(64) inline constexpr const char* const* __restrict charEscapeTable{ charEscapeTableRaw.data() };
+
+	consteval array<uint64_t, 256ULL> genCharEscapeSizes() {
 		array<uint64_t, 256ULL> returnValue{};
 		for (uint64_t x = 0; x < 256ULL; ++x) {
 			returnValue[x] = 1;
@@ -136,10 +124,9 @@ namespace jsonifier::internal {
 		return returnValue;
 	}
 
-	alignas(64) inline constexpr const uint64_t* __restrict charEscapeSizes{ []() constexpr {
-		constexpr auto local{ genCharEscapeSizes() };
-		return make_static<local>::value.data();
-	}() };
+	alignas(64) inline constexpr auto charEscapeSizesRaw{ genCharEscapeSizes() };
+
+	alignas(64) inline constexpr const uint64_t* __restrict charEscapeSizes{ charEscapeSizesRaw.data() };
 
 	template<typename value_type> JSONIFIER_INLINE constexpr value_type&& forward(remove_reference_t<value_type>& t JSONIFIER_LIFETIME_BOUND) noexcept {
 		return static_cast<value_type&&>(t);
@@ -156,6 +143,26 @@ namespace jsonifier::internal {
 		return static_cast<jsonifier::internal::remove_reference_t<value_type>&&>(value);
 	}
 
+	struct swap_fn {
+		template<typename value_type>
+			requires(std::is_move_constructible_v<value_type> && std::is_move_assignable_v<value_type>)
+		JSONIFIER_INLINE constexpr void operator()(value_type& lhs, value_type& rhs) const
+			noexcept(std::is_nothrow_move_constructible_v<value_type> && std::is_nothrow_move_assignable_v<value_type>) {
+			value_type temp{ jsonifier::internal::move(lhs) };
+			lhs = jsonifier::internal::move(rhs);
+			rhs = jsonifier::internal::move(temp);
+		}
+
+		template<typename value_type, std::size_t size> JSONIFIER_INLINE constexpr void operator()(value_type (&lhs)[size], value_type (&rhs)[size]) const
+			noexcept(noexcept((*this)(lhs[0], rhs[0]))) {
+			for (std::size_t index = 0; index < size; ++index) {
+				(*this)(lhs[index], rhs[index]);
+			}
+		}
+	};
+
+	alignas(64) inline constexpr swap_fn swap{};
+
 	template<uint_types value_type> inline constexpr value_type byteswap(value_type value) noexcept {
 		if constexpr (sizeof(value_type) == 1) {
 			return value;
@@ -168,7 +175,7 @@ namespace jsonifier::internal {
 				((value & 0x00000000FF000000ull) << 8) | ((value & 0x000000FF00000000ull) >> 8) | ((value & 0x0000FF0000000000ull) >> 24) |
 				((value & 0x00FF000000000000ull) >> 40) | ((value & 0xFF00000000000000ull) >> 56));
 		} else {
-			static_assert(sizeof(value_type) == 0, "byte_swap: unsupported type size");
+			static_assert(sizeof(value_type) == 0, "byteSwap: unsupported type size");
 		}
 	}
 
@@ -183,27 +190,26 @@ namespace jsonifier::internal {
 		using type = jsonifier::internal::conditional_t<std::is_unsigned_v<value_type>, uint8_t, int8_t>;
 	};
 
-	template<uint_types auto valueNew> struct integral_constant {
-		using value_type				  = decltype(valueNew);
-		static constexpr value_type value = valueNew;
+	template<uint64_t valueNew> struct integral_constant {
+		static constexpr uint64_t value = valueNew;
 
-		JSONIFIER_INLINE constexpr value_type operator()() const noexcept {
+		JSONIFIER_INLINE constexpr uint64_t operator()() const noexcept {
 			return value;
 		}
 
-		JSONIFIER_INLINE constexpr operator value_type() const noexcept {
+		JSONIFIER_INLINE constexpr operator uint64_t() const noexcept {
 			return value;
 		}
 	};
 
-	template<uint_types auto index> using tag = integral_constant<index>;
+	template<uint64_t index> using tag = integral_constant<index>;
 
 	template<uint64_t... indices> struct integer_sequence {};
 
 	template<typename sequence_one, typename sequence_two> struct concat_sequence;
 
-	template<uint64_t... first_values, uint64_t... second_values> struct concat_sequence<integer_sequence<first_values...>, integer_sequence<second_values...>> {
-		using type = integer_sequence<first_values..., (second_values + sizeof...(first_values))...>;
+	template<uint64_t... firstValues, uint64_t... secondValues> struct concat_sequence<integer_sequence<firstValues...>, integer_sequence<secondValues...>> {
+		using type = integer_sequence<firstValues..., (secondValues + sizeof...(firstValues))...>;
 	};
 
 	template<uint64_t count> struct make_sequence_impl {
@@ -225,21 +231,20 @@ namespace jsonifier::internal {
 	template<typename integer_sequence, uint64_t offset> struct offset_sequence;
 
 	template<uint64_t... indices, uint64_t offset> struct offset_sequence<integer_sequence<indices...>, offset> {
-		using type = integer_sequence<static_cast<decltype(offset)>(indices + offset)...>;
+		using type = integer_sequence<indices + offset...>;
 	};
 
 	template<typename integer_sequence, uint64_t step> struct step_sequence;
 
-	template<uint64_t... indices, uint64_t step_new> struct step_sequence<integer_sequence<indices...>, step_new> {
-		using type = integer_sequence<static_cast<decltype(step_new)>(indices* step_new)...>;
+	template<uint64_t... indices, uint64_t stepNew> struct step_sequence<integer_sequence<indices...>, stepNew> {
+		using type = integer_sequence<indices * stepNew...>;
 	};
 
 	template<typename integer_sequence, uint64_t step> using step_sequence_t = typename step_sequence<integer_sequence, step>::type;
 
 	template<uint64_t start, uint64_t end, uint64_t step>
 		requires(end >= start && step > 0)
-	using make_stepped_range_sequence =
-		typename offset_sequence<step_sequence_t<make_integer_sequence<static_cast<decltype(end)>((end - start + step - 1) / step)>, step>, start>::type;
+	using make_stepped_range_sequence = typename offset_sequence<step_sequence_t<make_integer_sequence<(end - start + step - 1) / step>, step>, start>::type;
 
 	template<template<auto...> typename functor_type, typename integer_sequence, auto...> struct functor_runner;
 
@@ -274,17 +279,16 @@ namespace jsonifier::internal {
 		}
 	};
 
-	template<typename function_type, typename variant_type, typename... arg_types>
-	JSONIFIER_INLINE static constexpr void visit(variant_type&& variant, arg_types&&... args) noexcept {
+	template<typename function_type, typename variant_type, typename... arg_types> JSONIFIER_INLINE constexpr void visit(variant_type&& variant, arg_types&&... args) noexcept {
 		visit_impl<function_type, make_integer_sequence<std::variant_size_v<base_t<variant_type>>>>::impl(internal::forward<variant_type>(variant),
 			internal::forward<arg_types>(args)...);
 	}
 
-	template<integral_t value_type01, integral_t value_type02> JSONIFIER_INLINE constexpr value_type01 max(value_type01 value1, value_type02 value2) noexcept {
+	template<integral_types value_type01, integral_types value_type02> JSONIFIER_INLINE constexpr value_type01 max(value_type01 value1, value_type02 value2) noexcept {
 		return value1 > static_cast<value_type01>(value2) ? value1 : static_cast<value_type01>(value2);
 	}
 
-	template<integral_t value_type01, integral_t value_type02> JSONIFIER_INLINE constexpr value_type01 min(value_type01 value1, value_type02 value2) noexcept {
+	template<integral_types value_type01, integral_types value_type02> JSONIFIER_INLINE constexpr value_type01 min(value_type01 value1, value_type02 value2) noexcept {
 		return value1 < static_cast<value_type01>(value2) ? value1 : static_cast<value_type01>(value2);
 	}
 
@@ -340,13 +344,15 @@ namespace jsonifier::internal {
 		static constexpr uint64_t value{ 32 };
 	};
 
-	template<uint64_t chunk_bytes> JSONIFIER_INLINE void copyOverlappingChunks(std::byte* __restrict dst, const std::byte* __restrict src, uint64_t byte_count) {
-		pow2MemcpyWrapper<chunk_bytes>(dst, src);
-		pow2MemcpyWrapper<chunk_bytes>(dst + byte_count - chunk_bytes, src + byte_count - chunk_bytes);
+#if JSONIFIER_PLATFORM_MAC
+
+	template<uint64_t chunkBytes> JSONIFIER_INLINE void copyOverlappingChunks(std::byte* __restrict dst, const std::byte* __restrict src, uint64_t byteCount) {
+		pow2MemcpyWrapper<chunkBytes>(dst, src);
+		pow2MemcpyWrapper<chunkBytes>(dst + byteCount - chunkBytes, src + byteCount - chunkBytes);
 	}
 
-	template<uint64_t max_bytes> JSONIFIER_INLINE void jsonifierMemcpyUpTo(void* __restrict dst, const void* __restrict src, uint64_t byte_count) {
-		switch (std::bit_width(byte_count)) {
+	template<uint64_t maxBytes> JSONIFIER_INLINE void jsonifierMemcpyUpTo(void* __restrict dst, const void* __restrict src, uint64_t byteCount) {
+		switch (std::bit_width(byteCount)) {
 			case 0: {
 				return;
 			}
@@ -355,47 +361,115 @@ namespace jsonifier::internal {
 				return;
 			}
 			case 2: {
-				if constexpr (max_bytes >= 2) {
-					copyOverlappingChunks<2>(static_cast<std::byte* __restrict>(dst), static_cast<const std::byte* __restrict>(src), byte_count);
+				if constexpr (maxBytes >= 2) {
+					copyOverlappingChunks<2>(static_cast<std::byte* __restrict>(dst), static_cast<const std::byte* __restrict>(src), byteCount);
 				}
 				return;
 			}
 			case 3: {
-				if constexpr (max_bytes >= 4) {
-					copyOverlappingChunks<4>(static_cast<std::byte* __restrict>(dst), static_cast<const std::byte* __restrict>(src), byte_count);
+				if constexpr (maxBytes >= 4) {
+					copyOverlappingChunks<4>(static_cast<std::byte* __restrict>(dst), static_cast<const std::byte* __restrict>(src), byteCount);
 				}
 				return;
 			}
 			case 4: {
-				if constexpr (max_bytes >= 8) {
-					copyOverlappingChunks<8>(static_cast<std::byte* __restrict>(dst), static_cast<const std::byte* __restrict>(src), byte_count);
+				if constexpr (maxBytes >= 8) {
+					copyOverlappingChunks<8>(static_cast<std::byte* __restrict>(dst), static_cast<const std::byte* __restrict>(src), byteCount);
 				}
 				return;
 			}
 			case 5: {
-				if constexpr (max_bytes >= 16) {
-					copyOverlappingChunks<16>(static_cast<std::byte* __restrict>(dst), static_cast<const std::byte* __restrict>(src), byte_count);
+				if constexpr (maxBytes >= 16) {
+					copyOverlappingChunks<16>(static_cast<std::byte* __restrict>(dst), static_cast<const std::byte* __restrict>(src), byteCount);
 				}
 				return;
 			}
 			case 6: {
-				if constexpr (max_bytes >= 32) {
-					copyOverlappingChunks<32>(static_cast<std::byte* __restrict>(dst), static_cast<const std::byte* __restrict>(src), byte_count);
+				if constexpr (maxBytes >= 32) {
+					copyOverlappingChunks<32>(static_cast<std::byte* __restrict>(dst), static_cast<const std::byte* __restrict>(src), byteCount);
 				}
 				return;
 			}
 			default: {
-				if constexpr (max_bytes >= 64) {
-					memcpyWrapper(static_cast<std::byte* __restrict>(dst), static_cast<const std::byte* __restrict>(src), byte_count);
+				if constexpr (maxBytes >= 64) {
+					memcpyWrapper(static_cast<std::byte* __restrict>(dst), static_cast<const std::byte* __restrict>(src), byteCount);
 				}
 				return;
 			}
 		}
 	}
 
-	JSONIFIER_INLINE void jsonifierMemcpy(void* __restrict destination, const void* __restrict source, uint64_t byte_count) {
-		jsonifierMemcpyUpTo<std::numeric_limits<uint64_t>::max()>(destination, source, byte_count);
+	JSONIFIER_INLINE void jsonifierMemcpy(void* __restrict destination, const void* __restrict source, uint64_t byteCount) {
+		jsonifierMemcpyUpTo<std::numeric_limits<uint64_t>::max()>(destination, source, byteCount);
 	}
+
+#else
+
+	template<uint64_t bucketSize, typename sequence_type> struct memcpy_runner_impl;
+
+	alignas(64) inline constexpr uint64_t registerWidth{ cpu_properties::getValue(cpu_property_types::alignment) };
+
+	template<uint64_t bucketSize, uint64_t... indices> struct memcpy_runner_impl<bucketSize, integer_sequence<indices...>> {
+		static_assert(std::has_single_bit(bucketSize), "Sorry, but buckets must be a power-of-2 size.");
+		static constexpr uint64_t chunkSize{ bucketSize < registerWidth ? bucketSize : registerWidth };
+		static constexpr uint64_t chunkCount{ bucketSize / chunkSize };
+		JSONIFIER_INLINE static void impl(std::byte* __restrict dst, const std::byte* __restrict src, uint64_t byteCount) noexcept {
+			std::byte* __restrict dstTail		= dst + byteCount - bucketSize;
+			const std::byte* __restrict srcTail = src + byteCount - bucketSize;
+			(pow2MemcpyWrapper<chunkSize>(dst + indices * chunkSize, src + indices * chunkSize), ...);
+			(pow2MemcpyWrapper<chunkSize>(dstTail + indices * chunkSize, srcTail + indices * chunkSize), ...);
+		}
+	};
+
+	template<uint64_t bucketSize> struct memcpy_runner {
+		static_assert(std::has_single_bit(bucketSize), "Sorry, but buckets must be a power-of-2 size.");
+		static constexpr uint64_t chunkSize{ bucketSize < registerWidth ? bucketSize : registerWidth };
+		static constexpr uint64_t chunkCount{ bucketSize / chunkSize };
+
+		JSONIFIER_INLINE static void impl(std::byte* __restrict dst, const std::byte* __restrict src, uint64_t byteCount) noexcept {
+			memcpy_runner_impl<bucketSize, make_integer_sequence<chunkCount>>::impl(dst, src, byteCount);
+		}
+	};
+
+	inline constexpr uint64_t fallbackBucketIndex{ 9 };
+
+	template<uint64_t maxBytes> inline constexpr uint64_t maxBytesBucketIndex{ static_cast<uint64_t>(std::bit_width(maxBytes)) };
+
+	template<uint64_t maxBytes>
+	inline constexpr uint64_t topBucketIndex{ maxBytesBucketIndex<maxBytes> < fallbackBucketIndex ? maxBytesBucketIndex<maxBytes> : fallbackBucketIndex };
+
+	template<uint64_t bucketIndex> JSONIFIER_INLINE void copyBucket(std::byte* __restrict dst, const std::byte* __restrict src, uint64_t byteCount) noexcept {
+		if constexpr (bucketIndex == 1) {
+			*dst = *src;
+		} else if constexpr (bucketIndex == fallbackBucketIndex) {
+			memcpyWrapper(dst, src, byteCount);
+		} else if constexpr (bucketIndex > 1) {
+			memcpy_runner<1ull << (bucketIndex - 1)>::impl(dst, src, byteCount);
+		}
+	}
+
+	template<uint64_t lowIndex, uint64_t highIndex> JSONIFIER_INLINE void dispatchBuckets(std::byte* __restrict dst, const std::byte* __restrict src, uint64_t byteCount) noexcept {
+		if constexpr (lowIndex == highIndex) {
+			copyBucket<lowIndex>(dst, src, byteCount);
+		} else {
+			constexpr uint64_t splitIndex{ (lowIndex + highIndex + 1) / 2 };
+			if (byteCount < (1ull << (splitIndex - 1))) {
+				dispatchBuckets<lowIndex, splitIndex - 1>(dst, src, byteCount);
+			} else {
+				dispatchBuckets<splitIndex, highIndex>(dst, src, byteCount);
+			}
+		}
+	}
+
+	template<uint64_t maxBytes> JSONIFIER_INLINE void jsonifierMemcpyUpTo(void* __restrict dst, const void* __restrict src, uint64_t byteCount) noexcept {
+		dispatchBuckets<0, topBucketIndex<maxBytes>>(static_cast<std::byte*>(dst), static_cast<const std::byte*>(src), byteCount);
+	}
+
+	JSONIFIER_INLINE void jsonifierMemcpy(void* __restrict dst, const void* __restrict src, uint64_t byteCount) noexcept {
+		jsonifierMemcpyUpTo<std::numeric_limits<uint64_t>::max()>(dst, src, byteCount);
+	}
+
+#endif
 
 }
 
