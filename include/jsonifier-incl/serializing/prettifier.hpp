@@ -144,7 +144,7 @@ namespace jsonifier::internal {
 					}
 					case static_cast<uint64_t>(colon): {
 						static constexpr char valuesNew[3]{ ':', options.indentChar };
-						alignas(64) static constexpr uint16_t colonIndentChar{ pack_values<string_literal{ valuesNew }>::value };
+						static constexpr uint16_t colonIndentChar{ pack_values<string_literal{ valuesNew }>::value };
 						pow2MemcpyWrapper<2>(&outBuffer[status.index], &colonIndentChar);
 						status.index += 2;
 						++iter;

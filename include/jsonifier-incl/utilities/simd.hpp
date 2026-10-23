@@ -79,7 +79,7 @@ namespace jsonifier::internal {
 			return index < lengthMinusStep;
 		}
 
-		alignas(64) uint8_t block[stepBytes]{};
+		alignas(simdBytesPerRegister) uint8_t block[stepBytes]{};
 		uint64_t lengthMinusStep{};
 		read_buffer_ptr inString{};
 		uint64_t length{};
@@ -104,7 +104,7 @@ namespace jsonifier::internal {
 			index			= 0;
 		}
 
-		alignas(64) uint8_t block[stepBytes]{};
+		alignas(simdBytesPerRegister) uint8_t block[stepBytes]{};
 		restricted_read_buffer_ptr inString{};
 		uint64_t lengthMinusStep{};
 		uint64_t length{};
@@ -161,7 +161,7 @@ namespace jsonifier::internal {
 			return indexVal;
 		}
 
-		alignas(64) uint8_t block[simdBytesPerBlock];
+		alignas(simdBytesPerRegister) uint8_t block[simdBytesPerBlock];
 		restricted_read_buffer_ptr inString{};
 		uint64_t fullBlockEnd{};
 		uint64_t fullStepEnd{};

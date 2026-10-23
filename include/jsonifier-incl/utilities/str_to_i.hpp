@@ -15,9 +15,9 @@
 
 namespace jsonifier::internal {
 
-	alignas(64) inline constexpr char zero{ '0' };
+	inline constexpr char zero{ '0' };
 
-	template<bool negative> alignas(64) inline constexpr uint64_t compValAddition{ [] {
+	template<bool negative> inline constexpr uint64_t compValAddition{ [] {
 		if constexpr (negative) {
 			return 1ULL;
 		} else {
@@ -41,9 +41,9 @@ namespace jsonifier::internal {
 		return returnValues;
 	}
 
-	template<typename v_type, bool negative> alignas(64) inline constexpr auto compValsRaw{ genRawCompVals<v_type, negative>() };
+	template<typename v_type, bool negative> inline constexpr auto compValsRaw{ genRawCompVals<v_type, negative>() };
 
-	template<typename v_type, bool negative> alignas(64) inline constexpr const std::make_unsigned_t<v_type>* __restrict compVals{ compValsRaw<v_type, negative>.data() };
+	template<typename v_type, bool negative> inline constexpr const std::make_unsigned_t<v_type>* __restrict compVals{ compValsRaw<v_type, negative>.data() };
 
 	JSONIFIER_INLINE uint8_t peekByte(const uint8_t* iter, const uint8_t* end) noexcept {
 		return iter < end ? *iter : uint8_t{ 0 };
@@ -57,13 +57,13 @@ namespace jsonifier::internal {
 		}
 	}
 
-	alignas(64) inline constexpr ptrdiff_t uncheckedIntegerSpan{ 21 };
+	inline constexpr ptrdiff_t uncheckedIntegerSpan{ 21 };
 
-	alignas(64) inline constexpr int64_t maxFractionDigits{ 18 };
+	inline constexpr int64_t maxFractionDigits{ 18 };
 
-	alignas(64) inline constexpr int64_t maxUnsignedFractionDigits{ 19 };
+	inline constexpr int64_t maxUnsignedFractionDigits{ 19 };
 
-	alignas(64) inline constexpr int64_t maxExponentValue{ 20 };
+	inline constexpr int64_t maxExponentValue{ 20 };
 
 	template<typename value_type, size_t count> consteval array<value_type, count> generatePowerOfTen() {
 		array<value_type, count> table{};
@@ -80,15 +80,15 @@ namespace jsonifier::internal {
 	template<typename> struct powers_of_ten;
 
 	template<int_types value_type> struct powers_of_ten<value_type> {
-		alignas(64) static constexpr array<int64_t, 19> valueRaw{ generatePowerOfTen<int64_t, 19>() };
+		static constexpr array<int64_t, 19> valueRaw{ generatePowerOfTen<int64_t, 19>() };
 
-		alignas(64) static constexpr const int64_t* __restrict value{ valueRaw.data() };
+		static constexpr const int64_t* __restrict value{ valueRaw.data() };
 	};
 
 	template<uint_types value_type> struct powers_of_ten<value_type> {
-		alignas(64) static constexpr array<uint64_t, 20> valueRaw{ generatePowerOfTen<uint64_t, 20>() };
+		static constexpr array<uint64_t, 20> valueRaw{ generatePowerOfTen<uint64_t, 20>() };
 
-		alignas(64) static constexpr const uint64_t* __restrict value{ valueRaw.data() };
+		static constexpr const uint64_t* __restrict value{ valueRaw.data() };
 	};
 
 	template<typename value_type> struct integer_parser;
@@ -178,11 +178,11 @@ namespace jsonifier::internal {
 		constexpr integer_parser() noexcept = default;
 
 		JSONIFIER_INLINE static const uint8_t* parseFraction(value_type& value, const uint8_t* iter, const uint8_t* end) noexcept {
-			if (JSONIFIER_IS_DIGIT(peekByte(iter, end))) [[likely]] {
+			if (isDigit(peekByte(iter, end))) [[likely]] {
 				value_type fracValue{ static_cast<value_type>(peekByte(iter, end) - zero) };
 				typename get_int_type<value_type>::type fracDigits{ 1 };
 				++iter;
-				while (JSONIFIER_IS_DIGIT(peekByte(iter, end))) {
+				while (isDigit(peekByte(iter, end))) {
 					if (fracDigits < (uint_types<value_type> ? maxUnsignedFractionDigits : maxFractionDigits)) {
 						fracValue = fracValue * 10 + static_cast<value_type>(peekByte(iter, end) - zero);
 						++fracDigits;
@@ -211,10 +211,10 @@ namespace jsonifier::internal {
 		JSONIFIER_INLINE static const uint8_t* parseExponentPostFrac(value_type& value, const uint8_t* iter, int8_t expSign, value_type fracValue,
 			typename get_int_type<value_type>::type fracDigits, const uint8_t* end) noexcept {
 			using exp_type = conditional_t<uint_types<value_type>, int64_t, value_type>;
-			if (JSONIFIER_IS_DIGIT(peekByte(iter, end))) [[likely]] {
+			if (isDigit(peekByte(iter, end))) [[likely]] {
 				exp_type expValue{ static_cast<exp_type>(peekByte(iter, end) - zero) };
 				++iter;
-				while (JSONIFIER_IS_DIGIT(peekByte(iter, end))) {
+				while (isDigit(peekByte(iter, end))) {
 					expValue = expValue < maxExponentValue ? expValue * 10 + static_cast<exp_type>(peekByte(iter, end) - zero) : expValue;
 					++iter;
 				}
@@ -248,10 +248,10 @@ namespace jsonifier::internal {
 		}
 
 		JSONIFIER_INLINE static const uint8_t* parseExponent(value_type& value, const uint8_t* iter, int8_t expSign, const uint8_t* end) noexcept {
-			if (JSONIFIER_IS_DIGIT(peekByte(iter, end))) [[likely]] {
+			if (isDigit(peekByte(iter, end))) [[likely]] {
 				value_type expValue{ static_cast<value_type>(peekByte(iter, end) - zero) };
 				++iter;
-				while (JSONIFIER_IS_DIGIT(peekByte(iter, end))) {
+				while (isDigit(peekByte(iter, end))) {
 					expValue = expValue < maxExponentValue ? expValue * 10 + static_cast<value_type>(peekByte(iter, end) - zero) : expValue;
 					++iter;
 				}
@@ -295,7 +295,7 @@ namespace jsonifier::internal {
 		template<bool negative, bool checked> JSONIFIER_INLINE static const uint8_t* parseInteger(value_type& value, const uint8_t* iter, const uint8_t* end) noexcept {
 			using v_type_local = std::make_unsigned_t<value_type>;
 			uint8_t numTmp{ loadByte<checked>(iter, end) };
-			if (JSONIFIER_IS_DIGIT(numTmp)) [[likely]] {
+			if (isDigit(numTmp)) [[likely]] {
 				value = static_cast<value_type>(numTmp - zero);
 				++iter;
 				numTmp = loadByte<checked>(iter, end);
@@ -303,7 +303,7 @@ namespace jsonifier::internal {
 				return nullptr;
 			}
 
-			if (JSONIFIER_IS_DIGIT(numTmp)) [[likely]] {
+			if (isDigit(numTmp)) [[likely]] {
 				value = static_cast<value_type>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = loadByte<checked>(iter, end);
@@ -325,7 +325,7 @@ namespace jsonifier::internal {
 				return nullptr;
 			}
 
-			if (JSONIFIER_IS_DIGIT(numTmp)) [[likely]] {
+			if (isDigit(numTmp)) [[likely]] {
 				value = static_cast<value_type>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = loadByte<checked>(iter, end);
@@ -343,7 +343,7 @@ namespace jsonifier::internal {
 				}
 			}
 
-			if (JSONIFIER_IS_DIGIT(numTmp)) [[likely]] {
+			if (isDigit(numTmp)) [[likely]] {
 				value = static_cast<value_type>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = loadByte<checked>(iter, end);
@@ -361,7 +361,7 @@ namespace jsonifier::internal {
 				}
 			}
 
-			if (JSONIFIER_IS_DIGIT(numTmp)) [[likely]] {
+			if (isDigit(numTmp)) [[likely]] {
 				value = static_cast<value_type>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = loadByte<checked>(iter, end);
@@ -379,7 +379,7 @@ namespace jsonifier::internal {
 				}
 			}
 
-			if (JSONIFIER_IS_DIGIT(numTmp)) [[likely]] {
+			if (isDigit(numTmp)) [[likely]] {
 				value = static_cast<value_type>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = loadByte<checked>(iter, end);
@@ -397,7 +397,7 @@ namespace jsonifier::internal {
 				}
 			}
 
-			if (JSONIFIER_IS_DIGIT(numTmp)) [[likely]] {
+			if (isDigit(numTmp)) [[likely]] {
 				value = static_cast<value_type>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = loadByte<checked>(iter, end);
@@ -415,7 +415,7 @@ namespace jsonifier::internal {
 				}
 			}
 
-			if (JSONIFIER_IS_DIGIT(numTmp)) [[likely]] {
+			if (isDigit(numTmp)) [[likely]] {
 				value = static_cast<value_type>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = loadByte<checked>(iter, end);
@@ -433,7 +433,7 @@ namespace jsonifier::internal {
 				}
 			}
 
-			if (JSONIFIER_IS_DIGIT(numTmp)) [[likely]] {
+			if (isDigit(numTmp)) [[likely]] {
 				value = static_cast<value_type>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = loadByte<checked>(iter, end);
@@ -451,7 +451,7 @@ namespace jsonifier::internal {
 				}
 			}
 
-			if (JSONIFIER_IS_DIGIT(numTmp)) [[likely]] {
+			if (isDigit(numTmp)) [[likely]] {
 				value = static_cast<value_type>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = loadByte<checked>(iter, end);
@@ -469,7 +469,7 @@ namespace jsonifier::internal {
 				}
 			}
 
-			if (JSONIFIER_IS_DIGIT(numTmp)) [[likely]] {
+			if (isDigit(numTmp)) [[likely]] {
 				value = static_cast<value_type>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = loadByte<checked>(iter, end);
@@ -487,7 +487,7 @@ namespace jsonifier::internal {
 				}
 			}
 
-			if (JSONIFIER_IS_DIGIT(numTmp)) [[likely]] {
+			if (isDigit(numTmp)) [[likely]] {
 				value = static_cast<value_type>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = loadByte<checked>(iter, end);
@@ -505,7 +505,7 @@ namespace jsonifier::internal {
 				}
 			}
 
-			if (JSONIFIER_IS_DIGIT(numTmp)) [[likely]] {
+			if (isDigit(numTmp)) [[likely]] {
 				value = static_cast<value_type>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = loadByte<checked>(iter, end);
@@ -523,7 +523,7 @@ namespace jsonifier::internal {
 				}
 			}
 
-			if (JSONIFIER_IS_DIGIT(numTmp)) [[likely]] {
+			if (isDigit(numTmp)) [[likely]] {
 				value = static_cast<value_type>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = loadByte<checked>(iter, end);
@@ -541,7 +541,7 @@ namespace jsonifier::internal {
 				}
 			}
 
-			if (JSONIFIER_IS_DIGIT(numTmp)) [[likely]] {
+			if (isDigit(numTmp)) [[likely]] {
 				value = static_cast<value_type>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = loadByte<checked>(iter, end);
@@ -559,7 +559,7 @@ namespace jsonifier::internal {
 				}
 			}
 
-			if (JSONIFIER_IS_DIGIT(numTmp)) [[likely]] {
+			if (isDigit(numTmp)) [[likely]] {
 				value = static_cast<value_type>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = loadByte<checked>(iter, end);
@@ -577,7 +577,7 @@ namespace jsonifier::internal {
 				}
 			}
 
-			if (JSONIFIER_IS_DIGIT(numTmp)) [[likely]] {
+			if (isDigit(numTmp)) [[likely]] {
 				value = static_cast<value_type>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = loadByte<checked>(iter, end);
@@ -595,7 +595,7 @@ namespace jsonifier::internal {
 				}
 			}
 
-			if (JSONIFIER_IS_DIGIT(numTmp)) [[likely]] {
+			if (isDigit(numTmp)) [[likely]] {
 				value = static_cast<value_type>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 				++iter;
 				numTmp = loadByte<checked>(iter, end);
@@ -614,7 +614,7 @@ namespace jsonifier::internal {
 			}
 
 			if constexpr (uint_types<value_type>) {
-				if (JSONIFIER_IS_DIGIT(numTmp)) [[likely]] {
+				if (isDigit(numTmp)) [[likely]] {
 					value = static_cast<value_type>(static_cast<v_type_local>(value) * 10 + (numTmp - zero));
 					++iter;
 					numTmp = loadByte<checked>(iter, end);
@@ -633,7 +633,7 @@ namespace jsonifier::internal {
 				}
 			}
 
-			if (JSONIFIER_IS_DIGIT(numTmp)) [[likely]] {
+			if (isDigit(numTmp)) [[likely]] {
 				if (static_cast<uint64_t>(value) > static_cast<uint64_t>(compVals<value_type, negative>[numTmp])) [[unlikely]] {
 					return nullptr;
 				}
@@ -653,10 +653,10 @@ namespace jsonifier::internal {
 					return finishParse(value, iter, end);
 				}
 			}
-			if (JSONIFIER_IS_DIGIT(numTmp)) [[unlikely]] {
+			if (isDigit(numTmp)) [[unlikely]] {
 				return nullptr;
 			}
-			alignas(64) static constexpr v_type_local zeroVal{ 0 };
+			static constexpr v_type_local zeroVal{ 0 };
 			if (expFracTable[numTmp]) [[unlikely]] {
 				if constexpr (negative) {
 					return (iter = finishParse(value, iter, end), value = static_cast<value_type>(zeroVal - static_cast<v_type_local>(value)), iter);
@@ -718,7 +718,7 @@ namespace jsonifier::internal {
 
 namespace jsonifier::internal {
 
-	template<bool negative> alignas(64) inline constexpr uint64_t compValAddition{ [] {
+	template<bool negative> inline constexpr uint64_t compValAddition{ [] {
 		if constexpr (negative) {
 			return 1ULL;
 		} else {
@@ -742,14 +742,14 @@ namespace jsonifier::internal {
 		return returnValues;
 	}
 
-	template<typename v_type, bool negative> alignas(64) inline constexpr auto compValsRaw{ genRawCompVals<v_type, negative>() };
+	template<typename v_type, bool negative> inline constexpr auto compValsRaw{ genRawCompVals<v_type, negative>() };
 
-	template<typename v_type, bool negative> alignas(64) inline constexpr const std::make_unsigned_t<v_type>* __restrict compVals{ compValsRaw<v_type, negative>.data() };
+	template<typename v_type, bool negative> inline constexpr const std::make_unsigned_t<v_type>* __restrict compVals{ compValsRaw<v_type, negative>.data() };
 
 	namespace int_swar {
 
 		template<uint8_types auto repeat, uint_types v_type>
-		alignas(64) inline constexpr v_type repeatBytes = static_cast<v_type>(static_cast<v_type>(0x0101010101010101ull) * static_cast<v_type>(repeat));
+		inline constexpr v_type repeatBytes = static_cast<v_type>(static_cast<v_type>(0x0101010101010101ull) * static_cast<v_type>(repeat));
 
 		template<uint_types v_type> JSONIFIER_INLINE v_type countZeros(v_type value) noexcept {
 			if constexpr (std::endian::native == std::endian::little) {
@@ -1331,15 +1331,15 @@ namespace jsonifier::internal {
 	template<typename> struct powers_of_ten;
 
 	template<int_types value_type> struct powers_of_ten<value_type> {
-		alignas(64) static constexpr array<int64_t, 19> valueRaw{ genPowerOfTenTable<int64_t, 19ULL>() };
+		static constexpr array<int64_t, 19> valueRaw{ genPowerOfTenTable<int64_t, 19ULL>() };
 
-		alignas(64) static constexpr const int64_t* __restrict value{ valueRaw.data() };
+		static constexpr const int64_t* __restrict value{ valueRaw.data() };
 	};
 
 	template<uint_types value_type> struct powers_of_ten<value_type> {
-		alignas(64) static constexpr array<uint64_t, 20> valueRaw{ genPowerOfTenTable<uint64_t, 20ULL>() };
+		static constexpr array<uint64_t, 20> valueRaw{ genPowerOfTenTable<uint64_t, 20ULL>() };
 
-		alignas(64) static constexpr const uint64_t* __restrict value{ valueRaw.data() };
+		static constexpr const uint64_t* __restrict value{ valueRaw.data() };
 	};
 
 	JSONIFIER_INLINE uint8_t peekByte(read_buffer_ptr iter, read_buffer_ptr end) noexcept {

@@ -293,7 +293,7 @@ namespace jsonifier::internal {
 
 	template<typename... value_type> struct tuple_size<std::tuple<value_type...>> : public integral_constant<sizeof...(value_type)> {};
 
-	template<typename tuple_type> alignas(64) inline constexpr uint64_t tupleSizeOf = tuple_size<remove_cvref_t<tuple_type>>::value;
+	template<typename tuple_type> inline constexpr uint64_t tupleSizeOf = tuple_size<remove_cvref_t<tuple_type>>::value;
 
 	template<typename... value_types> tuple(value_types&&...) -> tuple<value_types...>;
 

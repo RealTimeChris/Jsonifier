@@ -18,7 +18,7 @@ namespace jsonifier {
 	using write_structural_index_ptr  = uint32_t*;
 	using write_buffer_ptr			  = uint8_t*;
 
-	alignas(64) inline constexpr uint64_t maxSimdBytesPerRegister{ internal::cpu_properties::getValue(internal::cpu_property_types::alignment) };
+	inline constexpr uint64_t maxSimdBytesPerRegister{ internal::cpu_properties::getValue(internal::cpu_property_types::alignment) };
 
 	enum class jsonifier_backend : uint8_t {
 		fallback,
@@ -105,41 +105,41 @@ namespace jsonifier {
 
 #endif
 
-	template<jsonifier_backend backend> alignas(64) inline constexpr uint64_t backendBytesPerRegister{ sizeof(typename backend_traits<backend>::simd_int_t) };
-	template<jsonifier_backend backend> alignas(64) inline constexpr uint64_t backendRegistersPerBlock{ 64 / backendBytesPerRegister<backend> };
-	template<jsonifier_backend backend> alignas(64) inline constexpr uint64_t backendBytesPerStep{ backend_traits<backend>::blocksPerStep * 64 };
+	template<jsonifier_backend backend> inline constexpr uint64_t backendBytesPerRegister{ sizeof(typename backend_traits<backend>::simd_int_t) };
+	template<jsonifier_backend backend> inline constexpr uint64_t backendRegistersPerBlock{ 64 / backendBytesPerRegister<backend> };
+	template<jsonifier_backend backend> inline constexpr uint64_t backendBytesPerStep{ backend_traits<backend>::blocksPerStep * 64 };
 
 }
 
 namespace jsonifier {
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
-	alignas(64) inline constexpr jsonifier_backend defaultBackend{ jsonifier_backend::avx512 };
+	inline constexpr jsonifier_backend defaultBackend{ jsonifier_backend::avx512 };
 #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
-	alignas(64) inline constexpr jsonifier_backend defaultBackend{ jsonifier_backend::avx2 };
+	inline constexpr jsonifier_backend defaultBackend{ jsonifier_backend::avx2 };
 #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
-	alignas(64) inline constexpr jsonifier_backend defaultBackend{ jsonifier_backend::avx };
+	inline constexpr jsonifier_backend defaultBackend{ jsonifier_backend::avx };
 #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_SVE2)
-	alignas(64) inline constexpr jsonifier_backend defaultBackend{ jsonifier_backend::sve2 };
+	inline constexpr jsonifier_backend defaultBackend{ jsonifier_backend::sve2 };
 #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
-	alignas(64) inline constexpr jsonifier_backend defaultBackend{ jsonifier_backend::neon };
+	inline constexpr jsonifier_backend defaultBackend{ jsonifier_backend::neon };
 #else
-	alignas(64) inline constexpr jsonifier_backend defaultBackend{ jsonifier_backend::fallback };
+	inline constexpr jsonifier_backend defaultBackend{ jsonifier_backend::fallback };
 #endif
 
 	using default_backend_traits = backend_traits<defaultBackend>;
 
-	alignas(64) inline constexpr const char* cpuArchName{ default_backend_traits::name };
+	inline constexpr const char* cpuArchName{ default_backend_traits::name };
 
 	using jsonifier_simd_int_t = typename default_backend_traits::simd_int_t;
 
-	alignas(64) inline constexpr uint64_t simdTapeStep{ default_backend_traits::tapeStep };
-	alignas(64) inline constexpr uint64_t simdBlocksPerStep{ default_backend_traits::blocksPerStep };
-	alignas(64) inline constexpr uint64_t simdBytesPerRegister{ backendBytesPerRegister<defaultBackend> };
+	inline constexpr uint64_t simdTapeStep{ default_backend_traits::tapeStep };
+	inline constexpr uint64_t simdBlocksPerStep{ default_backend_traits::blocksPerStep };
+	inline constexpr uint64_t simdBytesPerRegister{ backendBytesPerRegister<defaultBackend> };
 
-	alignas(64) inline constexpr uint64_t simdRegistersPerBlock{ 64 / simdBytesPerRegister };
-	alignas(64) inline constexpr uint64_t simdBytesPerBlock{ 64 };
-	alignas(64) inline constexpr uint64_t simdBytesPerStep = simdBlocksPerStep * simdBytesPerBlock;
+	inline constexpr uint64_t simdRegistersPerBlock{ 64 / simdBytesPerRegister };
+	inline constexpr uint64_t simdBytesPerBlock{ 64 };
+	inline constexpr uint64_t simdBytesPerStep = simdBlocksPerStep * simdBytesPerBlock;
 
 	static_assert(simdBytesPerRegister == sizeof(jsonifier_simd_int_t),
 		"simdBytesPerRegister disagrees with the actual register width; simdRegistersPerBlock and every bitmask collapse depend on these matching.");

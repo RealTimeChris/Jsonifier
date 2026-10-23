@@ -38,9 +38,9 @@ namespace jsonifier::internal {
 		return returnValues;
 	}
 
-	alignas(64) inline constexpr auto jsonTypesRaw{ genJsonTypes() };
+	inline constexpr auto jsonTypesRaw{ genJsonTypes() };
 
-	alignas(64) inline constexpr const json_structural_type* __restrict jsonTypes{ jsonTypesRaw.data() };
+	inline constexpr const json_structural_type* __restrict jsonTypes{ jsonTypesRaw.data() };
 
 	template<typename minifier_type> struct minify_context_ro {
 		JSONIFIER_INLINE minify_context_ro(minifier_type& minifierNew, write_structural_index_ptr iterNew, write_structural_index_ptr endStructuralNew, read_buffer_ptr rootIterNew,

@@ -343,7 +343,7 @@ namespace jsonifier::internal {
 					requiredSize += get_size<options>::impl(*value, indent);
 				}
 			} else {
-				alignas(64) static constexpr char_blitter<"null"> nullV{};
+				static constexpr char_blitter<"null"> nullV{};
 				requiredSize += nullV.lengthToAdvance;
 			}
 			return requiredSize;
@@ -373,7 +373,7 @@ namespace jsonifier::internal {
 					return get_size_impl<bool, options>::staticSize;
 				}
 				default: {
-					alignas(64) static constexpr char_blitter<"null"> nullV{};
+					static constexpr char_blitter<"null"> nullV{};
 					return nullV.lengthToAdvance;
 				}
 			}
@@ -410,10 +410,10 @@ namespace jsonifier::internal {
 	};
 
 	template<string_literal prefix, char indentChar, uint64_t indentSize> struct indent_table {
-		alignas(64) static constexpr uint64_t maxDepth{ 8 };
-		alignas(64) static constexpr uint64_t maxIndentBytes{ maxDepth * indentSize };
-		alignas(64) static constexpr uint64_t totalLen{ prefix.size() + maxIndentBytes };
-		alignas(64) static constexpr uint64_t paddedLen{ (totalLen + 7) & ~uint64_t{ 7 } };
+		static constexpr uint64_t maxDepth{ 8 };
+		static constexpr uint64_t maxIndentBytes{ maxDepth * indentSize };
+		static constexpr uint64_t totalLen{ prefix.size() + maxIndentBytes };
+		static constexpr uint64_t paddedLen{ (totalLen + 7) & ~uint64_t{ 7 } };
 
 		JSONIFIER_INLINE static void blitWithOverflow(write_buffer_ptr __restrict& bufferPtr, uint64_t totalIndent) noexcept {
 			const uint64_t capped  = totalIndent < maxIndentBytes ? totalIndent : maxIndentBytes;
@@ -428,7 +428,7 @@ namespace jsonifier::internal {
 			}
 		}
 
-		alignas(64) static constexpr array<uint64_t, (paddedLen / sizeof(uint64_t))> data{ []() -> array<uint64_t, (paddedLen / sizeof(uint64_t))> {
+		static constexpr array<uint64_t, (paddedLen / sizeof(uint64_t))> data{ []() -> array<uint64_t, (paddedLen / sizeof(uint64_t))> {
 			array<uint64_t, (paddedLen / sizeof(uint64_t))> arr{};
 			for (uint64_t i = 0; i < prefix.size(); ++i) {
 				arr[i / sizeof(uint64_t)] |= static_cast<uint64_t>(static_cast<uint8_t>(prefix.values[i])) << ((i % sizeof(uint64_t)) * 8);
@@ -463,7 +463,7 @@ namespace jsonifier::internal {
 		static constexpr uint64_t wordCount{ isScalar ? 1 : lengthToCopy / 8 };
 		using return_type = conditional_t<isScalar, int_type, array<uint64_t, wordCount>>;
 
-		alignas(64) static constexpr return_type value{ []() -> return_type {
+		static constexpr return_type value{ []() -> return_type {
 			if constexpr (isScalar) {
 				int_type val{};
 				for (uint64_t x = 0; x < literal.size(); ++x) {
@@ -565,7 +565,7 @@ namespace jsonifier::internal {
 		using open_indent  = indent_table<"{\n", options.indentChar, options.indentSize>;
 		using close_indent = indent_table<"\n", options.indentChar, options.indentSize>;
 
-		alignas(64) static constexpr char_blitter<"{}"> emptyObject{};
+		static constexpr char_blitter<"{}"> emptyObject{};
 
 		template<typename value_type_new> JSONIFIER_INLINE static write_buffer_ptr impl(value_type_new&& value, write_buffer_ptr __restrict bufferPtr, uint64_t indent) noexcept {
 			static constexpr auto memberCount{ coreTupleSize<value_type> };
@@ -599,8 +599,8 @@ namespace jsonifier::internal {
 		using comma_indent = indent_table<",\n", options.indentChar, options.indentSize>;
 		using close_indent = indent_table<"\n", options.indentChar, options.indentSize>;
 
-		alignas(64) static constexpr char_blitter<": "> colonSpace{};
-		alignas(64) static constexpr char_blitter<"{}"> emptyObject{};
+		static constexpr char_blitter<": "> colonSpace{};
+		static constexpr char_blitter<"{}"> emptyObject{};
 
 		template<typename key_type_new, typename mapped_type_new>
 		JSONIFIER_INLINE static write_buffer_ptr writePair(key_type_new& key, mapped_type_new& mapped, write_buffer_ptr __restrict bufferPtr, uint64_t indent) noexcept {
@@ -666,7 +666,7 @@ namespace jsonifier::internal {
 		using comma_indent = indent_table<",\n", options.indentChar, options.indentSize>;
 		using close_indent = indent_table<"\n", options.indentChar, options.indentSize>;
 
-		alignas(64) static constexpr char_blitter<"[]"> emptyArray{};
+		static constexpr char_blitter<"[]"> emptyArray{};
 
 		template<typename value_type_new> JSONIFIER_INLINE static write_buffer_ptr impl(value_type_new&& value, write_buffer_ptr __restrict bufferPtr, uint64_t indent) noexcept {
 			const auto newSize = value.size();
@@ -709,7 +709,7 @@ namespace jsonifier::internal {
 		using comma_indent = indent_table<",\n", options.indentChar, options.indentSize>;
 		using close_indent = indent_table<"\n", options.indentChar, options.indentSize>;
 
-		alignas(64) static constexpr char_blitter<"[]"> emptyArray{};
+		static constexpr char_blitter<"[]"> emptyArray{};
 
 		template<template<typename, auto> typename value_type_new, typename value_type_internal, auto size>
 		JSONIFIER_INLINE static write_buffer_ptr impl(const value_type_new<value_type_internal, size>& value, write_buffer_ptr __restrict bufferPtr, uint64_t indent) noexcept {
@@ -754,7 +754,7 @@ namespace jsonifier::internal {
 		using open_indent  = indent_table<"[\n", options.indentChar, options.indentSize>;
 		using comma_indent = indent_table<",\n", options.indentChar, options.indentSize>;
 		using close_indent = indent_table<"\n", options.indentChar, options.indentSize>;
-		alignas(64) static constexpr char_blitter<"[]"> emptyArray{};
+		static constexpr char_blitter<"[]"> emptyArray{};
 		static constexpr auto memberCount = tupleSizeOf<value_type>;
 
 		template<uint64_t index, typename value_type_new>
@@ -801,7 +801,7 @@ namespace jsonifier::internal {
 	};
 
 	template<string_types value_type, serialize_options options> struct serialize_impl<value_type, options> {
-		alignas(64) static constexpr char_blitter<"\"\""> emptyString{};
+		static constexpr char_blitter<"\"\""> emptyString{};
 		template<typename value_type_new> JSONIFIER_INLINE static write_buffer_ptr impl(value_type_new&& value, write_buffer_ptr __restrict bufferPtr, uint64_t) noexcept {
 			const auto newSize = value.size();
 			if (newSize > 0) {
@@ -855,14 +855,14 @@ namespace jsonifier::internal {
 
 	template<bool_types value_type, serialize_options options> struct serialize_impl<value_type, options> {
 		template<typename value_type_new> JSONIFIER_INLINE static write_buffer_ptr impl(value_type_new&& value, write_buffer_ptr __restrict bufferPtr, uint64_t) noexcept {
-			alignas(64) static constexpr uint64_t falseVInt{ [] {
+			static constexpr uint64_t falseVInt{ [] {
 				if constexpr (std::endian::native == std::endian::little) {
 					return 435728179558ULL;
 				} else {
 					return 7377296907481120768ULL;
 				}
 			}() };
-			alignas(64) static constexpr uint64_t trueVInt{ [] {
+			static constexpr uint64_t trueVInt{ [] {
 				if constexpr (std::endian::native == std::endian::little) {
 					return 434025983730ULL;
 				} else {
@@ -880,7 +880,7 @@ namespace jsonifier::internal {
 			if (value) {
 				return serialize<options>::impl(*value, bufferPtr, indent);
 			} else {
-				alignas(64) static constexpr char_blitter<"null"> nullV{};
+				static constexpr char_blitter<"null"> nullV{};
 				pow2MemcpyWrapper<nullV.lengthToCopy>(bufferPtr, &nullV.value);
 				return bufferPtr + nullV.lengthToAdvance;
 			}
@@ -922,7 +922,7 @@ namespace jsonifier::internal {
 					return serialize<options>::impl(value.getBool(), bufferPtr, indent);
 				}
 				default: {
-					alignas(64) static constexpr char_blitter<"null"> nullV{};
+					static constexpr char_blitter<"null"> nullV{};
 					pow2MemcpyWrapper<nullV.lengthToCopy>(bufferPtr, &nullV.value);
 					return bufferPtr + nullV.lengthToAdvance;
 				}
@@ -932,7 +932,7 @@ namespace jsonifier::internal {
 
 	template<skip_or_always_null_types value_type, serialize_options options> struct serialize_impl<value_type, options> {
 		template<typename value_type_new> JSONIFIER_INLINE static write_buffer_ptr impl(value_type_new&&, write_buffer_ptr __restrict bufferPtr, uint64_t) noexcept {
-			alignas(64) static constexpr char_blitter<"null"> nullV{};
+			static constexpr char_blitter<"null"> nullV{};
 			pow2MemcpyWrapper<nullV.lengthToCopy>(bufferPtr, &nullV.value);
 			return bufferPtr + nullV.lengthToAdvance;
 		}

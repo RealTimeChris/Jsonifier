@@ -15,7 +15,7 @@ namespace jsonifier::internal::simd {
 
 #if !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON) && !JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_SVE2)
 
-	alignas(64) inline constexpr internal::array<uint64_t, simdRegistersPerBlock> shiftAmounts{ [] {
+	alignas(simdBytesPerRegister) inline constexpr internal::array<uint64_t, simdRegistersPerBlock> shiftAmounts{ [] {
 		internal::array<uint64_t, simdRegistersPerBlock> returnValue{};
 		for (uint64_t x = 0; x < simdRegistersPerBlock; ++x) {
 			returnValue[x] = simdBytesPerRegister * x;
@@ -280,7 +280,7 @@ namespace jsonifier::internal::simd {
 		return returnValues;
 	};
 
-	template<uint64_t size> alignas(64) inline constexpr internal::array<uint8_t, size> whitespaceArray{ generateWhitespaceArray<size>() };
+	template<uint64_t size> alignas(simdBytesPerRegister) inline constexpr internal::array<uint8_t, size> whitespaceArray{ generateWhitespaceArray<size>() };
 
 	template<uint64_t size> inline consteval internal::array<uint8_t, size> generateOpArray() {
 		constexpr const uint8_t values[]{ 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, ':', '{', ',', '}', 0x00u, 0x00u };
@@ -291,7 +291,7 @@ namespace jsonifier::internal::simd {
 		return returnValues;
 	};
 
-	template<uint64_t size> alignas(64) inline constexpr internal::array<uint8_t, size> opArray{ generateOpArray<size>() };
+	template<uint64_t size> alignas(simdBytesPerRegister) inline constexpr internal::array<uint8_t, size> opArray{ generateOpArray<size>() };
 
 #endif
 

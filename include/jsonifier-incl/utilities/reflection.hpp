@@ -36,9 +36,9 @@ namespace jsonifier::internal {
 	template<typename value_type> using remove_class_pointer_t = typename remove_class_pointer<value_type>::type;
 
 #if JSONIFIER_COMPILER_CLANG
-	alignas(64) inline constexpr auto prettyFunctionTail = "]";
+	inline constexpr auto prettyFunctionTail = "]";
 #elif JSONIFIER_COMPILER_GCC
-	alignas(64) inline constexpr auto prettyFunctionTail = ";";
+	inline constexpr auto prettyFunctionTail = ";";
 #endif
 
 #if JSONIFIER_COMPILER_MSVC

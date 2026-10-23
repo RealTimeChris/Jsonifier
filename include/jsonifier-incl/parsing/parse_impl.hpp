@@ -1120,7 +1120,7 @@ namespace jsonifier::internal {
 	template<typename value_type> static thread_local uint64_t elementCountHint{};
 
 	template<typename value_type>
-	alignas(64) inline constexpr uint64_t maxHintedElements{ 4096 / sizeof(typename value_type::value_type) > 0 ? 4096 / sizeof(typename value_type::value_type) : 1 };
+	inline constexpr uint64_t maxHintedElements{ 4096 / sizeof(typename value_type::value_type) > 0 ? 4096 / sizeof(typename value_type::value_type) : 1 };
 
 	template<typename value_type> JSONIFIER_INLINE void reserveFromHint(value_type& value) {
 		if constexpr (reserveable_types<value_type> && !raw_json_types<typename value_type::value_type>) {
@@ -1153,9 +1153,9 @@ namespace jsonifier::internal {
 	#pragma clang diagnostic pop
 #endif
 
-	template<typename element_type> alignas(64) inline constexpr bool fullyOverwritten{ std::is_arithmetic_v<element_type> };
+	template<typename element_type> inline constexpr bool fullyOverwritten{ std::is_arithmetic_v<element_type> };
 
-	template<vector_types element_type> alignas(64) inline constexpr bool fullyOverwritten<element_type>{ fullyOverwritten<typename element_type::value_type> };
+	template<vector_types element_type> inline constexpr bool fullyOverwritten<element_type>{ fullyOverwritten<typename element_type::value_type> };
 
 	template<typename value_type, typename iterator_type> JSONIFIER_INLINE void moveAssignVec(value_type& value, iterator_type first, iterator_type last) {
 		if constexpr (std::is_trivially_copyable_v<typename value_type::value_type>) {

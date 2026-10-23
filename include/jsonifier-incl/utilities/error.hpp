@@ -185,9 +185,9 @@ namespace jsonifier::internal {
 		return returnValues;
 	}
 
-	alignas(64) inline constexpr auto boolTableRaw{ genBoolTable() };
+	inline constexpr auto boolTableRaw{ genBoolTable() };
 
-	alignas(64) inline constexpr const bool* __restrict boolTable{ boolTableRaw.data() };
+	inline constexpr const bool* __restrict boolTable{ boolTableRaw.data() };
 
 	struct error {
 		inline void formatReport() noexcept {

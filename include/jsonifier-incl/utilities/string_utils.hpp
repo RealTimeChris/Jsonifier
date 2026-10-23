@@ -15,7 +15,7 @@
 
 namespace jsonifier::internal {
 
-	template<typename = void> alignas(64) inline constexpr uint32_t digitToVal32[]{ 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
+	template<typename = void> inline constexpr uint32_t digitToVal32[]{ 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
 		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
 		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
 		0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu,
@@ -208,7 +208,7 @@ namespace jsonifier::internal {
 
 	alignas(64) inline constexpr auto escapeMapRaw{ genEscapeMap() };
 
-	alignas(64) inline constexpr const char* __restrict escapeMap{ escapeMapRaw.data() };
+	inline constexpr const char* __restrict escapeMap{ escapeMapRaw.data() };
 
 	template<typename basic_iterator01, typename basic_iterator02>
 	JSONIFIER_INLINE basic_iterator02 unescapeImpl(basic_iterator01 string1Start, const basic_iterator01 string1End, basic_iterator02 string2) noexcept {
@@ -248,14 +248,14 @@ namespace jsonifier::internal {
 	};
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
-	alignas(64) inline constexpr uint64_t startIndex = 0;
+	inline constexpr uint64_t startIndex = 0;
 #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
-	alignas(64) inline constexpr uint64_t startIndex = 1;
+	inline constexpr uint64_t startIndex = 1;
 #else
-	alignas(64) inline constexpr uint64_t startIndex = 2;
+	inline constexpr uint64_t startIndex = 2;
 #endif
 
-	alignas(64) inline constexpr uint64_t listSize = 3;
+	inline constexpr uint64_t listSize = 3;
 
 	template<uint64_t start, uint64_t end, uint64_t... indices> struct make_ascending_range_impl : make_ascending_range_impl<start + 1, end, indices..., start> {};
 	template<uint64_t end, uint64_t... indices> struct make_ascending_range_impl<end, end, indices...> {
@@ -598,7 +598,7 @@ namespace jsonifier::internal {
 		return returnValues;
 	}
 
-	alignas(64) inline constexpr auto escapeTable{ genEscapeTable() };
+	inline constexpr auto escapeTable{ genEscapeTable() };
 
 	template<serialize_options options> struct string_serializer {
 		struct string_serialize_step {
@@ -954,8 +954,8 @@ namespace jsonifier::internal {
 		using integer_type = convert_length_to_int_t<stringNew.size()>;
 		static constexpr auto string{ stringNew };
 		static_assert(stringNew.size() == 4, "Sorry, but please only use a string with a length of 4 in this function!");
-		alignas(64) static constexpr auto stringInt{ getStringAsInt<string>() };
-		alignas(64) integer_type sourceVal;
+		static constexpr auto stringInt{ getStringAsInt<string>() };
+		integer_type sourceVal;
 		pow2MemcpyWrapper<string.size()>(&sourceVal, src);
 		return !static_cast<bool>(sourceVal ^ stringInt);
 	}

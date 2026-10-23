@@ -38,9 +38,9 @@ namespace jsonifier::zmij {
 		}
 
 #if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-		alignas(64) inline constexpr bool isBigEndian = true;
+		inline constexpr bool isBigEndian = true;
 #else
-		alignas(64) inline constexpr bool isBigEndian = false;
+		inline constexpr bool isBigEndian = false;
 #endif
 
 		JSONIFIER_INLINE auto bswap64(uint64_t x) noexcept -> uint64_t {
@@ -98,9 +98,9 @@ namespace jsonifier::zmij {
 #endif
 
 #if ZMIJ_USE_INT128 && JSONIFIER_PLATFORM_MAC
-		alignas(64) inline constexpr bool useUmul128Hi64 = true;
+		inline constexpr bool useUmul128Hi64 = true;
 #else
-		alignas(64) inline constexpr bool useUmul128Hi64 = false;
+		inline constexpr bool useUmul128Hi64 = false;
 #endif
 
 		JSONIFIER_INLINE constexpr auto umul128(uint64_t x, uint64_t y) noexcept -> uint128_t {
@@ -204,12 +204,12 @@ namespace jsonifier::zmij {
 			static_assert(float_traits::is_iec559, "IEEE 754 required");
 		};
 
-		alignas(64) inline constexpr uint64_t pow10Minor[]{ 0x8000000000000000, 0xa000000000000000, 0xc800000000000000, 0xfa00000000000000, 0x9c40000000000000, 0xc350000000000000,
+		inline constexpr uint64_t pow10Minor[]{ 0x8000000000000000, 0xa000000000000000, 0xc800000000000000, 0xfa00000000000000, 0x9c40000000000000, 0xc350000000000000,
 			0xf424000000000000, 0x9896800000000000, 0xbebc200000000000, 0xee6b280000000000, 0x9502f90000000000, 0xba43b74000000000, 0xe8d4a51000000000, 0x9184e72a00000000,
 			0xb5e620f480000000, 0xe35fa931a0000000, 0x8e1bc9bf04000000, 0xb1a2bc2ec5000000, 0xde0b6b3a76400000, 0x8ac7230489e80000, 0xad78ebc5ac620000, 0xd8d726b7177a8000,
 			0x878678326eac9000, 0xa968163f0a57b400, 0xd3c21bcecceda100, 0x84595161401484a0, 0xa56fa5b99019a5c8, 0xcecb8f27f4200f3a };
 
-		alignas(64) inline constexpr uint128 pow10Major[]{ { 0xaf8e5410288e1b6f, 0x07ecf0ae5ee44dda }, { 0xb1442798f49ffb4a, 0x99cd11cfdf41779d },
+		inline constexpr uint128 pow10Major[]{ { 0xaf8e5410288e1b6f, 0x07ecf0ae5ee44dda }, { 0xb1442798f49ffb4a, 0x99cd11cfdf41779d },
 			{ 0xb2fe3f0b8599ef07, 0x861fa7e6dcb4aa15 }, { 0xb4bca50b065abe63, 0x0fed077a756b53aa }, { 0xb67f6455292cbf08, 0x1a3bc84c17b1d543 },
 			{ 0xb84687c269ef3bfb, 0x3d5d514f40eea742 }, { 0xba121a4650e4ddeb, 0x92f34d62616ce413 }, { 0xbbe226efb628afea, 0x890489f70a55368c },
 			{ 0xbdb6b8e905cb600f, 0x5400e987bbc1c921 }, { 0xbf8fdb78849a5f96, 0xde98520472bdd034 }, { 0xc16d9a0095928a27, 0x75b7053c0f178294 },
@@ -218,10 +218,10 @@ namespace jsonifier::zmij {
 			{ 0xcf02b2c21207ef2e, 0x94f967e45e03f4bc }, { 0xd106f86e69d785c7, 0xe13336d701beba52 }, { 0xd31045a8341ca07c, 0x1ede48111209a051 },
 			{ 0xd51ea6fa85785631, 0x552a74227f3ea566 }, { 0xd732290fbacaf133, 0xa97c177947ad4096 }, { 0xd94ad8b1c7380874, 0x18375281ae7822bc } };
 
-		alignas(64) inline constexpr uint32_t pow10Fixups[]{ 0x0a4e363f, 0x00001840, 0x00006400, 0x24200040, 0x00000000, 0x0c000000, 0x82c81380, 0x5e4ce01f, 0xd730f60f, 0x0000001b,
+		inline constexpr uint32_t pow10Fixups[]{ 0x0a4e363f, 0x00001840, 0x00006400, 0x24200040, 0x00000000, 0x0c000000, 0x82c81380, 0x5e4ce01f, 0xd730f60f, 0x0000001b,
 			0x00000000, 0xcdf7fffc, 0x6e8201d8, 0x40cd3fd1, 0xdb642501, 0x00000d0d, 0x14042400, 0x53713840, 0x11781db4, 0x00000000 };
 
-		struct alignas(64) pow10_significand_table {
+		struct alignas(simdBytesPerRegister) pow10_significand_table {
 			static constexpr bool compress	   = ZMIJ_OPTIMIZE_SIZE != 0;
 			static constexpr bool splitTables  = !compress && JSONIFIER_ARCH_ARM64 != 0;
 			static constexpr int32_t numPow10s = 618;
@@ -302,7 +302,7 @@ namespace jsonifier::zmij {
 			uint8_t data[enable ? float_traits<double>::expMask + 1 : 1]{};
 		};
 
-		struct alignas(64) exp_string_table {
+		struct alignas(simdBytesPerRegister) exp_string_table {
 			static constexpr bool enable	   = ZMIJ_USE_EXP_STRING_TABLE;
 			using traits					   = float_traits<double>;
 			static constexpr int32_t minDecExp = traits::min_exponent10 - traits::max_digits10;
@@ -376,7 +376,7 @@ namespace jsonifier::zmij {
 				return entry{ &data[idx * 16], data[idx * 16 + 15] };
 			}
 
-			alignas(64) uint8_t data[enable ? 32 * 16 : 1]{};
+			alignas(simdBytesPerRegister) uint8_t data[enable ? 32 * 16 : 1]{};
 		};
 
 		struct fixed_layout_table {
@@ -455,7 +455,7 @@ namespace jsonifier::zmij {
 		}
 
 		[[maybe_unused]] JSONIFIER_INLINE auto digits2(uint64_t value) noexcept -> jsonifier::read_buffer_ptr {
-			alignas(64) static const char data[] = "0001020304050607080910111213141516171819"
+			static const char data[] = "0001020304050607080910111213141516171819"
 												   "2021222324252627282930313233343536373839"
 												   "4041424344454647484950515253545556575859"
 												   "6061626364656667686970717273747576777879"
@@ -463,17 +463,17 @@ namespace jsonifier::zmij {
 			return std::bit_cast<jsonifier::read_buffer_ptr>(&data[value * 2ULL]);
 		}
 
-		alignas(64) inline constexpr int32_t div10kExp	= 40;
-		alignas(64) inline constexpr uint32_t div10kSig = static_cast<uint32_t>((1ULL << div10kExp) / 10000ULL + 1ULL);
-		alignas(64) inline constexpr uint32_t neg10k	= static_cast<uint32_t>((1ULL << 32) - 10000ULL);
-		alignas(64) inline constexpr int32_t div100Exp	= 19;
-		alignas(64) inline constexpr uint32_t div100Sig = (1U << div100Exp) / 100U + 1U;
-		alignas(64) inline constexpr uint32_t neg100	= (1U << 16) - 100U;
-		alignas(64) inline constexpr int32_t div10Exp	= 10;
-		alignas(64) inline constexpr uint32_t div10Sig	= (1U << div10Exp) / 10U + 1U;
-		alignas(64) inline constexpr uint32_t neg10		= (1U << 8) - 10U;
+		inline constexpr int32_t div10kExp	= 40;
+		inline constexpr uint32_t div10kSig = static_cast<uint32_t>((1ULL << div10kExp) / 10000ULL + 1ULL);
+		inline constexpr uint32_t neg10k	= static_cast<uint32_t>((1ULL << 32) - 10000ULL);
+		inline constexpr int32_t div100Exp	= 19;
+		inline constexpr uint32_t div100Sig = (1U << div100Exp) / 100U + 1U;
+		inline constexpr uint32_t neg100	= (1U << 16) - 100U;
+		inline constexpr int32_t div10Exp	= 10;
+		inline constexpr uint32_t div10Sig	= (1U << div10Exp) / 10U + 1U;
+		inline constexpr uint32_t neg10		= (1U << 8) - 10U;
 
-		alignas(64) inline constexpr uint64_t zeros = 0x0101010101010101ULL * static_cast<uint64_t>('0');
+		inline constexpr uint64_t zeros = 0x0101010101010101ULL * static_cast<uint64_t>('0');
 
 		[[maybe_unused]] JSONIFIER_INLINE auto writeIf(jsonifier::write_buffer_ptr buffer, uint32_t digit, bool condition) noexcept -> jsonifier::write_buffer_ptr {
 			*buffer = static_cast<uint8_t>(static_cast<uint32_t>('0') + digit);
@@ -494,7 +494,7 @@ namespace jsonifier::zmij {
 			return (u64(h) << 56) | (u64(g) << 48) | (u64(f) << 40) | (u64(e) << 32) | (u64(d) << 24) | (u64(c) << 16) | (u64(b) << 8) | u64(a);
 		}
 
-		struct alignas(64) data {
+		struct alignas(simdBytesPerRegister) data {
 			static constexpr uint64_t threshold = 1000000000000000ULL;
 
 			static constexpr uint64_t biasedHalf = (1ULL << 63) + 6ULL;
@@ -528,7 +528,7 @@ namespace jsonifier::zmij {
 
 			static constexpr uint8_t shiftShuffle[17]{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0 };
 		};
-		alignas(64) constexpr data staticData{};
+		alignas(simdBytesPerRegister) constexpr data staticData{};
 
 #if JSONIFIER_CHECK_FOR_INSTRUCTION((JSONIFIER_NEON | JSONIFIER_SVE2))
 

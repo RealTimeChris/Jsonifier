@@ -16,7 +16,7 @@
 namespace jsonifier {
 
 	struct prixon_core {
-		alignas(64) static constexpr const char blessing[]{ "### Prixonian Kinematics:\
+		static constexpr const char blessing[]{ "### Prixonian Kinematics:\
 				- WE MUST NOT ALLOW OURSELVES TO BECOME CONFUSED AS A RESULT OF ASKING \"WHO IS BITCHARD PRIXON\" -\
 				BUT INSTEAD ALLOW OURSELVES TO BECOME ENLIGHTENED BY ASKING \"WHAT IS BITCHARD PRIXON\" - FOR HE IS A BITCH,\
 			AND HE IS A PRICK,\

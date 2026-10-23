@@ -24,7 +24,7 @@ namespace jsonifier::internal {
 
 	alignas(64) inline constexpr auto whitespaceTableRaw{ genWhitespaceTable() };
 
-	alignas(64) inline constexpr const bool* __restrict whitespaceTable{ whitespaceTableRaw.data() };
+	inline constexpr const bool* __restrict whitespaceTable{ whitespaceTableRaw.data() };
 
 	consteval array<int64_t, 256ULL> genNestingDeltaTable() {
 		array<int64_t, 256ULL> returnValues{};
@@ -35,9 +35,9 @@ namespace jsonifier::internal {
 		return returnValues;
 	}
 
-	alignas(64) inline constexpr auto nestingDeltaTableRaw{ genNestingDeltaTable() };
+	inline constexpr auto nestingDeltaTableRaw{ genNestingDeltaTable() };
 
-	alignas(64) inline constexpr const int64_t* __restrict nestingDeltaTable{ nestingDeltaTableRaw.data() };
+	inline constexpr const int64_t* __restrict nestingDeltaTable{ nestingDeltaTableRaw.data() };
 
 	consteval array<bool, 256ULL> genNewlineTable() {
 		array<bool, 256ULL> returnValues{};
@@ -46,9 +46,9 @@ namespace jsonifier::internal {
 		return returnValues;
 	}
 
-	alignas(64) inline constexpr auto newlineTableRaw{ genNewlineTable() };
+	inline constexpr auto newlineTableRaw{ genNewlineTable() };
 
-	alignas(64) inline constexpr const bool* __restrict newlineTable{ newlineTableRaw.data() };
+	inline constexpr const bool* __restrict newlineTable{ newlineTableRaw.data() };
 
 	consteval array<bool, 256ULL> genNumberTable() {
 		array<bool, 256ULL> returnValues{};
@@ -66,9 +66,9 @@ namespace jsonifier::internal {
 		return returnValues;
 	}
 
-	alignas(64) inline constexpr auto numberTableRaw{ genNumberTable() };
+	inline constexpr auto numberTableRaw{ genNumberTable() };
 
-	alignas(64) inline constexpr const bool* __restrict numberTable{ numberTableRaw.data() };
+	inline constexpr const bool* __restrict numberTable{ numberTableRaw.data() };
 
 	consteval array<array<char, 2>, 256ULL> genCharEscapeStorage() {
 		array<array<char, 2>, 256ULL> returnValue{};
@@ -93,9 +93,9 @@ namespace jsonifier::internal {
 		return returnValue;
 	}
 
-	alignas(64) inline constexpr auto charEscapeStorageRaw{ genCharEscapeStorage() };
+	inline constexpr auto charEscapeStorageRaw{ genCharEscapeStorage() };
 
-	alignas(64) inline constexpr const array<char, 2>* __restrict charEscapeStorage{ charEscapeStorageRaw.data() };
+	inline constexpr const array<char, 2>* __restrict charEscapeStorage{ charEscapeStorageRaw.data() };
 
 	consteval array<const char*, 256ULL> genCharEscapeTable() {
 		array<const char*, 256ULL> returnValue{};
@@ -105,9 +105,9 @@ namespace jsonifier::internal {
 		return returnValue;
 	}
 
-	alignas(64) inline constexpr auto charEscapeTableRaw{ genCharEscapeTable() };
+	inline constexpr auto charEscapeTableRaw{ genCharEscapeTable() };
 
-	alignas(64) inline constexpr const char* const* __restrict charEscapeTable{ charEscapeTableRaw.data() };
+	inline constexpr const char* const* __restrict charEscapeTable{ charEscapeTableRaw.data() };
 
 	consteval array<uint64_t, 256ULL> genCharEscapeSizes() {
 		array<uint64_t, 256ULL> returnValue{};
@@ -124,9 +124,9 @@ namespace jsonifier::internal {
 		return returnValue;
 	}
 
-	alignas(64) inline constexpr auto charEscapeSizesRaw{ genCharEscapeSizes() };
+	inline constexpr auto charEscapeSizesRaw{ genCharEscapeSizes() };
 
-	alignas(64) inline constexpr const uint64_t* __restrict charEscapeSizes{ charEscapeSizesRaw.data() };
+	inline constexpr const uint64_t* __restrict charEscapeSizes{ charEscapeSizesRaw.data() };
 
 	template<typename value_type> JSONIFIER_INLINE constexpr value_type&& forward(remove_reference_t<value_type>& t JSONIFIER_LIFETIME_BOUND) noexcept {
 		return static_cast<value_type&&>(t);
@@ -161,7 +161,7 @@ namespace jsonifier::internal {
 		}
 	};
 
-	alignas(64) inline constexpr swap_fn swap{};
+	inline constexpr swap_fn swap{};
 
 	template<uint_types value_type> inline constexpr value_type byteswap(value_type value) noexcept {
 		if constexpr (sizeof(value_type) == 1) {
@@ -407,7 +407,7 @@ namespace jsonifier::internal {
 
 	template<uint64_t bucketSize, typename sequence_type> struct memcpy_runner_impl;
 
-	alignas(64) inline constexpr uint64_t registerWidth{ cpu_properties::getValue(cpu_property_types::alignment) };
+	inline constexpr uint64_t registerWidth{ cpu_properties::getValue(cpu_property_types::alignment) };
 
 	template<uint64_t bucketSize, uint64_t... indices> struct memcpy_runner_impl<bucketSize, integer_sequence<indices...>> {
 		static_assert(std::has_single_bit(bucketSize), "Sorry, but buckets must be a power-of-2 size.");

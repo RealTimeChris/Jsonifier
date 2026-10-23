@@ -18,9 +18,9 @@ namespace jsonifier::internal {
 		return table;
 	}
 
-	template<typename = void> alignas(64) inline constexpr array<bool, 256> expTableRaw = generateExpTable();
+	template<typename = void> inline constexpr array<bool, 256> expTableRaw = generateExpTable();
 
-	alignas(64) inline constexpr const bool* __restrict expTable{ expTableRaw<>.data() };
+	inline constexpr const bool* __restrict expTable{ expTableRaw<>.data() };
 
 	consteval array<bool, 256> generateExpFracTable() {
 		array<bool, 256> table{};
@@ -30,14 +30,14 @@ namespace jsonifier::internal {
 		return table;
 	}
 
-	template<typename = void> alignas(64) inline constexpr array<bool, 256> expFracTableRaw = generateExpFracTable();
+	template<typename = void> inline constexpr array<bool, 256> expFracTableRaw = generateExpFracTable();
 
-	alignas(64) inline constexpr const bool* __restrict expFracTable{ expFracTableRaw<>.data() };
+	inline constexpr const bool* __restrict expFracTable{ expFracTableRaw<>.data() };
 
-	alignas(64) inline constexpr char decimal{ '.' };
-	alignas(64) inline constexpr char minus{ '-' };
-	alignas(64) inline constexpr char plus{ '+' };
-	alignas(64) inline constexpr char nine{ '9' };
+	inline constexpr char decimal{ '.' };
+	inline constexpr char minus{ '-' };
+	inline constexpr char plus{ '+' };
+	inline constexpr char nine{ '9' };
 
 	struct parsed_number {
 		read_buffer_ptr lastMatch{};

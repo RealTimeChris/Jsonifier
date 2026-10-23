@@ -64,8 +64,8 @@ namespace jsonifier::internal {
 
 	template<typename value_type> using base_t = internal::remove_cvref_t<value_type>;
 
-	template<typename, typename> alignas(64) inline constexpr bool isSame						   = false;
-	template<typename value_type> alignas(64) inline constexpr bool isSame<value_type, value_type> = true;
+	template<typename, typename> inline constexpr bool isSame						   = false;
+	template<typename value_type> inline constexpr bool isSame<value_type, value_type> = true;
 
 	template<typename value_type>
 	concept static_sized_types = requires() { base_t<value_type>::staticSize; };
@@ -292,7 +292,7 @@ namespace jsonifier::internal {
 	concept same_character_size_types = requires { sizeof(typename base_t<value_type01>::value_type) == sizeof(typename base_t<value_type02>::value_type); } &&
 		string_types<value_type01> && string_types<value_type02>;
 
-	template<typename value_type> alignas(64) inline constexpr bool hasSizeEqualToZero{ std::tuple_size_v<base_t<value_type>> == 0 };
+	template<typename value_type> inline constexpr bool hasSizeEqualToZero{ std::tuple_size_v<base_t<value_type>> == 0 };
 
 	template<typename value_type>
 	concept skip_or_always_null_types = skip_types<value_type> || always_null_types<value_type>;

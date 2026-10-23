@@ -36,12 +36,12 @@ namespace jsonifier::internal {
 		return t;
 	}
 
-	alignas(64) inline constexpr auto table02{ genTable<2ULL>() };
-	alignas(64) inline constexpr const auto* __restrict charTable2DigitData = table02.data();
-	alignas(64) inline constexpr auto table03{ genTable<3ULL>() };
-	alignas(64) inline constexpr const auto* __restrict charTable3DigitData = table03.data();
-	alignas(64) inline constexpr auto table04{ genTable<4ULL>() };
-	alignas(64) inline constexpr const auto* __restrict charTable4DigitData = table04.data();
+	inline constexpr auto table02{ genTable<2ULL>() };
+	inline constexpr const auto* __restrict charTable2DigitData = table02.data();
+	inline constexpr auto table03{ genTable<3ULL>() };
+	inline constexpr const auto* __restrict charTable3DigitData = table03.data();
+	inline constexpr auto table04{ genTable<4ULL>() };
+	inline constexpr const auto* __restrict charTable4DigitData = table04.data();
 
 #if !JSONIFIER_COMPILER_CLANG && !JSONIFIER_COMPILER_GCC && !JSONIFIER_COMPILER_MSVC
 

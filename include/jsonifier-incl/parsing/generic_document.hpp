@@ -13,7 +13,7 @@
 
 namespace jsonifier::generic {
 
-	alignas(64) inline constexpr uint64_t defaultBatchSize{ 1024 * 1024 };
+	inline constexpr uint64_t defaultBatchSize{ 1024 * 1024 };
 
 	enum class error_code : uint8_t {
 		success,
@@ -508,7 +508,7 @@ namespace jsonifier::generic {
 
 	alignas(64) inline constexpr auto utf8StringStopTableRaw{ genUtf8StringStopTable() };
 
-	alignas(64) inline constexpr const bool* __restrict utf8StringStopTable{ utf8StringStopTableRaw.data() };
+	inline constexpr const bool* __restrict utf8StringStopTable{ utf8StringStopTableRaw.data() };
 
 	consteval internal::array<bool, 256ULL> genAsciiStringStopTable() {
 		internal::array<bool, 256ULL> returnValues{};
@@ -525,7 +525,7 @@ namespace jsonifier::generic {
 
 	alignas(64) inline constexpr auto asciiStringStopTableRaw{ genAsciiStringStopTable() };
 
-	alignas(64) inline constexpr const bool* __restrict asciiStringStopTable{ asciiStringStopTableRaw.data() };
+	inline constexpr const bool* __restrict asciiStringStopTable{ asciiStringStopTableRaw.data() };
 
 	consteval array_type_table genTypeTable() {
 		array_type_table returnValues{};
@@ -547,7 +547,7 @@ namespace jsonifier::generic {
 
 	alignas(64) inline constexpr auto typeTableRaw{ genTypeTable() };
 
-	alignas(64) inline constexpr const json_type* __restrict typeTable{ typeTableRaw.data() };
+	inline constexpr const json_type* __restrict typeTable{ typeTableRaw.data() };
 
 	class object;
 	class array;

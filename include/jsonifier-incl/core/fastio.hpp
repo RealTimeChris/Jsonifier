@@ -40,10 +40,10 @@ namespace jsonifier::internal {
 #endif
 	}
 
-	alignas(64) inline constexpr uint8_t digitCounts[]{ 19, 19, 19, 19, 18, 18, 18, 17, 17, 17, 16, 16, 16, 16, 15, 15, 15, 14, 14, 14, 13, 13, 13, 13, 12, 12, 12, 11, 11, 11, 10,
+	inline constexpr uint8_t digitCounts[]{ 19, 19, 19, 19, 18, 18, 18, 17, 17, 17, 16, 16, 16, 16, 15, 15, 15, 14, 14, 14, 13, 13, 13, 13, 12, 12, 12, 11, 11, 11, 10,
 		10, 10, 10, 9, 9, 9, 8, 8, 8, 7, 7, 7, 7, 6, 6, 6, 5, 5, 5, 4, 4, 4, 4, 3, 3, 3, 2, 2, 2, 1, 1, 1, 1, 1 };
 
-	alignas(64) inline constexpr uint64_t digitCountThresholds[]{ 0ULL, 9ULL, 99ULL, 999ULL, 9999ULL, 99999ULL, 999999ULL, 9999999ULL, 99999999ULL, 999999999ULL, 9999999999ULL,
+	inline constexpr uint64_t digitCountThresholds[]{ 0ULL, 9ULL, 99ULL, 999ULL, 9999ULL, 99999ULL, 999999ULL, 9999999ULL, 99999999ULL, 999999999ULL, 9999999999ULL,
 		99999999999ULL, 999999999999ULL, 9999999999999ULL, 99999999999999ULL, 999999999999999ULL, 9999999999999999ULL, 99999999999999999ULL, 999999999999999999ULL,
 		9999999999999999999ULL };
 
@@ -105,10 +105,10 @@ namespace jsonifier::internal {
 	}
 
 	struct endl_t {};
-	alignas(64) inline constexpr endl_t endl{};
+	inline constexpr endl_t endl{};
 
 	struct flush_t {};
-	alignas(64) inline constexpr flush_t flush{};
+	inline constexpr flush_t flush{};
 
 	template<uint64_t bufferSize = 8192> struct basic_stream {
 		template<typename integer_type>

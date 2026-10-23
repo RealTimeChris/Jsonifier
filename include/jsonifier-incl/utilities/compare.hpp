@@ -286,7 +286,7 @@ namespace jsonifier::internal {
 		return uint8_t{};
 	}
 
-	template<uint64_t length> alignas(64) inline constexpr uint64_t intLength = []<uint64_t lengthNew> {
+	template<uint64_t length> inline constexpr uint64_t intLength = []<uint64_t lengthNew> {
 		if constexpr (lengthNew == 1ULL) {
 			return 1ULL;
 		} else if constexpr (lengthNew == 2ULL) {
@@ -317,7 +317,7 @@ namespace jsonifier::internal {
 			}
 			return returnValues;
 		}
-		alignas(64) static constexpr auto value{ gen() };
+		static constexpr auto value{ gen() };
 	};
 
 	template<gt_8_types auto string> struct pack_values<string> {
@@ -329,7 +329,7 @@ namespace jsonifier::internal {
 			}
 			return outLocal;
 		}
-		alignas(64) static constexpr auto value{ gen() };
+		alignas(simdBytesPerRegister) static constexpr auto value{ gen() };
 	};
 
 	struct string_status {
@@ -543,7 +543,7 @@ namespace jsonifier::internal {
 	template<eq_16_types sl_type, base_t<sl_type> stringNew> struct string_literal_comparator_impl<sl_type, stringNew, void> {
 		JSONIFIER_INLINE static read_buffer_ptr impl(read_buffer_ptr __restrict str) noexcept {
 			static constexpr auto newLiteral{ stringNew };
-			alignas(64) static constexpr auto valuesNew{ pack_values<newLiteral>::value };
+			alignas(simdBytesPerRegister) static constexpr auto valuesNew{ pack_values<newLiteral>::value };
 			const jsonifier_simd_int_128 data1{ simd::gatherValuesU<jsonifier_simd_int_128>(str) };
 			const jsonifier_simd_int_128 data2{ simd::gatherValues<jsonifier_simd_int_128>(valuesNew.data()) };
 			return simd::opTest(simd::opXor(data1, data2)) ? str + 16 : nullptr;
@@ -556,8 +556,8 @@ namespace jsonifier::internal {
 			static constexpr auto newCount{ stringLiteral.size() };
 			static constexpr auto loString = stringLiteral.template substr<0, 16>();
 			static constexpr auto hiString = stringLiteral.template substr<newCount - 16, 16>();
-			alignas(64) static constexpr auto loValuesNew{ pack_values<loString>::value };
-			alignas(64) static constexpr auto hiValuesNew{ pack_values<hiString>::value };
+			alignas(simdBytesPerRegister) static constexpr auto loValuesNew{ pack_values<loString>::value };
+			alignas(simdBytesPerRegister) static constexpr auto hiValuesNew{ pack_values<hiString>::value };
 			const jsonifier_simd_int_128 lo{ simd::opXor(simd::gatherValuesU<jsonifier_simd_int_128>(str), simd::gatherValues<jsonifier_simd_int_128>(loValuesNew.data())) };
 			const jsonifier_simd_int_128 hi{ simd::opXor(simd::gatherValuesU<jsonifier_simd_int_128>(str + newCount - 16),
 				simd::gatherValues<jsonifier_simd_int_128>(hiValuesNew.data())) };
@@ -570,7 +570,7 @@ namespace jsonifier::internal {
 	template<eq_32_types sl_type, base_t<sl_type> stringNew> struct string_literal_comparator_impl<sl_type, stringNew, void> {
 		JSONIFIER_INLINE static read_buffer_ptr impl(read_buffer_ptr __restrict str) noexcept {
 			static constexpr auto newLiteral{ stringNew };
-			alignas(64) static constexpr auto valuesNew{ pack_values<newLiteral>::value };
+			alignas(simdBytesPerRegister) static constexpr auto valuesNew{ pack_values<newLiteral>::value };
 			const jsonifier_simd_int_256 data1{ simd::gatherValuesU<jsonifier_simd_int_256>(str) };
 			const jsonifier_simd_int_256 data2{ simd::gatherValues<jsonifier_simd_int_256>(valuesNew.data()) };
 			return simd::opTest(simd::opXor(data1, data2)) ? str + 32 : nullptr;
@@ -583,8 +583,8 @@ namespace jsonifier::internal {
 			static constexpr auto newCount{ stringLiteral.size() };
 			static constexpr auto loString = stringLiteral.template substr<0, 32>();
 			static constexpr auto hiString = stringLiteral.template substr<newCount - 32, 32>();
-			alignas(64) static constexpr auto loValuesNew{ pack_values<loString>::value };
-			alignas(64) static constexpr auto hiValuesNew{ pack_values<hiString>::value };
+			alignas(simdBytesPerRegister) static constexpr auto loValuesNew{ pack_values<loString>::value };
+			alignas(simdBytesPerRegister) static constexpr auto hiValuesNew{ pack_values<hiString>::value };
 			const jsonifier_simd_int_256 lo{ simd::opXor(simd::gatherValuesU<jsonifier_simd_int_256>(str), simd::gatherValues<jsonifier_simd_int_256>(loValuesNew.data())) };
 			const jsonifier_simd_int_256 hi{ simd::opXor(simd::gatherValuesU<jsonifier_simd_int_256>(str + newCount - 32),
 				simd::gatherValues<jsonifier_simd_int_256>(hiValuesNew.data())) };
@@ -598,7 +598,7 @@ namespace jsonifier::internal {
 	template<eq_64_types sl_type, base_t<sl_type> stringNew> struct string_literal_comparator_impl<sl_type, stringNew, void> {
 		JSONIFIER_INLINE static read_buffer_ptr impl(read_buffer_ptr __restrict str) noexcept {
 			static constexpr auto newLiteral{ stringNew };
-			alignas(64) static constexpr auto valuesNew{ pack_values<newLiteral>::value };
+			alignas(simdBytesPerRegister) static constexpr auto valuesNew{ pack_values<newLiteral>::value };
 			const jsonifier_simd_int_512 data1{ simd::gatherValuesU<jsonifier_simd_int_512>(str) };
 			const jsonifier_simd_int_512 data2{ simd::gatherValues<jsonifier_simd_int_512>(valuesNew.data()) };
 			return simd::opCmpNeq(data1, data2) == 0 ? str + 64 : nullptr;

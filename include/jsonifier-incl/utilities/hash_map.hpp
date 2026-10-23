@@ -39,8 +39,8 @@ namespace jsonifier::internal {
 		return os;
 	}
 
-	alignas(64) inline constexpr uint64_t npos64{ ~0ull };
-	alignas(64) inline constexpr uint8_t npos8{ 0xFFu };
+	inline constexpr uint64_t npos64{ ~0ull };
+	inline constexpr uint8_t npos8{ 0xFFu };
 
 	inline constexpr bool contains(read_buffer_ptr hashDataNew, uint8_t byteToCheckFor, uint64_t size) noexcept {
 		for (uint64_t x = 0; x < size; ++x) {
@@ -123,7 +123,7 @@ namespace jsonifier::internal {
 		return result;
 	}
 
-	alignas(64) inline constexpr uint64_t maxStorageSize{ 2048 };
+	inline constexpr uint64_t maxStorageSize{ 2048 };
 
 	inline consteval uint64_t storageSizeFor(uint64_t keyCount) {
 		const uint64_t target{ jsonifier::internal::nextPowerOfTwo(keyCount * 16ull) };
@@ -134,7 +134,7 @@ namespace jsonifier::internal {
 		static constexpr uint64_t storageSize{ storageSizeNew };
 
 		array<uint16_t, storageSizeNew / jsonifier::internal::setSimdWidth(storageSizeNew)> bucketSizes{};
-		alignas(64) array<uint8_t, storageSizeNew + 1ULL> controlBytes{};
+		alignas(simdBytesPerRegister) array<uint8_t, storageSizeNew + 1ULL> controlBytes{};
 
 		inline constexpr hash_map_construction_data() noexcept = default;
 
@@ -228,7 +228,7 @@ namespace jsonifier::internal {
 		}
 
 		char padding01[simdBytesPerRegister - ((storageSizeNew + 1) % 8)]{};
-		alignas(64) array<uint8_t, storageSizeNew + 1ULL> controlBytes{};
+		alignas(simdBytesPerRegister) array<uint8_t, storageSizeNew + 1ULL> controlBytes{};
 		uint64_t bucketSize{ jsonifier::internal::setSimdWidth(storageSizeNew) };
 		uint64_t numGroups{ storageSizeNew / bucketSize };
 		array<uint16_t, storageSizeNew + 1ULL> indices{};
@@ -323,7 +323,7 @@ namespace jsonifier::internal {
 		return result;
 	}
 
-	template<typename value_type> alignas(64) inline constexpr auto firstByteColumns{ jsonifier::internal::collectFirstByteColumns(tupleReferencesByFirstByte<value_type>) };
+	template<typename value_type> alignas(simdBytesPerRegister) inline constexpr auto firstByteColumns{ jsonifier::internal::collectFirstByteColumns(tupleReferencesByFirstByte<value_type>) };
 
 	struct first_byte_arrays {
 		array<uint8_t, 256 * 256> indexByFirstByteAndChar{};
@@ -359,7 +359,7 @@ namespace jsonifier::internal {
 		return stats;
 	}
 
-	template<typename value_type> alignas(64) inline constexpr auto keyStatsVal = jsonifier::internal::keyStatsImpl(tupleReferences<value_type>);
+	template<typename value_type> alignas(simdBytesPerRegister) inline constexpr auto keyStatsVal = jsonifier::internal::keyStatsImpl(tupleReferences<value_type>);
 
 	template<typename value_type, uint64_t storageSize>
 	inline consteval void collectSimdFullLengthHashMapData(hash_map_construction_data<storageSize>& returnValues, const tuple_references& pairsNew) {
@@ -557,7 +557,7 @@ namespace jsonifier::internal {
 		return returnValues;
 	}
 
-	template<typename value_type, uint64_t storageSize> alignas(64) inline constexpr auto mapConstructionDataAt = collectMapConstructionDataImpl<value_type, storageSize>();
+	template<typename value_type, uint64_t storageSize> alignas(simdBytesPerRegister) inline constexpr auto mapConstructionDataAt = collectMapConstructionDataImpl<value_type, storageSize>();
 
 	template<typename value_type> inline consteval const auto& selectMapConstructionData() {
 		constexpr auto preferredSize = jsonifier::internal::storageSizeFor(tupleReferences<value_type>.count);
@@ -568,7 +568,7 @@ namespace jsonifier::internal {
 		}
 	}
 
-	template<typename value_type> alignas(64) inline constexpr const auto& mapConstructionData = selectMapConstructionData<value_type>();
+	template<typename value_type> inline constexpr const auto& mapConstructionData = selectMapConstructionData<value_type>();
 
 	template<typename value_type> inline consteval hash_map_types classifyMapType() {
 		return mapConstructionData<value_type>.type;
@@ -642,7 +642,7 @@ namespace jsonifier::internal {
 	#endif
 #endif
 
-	template<typename value_type> alignas(64) inline constexpr auto hashData = collectMapConstructionData<value_type>();
+	template<typename value_type> alignas(simdBytesPerRegister) inline constexpr auto hashData = collectMapConstructionData<value_type>();
 
 	template<typename value_type, typename iterator_newer> struct hash_map {
 		static constexpr uint64_t lengthSpread{ keyStatsVal<value_type>.maxLength - keyStatsVal<value_type>.minLength };

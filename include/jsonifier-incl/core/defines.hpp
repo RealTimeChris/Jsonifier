@@ -192,66 +192,6 @@
 	#error "Sorry, this arch is not supported."
 #endif
 
-#if JSONIFIER_ARCH_X64 && JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
-	#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
-		#define JSONIFIER_CONFIGURED_AVX_TIER 3
-	#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
-		#define JSONIFIER_CONFIGURED_AVX_TIER 2
-	#else
-		#define JSONIFIER_CONFIGURED_AVX_TIER 1
-	#endif
-	#if defined(JSONIFIER_MAX_AVX_TIER) && JSONIFIER_CONFIGURED_AVX_TIER > JSONIFIER_MAX_AVX_TIER
-		#undef JSONIFIER_CONFIGURED_AVX_TIER
-		#define JSONIFIER_CONFIGURED_AVX_TIER JSONIFIER_MAX_AVX_TIER
-	#endif
-	#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_LZCNT)
-		#define JSONIFIER_CONFIGURED_LZCNT JSONIFIER_LZCNT
-	#else
-		#define JSONIFIER_CONFIGURED_LZCNT 0
-	#endif
-	#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_POPCNT)
-		#define JSONIFIER_CONFIGURED_POPCNT JSONIFIER_POPCNT
-	#else
-		#define JSONIFIER_CONFIGURED_POPCNT 0
-	#endif
-	#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_BMI)
-		#define JSONIFIER_CONFIGURED_BMI JSONIFIER_BMI
-	#else
-		#define JSONIFIER_CONFIGURED_BMI 0
-	#endif
-	#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_CLMUL)
-		#define JSONIFIER_CONFIGURED_CLMUL JSONIFIER_CLMUL
-	#else
-		#define JSONIFIER_CONFIGURED_CLMUL 0
-	#endif
-	#define JSONIFIER_SCALAR_INSTRUCTIONS (JSONIFIER_CONFIGURED_LZCNT | JSONIFIER_CONFIGURED_POPCNT | JSONIFIER_CONFIGURED_BMI | JSONIFIER_CONFIGURED_CLMUL)
-	#define JSONIFIER_AVX_TIER_INSTRUCTIONS (JSONIFIER_SCALAR_INSTRUCTIONS | JSONIFIER_AVX)
-	#define JSONIFIER_AVX2_TIER_INSTRUCTIONS (JSONIFIER_AVX_TIER_INSTRUCTIONS | JSONIFIER_AVX2)
-	#define JSONIFIER_AVX512_TIER_INSTRUCTIONS (JSONIFIER_AVX2_TIER_INSTRUCTIONS | JSONIFIER_AVX512)
-	#undef JSONIFIER_CPU_INSTRUCTIONS
-	#if JSONIFIER_CONFIGURED_AVX_TIER >= 3
-		#define JSONIFIER_CPU_INSTRUCTIONS JSONIFIER_AVX512_TIER_INSTRUCTIONS
-		#if !(defined(__AVX512F__) && defined(__AVX512BW__)) || (!JSONIFIER_COMPILER_MSVC && !defined(__AVX512VBMI2__))
-			#error \
-				"Jsonifier was configured for AVX-512, but this translation unit is not compiled with AVX-512F/BW/VBMI2 enabled - link voided_hw_jsonifier_cpu or pass the matching -march / /arch:AVX512, or define JSONIFIER_MAX_AVX_TIER."
-		#endif
-	#elif JSONIFIER_CONFIGURED_AVX_TIER == 2
-		#define JSONIFIER_CPU_INSTRUCTIONS JSONIFIER_AVX2_TIER_INSTRUCTIONS
-		#if !defined(__AVX2__)
-			#error \
-				"Jsonifier was configured for AVX2, but this translation unit is not compiled with AVX2 enabled - link voided_hw_jsonifier_cpu or pass the matching -march / /arch:AVX2, or define JSONIFIER_MAX_AVX_TIER."
-		#endif
-	#else
-		#define JSONIFIER_CPU_INSTRUCTIONS JSONIFIER_AVX_TIER_INSTRUCTIONS
-		#if !defined(__AVX__)
-			#error \
-				"Jsonifier was configured for AVX, but this translation unit is not compiled with AVX enabled - link voided_hw_jsonifier_cpu or pass the matching -march / /arch:AVX."
-		#endif
-	#endif
-#else
-	#define JSONIFIER_CONFIGURED_AVX_TIER 0
-#endif
-
 #if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
 	#include <immintrin.h>
 #elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
@@ -338,10 +278,6 @@
 			return false; \
 		} \
 	}
-
-#if !defined(JSONIFIER_IS_DIGIT)
-	#define JSONIFIER_IS_DIGIT(x) ((static_cast<uint8_t>(x - '0')) < 10)
-#endif
 
 template<typename... arg_types> inline void jsonifierFailMemcpyImpl(arg_types&&...) noexcept {
 	static_assert(sizeof...(arg_types) == 0,
