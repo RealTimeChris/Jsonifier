@@ -106,106 +106,9 @@ Continuous integration runs AddressSanitizer and UndefinedBehaviorSanitizer on e
 
 ---
 
-## CI/CD with unit-tests
+## Testing
 
-Jsonifier uses GitHub Actions to continuously test across multiple platforms and compilers with sanitizers enabled. The test suite is built on [rt-ut](https://github.com/nihilai-collective/rt-ut), fetched directly via CMake `FetchContent`, and runs on every push and pull request:
-
-```yaml
-name: unit-tests
-on:
-  push:
-    branches: [ "**" ]
-  pull_request:
-    branches: [ "**" ]
-  workflow_dispatch:
-
-jobs:
-  build:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            compiler: clang
-            name: "Ubuntu Clang"
-          - os: ubuntu-latest
-            compiler: gcc
-            name: "Ubuntu GCC"
-          - os: macos-latest
-            compiler: clang
-            name: "macOS Clang"
-          - os: macos-latest
-            compiler: gcc
-            name: "macOS GCC"
-          - os: windows-latest
-            compiler: msvc
-            name: "Windows MSVC"
-    runs-on: ${{ matrix.os }}
-```
-
-This ensures memory safety and undefined behavior detection across all supported platforms. Note that sanitizers are automatically disabled for the GCC-on-macOS combination (unsupported), and UBSan has no effect under MSVC (no equivalent runtime), so Clang-cl or a Clang/GCC build is needed for UBSan coverage there.
-
-The full suite passes on **Ubuntu (Clang/GCC), macOS (Clang/GCC), and Windows (MSVC)** on every push.
-
----
-
-## Comprehensive Test Suite
-
-Jsonifier includes an extensive test suite that runs on **every push** across **all supported platforms and compilers** with **ASAN and UBSAN** enabled where supported.
-
-### Test Categories
-
-| Test Category | Description |
-|---------------|-------------|
-| **Conformance Tests** | Full RFC8259 compliance testing against two corpora, each wired up independently: `conformance.hpp` drives the classic `jsonchecker` set (77 of 79 `fail*.json` on disk + all 27 `pass*.json`, each checked against a specific expected `parse_statuses` error), and `JSONTestSuite.hpp` drives the JSONTestSuite Y/N corpus (all 188 `n_*.json` + all 95 `y_*.json`; the `i_*.json` implementation-defined cases are intentionally unused). 387 documents total, each run across all eight `partialRead` / `knownOrder` / `nullTerminated` combinations |
-| **Round-Trip Tests** | 27 serialize → parse → compare documents covering primitives, raw pointers, `unique_ptr`, and nested objects; 54 checks per configuration, run across the four `partialRead` / `knownOrder` combinations |
-| **Float Validation** | 64 edge cases including denormals, subnormal boundaries, round-half-to-even cases, infinities, and extreme exponents |
-| **Integer Validation** | Bounds testing for signed (24 pass / 11 fail) and unsigned (16 pass / 11 fail) integers, from zero through the full int64/uint64 range |
-| **String Validation** | 35 pass cases (Unicode, escape sequences, control characters, multi-byte emoji, ZWJ sequences, surrogate pairs) and 26 fail cases (malformed escapes, invalid `\u` sequences, unterminated strings) |
-| **UTF-8 Validation** | 202 tests: the full Markus Kuhn UTF-8 stress-test corpus, standalone 1–4 byte sequence and chunk/block-boundary tests, second-byte boundary tests per lead-byte class, fused string-parser validation (escape-aware, surrogate-pair-aware), an unaligned-pointer sweep, an unaligned invalid-sequence sweep, an mmap page-boundary fault check, and a width-transition sweep across body lengths 24–224 |
-| **Bounds/Truncation** | Progressive truncation of full JSON payloads (Canada, CitmCatalog, Discord, Google Maps, Instruments, Marine IK, Mesh, Random, Twitter, Twitter Partial): 10 corpus documents, minified and prettified (20 files), across all eight configurations (160 truncation runs), to validate graceful failure on malformed/truncated input |
-| **Parsing Tests** | Parse/serialize/minify/prettify/validate correctness across the full real-world payload suite, both minified and prettified, across all eight `partialRead` / `knownOrder` / `nullTerminated` combinations |
-| **Intrinsics Tests** | Direct correctness testing of the SIMD abstraction layer: comparison, bitmask, logical, saturating-subtract, shift, cross-register alignment, and load/store round-trips at every unaligned offset |
-| **Error & Core Tests** | 10 tests for construction, equality, line-number reporting, and control-character escaping of the error-reporting model, plus 11 `jsonifier_core` copy/move/self-assignment tests |
-| **Generic Parsing** | 75 tests for the schema-free On Demand-style parser: in-order, reverse-order, and missing-key access, JSON pointers, escaped and non-ASCII strings, invalid-UTF-8 rejection, and multi-document streams |
-| **raw_json_data** | 41 tests for type detection, int32_t/uint/double round-trips, key and index access, `contains`, `size`, deep nesting, equality, and serialization (compact, prettified, and default-constructed) |
-| **Number Serialization** | 527 tests: 76 fastio digit-count/integer/float tests, 83 zmij double-serialization tests, and 368 digit-boundary tests for `i_to_str` and `jsonifier::toString` across all eight integer types |
-| **Type Coverage** | Primitives, containers (`vector`, `array`, `map`, `unordered_map`), tuples, `optional`, `shared_ptr`, enums, nested structs, renamed/escaped keys; 69 dedicated unit tests |
-| **Internal Containers & Utilities** | Direct correctness tests for the library's own building blocks: the fixed-size allocator, `jsonifier::array`, the tuple implementation and its iterator, the compile-time hash and hash-map generators, comparators and the string-literal comparator, enum-name and member-name reflection, the `jsonifier::string` class, stage-1 tape emission, and the minifier/prettifier/printer output paths; 624 dedicated unit tests |
-
-### What Gets Tested
-
-- **69 dedicated unit tests** covering reflection, renamed fields, optionals, enums, `shared_ptr`, nested structs, containers, tuples, maps, and escaped keys
-- **624 additional unit tests** directly exercising the library's internal containers and utilities: allocator, `jsonifier::array`, tuple/iterator, compile-time hash and hash-map generation, comparators, enum/member-name reflection, `jsonifier::string`, stage-1 tape emission, and the minify/prettify/print output paths
-- **75 generic-parser tests**, **41 `raw_json_data` tests**, and **527 number-serialization tests**
-- **7,030 assertions in total** per platform (Windows MSVC, AVX2 backend), all passing
-- **265 conformance fail cases + 122 pass cases** (77+27 from `jsonchecker`, 188+95 from JSONTestSuite), each asserting the exact expected `parse_statuses` value, for 3,096 conformance assertions per platform across all eight configs
-- **27 round-trip documents** (54 checks per configuration) including edge cases (null, empty, large numbers, raw pointers, `unique_ptr`, special floats)
-- **64 float edge cases** (plus dedicated serialization-fidelity checks) and **24+16 int32_t/uint pass cases** with **11+11 matching fail cases**, backed by separate digit-boundary/`toString` tests across all eight integer types
-- **35 string pass cases + 26 fail cases**, including full Unicode/emoji/ZWJ/escape coverage
-- **A full UTF-8 correctness gauntlet**: basic sequence tests, the complete Markus Kuhn stress corpus, second-byte boundary tests, fused string-parser tests, unaligned-pointer and unaligned-invalid-sequence sweeps, an mmap page-boundary fault check, and a width-transition sweep
-- **Direct SIMD intrinsics correctness tests**, independent of parsing, covering every primitive operation across all supported backends
-- **Memory safety**: No leaks, double-frees, or use-after-free (ASAN)
-- **Undefined behavior**: No signed overflow, null pointer dereference, or invalid casts (UBSAN)
-- **Bounds checking**: Proper, graceful handling of truncated/malformed input across the full real-world payload suite
-- **Unicode and emoji**: Full UTF-8 support, including ZWJ sequences and surrogate pairs
-- **Edge cases**: Infinity, NaN, denormal numbers, integer overflow boundaries
-
-Every parsing-family category above runs across all **eight** combinations of `partialRead`, `knownOrder`, and `nullTerminated` (round-trip runs the four `partialRead` × `knownOrder` combinations), and the full suite passes on **Ubuntu (GCC/Clang), macOS (GCC/Clang), and Windows (MSVC)**.
-
-### Running Tests Locally
-
-```bash
-git clone https://github.com/nihilai-collective/Jsonifier.git
-cd Jsonifier
-
-cmake -B build -DJSONIFIER_UNIT_TESTS=ON
-
-cmake -B build -DJSONIFIER_UNIT_TESTS=ON -DJSONIFIER_ASAN=ON -DJSONIFIER_UBSAN=ON
-
-cmake --build build --target jsonifier-unit-tests
-./build/unit-tests/jsonifier-unit-tests
-```
+Every push runs the full unit-test suite on Ubuntu (Clang/GCC), macOS (Clang/GCC), and Windows (MSVC), with ASan and UBSan enabled where supported. See [Unit Tests](documentation/Unit_Tests.md) for the CI setup, how to run the tests locally, and a breakdown of every test suite.
 
 ---
 
@@ -291,6 +194,7 @@ The `jsonifier_core<>` type is templated on an initial scratch-buffer size in by
 - [Excluding Keys at Runtime](documentation/Excluding_Keys.md): Dynamic key exclusion during serialization
 - [Parsing Arbitrary Data](documentation/Parsing_Arbitrary_Data.md): Working with unknown JSON structures
 - [Generic Parsing](documentation/Generic_Parsing.md): Schema-free, On Demand-style parsing and NDJSON streams
+- [Unit Tests](documentation/Unit_Tests.md): CI matrix, running tests locally, and everything the suite covers
 
 ---
 
