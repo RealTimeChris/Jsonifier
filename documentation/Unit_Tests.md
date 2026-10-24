@@ -31,7 +31,7 @@ cmake --build build --target jsonifier-unit-tests
 ./build/unit-tests/jsonifier-unit-tests
 ```
 
-The test binary first prints the active SIMD backend, then runs every suite in order. Any failure makes the process exit with code `1`.
+The test binary first prints the active SIMD then runs every suite in order. Any failure makes the process exit with code `1`.
 
 ---
 

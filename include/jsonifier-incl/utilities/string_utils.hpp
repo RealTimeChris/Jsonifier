@@ -247,9 +247,9 @@ namespace jsonifier::internal {
 		}
 	};
 
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
+#if JSONIFIER_AVX512
 	inline constexpr uint64_t startIndex = 0;
-#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
+#elif JSONIFIER_AVX2
 	inline constexpr uint64_t startIndex = 1;
 #else
 	inline constexpr uint64_t startIndex = 2;

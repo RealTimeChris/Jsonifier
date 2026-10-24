@@ -192,11 +192,11 @@
 	#error "Sorry, this arch is not supported."
 #endif
 
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_ANY_AVX)
+#if JSONIFIER_ANY_AVX
 	#include <immintrin.h>
-#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
+#elif JSONIFIER_NEON
 	#include <arm_neon.h>
-#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_SVE2)
+#elif JSONIFIER_SVE2
 	#include <arm_neon_sve_bridge.h>
 	#include <arm_neon.h>
 	#include <arm_sve.h>

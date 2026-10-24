@@ -11,7 +11,7 @@
 
 namespace jsonifier::internal::simd {
 
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
+#if JSONIFIER_AVX512 || JSONIFIER_AVX2 || JSONIFIER_AVX
 
 	template<uint_types value_type> [[maybe_unused]] JSONIFIER_INLINE uint64_t postCmpTzcnt(const value_type value) noexcept {
 		return countrZero(value);
@@ -134,7 +134,7 @@ namespace jsonifier::internal::simd {
 		return opOr(chunks.template get<0>(), opOr(chunks.template get<1>(), opOr(chunks.template get<2>(), chunks.template get<3>())));
 	}
 
-	#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
+	#if JSONIFIER_AVX512 || JSONIFIER_AVX2
 
 	template<simd_int_256_types simd_int_type_new> [[maybe_unused]] JSONIFIER_INLINE simd_int_type_new gatherValues(const void* __restrict str) noexcept {
 		return _mm256_load_si256(static_cast<const __m256i*>(str));
@@ -248,7 +248,7 @@ namespace jsonifier::internal::simd {
 		return !simd::opTest(value);
 	}
 
-		#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
+		#if JSONIFIER_AVX512
 
 	template<simd_int_512_types simd_int_type_new> [[maybe_unused]] JSONIFIER_INLINE simd_int_type_new gatherValues(const void* __restrict str) noexcept {
 		return _mm512_load_si512(static_cast<const __m512i*>(str));

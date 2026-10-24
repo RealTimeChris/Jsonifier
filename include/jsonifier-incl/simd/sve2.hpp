@@ -11,7 +11,7 @@
 
 namespace jsonifier::internal::simd {
 
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_SVE2)
+#if JSONIFIER_SVE2
 
 	template<uint_types value_type> [[maybe_unused]] JSONIFIER_INLINE uint64_t postCmpTzcnt(value_type value) noexcept {
 		return countrZero(value) >> 2;

@@ -90,7 +90,7 @@ namespace jsonifier {
 	  protected:
 		template<typename, parse_options> friend class generic::document_stream;
 
-		internal::pod_simd_string_reader<defaultBackend, simdBytesPerStep> podSection{};
+		internal::pod_simd_string_reader<simdBytesPerStep> podSection{};
 		internal::simd_string_reader<initialBufferSize> section{};
 		string_base<initialBufferSize> stringBuffer{};
 		std::vector<internal::error> errors{};

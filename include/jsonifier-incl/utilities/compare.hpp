@@ -26,7 +26,7 @@ namespace jsonifier::internal {
 	template<char valueNewer, typename char_type> struct char_comparison {
 		static constexpr char value{ valueNewer };
 		JSONIFIER_INLINE static const char_type* memchar(const char_type* data, uint64_t lengthNew) noexcept {
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
+#if JSONIFIER_AVX512
 			if (lengthNew >= 64) {
 				using type_list_element				 = type_list_element_t<0, simd::avx_list>;
 				using simd_type						 = typename type_list_element::type::type;
@@ -48,7 +48,7 @@ namespace jsonifier::internal {
 			}
 #endif
 
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
+#if JSONIFIER_AVX512 || JSONIFIER_AVX2
 			if (lengthNew >= 32) {
 				using type_list_element				 = type_list_element_t<1, simd::avx_list>;
 				using simd_type						 = typename type_list_element::type::type;
@@ -158,7 +158,7 @@ namespace jsonifier::internal {
 
 	struct comparison {
 		template<typename char_type01, typename char_type02> JSONIFIER_INLINE static bool compare(const char_type01* lhs, char_type02* rhs, uint64_t lengthNew) noexcept {
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
+#if JSONIFIER_AVX512
 			if (lengthNew >= 64) {
 				using type_list_element				 = type_list_element_t<0, simd::avx_list>;
 				using simd_type						 = typename type_list_element::type::type;
@@ -177,7 +177,7 @@ namespace jsonifier::internal {
 				}
 			}
 #endif
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
+#if JSONIFIER_AVX512 || JSONIFIER_AVX2
 			if (lengthNew >= 32) {
 				using type_list_element				 = type_list_element_t<1, simd::avx_list>;
 				using simd_type						 = typename type_list_element::type::type;
@@ -565,7 +565,7 @@ namespace jsonifier::internal {
 		}
 	};
 
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512) || JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
+#if JSONIFIER_AVX512 || JSONIFIER_AVX2
 
 	template<eq_32_types sl_type, base_t<sl_type> stringNew> struct string_literal_comparator_impl<sl_type, stringNew, void> {
 		JSONIFIER_INLINE static read_buffer_ptr impl(read_buffer_ptr __restrict str) noexcept {
@@ -594,7 +594,7 @@ namespace jsonifier::internal {
 
 #endif
 
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
+#if JSONIFIER_AVX512
 	template<eq_64_types sl_type, base_t<sl_type> stringNew> struct string_literal_comparator_impl<sl_type, stringNew, void> {
 		JSONIFIER_INLINE static read_buffer_ptr impl(read_buffer_ptr __restrict str) noexcept {
 			static constexpr auto newLiteral{ stringNew };

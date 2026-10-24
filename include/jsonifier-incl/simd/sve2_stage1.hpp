@@ -11,7 +11,7 @@
 
 namespace jsonifier::internal::simd {
 
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_SVE2)
+#if JSONIFIER_SVE2
 
 	static_assert(JSONIFIER_SVE2_VECTOR_BITS == 128,
 		"This block collapses simdRegistersPerBlock registers into a single uint64_t bitmask, and SVE2 ADDP is segment-wise; both hold only at 128-bit VL.");

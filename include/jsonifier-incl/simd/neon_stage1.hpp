@@ -11,7 +11,7 @@
 
 namespace jsonifier::internal::simd {
 
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
+#if JSONIFIER_NEON
 
 	alignas(simdBytesPerRegister) inline constexpr internal::array<uint64_t, simdRegistersPerBlock> shiftAmounts{ [] {
 		internal::array<uint64_t, simdRegistersPerBlock> returnValue{};

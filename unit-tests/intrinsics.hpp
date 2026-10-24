@@ -10,15 +10,15 @@
 
 namespace intrinsics_tests {
 
-#if JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX512)
+#if JSONIFIER_AVX512
 	using active_simd_t = jsonifier::jsonifier_simd_int_512;
-#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX2)
+#elif JSONIFIER_AVX2
 	using active_simd_t = jsonifier::jsonifier_simd_int_256;
-#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_AVX)
+#elif JSONIFIER_AVX
 	using active_simd_t = jsonifier::jsonifier_simd_int_128;
-#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_SVE2)
+#elif JSONIFIER_SVE2
 	using active_simd_t = jsonifier::jsonifier_simd_int_128;
-#elif JSONIFIER_CHECK_FOR_INSTRUCTION(JSONIFIER_NEON)
+#elif JSONIFIER_NEON
 	using active_simd_t = jsonifier::jsonifier_simd_int_128;
 #else
 	using active_simd_t = jsonifier::jsonifier_simd_int_128;
